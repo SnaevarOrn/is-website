@@ -335,118 +335,102 @@
         </div>
 
         <div class="map-wrapper">
-          <!-- Stílfært Ísland + jöklar á réttum <svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="glacierGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#c6e7ff"/>
-      <stop offset="50%" stop-color="#8fd3f4"/>
-      <stop offset="100%" stop-color="#5aa9dd"/>
-    </linearGradient>
-  </defs>
+          <svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="glacierGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#c6e7ff"/>
+                <stop offset="50%" stop-color="#8fd3f4"/>
+                <stop offset="100%" stop-color="#5aa9dd"/>
+              </linearGradient>
+            </defs>
 
-  <!-- Ísland – meira „kartöflu“-laga, með vestfjörðum, nesjum og skörpum hornum -->
-  <path
-    class="island-outline"
-    d="
-      M18,18
-      L12,24 13,30 18,33   <!-- Vestfirðir -->
-      L20,30 23,34 27,36   <!-- Snæfellsnes -->
-      L31,38 35,42 38,47   <!-- Vesturland/Suðvestur -->
-      L42,50 48,52 55,52   <!-- Suðurströnd -->
-      L62,51 69,51 76,49   <!-- Suðausturhorn -->
-      L82,45 86,39 88,34   <!-- Austurland -->
-      L87,30 83,26 79,23
-      L73,20 66,18 60,17   <!-- Norðaustur -->
-      L54,17 48,18 42,20
-      L36,21 30,21 24,20   <!-- Norðurland / inn í skaga -->
-      Z
-    " />
+            <!-- Ísland, stylized en „kartöflulaga“ með nesum -->
+            <path
+              class="island-outline"
+              d="M18 18
+                 L12 24 13 30 18 33
+                 L20 30 23 34 27 36
+                 L31 38 35 42 38 47
+                 L42 50 48 52 55 52
+                 L62 51 69 51 76 49
+                 L82 45 86 39 88 34
+                 L87 30 83 26 79 23
+                 L73 20 66 18 60 17
+                 L54 17 48 18 42 20
+                 L36 21 30 21 24 20
+                 Z" />
 
-  <!-- Drangajökull – stakur „pönnu“-flipi í norðvestur -->
-  <path
-    class="glacier"
-    data-id="drangajokull"
-    d="
-      M22,24
-      L26,23 30,24 33,26
-      L34,29 33,32 30,34
-      L26,35 23,34 21,31
-      L21,27 Z
-    " />
+            <!-- Drangajökull -->
+            <path
+              class="glacier"
+              data-id="drangajokull"
+              d="M22 24
+                 L26 23 30 24 33 26
+                 L34 29 33 32 30 34
+                 L26 35 23 34 21 31
+                 L21 27 Z" />
 
-  <!-- Snæfellsjökull – enda á nesinu -->
-  <path
-    class="glacier"
-    data-id="snaefellsjokull"
-    d="
-      M26,37
-      L29,37 32,38 34,40
-      L34,42 33,44 31,45
-      L28,46 25,45 23,43
-      L23,40 Z
-    " />
+            <!-- Snæfellsjökull -->
+            <path
+              class="glacier"
+              data-id="snaefellsjokull"
+              d="M26 37
+                 L29 37 32 38 34 40
+                 L34 42 33 44 31 45
+                 L28 46 25 45 23 43
+                 L23 40 Z" />
 
-  <!-- Langjökull – langur fleki á miðn-hálendi -->
-  <path
-    class="glacier"
-    data-id="langjokull"
-    d="
-      M37,28
-      L42,27 48,27 52,28
-      L55,30 56,33 54,36
-      L51,38 46,39 41,38
-      L38,36 36,33 36,30 Z
-    " />
+            <!-- Langjökull -->
+            <path
+              class="glacier"
+              data-id="langjokull"
+              d="M37 28
+                 L42 27 48 27 52 28
+                 L55 30 56 33 54 36
+                 L51 38 46 39 41 38
+                 L38 36 36 33 36 30 Z" />
 
-  <!-- Hofsjökull – kringlóttari rétt austar -->
-  <path
-    class="glacier"
-    data-id="hofsjokull"
-    d="
-      M47,32
-      L50,31 54,31 57,33
-      L58,35 58,37 56,39
-      L53,40 49,40 46,39
-      L44,37 44,35 45,33 Z
-    " />
+            <!-- Hofsjökull -->
+            <path
+              class="glacier"
+              data-id="hofsjokull"
+              d="M47 32
+                 L50 31 54 31 57 33
+                 L58 35 58 37 56 39
+                 L53 40 49 40 46 39
+                 L44 37 44 35 45 33 Z" />
 
-  <!-- Vatnajökull – stór plata í suðaustri -->
-  <path
-    class="glacier"
-    data-id="vatnajokull"
-    d="
-      M55,40
-      L62,38 69,38 75,40
-      L79,43 81,46 80,50
-      L77,53 71,56 64,57
-      L57,56 51,54 48,51
-      L47,48 48,45 51,42 Z
-    " />
+            <!-- Vatnajökull -->
+            <path
+              class="glacier"
+              data-id="vatnajokull"
+              d="M55 40
+                 L62 38 69 38 75 40
+                 L79 43 81 46 80 50
+                 L77 53 71 56 64 57
+                 L57 56 51 54 48 51
+                 L47 48 48 45 51 42 Z" />
 
-  <!-- Mýrdalsjökull – breiður suðurblettur vestan við Vatnajökul -->
-  <path
-    class="glacier"
-    data-id="myrdalsjokull"
-    d="
-      M48,49
-      L52,48 57,48 61,49
-      L63,51 64,53 63,55
-      L60,57 55,58 50,57
-      L47,55 46,53 46,51 Z
-    " />
+            <!-- Mýrdalsjökull -->
+            <path
+              class="glacier"
+              data-id="myrdalsjokull"
+              d="M48 49
+                 L52 48 57 48 61 49
+                 L63 51 64 53 63 55
+                 L60 57 55 58 50 57
+                 L47 55 46 53 46 51 Z" />
 
-  <!-- Eyjafjallajökull – örlítið vestar en Mýrdalsjökull -->
-  <path
-    class="glacier"
-    data-id="eyjafjallajokull"
-    d="
-      M40,49
-      L44,48 47,48 50,49
-      L51,51 51,53 49,55
-      L46,56 42,56 39,55
-      L38,53 38,51 39,50 Z
-    " />
-</svg>
+            <!-- Eyjafjallajökull -->
+            <path
+              class="glacier"
+              data-id="eyjafjallajokull"
+              d="M40 49
+                 L44 48 47 48 50 49
+                 L51 51 51 53 49 55
+                 L46 56 42 56 39 55
+                 L38 53 38 51 39 50 Z" />
+          </svg>
         </div>
 
         <div id="status" class="status"></div>
@@ -454,9 +438,7 @@
 
       <aside class="info-card">
         <div class="legend-title">Jöklar í leiknum</div>
-        <ul class="legend-list" id="legend-list">
-          <!-- fyllist í JS -->
-        </ul>
+        <ul class="legend-list" id="legend-list"></ul>
 
         <div class="controls">
           <button id="btn-restart" type="button">🔄 Spila aftur</button>
@@ -524,7 +506,7 @@
     }
 
     function updateLegendEntry(id, found) {
-      const item = legendListEl.querySelector(`.legend-item[data-id="${id}"]`);
+      const item = legendListEl.querySelector(\`.legend-item[data-id="\${id}"]\`);
       if (!item) return;
       const stateEl = item.querySelector(".state");
       if (found) {
@@ -557,7 +539,7 @@
       promptTargetEl.classList.remove("done");
       promptTargetEl.classList.add("target");
       const remaining = order.length - currentIndex;
-      setStatus(`Jöklar eftir: ${remaining}`, "");
+      setStatus(\`Jöklar eftir: \${remaining}\`, "");
     }
 
     function initOrder(randomize = true) {
@@ -586,7 +568,7 @@
         setPrompt();
       } else {
         target.classList.remove("shake");
-        void target.offsetWidth; // reset animation
+        void target.offsetWidth;
         target.classList.add("shake");
         setStatus("Ekki þessi jökull – prófaðu annan. ❄️", "err");
       }
