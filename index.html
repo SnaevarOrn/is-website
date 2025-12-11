@@ -335,142 +335,118 @@
         </div>
 
         <div class="map-wrapper">
-          <!-- Stílfært Ísland + jöklar á réttum stöðum -->
-          <svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="glacierGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#c6e7ff"/>
-                <stop offset="50%" stop-color="#8fd3f4"/>
-                <stop offset="100%" stop-color="#5aa9dd"/>
-              </linearGradient>
-            </defs>
+          <!-- Stílfært Ísland + jöklar á réttum <svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="glacierGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c6e7ff"/>
+      <stop offset="50%" stop-color="#8fd3f4"/>
+      <stop offset="100%" stop-color="#5aa9dd"/>
+    </linearGradient>
+  </defs>
 
-            <!-- Ísland -->
-            <path
-              class="island-outline"
-              d="M7,40
-                 C6,33 9,24 15,20
-                 C21,16 29,13 37,11
-                 C45,9 54,9 63,11
-                 C71,13 79,16 85,21
-                 C90,25 93,31 93,37
-                 C93,43 90,50 85,55
-                 C79,60 71,64 62,66
-                 C53,68 44,68 36,66
-                 C27,64 19,60 13,54
-                 C9,50 7,45 7,40 Z" />
+  <!-- Ísland – meira „kartöflu“-laga, með vestfjörðum, nesjum og skörpum hornum -->
+  <path
+    class="island-outline"
+    d="
+      M18,18
+      L12,24 13,30 18,33   <!-- Vestfirðir -->
+      L20,30 23,34 27,36   <!-- Snæfellsnes -->
+      L31,38 35,42 38,47   <!-- Vesturland/Suðvestur -->
+      L42,50 48,52 55,52   <!-- Suðurströnd -->
+      L62,51 69,51 76,49   <!-- Suðausturhorn -->
+      L82,45 86,39 88,34   <!-- Austurland -->
+      L87,30 83,26 79,23
+      L73,20 66,18 60,17   <!-- Norðaustur -->
+      L54,17 48,18 42,20
+      L36,21 30,21 24,20   <!-- Norðurland / inn í skaga -->
+      Z
+    " />
 
-            <!-- Drangajökull – norðvestur -->
-            <path
-              class="glacier"
-              data-id="drangajokull"
-              d="M21,27
-                 C23,25.5 25.8,24.6 28.6,24.7
-                 C30.7,24.8 32.9,25.4 34.5,26.5
-                 C36.1,27.6 37.1,29.1 37.4,30.6
-                 C37.8,32.5 37.3,34.4 36.1,35.9
-                 C34.8,37.4 32.8,38.5 30.6,39.2
-                 C28.4,39.9 25.9,40.1 23.9,39.7
-                 C21.9,39.3 20.2,38.3 19.3,37.1
-                 C18.4,35.9 18,34.4 18.2,33
-                 C18.5,31.4 19.3,28.8 21,27 Z" />
+  <!-- Drangajökull – stakur „pönnu“-flipi í norðvestur -->
+  <path
+    class="glacier"
+    data-id="drangajokull"
+    d="
+      M22,24
+      L26,23 30,24 33,26
+      L34,29 33,32 30,34
+      L26,35 23,34 21,31
+      L21,27 Z
+    " />
 
-            <!-- Snæfellsjökull – vestan á nesinu -->
-            <path
-              class="glacier"
-              data-id="snaefellsjokull"
-              d="M24,40.5
-                 C25.6,39.6 27.8,39.1 29.8,39.2
-                 C31.3,39.3 32.8,39.8 34,40.4
-                 C35.1,41.1 35.9,42 36.2,43
-                 C36.5,44.2 36.3,45.5 35.6,46.6
-                 C34.7,48 33.2,49.1 31.4,49.7
-                 C29.6,50.3 27.4,50.4 25.7,49.9
-                 C24,49.4 22.6,48.5 21.7,47.5
-                 C20.9,46.5 20.5,45.3 20.7,44.2
-                 C21,42.9 21.9,41.5 23.2,40.8
-                 C23.6,40.6 23.8,40.6 24,40.5 Z" />
+  <!-- Snæfellsjökull – enda á nesinu -->
+  <path
+    class="glacier"
+    data-id="snaefellsjokull"
+    d="
+      M26,37
+      L29,37 32,38 34,40
+      L34,42 33,44 31,45
+      L28,46 25,45 23,43
+      L23,40 Z
+    " />
 
-            <!-- Langjökull – miðn-háland, aðeins vestar -->
-            <path
-              class="glacier"
-              data-id="langjokull"
-              d="M37,30.5
-                 C40,29.4 43.8,29 47.1,29.4
-                 C49.4,29.7 51.7,30.5 53.4,31.8
-                 C55,33 56.1,34.7 55.9,36.4
-                 C55.7,38.6 54.2,40.7 52.1,42
-                 C50.1,43.2 47.3,44 44.5,43.9
-                 C41.7,43.8 39,42.8 37.2,41.6
-                 C35.6,40.5 34.5,39.1 34.1,37.6
-                 C33.7,36 34.1,34.2 35.1,32.9
-                 C35.7,32.1 36.3,31.2 37,30.5 Z" />
+  <!-- Langjökull – langur fleki á miðn-hálendi -->
+  <path
+    class="glacier"
+    data-id="langjokull"
+    d="
+      M37,28
+      L42,27 48,27 52,28
+      L55,30 56,33 54,36
+      L51,38 46,39 41,38
+      L38,36 36,33 36,30 Z
+    " />
 
-            <!-- Hofsjökull – aðeins austar en Langjökull -->
-            <path
-              class="glacier"
-              data-id="hofsjokull"
-              d="M47.5,34.5
-                 C49.9,33.4 52.6,33.1 55.1,33.5
-                 C56.8,33.8 58.4,34.6 59.6,35.6
-                 C60.7,36.6 61.4,38.1 61.3,39.5
-                 C61.2,41.4 60.1,43.3 58.4,44.6
-                 C56.8,45.9 54.4,46.7 52.1,47
-                 C49.8,47.3 47.5,46.9 45.8,46.1
-                 C44.1,45.3 42.7,44.1 41.9,42.8
-                 C41.1,41.5 40.9,40 41.3,38.7
-                 C41.7,37.4 42.6,36.1 44,35.2
-                 C45.1,34.4 46.3,34.1 47.5,34.5 Z" />
+  <!-- Hofsjökull – kringlóttari rétt austar -->
+  <path
+    class="glacier"
+    data-id="hofsjokull"
+    d="
+      M47,32
+      L50,31 54,31 57,33
+      L58,35 58,37 56,39
+      L53,40 49,40 46,39
+      L44,37 44,35 45,33 Z
+    " />
 
-            <!-- Vatnajökull – stór suðaustur -->
-            <path
-              class="glacier"
-              data-id="vatnajokull"
-              d="M56,42.5
-                 C61.2,40.5 68.2,39.8 73.8,41.0
-                 C77.1,41.8 80.1,43.4 82.1,45.6
-                 C83.9,47.7 84.7,50.4 84.1,52.8
-                 C83.3,56.1 80.7,59.0 77.1,60.9
-                 C73.5,62.8 68.8,63.7 64.3,63.6
-                 C59.8,63.5 55.5,62.5 52.1,60.9
-                 C49.3,59.6 47.1,57.7 45.9,55.8
-                 C44.7,53.9 44.5,51.7 45.3,49.8
-                 C46.3,47.5 48.3,45.7 51,44.4
-                 C52.7,43.6 54.3,43.1 56,42.5 Z" />
+  <!-- Vatnajökull – stór plata í suðaustri -->
+  <path
+    class="glacier"
+    data-id="vatnajokull"
+    d="
+      M55,40
+      L62,38 69,38 75,40
+      L79,43 81,46 80,50
+      L77,53 71,56 64,57
+      L57,56 51,54 48,51
+      L47,48 48,45 51,42 Z
+    " />
 
-            <!-- Mýrdalsjökull – suður, aðeins vestar en miðja Vatnajökuls -->
-            <path
-              class="glacier"
-              data-id="myrdalsjokull"
-              d="M49.5,52.5
-                 C52.2,51.4 55.5,51.0 58.4,51.2
-                 C60.5,51.3 62.7,51.9 64.4,52.9
-                 C66.1,53.9 67.4,55.4 67.8,56.8
-                 C68.2,58.2 67.8,59.8 66.9,60.9
-                 C65.6,62.6 63.3,63.8 60.7,64.4
-                 C58.1,65.0 55.1,65.0 52.6,64.4
-                 C50.1,63.8 48.0,62.6 46.6,61.3
-                 C45.6,60.3 44.8,59.1 44.5,57.9
-                 C44.2,56.7 44.4,55.3 45.2,54.3
-                 C46.2,53.1 47.6,53.1 49.5,52.5 Z" />
+  <!-- Mýrdalsjökull – breiður suðurblettur vestan við Vatnajökul -->
+  <path
+    class="glacier"
+    data-id="myrdalsjokull"
+    d="
+      M48,49
+      L52,48 57,48 61,49
+      L63,51 64,53 63,55
+      L60,57 55,58 50,57
+      L47,55 46,53 46,51 Z
+    " />
 
-            <!-- Eyjafjallajökull – vestan við Mýrdalsjökul -->
-            <path
-              class="glacier"
-              data-id="eyjafjallajokull"
-              d="M41.5,52
-                 C43.6,51.1 46.2,50.7 48.5,50.9
-                 C50.1,51.0 51.7,51.5 52.9,52.1
-                 C54.1,52.8 55,53.7 55.4,54.7
-                 C55.8,55.9 55.7,57.3 55.0,58.5
-                 C54.1,60.1 52.5,61.3 50.6,62.1
-                 C48.8,62.8 46.6,63.1 44.7,62.9
-                 C42.8,62.7 41.1,62.0 39.8,61.2
-                 C38.5,60.3 37.5,59.2 37.1,58.0
-                 C36.7,56.8 36.9,55.4 37.7,54.4
-                 C38.5,53.4 39.8,52.6 41.5,52 Z" />
-
-          </svg>
+  <!-- Eyjafjallajökull – örlítið vestar en Mýrdalsjökull -->
+  <path
+    class="glacier"
+    data-id="eyjafjallajokull"
+    d="
+      M40,49
+      L44,48 47,48 50,49
+      L51,51 51,53 49,55
+      L46,56 42,56 39,55
+      L38,53 38,51 39,50 Z
+    " />
+</svg>
         </div>
 
         <div id="status" class="status"></div>
