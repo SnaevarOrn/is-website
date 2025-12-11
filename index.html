@@ -344,31 +344,32 @@
               </linearGradient>
             </defs>
 
-            <!-- Ísland, stylized en „kartöflulaga“ með nesum -->
+            <!-- Ísland – stylized en með skýrari lögun -->
             <path
               class="island-outline"
-              d="M18 18
-                 L12 24 13 30 18 33
-                 L20 30 23 34 27 36
-                 L31 38 35 42 38 47
-                 L42 50 48 52 55 52
-                 L62 51 69 51 76 49
-                 L82 45 86 39 88 34
-                 L87 30 83 26 79 23
-                 L73 20 66 18 60 17
-                 L54 17 48 18 42 20
-                 L36 21 30 21 24 20
-                 Z" />
+              d="
+                M15 20
+                L10 24 11 29 14 32
+                L13 36 16 40 21 39
+                L24 41 28 43 31 46
+                L35 49 41 51 48 52
+                L55 52 62 51 69 50
+                L75 47 80 43 83 39
+                L85 35 84 31 81 28
+                L77 25 72 23 66 22
+                L60 21 54 21 48 22
+                L42 23 36 24 30 23
+                L25 22 20 21 Z" />
 
             <!-- Drangajökull -->
             <path
               class="glacier"
               data-id="drangajokull"
-              d="M22 24
-                 L26 23 30 24 33 26
-                 L34 29 33 32 30 34
-                 L26 35 23 34 21 31
-                 L21 27 Z" />
+              d="M21 24
+                 L25 23 29 24 32 26
+                 L33 29 32 32 29 34
+                 L25 35 22 34 20 31
+                 L20 27 Z" />
 
             <!-- Snæfellsjökull -->
             <path
@@ -481,7 +482,9 @@
       const a = arr.slice();
       for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
+        const tmp = a[i];
+        a[i] = a[j];
+        a[j] = tmp;
       }
       return a;
     }
@@ -496,17 +499,17 @@
         const li = document.createElement("li");
         li.className = "legend-item";
         li.dataset.id = jokull.id;
-        li.innerHTML = `
-          <div class="legend-dot"></div>
-          <span class="name">${idx + 1}. ${jokull.name}</span>
-          <span class="state">Ófundinn</span>
-        `;
+        li.innerHTML =
+          '<div class="legend-dot"></div>' +
+          '<span class="name">' + (idx + 1) + '. ' + jokull.name + '</span>' +
+          '<span class="state">Ófundinn</span>';
         legendListEl.appendChild(li);
       });
     }
 
     function updateLegendEntry(id, found) {
-      const item = legendListEl.querySelector(\`.legend-item[data-id="\${id}"]\`);
+      const selector = '.legend-item[data-id="' + id + '"]';
+      const item = legendListEl.querySelector(selector);
       if (!item) return;
       const stateEl = item.querySelector(".state");
       if (found) {
@@ -518,10 +521,11 @@
       }
     }
 
-    function setStatus(msg, type = "") {
+    function setStatus(msg, type) {
       statusEl.textContent = msg || "";
       statusEl.classList.remove("ok", "err");
-      if (type) statusEl.classList.add(type);
+      if (type === "ok") statusEl.classList.add("ok");
+      if (type === "err") statusEl.classList.add("err");
     }
 
     function setPrompt() {
@@ -539,10 +543,11 @@
       promptTargetEl.classList.remove("done");
       promptTargetEl.classList.add("target");
       const remaining = order.length - currentIndex;
-      setStatus(\`Jöklar eftir: \${remaining}\`, "");
+      setStatus("Jöklar eftir: " + remaining, "");
     }
 
-    function initOrder(randomize = true) {
+    function initOrder(randomize) {
+      if (randomize === undefined) randomize = true;
       order = randomize ? shuffle(JOKLAR) : JOKLAR.slice();
       currentIndex = 0;
       done = false;
@@ -568,15 +573,15 @@
         setPrompt();
       } else {
         target.classList.remove("shake");
-        void target.offsetWidth;
+        void target.offsetWidth; // reset animation
         target.classList.add("shake");
         setStatus("Ekki þessi jökull – prófaðu annan. ❄️", "err");
       }
     }
 
     glacierPaths.forEach(p => p.addEventListener("click", onGlacierClick));
-    btnRestart.addEventListener("click", () => initOrder(false));
-    btnRandom.addEventListener("click", () => initOrder(true));
+    btnRestart.addEventListener("click", function () { initOrder(false); });
+    btnRandom.addEventListener("click", function () { initOrder(true); });
 
     initOrder(true);
   </script>
