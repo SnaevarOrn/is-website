@@ -1,383 +1,488 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="is">
 <head>
-  <meta charset="UTF-8" />
-  <title>Giskaðu á jöklana – ís.is</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Jöklaleikur – ís.is</title>
+
   <style>
-    :root {
-      --bg: #0a1722;
-      --accent: #8fd3f4;
-      --accent-soft: #b8ecff;
-      --text: #e6f4ff;
-      --muted: #9bb3c9;
-      --error: #ff6b6b;
+    :root{
+      --bg0:#071019;
+      --bg1:#0b1620;
+      --card: rgba(10,20,30,.72);
+      --stroke: rgba(170,210,255,.55);
+      --text: rgba(235,245,255,.92);
+      --muted: rgba(235,245,255,.65);
+      --accent: rgba(120,200,255,.95);
+      --ok: rgba(140, 255, 220, .95);
+      --bad: rgba(255, 150, 150, .95);
+      --radius: 22px;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #18324a 0, var(--bg) 50%, #050b10 100%);
+
+    html, body{
+      margin:0;
+      padding:0;
+      background: radial-gradient(circle at top, #122433 0%, var(--bg1) 60%, var(--bg0) 100%);
       color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      overscroll-behavior: none;
     }
-    .app {
-      width: 100%;
-      max-width: 960px;
-      background: linear-gradient(145deg, rgba(16,31,44,0.96), rgba(7,14,21,0.98));
-      border-radius: 18px;
-      border: 1px solid rgba(143,211,244,0.25);
-      box-shadow:
-        0 20px 60px rgba(0,0,0,0.65),
-        0 0 40px rgba(143,211,244,0.18);
-      padding: 20px 20px 24px;
-      display: flex;
-      flex-direction: column;
+    body{ overflow-x:hidden; }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px 16px 32px;
+      position: relative;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 14px;
+    }
+
+    .back{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--text);
+      text-decoration:none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      user-select:none;
+    }
+    .back:active{ transform: translateY(1px); }
+
+    .badge{
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      letter-spacing: .12em;
+      font-size: 12px;
+      text-transform: uppercase;
+      user-select:none;
+    }
+
+    /* Hero */
+    .hero{
+      margin: 8px 0 14px;
+    }
+    h1{
+      margin: 8px 0 6px;
+      font-size: 28px;
+      letter-spacing: .02em;
+    }
+    .sub{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    /* Layout */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
       gap: 16px;
     }
-    header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-    .title-block { display:flex; flex-direction:column; gap:2px; }
-    h1 { font-size:1.4rem; margin:0; letter-spacing:.04em; text-transform:uppercase; }
-    .subtitle { margin:0; font-size:.9rem; color:var(--muted); }
-    .tag {
-      font-size: .75rem;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(143,211,244,0.4);
-      background: radial-gradient(circle at top left, rgba(184,236,255,0.2), rgba(8,20,30,0.9));
-      color: var(--accent-soft);
-      white-space: nowrap;
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
     }
-    .main { display:flex; gap:18px; flex-wrap:wrap; }
-    .map-card {
-      flex: 2 1 280px;
-      background: radial-gradient(circle at top, rgba(63,120,173,0.18), rgba(9,20,32,0.95));
-      border-radius: 16px;
-      padding: 12px 16px 16px;
-      border: 1px solid rgba(143,211,244,0.28);
-      display:flex; flex-direction:column; gap:10px;
+
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow:hidden;
     }
-    .info-card {
-      flex: 1 1 220px;
-      background: radial-gradient(circle at top, rgba(143,211,244,0.08), rgba(3,9,15,0.95));
-      border-radius: 16px;
-      padding: 12px 16px 16px;
-      border: 1px solid rgba(143,211,244,0.18);
-      display:flex; flex-direction:column; gap:10px;
+
+    .card-head{
+      padding: 16px 16px 0;
     }
-    .prompt-label {
-      font-size: .8rem;
-      text-transform: uppercase;
-      letter-spacing: .16em;
-      color: var(--muted);
-    }
-    .prompt-text {
-      font-size: 1.1rem;
-      font-weight: 600;
+
+    .now{
       display:flex;
       align-items:baseline;
-      gap:.4em;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
     }
-    .prompt-text span.target {
-      color: var(--accent-soft);
-      text-shadow: 0 0 8px rgba(184,236,255,0.6);
+    .now .label{
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
     }
-    .prompt-text span.done {
-      color: #7ce38b;
-      text-shadow: 0 0 8px rgba(124,227,139,0.7);
+    .target{
+      font-size: 22px;
+      margin: 6px 0 10px;
+    }
+    .hint{
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
     }
 
-    /* --- MAP STACK: PNG + SVG overlay --- */
-    .map-wrapper {
+    /* Map */
+    .map{
+      padding: 0 12px 14px;
+    }
+    .map-wrapper{
       position: relative;
       width: 100%;
-      padding-top: 70%;
-      border-radius: 14px;
+      aspect-ratio: 1600 / 1120;
+      border-radius: 18px;
       overflow: hidden;
-      background: radial-gradient(circle at center, #1a2938 0, #09131f 55%, #050b12 100%);
-      box-shadow:
-        inset 0 0 40px rgba(0,0,0,0.7),
-        0 0 40px rgba(143,211,244,0.25);
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.10);
     }
-    .map-bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      filter: drop-shadow(0 0 20px rgba(143,211,244,0.12));
-      user-select: none;
-      -webkit-user-drag: none;
-      pointer-events: none;
+    .map-bg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      filter: contrast(1.05) saturate(1.05);
+      opacity: .92;
+      user-select:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
     }
-    .map-glaciers {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+    svg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
     }
 
-    /* Glacier styling */
-    .glacier {
-      fill: rgba(219,231,242,0.90);
-      stroke: rgba(34,69,103,0.9);
-      stroke-width: 3;
+    .glacier{
+      fill: rgba(240, 250, 255, .92);
+      stroke: rgba(255,255,255,.25);
+      stroke-width: 2;
       cursor: pointer;
-      transition: filter 1.2s ease, fill 1.2s ease, transform .2s ease;
+      transition: transform .12s ease, fill .12s ease, opacity .12s ease;
+      transform-origin: center;
+      opacity: .92;
     }
-    .glacier:hover {
-      filter: drop-shadow(0 0 12px rgba(184,236,255,0.75));
-      transform: translateY(-1px);
+    .glacier:hover{ transform: scale(1.03); }
+    .glacier.found{
+      fill: rgba(140, 255, 220, .95);
+      opacity: .95;
+      cursor: default;
     }
-    .glacier.found {
-      fill: #8fd3f4;
-      filter:
-        drop-shadow(0 0 18px rgba(143,211,244,0.95))
-        drop-shadow(0 0 48px rgba(143,211,244,0.5));
-    }
-    .glacier.shake { animation: shake .55s ease; transform-origin:center; }
-    @keyframes shake {
-      10% { transform: translateX(-2px); }
-      20% { transform: translateX(2px); }
-      30% { transform: translateX(-2px); }
-      40% { transform: translateX(2px); }
-      50% { transform: translateX(-1px); }
-      60% { transform: translateX(1px); }
-      70% { transform: translateX(0); }
+    .glacier.wrong{
+      fill: rgba(255, 150, 150, .95);
+      opacity: .95;
     }
 
-    .status { font-size: .9rem; color: var(--muted); min-height: 1.2em; }
-    .status.ok { color:#7ce38b; }
-    .status.err { color: var(--error); }
-
-    .legend-title { font-size:.8rem; text-transform:uppercase; letter-spacing:.15em; color:var(--muted); }
-    .legend-list { list-style:none; padding:0; margin:4px 0 0; display:flex; flex-direction:column; gap:4px; font-size:.9rem; }
-    .legend-item { display:flex; align-items:center; gap:6px; color:var(--muted); }
-    .legend-dot { width:10px; height:10px; border-radius:999px; background: linear-gradient(135deg, #c6e7ff, #8fd3f4); opacity:.3; transition: opacity .4s ease; }
-    .legend-item.found .legend-dot { opacity:1; box-shadow: 0 0 8px rgba(143,211,244,0.8); }
-    .legend-item span.name { flex:1; }
-    .legend-item span.state { font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; }
-    .legend-item.found span.state { color:#7ce38b; }
-
-    .controls { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
-    button {
+    /* Right panel */
+    .panel{
+      padding: 16px;
+    }
+    .panel h2{
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: var(--muted);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .list{
+      display:grid;
+      gap: 8px;
+      margin: 0 0 14px;
+      padding: 0;
+      list-style: none;
+    }
+    .item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+    }
+    .name{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .dot{
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
-      border: 1px solid rgba(143,211,244,0.6);
-      background: radial-gradient(circle at top, rgba(184,236,255,0.22), rgba(2,9,16,0.98));
-      color: var(--accent-soft);
-      padding: 6px 14px;
-      font-size: .85rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: background .3s ease, transform .15s ease, box-shadow .3s ease;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 3px rgba(255,255,255,.04);
+      flex: 0 0 auto;
     }
-    button:hover {
-      background: radial-gradient(circle at top, rgba(184,236,255,0.32), rgba(3,10,18,0.98));
-      box-shadow: 0 0 18px rgba(143,211,244,0.6);
-      transform: translateY(-1px);
+    .item.found .dot{
+      background: var(--ok);
+      box-shadow: 0 0 0 3px rgba(140,255,220,.12);
     }
-    button:active { transform: translateY(0); box-shadow: 0 0 10px rgba(143,211,244,0.4); }
+    .item span{
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .status{
+      color: var(--muted);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 12px;
+      flex: 0 0 auto;
+    }
+    .item.found .status{ color: rgba(140,255,220,.9); }
 
-    .hint { font-size:.8rem; color:var(--muted); margin-top:2px; }
-    footer { margin-top:4px; font-size:.75rem; color:var(--muted); display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
-    @media (max-width: 640px) {
-      .app { padding: 16px 14px 18px; }
-      h1 { font-size: 1.1rem; }
-      .prompt-text { font-size: 1rem; }
+    .btnrow{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      user-select:none;
+    }
+    button:active{ transform: translateY(1px); }
+
+    .footer{
+      margin-top: 14px;
+      color: rgba(235,245,255,.45);
+      font-size: 13px;
+      text-align:center;
+    }
+
+    .done{
+      color: rgba(140,255,220,.95);
     }
   </style>
 </head>
+
 <body>
-  <div class="app">
-    <header>
-      <div class="title-block">
-        <h1>Giskaðu á jöklana</h1>
-        <p class="subtitle">Smelltu á réttan jökul á Íslandskortinu.</p>
-      </div>
-      <div class="tag">ís.is · prótótýpa</div>
-    </header>
-
-    <div class="main">
-      <section class="map-card">
-        <div class="prompt-label">Núverandi verkefni</div>
-        <div class="prompt-text">
-          <span id="prompt-prefix">Finndu:</span>
-          <span id="prompt-target" class="target">—</span>
-        </div>
-
-        <div class="map-wrapper">
-          <img class="map-bg" src="assets/iceland_v2.png" alt="Ísland" />
-          <!-- Inline SVG overlay (also provided as assets/glaciers.svg) -->
-          <svg class="map-glaciers" viewBox="0 0 1600 1120" xmlns="http://www.w3.org/2000/svg">
-            <ellipse class="glacier" data-id="drangajokull" cx="400" cy="220" rx="50" ry="50" />
-            <ellipse class="glacier" data-id="snaefellsjokull" cx="200" cy="625" rx="40" ry="40" />
-            <ellipse class="glacier" data-id="langjokull" cx="652" cy="655" rx="90" ry="55" />
-            <ellipse class="glacier" data-id="hofsjokull" cx="840" cy="600" rx="65" ry="55" />
-            <ellipse class="glacier" data-id="myrdalsjokull" cx="800" cy="920" rx="65" ry="45" />
-            <ellipse class="glacier" data-id="eyjafjallajokull" cx="680" cy="930" rx="55" ry="35" />
-            <ellipse class="glacier" data-id="vatnajokull" cx="1070" cy="750" rx="140" ry="110" />
-          </svg>
-        </div>
-
-        <div id="status" class="status"></div>
-      </section>
-
-      <aside class="info-card">
-        <div class="legend-title">Jöklar í leiknum</div>
-        <ul class="legend-list" id="legend-list"></ul>
-
-        <div class="controls">
-          <button id="btn-restart" type="button">🔄 Spila aftur</button>
-          <button id="btn-randomize" type="button">🎲 Ný röðun</button>
-        </div>
-
-        <p class="hint">Smelltu á jökla til að finna þá.</p>
-      </aside>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="back" href="../index.html" aria-label="Tilbaka á forsíðu">
+        ← Tilbaka á forsíðu
+      </a>
+      <div class="badge">ís.is · prótótýpa</div>
     </div>
 
-    <footer>
-      <span>Prótótýpa fyrir ís.is – jöklaleik.</span>
-      <span>Engar vafrakökur, bara ís.</span>
-    </footer>
+    <div class="hero">
+      <h1>Giskaðu á jöklana</h1>
+      <p class="sub">Finndu jökulinn sem er beðinn um — með því að smella á kortið.</p>
+    </div>
+
+    <div class="grid">
+      <!-- Left: map -->
+      <section class="card">
+        <div class="card-head">
+          <div class="now">
+            <div>
+              <div class="label">Núverandi verkefni</div>
+              <div class="target">Finndu: <span id="targetName">—</span></div>
+              <p class="hint" id="hintText">Smelltu á jökul á kortinu.</p>
+            </div>
+            <div class="label">Eftir: <span id="remaining">—</span></div>
+          </div>
+        </div>
+
+        <div class="map">
+          <div class="map-wrapper" aria-label="Íslandskort með jöklum">
+            <img class="map-bg" src="assets/iceland_v2.png" alt="Ísland" />
+
+            <!-- SVG overlay (updated positions as per your screenshot) -->
+            <svg id="mapGlaciers" viewBox="0 0 1600 1120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <ellipse class="glacier" data-id="drangajokull"    cx="400"  cy="220" rx="50"  ry="50" />
+              <ellipse class="glacier" data-id="snaefellsjokull" cx="200"  cy="625" rx="40"  ry="40" />
+              <ellipse class="glacier" data-id="langjokull"      cx="652"  cy="655" rx="90"  ry="55" />
+              <ellipse class="glacier" data-id="hofsjokull"      cx="840"  cy="600" rx="65"  ry="55" />
+              <ellipse class="glacier" data-id="myrdalsjokull"   cx="800"  cy="920" rx="65"  ry="45" />
+              <ellipse class="glacier" data-id="eyjafjallajokull"cx="680"  cy="930" rx="55"  ry="35" />
+              <ellipse class="glacier" data-id="vatnajokull"     cx="1070" cy="750" rx="140" ry="110" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: list / controls -->
+      <aside class="card">
+        <div class="panel">
+          <h2>Jöklar í leiknum</h2>
+          <ul class="list" id="glacierList"></ul>
+
+          <div class="btnrow">
+            <button id="restartBtn" type="button">Spila aftur</button>
+            <button id="shuffleBtn" type="button">Ný röðun</button>
+          </div>
+
+          <div class="footer" id="footerText">
+            Prótótýpa fyrir ís.is — jöklaleikur. Engar vafrakökur, bara ís.
+          </div>
+        </div>
+      </aside>
+    </div>
   </div>
 
   <script>
-    const JOKLAR = [
-      { id: "vatnajokull", name: "Vatnajökull" },
-      { id: "langjokull", name: "Langjökull" },
-      { id: "hofsjokull", name: "Hofsjökull" },
-      { id: "myrdalsjokull", name: "Mýrdalsjökull" },
-      { id: "eyjafjallajokull", name: "Eyjafjallajökull" },
-      { id: "drangajokull", name: "Drangajökull" },
-      { id: "snaefellsjokull", name: "Snæfellsjökull" }
+    const GLACIERS = [
+      { id: "langjokull",       name: "Langjökull" },
+      { id: "drangajokull",     name: "Drangajökull" },
+      { id: "hofsjokull",       name: "Hofsjökull" },
+      { id: "vatnajokull",      name: "Vatnajökull" },
+      { id: "snaefellsjokull",  name: "Snæfellsjökull" },
+      { id: "myrdalsjokull",    name: "Mýrdalsjökull" },
+      { id: "eyjafjallajokull", name: "Eyjafjallajökull" }
     ];
 
-    const promptTargetEl = document.getElementById("prompt-target");
-    const statusEl = document.getElementById("status");
-    const legendListEl = document.getElementById("legend-list");
-    const btnRestart = document.getElementById("btn-restart");
-    const btnRandom = document.getElementById("btn-randomize");
-    const glacierEls = Array.from(document.querySelectorAll(".glacier"));
+    const els = {
+      targetName: document.getElementById("targetName"),
+      remaining: document.getElementById("remaining"),
+      list: document.getElementById("glacierList"),
+      footer: document.getElementById("footerText"),
+      restart: document.getElementById("restartBtn"),
+      shuffle: document.getElementById("shuffleBtn"),
+      map: document.getElementById("mapGlaciers")
+    };
 
     let order = [];
-    let currentIndex = 0;
-    let done = false;
+    let index = 0;
+    const found = new Set();
 
-    function shuffle(arr) {
-      const a = arr.slice();
-      for (let i = a.length - 1; i > 0; i--) {
+    function shuffle(arr){
+      for(let i = arr.length - 1; i > 0; i--){
         const j = Math.floor(Math.random() * (i + 1));
-        const tmp = a[i];
-        a[i] = a[j];
-        a[j] = tmp;
+        [arr[i], arr[j]] = [arr[j], arr[i]];
       }
-      return a;
+      return arr;
     }
 
-    function resetGlaciers() {
-      glacierEls.forEach(p => p.classList.remove("found", "shake"));
-    }
-
-    function rebuildLegend() {
-      legendListEl.innerHTML = "";
-      order.forEach((jokull, idx) => {
+    function buildList(){
+      els.list.innerHTML = "";
+      for(const g of GLACIERS){
         const li = document.createElement("li");
-        li.className = "legend-item";
-        li.dataset.id = jokull.id;
-        li.innerHTML =
-          '<div class="legend-dot"></div>' +
-          '<span class="name">' + (idx + 1) + '. ' + jokull.name + '</span>' +
-          '<span class="state">Ófundinn</span>';
-        legendListEl.appendChild(li);
-      });
-    }
-
-    function updateLegendEntry(id, found) {
-      const selector = '.legend-item[data-id="' + id + '"]';
-      const item = legendListEl.querySelector(selector);
-      if (!item) return;
-      const stateEl = item.querySelector(".state");
-      if (found) {
-        item.classList.add("found");
-        if (stateEl) stateEl.textContent = "Fundinn";
-      } else {
-        item.classList.remove("found");
-        if (stateEl) stateEl.textContent = "Ófundinn";
+        li.className = "item";
+        li.dataset.id = g.id;
+        li.innerHTML = `
+          <div class="name">
+            <span class="dot" aria-hidden="true"></span>
+            <span>${g.name}</span>
+          </div>
+          <div class="status">Ófundinn</div>
+        `;
+        els.list.appendChild(li);
       }
     }
 
-    function setStatus(msg, type) {
-      statusEl.textContent = msg || "";
-      statusEl.classList.remove("ok", "err");
-      if (type === "ok") statusEl.classList.add("ok");
-      if (type === "err") statusEl.classList.add("err");
+    function setListFound(id){
+      const li = els.list.querySelector(`.item[data-id="${id}"]`);
+      if(!li) return;
+      li.classList.add("found");
+      li.querySelector(".status").textContent = "Fundinn";
     }
 
-    function setPrompt() {
-      if (currentIndex >= order.length) {
-        done = true;
-        promptTargetEl.textContent = "Allir jöklar fundnir!";
-        promptTargetEl.classList.remove("target");
-        promptTargetEl.classList.add("done");
-        setStatus("Vel gert! Þú fannst alla jöklana. ✨", "ok");
+    function setEllipseFound(id){
+      const el = els.map.querySelector(`.glacier[data-id="${id}"]`);
+      if(el) el.classList.add("found");
+    }
+
+    function setTarget(){
+      // Move index forward until we find a non-found target
+      while(index < order.length && found.has(order[index].id)) index++;
+
+      const remaining = GLACIERS.length - found.size;
+      els.remaining.textContent = remaining;
+
+      if(index >= order.length){
+        els.targetName.textContent = "Allir fundnir ✨";
+        els.targetName.parentElement.classList.add("done");
+        els.footer.innerHTML = `<span class="done">Klárað!</span> Ýttu á “Spila aftur” eða “Ný röðun”.`;
         return;
       }
-      done = false;
-      const current = order[currentIndex];
-      promptTargetEl.textContent = current.name;
-      promptTargetEl.classList.remove("done");
-      promptTargetEl.classList.add("target");
-      const remaining = order.length - currentIndex;
-      setStatus("Jöklar eftir: " + remaining, "");
+
+      els.targetName.parentElement.classList.remove("done");
+      els.targetName.textContent = order[index].name;
+      els.footer.textContent = "Prótótýpa fyrir ís.is — jöklaleikur. Engar vafrakökur, bara ís.";
     }
 
-    function initOrder(randomize) {
-      if (randomize === undefined) randomize = true;
-      order = randomize ? shuffle(JOKLAR) : JOKLAR.slice();
-      currentIndex = 0;
-      done = false;
-      resetGlaciers();
-      rebuildLegend();
-      setPrompt();
+    function resetGame({ reshuffle = false } = {}){
+      found.clear();
+      index = 0;
+
+      // Reset visuals
+      els.map.querySelectorAll(".glacier").forEach(e => e.classList.remove("found", "wrong"));
+      els.list.querySelectorAll(".item").forEach(li => {
+        li.classList.remove("found");
+        li.querySelector(".status").textContent = "Ófundinn";
+      });
+
+      order = GLACIERS.slice();
+      if(reshuffle) shuffle(order);
+
+      setTarget();
     }
 
-    function onGlacierClick(e) {
-      const target = e.currentTarget;
-      const clickedId = target.getAttribute("data-id");
-      if (!clickedId || done) return;
+    function flashWrong(el){
+      el.classList.add("wrong");
+      setTimeout(() => el.classList.remove("wrong"), 250);
+    }
 
-      const current = order[currentIndex];
-      if (!current) return;
+    function onGlacierClick(e){
+      const el = e.target.closest(".glacier");
+      if(!el) return;
 
-      if (clickedId === current.id) {
-        target.classList.remove("shake");
-        target.classList.add("found");
-        updateLegendEntry(clickedId, true);
-        currentIndex++;
-        setStatus("Rétt! 👌", "ok");
-        setPrompt();
+      const id = el.dataset.id;
+
+      // Ignore already found
+      if(found.has(id) || el.classList.contains("found")) return;
+
+      // If game done, ignore
+      if(index >= order.length) return;
+
+      const target = order[index].id;
+
+      if(id === target){
+        found.add(id);
+        setEllipseFound(id);
+        setListFound(id);
+        index++;
+        setTarget();
       } else {
-        target.classList.remove("shake");
-        void target.offsetWidth;
-        target.classList.add("shake");
-        setStatus("Ekki þessi jökull – prófaðu annan. ❄️", "err");
+        flashWrong(el);
       }
     }
 
-    glacierEls.forEach(p => p.addEventListener("click", onGlacierClick));
-    btnRestart.addEventListener("click", function () { initOrder(false); });
-    btnRandom.addEventListener("click", function () { initOrder(true); });
+    // Init
+    buildList();
+    order = shuffle(GLACIERS.slice());
+    setTarget();
 
-    initOrder(true);
+    els.map.addEventListener("click", onGlacierClick);
+    els.restart.addEventListener("click", () => resetGame({ reshuffle: false }));
+    els.shuffle.addEventListener("click", () => resetGame({ reshuffle: true }));
   </script>
 </body>
 </html>
