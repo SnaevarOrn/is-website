@@ -11,10 +11,8 @@
       --bg0:#071019;
       --bg1:#0b1620;
       --card: rgba(10,20,30,.72);
-      --stroke: rgba(170,210,255,.55);
       --text: rgba(235,245,255,.92);
       --muted: rgba(235,245,255,.65);
-      --accent: rgba(120,200,255,.95);
       --ok: rgba(140, 255, 220, .95);
       --bad: rgba(255, 150, 150, .95);
       --radius: 22px;
@@ -38,7 +36,6 @@
       position: relative;
     }
 
-    /* Top bar */
     .topbar{
       display:flex;
       align-items:center;
@@ -76,30 +73,16 @@
       user-select:none;
     }
 
-    /* Hero */
-    .hero{
-      margin: 8px 0 14px;
-    }
-    h1{
-      margin: 8px 0 6px;
-      font-size: 28px;
-      letter-spacing: .02em;
-    }
-    .sub{
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.35;
-    }
+    .hero{ margin: 8px 0 14px; }
+    h1{ margin: 8px 0 6px; font-size: 28px; letter-spacing: .02em; }
+    .sub{ margin: 0; color: var(--muted); line-height: 1.35; }
 
-    /* Layout */
     .grid{
       display:grid;
       grid-template-columns: 1.15fr .85fr;
       gap: 16px;
     }
-    @media (max-width: 900px){
-      .grid{ grid-template-columns: 1fr; }
-    }
+    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
 
     .card{
       background: var(--card);
@@ -111,9 +94,7 @@
       overflow:hidden;
     }
 
-    .card-head{
-      padding: 16px 16px 0;
-    }
+    .card-head{ padding: 16px 16px 0; }
 
     .now{
       display:flex;
@@ -122,21 +103,32 @@
       gap:10px;
       flex-wrap:wrap;
     }
-    .now .label{
+    .label{
       color: var(--muted);
       font-size: 12px;
       letter-spacing: .18em;
       text-transform: uppercase;
     }
-    .target{
-      font-size: 22px;
-      margin: 6px 0 10px;
+    .target{ font-size: 22px; margin: 6px 0 10px; }
+
+    .kpis{
+      display:flex;
+      gap: 12px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:baseline;
+    }
+    .kpi{
+      display:flex;
+      gap:8px;
+      align-items:baseline;
+    }
+    .kpi b{
+      font-size: 18px;
+      letter-spacing: .02em;
     }
 
-    /* Map */
-    .map{
-      padding: 0 12px 14px;
-    }
+    .map{ padding: 0 12px 14px; }
     .map-wrapper{
       position: relative;
       width: 100%;
@@ -147,23 +139,15 @@
       border: 1px solid rgba(255,255,255,.10);
     }
     .map-bg{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
+      position:absolute; inset:0;
+      width:100%; height:100%;
       object-fit: cover;
-      filter: contrast(1.05) saturate(1.05);
       opacity: .92;
       user-select:none;
       -webkit-user-drag:none;
       pointer-events:none;
     }
-    svg{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-    }
+    svg{ position:absolute; inset:0; width:100%; height:100%; }
 
     .glacier{
       fill: rgba(240, 250, 255, .92);
@@ -185,10 +169,7 @@
       opacity: .95;
     }
 
-    /* Right panel */
-    .panel{
-      padding: 16px;
-    }
+    .panel{ padding: 16px; }
     .panel h2{
       margin: 0 0 10px;
       font-size: 16px;
@@ -220,8 +201,7 @@
       min-width: 0;
     }
     .dot{
-      width: 10px;
-      height: 10px;
+      width: 10px; height: 10px;
       border-radius: 999px;
       background: rgba(255,255,255,.25);
       box-shadow: 0 0 0 3px rgba(255,255,255,.04);
@@ -245,11 +225,7 @@
     }
     .item.found .status{ color: rgba(140,255,220,.9); }
 
-    .btnrow{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .btnrow{ display:flex; gap: 10px; flex-wrap: wrap; }
     button{
       appearance:none;
       border: 1px solid rgba(255,255,255,.12);
@@ -270,19 +246,14 @@
       font-size: 13px;
       text-align:center;
     }
-
-    .done{
-      color: rgba(140,255,220,.95);
-    }
+    .done{ color: rgba(140,255,220,.95); }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <div class="topbar">
-      <a class="back" href="../index.html" aria-label="Tilbaka á forsíðu">
-        ← Tilbaka á forsíðu
-      </a>
+      <a class="back" href="../index.html" aria-label="Tilbaka á forsíðu">← Tilbaka á forsíðu</a>
       <div class="badge">ís.is · prótótýpa</div>
     </div>
 
@@ -292,7 +263,6 @@
     </div>
 
     <div class="grid">
-      <!-- Left: map -->
       <section class="card">
         <div class="card-head">
           <div class="now">
@@ -300,7 +270,12 @@
               <div class="label">Núverandi verkefni</div>
               <div class="target">Finndu: <span id="targetName">—</span></div>
             </div>
-            <div class="label">Eftir: <span id="remaining">—</span></div>
+
+            <div class="kpis">
+              <div class="kpi"><span class="label">Eftir</span> <b id="remaining">—</b></div>
+              <div class="kpi"><span class="label">Stig</span> <b id="score">0</b></div>
+              <div class="kpi"><span class="label">Best</span> <b id="best">0</b></div>
+            </div>
           </div>
         </div>
 
@@ -308,7 +283,7 @@
           <div class="map-wrapper" aria-label="Íslandskort með jöklum">
             <img class="map-bg" src="assets/iceland_v2.png" alt="Ísland" />
 
-            <!-- SVG overlay (updated positions as per your screenshot) -->
+            <!-- SVG overlay (positions per your screenshot) -->
             <svg id="mapGlaciers" viewBox="0 0 1600 1120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <ellipse class="glacier" data-id="drangajokull"     cx="400"  cy="220" rx="50"  ry="50" />
               <ellipse class="glacier" data-id="snaefellsjokull"  cx="200"  cy="625" rx="40"  ry="40" />
@@ -322,7 +297,6 @@
         </div>
       </section>
 
-      <!-- Right: list / controls -->
       <aside class="card">
         <div class="panel">
           <h2>Jöklar í leiknum</h2>
@@ -355,6 +329,8 @@
     const els = {
       targetName: document.getElementById("targetName"),
       remaining: document.getElementById("remaining"),
+      score: document.getElementById("score"),
+      best: document.getElementById("best"),
       list: document.getElementById("glacierList"),
       footer: document.getElementById("footerText"),
       restart: document.getElementById("restartBtn"),
@@ -362,9 +338,26 @@
       map: document.getElementById("mapGlaciers")
     };
 
+    // Game state
     let order = [];
     let index = 0;
     const found = new Set();
+
+    // Scoring
+    let score = 0;
+    let streak = 0;
+    const BEST_KEY = "is.is_glacier_best";
+
+    function loadBest(){
+      const v = Number(localStorage.getItem(BEST_KEY) || 0);
+      return Number.isFinite(v) ? v : 0;
+    }
+    function saveBest(v){
+      localStorage.setItem(BEST_KEY, String(v));
+    }
+
+    let best = loadBest();
+    els.best.textContent = best;
 
     function shuffle(arr){
       for(let i = arr.length - 1; i > 0; i--){
@@ -392,28 +385,48 @@
     }
 
     function setListFound(id){
-      const li = els.list.querySelector(\`.item[data-id="\${id}"]\`);
+      const li = els.list.querySelector(`.item[data-id="${id}"]`);
       if(!li) return;
       li.classList.add("found");
       li.querySelector(".status").textContent = "Fundinn";
     }
 
     function setEllipseFound(id){
-      const el = els.map.querySelector(\`.glacier[data-id="\${id}"]\`);
+      const el = els.map.querySelector(`.glacier[data-id="${id}"]`);
       if(el) el.classList.add("found");
     }
 
-    function setTarget(){
-      while(index < order.length && found.has(order[index].id)) index++;
+    function updateScoreUI(){
+      els.score.textContent = score;
+      if(score > best){
+        best = score;
+        els.best.textContent = best;
+        saveBest(best);
+      }
+    }
 
-      const remaining = GLACIERS.length - found.size;
+    // ✅ Robust target setter (fixes "Finndu: —")
+    function setTarget(){
+      const remaining = order.length - found.size;
       els.remaining.textContent = remaining;
 
-      if(index >= order.length){
+      if(remaining <= 0){
         els.targetName.textContent = "Allir fundnir ✨";
         els.targetName.parentElement.classList.add("done");
-        els.footer.innerHTML = \`<span class="done">Klárað!</span> Ýttu á “Spila aftur” eða “Ný röðun”.\`;
+        els.footer.innerHTML =
+          `<span class="done">Klárað!</span> Stig: <b>${score}</b>. Ýttu á “Spila aftur” eða “Ný röðun”.`;
         return;
+      }
+
+      // Clamp index
+      if(index < 0 || index >= order.length) index = 0;
+
+      // Skip already-found entries
+      let guard = 0;
+      while(found.has(order[index].id) && guard < order.length){
+        index++;
+        if(index >= order.length) index = 0;
+        guard++;
       }
 
       els.targetName.parentElement.classList.remove("done");
@@ -425,13 +438,16 @@
       found.clear();
       index = 0;
 
+      // Keep score on restart? (we reset it)
+      score = 0;
+      streak = 0;
+      updateScoreUI();
+
       order = GLACIERS.slice();
       if(reshuffle) shuffle(order);
 
-      // Rebuild list in the current order
       buildList(order);
 
-      // Reset map visuals
       els.map.querySelectorAll(".glacier").forEach(e => e.classList.remove("found", "wrong"));
 
       setTarget();
@@ -442,6 +458,19 @@
       setTimeout(() => el.classList.remove("wrong"), 250);
     }
 
+    function awardCorrect(){
+      // +10, plus +2 per streak (0,2,4,6...)
+      score += 10 + (streak * 2);
+      streak++;
+      updateScoreUI();
+    }
+
+    function penalizeWrong(){
+      score = Math.max(0, score - 2);
+      streak = 0;
+      updateScoreUI();
+    }
+
     function onGlacierClick(e){
       const el = e.target.closest(".glacier");
       if(!el) return;
@@ -449,29 +478,49 @@
       const id = el.dataset.id;
 
       if(found.has(id) || el.classList.contains("found")) return;
-      if(index >= order.length) return;
+      if(order.length === 0) return;
 
-      const target = order[index].id;
+      const remaining = order.length - found.size;
+      if(remaining <= 0) return;
 
-      if(id === target){
+      const targetId = order[index]?.id;
+      if(!targetId){
+        // Safety net: recover gracefully
+        index = 0;
+        setTarget();
+        return;
+      }
+
+      if(id === targetId){
         found.add(id);
         setEllipseFound(id);
         setListFound(id);
+        awardCorrect();
+        // advance (setTarget will also guard/skip)
         index++;
         setTarget();
       } else {
         flashWrong(el);
+        penalizeWrong();
       }
     }
 
     // Init
     order = shuffle(GLACIERS.slice());
     buildList(order);
+    updateScoreUI();
     setTarget();
 
     els.map.addEventListener("click", onGlacierClick);
-    els.restart.addEventListener("click", () => resetGame({ reshuffle: false }));
-    els.shuffle.addEventListener("click", () => resetGame({ reshuffle: true }));
+    els.restart.addEventListener("click", () => {
+      // "Spila aftur" = restart same order
+      // (we rebuild list in same order and reset score)
+      resetGame({ reshuffle: false });
+    });
+    els.shuffle.addEventListener("click", () => {
+      // "Ný röðun" = new order + reset score
+      resetGame({ reshuffle: true });
+    });
   </script>
 </body>
 </html>
