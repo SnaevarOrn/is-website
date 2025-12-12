@@ -4,26 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is</title>
+
   <style>
     :root {
-      --ice-blue: #cfefff;
+      --ice-light: #e6f6ff;
+      --ice-blue: #bfe9ff;
       --deep-blue: #0b2a3d;
       --glow: rgba(180, 230, 255, 0.6);
     }
 
     * {
       box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     body {
-      margin: 0;
-      height: 100vh;
-      background: radial-gradient(circle at top, #1b4f72, #081823 70%);
-      color: white;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: radial-gradient(circle at top, #1b4f72, #081823 70%);
+      color: #ffffff;
       overflow: hidden;
     }
 
@@ -33,14 +37,14 @@
       border-radius: 20px;
       background: rgba(255, 255, 255, 0.04);
       backdrop-filter: blur(10px);
-      box-shadow: 0 0 40px rgba(0,0,0,0.4);
-      animation: fadeIn 1.2s ease-out forwards;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+      animation: fadeIn 1s ease-out forwards;
     }
 
     h1 {
       font-size: clamp(2.5rem, 6vw, 4rem);
-      margin: 0 0 1rem;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
     }
 
     p {
@@ -50,19 +54,19 @@
     }
 
     .btn {
+      display: inline-block;
       padding: 1rem 2.8rem;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       border-radius: 999px;
-      border: none;
-      cursor: pointer;
+      text-decoration: none;
       color: var(--deep-blue);
-      background: linear-gradient(135deg, white, var(--ice-blue));
+      background: linear-gradient(135deg, #ffffff, var(--ice-blue));
       box-shadow: 0 0 25px var(--glow);
       transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
     .btn:hover {
-      transform: scale(1.06);
+      transform: scale(1.05);
       box-shadow: 0 0 45px var(--glow);
     }
 
@@ -75,14 +79,15 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* subtle drifting frost particles */
+    /* subtle frost particles */
     .particle {
       position: absolute;
       width: 6px;
       height: 6px;
-      background: rgba(255,255,255,0.25);
+      background: rgba(255, 255, 255, 0.25);
       border-radius: 50%;
       animation: float linear infinite;
+      pointer-events: none;
     }
 
     @keyframes float {
@@ -91,19 +96,16 @@
     }
   </style>
 </head>
-<body>
 
-  <div class="container">
+<body>
+  <main class="container">
     <h1>ÍS</h1>
     <p>Smelltu til að kanna jöklana á Íslandi</p>
-    <!-- Breyttu href í slóðina á jöklaleikinn -->
-    <button class="btn" onclick="location.href='joklaleikur.html'">
-      Opna jöklaleik ❄️
-    </button>
-  </div>
+    <a href="/spil/" class="btn">Opna jöklaleik ❄️</a>
+  </main>
 
   <script>
-    // create gentle ice particles
+    // decorative frost particles (non-critical)
     for (let i = 0; i < 25; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
@@ -113,6 +115,5 @@
       document.body.appendChild(p);
     }
   </script>
-
 </body>
 </html>
