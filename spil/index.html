@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
-  <title>Jöklaleikur – ís.is</title>
+  <title>Kortlagning jökla – ís.is</title>
 
   <style>
     :root{
@@ -131,11 +131,6 @@
     .target{
       font-size: 22px;
       margin: 6px 0 10px;
-    }
-    .hint{
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-size: 14px;
     }
 
     /* Map */
@@ -292,8 +287,8 @@
     </div>
 
     <div class="hero">
-      <h1>Giskaðu á jöklana</h1>
-      <p class="sub">Finndu jökulinn sem er beðinn um — með því að smella á kortið.</p>
+      <h1>Kortlagning jökla</h1>
+      <p class="sub">Staðsettu jökulinn með því að smella á kortið.</p>
     </div>
 
     <div class="grid">
@@ -304,7 +299,6 @@
             <div>
               <div class="label">Núverandi verkefni</div>
               <div class="target">Finndu: <span id="targetName">—</span></div>
-              <p class="hint" id="hintText">Smelltu á jökul á kortinu.</p>
             </div>
             <div class="label">Eftir: <span id="remaining">—</span></div>
           </div>
@@ -316,13 +310,13 @@
 
             <!-- SVG overlay (updated positions as per your screenshot) -->
             <svg id="mapGlaciers" viewBox="0 0 1600 1120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <ellipse class="glacier" data-id="drangajokull"    cx="400"  cy="220" rx="50"  ry="50" />
-              <ellipse class="glacier" data-id="snaefellsjokull" cx="200"  cy="625" rx="40"  ry="40" />
-              <ellipse class="glacier" data-id="langjokull"      cx="652"  cy="655" rx="90"  ry="55" />
-              <ellipse class="glacier" data-id="hofsjokull"      cx="840"  cy="600" rx="65"  ry="55" />
-              <ellipse class="glacier" data-id="myrdalsjokull"   cx="800"  cy="920" rx="65"  ry="45" />
-              <ellipse class="glacier" data-id="eyjafjallajokull"cx="680"  cy="930" rx="55"  ry="35" />
-              <ellipse class="glacier" data-id="vatnajokull"     cx="1070" cy="750" rx="140" ry="110" />
+              <ellipse class="glacier" data-id="drangajokull"     cx="400"  cy="220" rx="50"  ry="50" />
+              <ellipse class="glacier" data-id="snaefellsjokull"  cx="200"  cy="625" rx="40"  ry="40" />
+              <ellipse class="glacier" data-id="langjokull"       cx="652"  cy="655" rx="90"  ry="55" />
+              <ellipse class="glacier" data-id="hofsjokull"       cx="840"  cy="600" rx="65"  ry="55" />
+              <ellipse class="glacier" data-id="myrdalsjokull"    cx="800"  cy="920" rx="65"  ry="45" />
+              <ellipse class="glacier" data-id="eyjafjallajokull" cx="680"  cy="930" rx="55"  ry="35" />
+              <ellipse class="glacier" data-id="vatnajokull"      cx="1070" cy="750" rx="140" ry="110" />
             </svg>
           </div>
         </div>
@@ -380,9 +374,9 @@
       return arr;
     }
 
-    function buildList(){
+    function buildList(listData){
       els.list.innerHTML = "";
-      for(const g of GLACIERS){
+      for(const g of listData){
         const li = document.createElement("li");
         li.className = "item";
         li.dataset.id = g.id;
@@ -398,19 +392,18 @@
     }
 
     function setListFound(id){
-      const li = els.list.querySelector(`.item[data-id="${id}"]`);
+      const li = els.list.querySelector(\`.item[data-id="\${id}"]\`);
       if(!li) return;
       li.classList.add("found");
       li.querySelector(".status").textContent = "Fundinn";
     }
 
     function setEllipseFound(id){
-      const el = els.map.querySelector(`.glacier[data-id="${id}"]`);
+      const el = els.map.querySelector(\`.glacier[data-id="\${id}"]\`);
       if(el) el.classList.add("found");
     }
 
     function setTarget(){
-      // Move index forward until we find a non-found target
       while(index < order.length && found.has(order[index].id)) index++;
 
       const remaining = GLACIERS.length - found.size;
@@ -419,7 +412,7 @@
       if(index >= order.length){
         els.targetName.textContent = "Allir fundnir ✨";
         els.targetName.parentElement.classList.add("done");
-        els.footer.innerHTML = `<span class="done">Klárað!</span> Ýttu á “Spila aftur” eða “Ný röðun”.`;
+        els.footer.innerHTML = \`<span class="done">Klárað!</span> Ýttu á “Spila aftur” eða “Ný röðun”.\`;
         return;
       }
 
@@ -432,15 +425,14 @@
       found.clear();
       index = 0;
 
-      // Reset visuals
-      els.map.querySelectorAll(".glacier").forEach(e => e.classList.remove("found", "wrong"));
-      els.list.querySelectorAll(".item").forEach(li => {
-        li.classList.remove("found");
-        li.querySelector(".status").textContent = "Ófundinn";
-      });
-
       order = GLACIERS.slice();
       if(reshuffle) shuffle(order);
+
+      // Rebuild list in the current order
+      buildList(order);
+
+      // Reset map visuals
+      els.map.querySelectorAll(".glacier").forEach(e => e.classList.remove("found", "wrong"));
 
       setTarget();
     }
@@ -456,10 +448,7 @@
 
       const id = el.dataset.id;
 
-      // Ignore already found
       if(found.has(id) || el.classList.contains("found")) return;
-
-      // If game done, ignore
       if(index >= order.length) return;
 
       const target = order[index].id;
@@ -476,8 +465,8 @@
     }
 
     // Init
-    buildList();
     order = shuffle(GLACIERS.slice());
+    buildList(order);
     setTarget();
 
     els.map.addEventListener("click", onGlacierClick);
