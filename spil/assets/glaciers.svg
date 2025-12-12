@@ -1,9 +1,9 @@
 <svg viewBox="0 0 1600 1120" xmlns="http://www.w3.org/2000/svg">
-  <ellipse class="glacier" data-id="drangajokull" cx="400" cy="369" rx="55" ry="45" />
-  <ellipse class="glacier" data-id="snaefellsjokull" cx="463" cy="560" rx="45" ry="35" />
-  <ellipse class="glacier" data-id="langjokull" cx="752" cy="470" rx="90" ry="55" />
-  <ellipse class="glacier" data-id="hofsjokull" cx="896" cy="504" rx="65" ry="55" />
-  <ellipse class="glacier" data-id="myrdalsjokull" cx="768" cy="694" rx="70" ry="45" />
-  <ellipse class="glacier" data-id="eyjafjallajokull" cx="672" cy="716" rx="55" ry="35" />
-  <ellipse class="glacier" data-id="vatnajokull" cx="1072" cy="672" rx="140" ry="85" />
+  <ellipse class="glacier" data-id="drangajokull" cx="400" cy="269" rx="55" ry="45" />
+  <ellipse class="glacier" data-id="snaefellsjokull" cx="300" cy="580" rx="45" ry="35" />
+  <ellipse class="glacier" data-id="langjokull" cx="652" cy="570" rx="90" ry="55" />
+  <ellipse class="glacier" data-id="hofsjokull" cx="850" cy="504" rx="65" ry="55" />
+  <ellipse class="glacier" data-id="myrdalsjokull" cx="768" cy="794" rx="70" ry="45" />
+  <ellipse class="glacier" data-id="eyjafjallajokull" cx="672" cy="816" rx="55" ry="35" />
+  <ellipse class="glacier" data-id="vatnajokull" cx="1072" cy="772" rx="140" ry="85" />
 </svg>
