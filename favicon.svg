@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ice" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"></stop>
+      <stop offset="100%" stop-color="#bfe9ff"></stop>
+    </linearGradient>
+  </defs>
+
+  <g fill="none" stroke="url(#ice)" stroke-width="3" stroke-linecap="round">
+    <!-- vertical -->
+    <line x1="32" y1="6" x2="32" y2="58"></line>
+    <!-- diagonal -->
+    <line x1="10" y1="18" x2="54" y2="46"></line>
+    <line x1="54" y1="18" x2="10" y2="46"></line>
+
+    <!-- small arms -->
+    <line x1="32" y1="6" x2="28" y2="12"></line>
+    <line x1="32" y1="6" x2="36" y2="12"></line>
+
+    <line x1="32" y1="58" x2="28" y2="52"></line>
+    <line x1="32" y1="58" x2="36" y2="52"></line>
+
+    <line x1="10" y1="18" x2="14" y2="24"></line>
+    <line x1="10" y1="18" x2="18" y2="20"></line>
+
+    <line x1="54" y1="46" x2="50" y2="40"></line>
+    <line x1="54" y1="46" x2="46" y2="44"></line>
+
+    <line x1="54" y1="18" x2="50" y2="24"></line>
+    <line x1="54" y1="18" x2="46" y2="20"></line>
+
+    <line x1="10" y1="46" x2="14" y2="40"></line>
+    <line x1="10" y1="46" x2="18" y2="44"></line>
+  </g>
+</svg>
