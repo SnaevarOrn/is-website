@@ -330,14 +330,25 @@
   const MAP_SRC = "./assets/iceland_map.png";
 
   const CITIES = [
-    { name: "Reykjavík",   x: 0.28, y: 0.70 },
-    { name: "Ísafjörður",  x: 0.20, y: 0.33 },
-    { name: "Akureyri",    x: 0.52, y: 0.34 },
-    { name: "Sauðárkrókur",    x: 0.42, y: 0.34 },
-    { name: "Egilsstaðir", x: 0.78, y: 0.48 },
-    { name: "Höfn í Hornafirði", x: 0.73, y: 0.80 },
+    { name: "Akureyri",    x: 0.53, y: 0.34 },
+    { name: "Egilsstaðir", x: 0.80, y: 0.46 },
+    { name: "Sauðárkrókur",    x: 0.43, y: 0.33 },
+    { name: "Flúðir",    x: 0.35, y: 0.72 },
+    { name: "Höfn í Hornafirði", x: 0.73, y: 0.72 },
+    { name: "Kópasker",    x: 0.73, y: 0.27 },
+    { name: "Ísafjörður",  x: 0.20, y: 0.27 },
+    { name: "Patreksfjörður",    x: 0.18, y: 0.33 },
+    { name: "Reykjavík",   x: 0.28, y: 0.69 },
+    { name: "Sauðárkrókur",    x: 0.43, y: 0.33 },
+    { name: "Stykkishólmur",    x: 0.23, y: 0.46 },
   ];
 
+// Random röð á bæjum (Fisher–Yates)
+for (let i = CITIES.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [CITIES[i], CITIES[j]] = [CITIES[j], CITIES[i]];
+}
+  
   const MAX_DIST_PX = 380;
   const MIN_SCALE = 1;  // ekki minnka inní boxinu
   const MAX_SCALE = 6;
