@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Borg — giskaðu staðsetningu</title>
+  <title>Bæir — giskaðu staðsetningu</title>
   <style>
     :root{
       --bg:#07090f;
       --panel:#0d1220;
-      --panel2:#0b1020;
       --text:#e9eefc;
       --muted:#9aa6c3;
       --line:rgba(255,255,255,.10);
@@ -31,39 +30,55 @@
       justify-content:center;
       padding:18px;
     }
-    .app{
-      width:min(1100px, 100%);
-      display:grid;
-      grid-template-columns: 360px 1fr;
-      gap:14px;
-    }
-    @media (max-width: 900px){
-      .app{ grid-template-columns: 1fr; }
-    }
 
     .card{
+      width:min(1100px, 100%);
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       border: 1px solid var(--line);
       border-radius: 18px;
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-    .left{
-      padding:16px;
-      display:flex;
-      flex-direction:column;
+
+    /* Top bar */
+    .top{
+      padding:14px 14px 10px;
+      display:grid;
+      grid-template-columns: 1.4fr 1fr;
       gap:12px;
+      border-bottom:1px solid var(--line);
+      background: rgba(0,0,0,.12);
     }
-    .title{
+    @media (max-width: 900px){
+      .top{ grid-template-columns: 1fr; }
+    }
+
+    .prompt{
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
       display:flex;
-      align-items:baseline;
+      align-items:center;
       justify-content:space-between;
-      gap:10px;
+      gap:12px;
+      min-height:64px;
     }
-    .title h1{
-      margin:0;
-      font-size:18px;
+    .prompt .left{
+      min-width:0;
+    }
+    .label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .city{
+      font-size:22px;
+      font-weight:800;
       letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     .chip{
       font-size:12px;
@@ -72,22 +87,13 @@
       padding:6px 10px;
       border-radius:999px;
       background: rgba(0,0,0,.15);
+      flex:0 0 auto;
     }
-    .prompt{
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background: rgba(0,0,0,.18);
-    }
-    .prompt .label{
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom:6px;
-    }
-    .prompt .city{
-      font-size:22px;
-      font-weight:700;
-      letter-spacing:.2px;
+
+    .rightCol{
+      display:grid;
+      grid-template-rows: auto auto;
+      gap:10px;
     }
 
     .stats{
@@ -102,13 +108,14 @@
       background: rgba(0,0,0,.12);
     }
     .stat .k{ font-size:12px; color:var(--muted); }
-    .stat .v{ font-size:18px; font-weight:700; margin-top:2px; }
+    .stat .v{ font-size:18px; font-weight:800; margin-top:2px; }
 
     .actions{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
-      margin-top:4px;
+      justify-content:flex-end;
+      align-items:center;
     }
     button{
       appearance:none;
@@ -118,7 +125,7 @@
       padding:10px 12px;
       border-radius:12px;
       cursor:pointer;
-      font-weight:600;
+      font-weight:700;
       transition: transform .05s ease, background .15s ease;
       user-select:none;
     }
@@ -132,41 +139,42 @@
       border-color: rgba(252,165,165,.35);
       background: rgba(252,165,165,.08);
     }
-    .small{
-      padding:8px 10px;
-      font-size:13px;
-      border-radius:10px;
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
     }
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-      padding:10px 2px 0;
+
+    /* Result strip */
+    .result{
+      padding:10px 14px 14px;
+      border-bottom:1px solid var(--line);
+      background: rgba(0,0,0,.06);
     }
-    .hint code{
-      color: var(--accent);
-      background: rgba(125,211,252,.10);
-      border: 1px solid rgba(125,211,252,.20);
-      padding: 2px 6px;
-      border-radius: 8px;
+    .toast{
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      min-height: 58px;
     }
+    .toast .t{ font-size:12px; color:var(--muted); }
+    .toast .m{ margin-top:6px; font-size:14px; line-height:1.35; }
+    .good{ color: var(--good); font-weight:800; }
+    .bad{ color: var(--bad); font-weight:800; }
 
     /* Map area */
     .mapWrap{
       position:relative;
-      height: min(78vh, 720px);
+      height: min(72vh, 700px);
       min-height: 420px;
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      border: 1px solid var(--line);
-      border-radius: 18px;
       overflow:hidden;
-      box-shadow: var(--shadow);
     }
     .mapViewport{
       position:absolute;
       inset:0;
       cursor: grab;
-      touch-action: none; /* allow custom pan on touch */
+      touch-action: none;
       background: rgba(0,0,0,.10);
     }
     .mapViewport:active{ cursor: grabbing; }
@@ -182,7 +190,7 @@
       user-drag:none;
       -webkit-user-drag:none;
       user-select:none;
-      pointer-events:none; /* clicks handled by viewport */
+      pointer-events:none;
       max-width:none;
     }
 
@@ -196,7 +204,7 @@
       box-shadow: 0 10px 22px rgba(0,0,0,.45);
       pointer-events:none;
     }
-    .marker.guess{ background: rgba(125,211,252,.95); }
+    .marker.guess{ background: rgba(125,211,252,.95); display:none; }
     .marker.truth{ background: rgba(134,239,172,.95); display:none; }
 
     .line{
@@ -224,60 +232,47 @@
       gap:8px;
       justify-content:flex-end;
     }
-
-    .toast{
-      margin-top:4px;
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background: rgba(0,0,0,.18);
-      min-height: 64px;
+    .small{
+      padding:8px 10px;
+      font-size:13px;
+      border-radius:10px;
     }
-    .toast .t{ font-size:12px; color:var(--muted); }
-    .toast .m{ margin-top:6px; font-size:14px; line-height:1.35; }
-    .good{ color: var(--good); font-weight:700; }
-    .bad{ color: var(--bad); font-weight:700; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="card left">
-      <div class="title">
-        <h1>Borg</h1>
+  <div class="card">
+    <div class="top">
+      <div class="prompt">
+        <div class="left">
+          <div class="label">Finndu bæinn á kortinu</div>
+          <div class="city" id="cityName">—</div>
+        </div>
         <div class="chip" id="roundChip">Umferð 1/5</div>
       </div>
 
-      <div class="prompt">
-        <div class="label">Staðsettu bæinn með því að smella á kortið</div>
-        <div class="city" id="cityName">—</div>
-      </div>
-
-      <div class="stats">
-        <div class="stat">
-          <div class="k">Stig (samtals)</div>
-          <div class="v" id="totalScore">0</div>
+      <div class="rightCol">
+        <div class="stats">
+          <div class="stat">
+            <div class="k">Stig (samtals)</div>
+            <div class="v" id="totalScore">0</div>
+          </div>
+          <div class="stat">
+            <div class="k">Síðasta</div>
+            <div class="v" id="lastScore">—</div>
+          </div>
         </div>
-        <div class="stat">
-          <div class="k">Síðasta gisk</div>
-          <div class="v" id="lastScore">—</div>
+
+        <div class="actions">
+          <button class="primary" id="nextBtn" disabled>Næsti bær</button>
+          <button class="danger" id="restartBtn">Byrja aftur</button>
         </div>
       </div>
+    </div>
 
-      <div class="actions">
-        <button class="primary" id="nextBtn" disabled>Næsti bær</button>
-        <button id="recenterBtn">Miðja kort</button>
-        <button id="resetZoomBtn">Reset zoom</button>
-        <button class="danger" id="restartBtn">Byrja upp á nýtt</button>
-      </div>
-
+    <div class="result">
       <div class="toast" id="toast">
         <div class="t">Niðurstaða</div>
         <div class="m" id="toastMsg">Smelltu á kortið til að giska.</div>
-      </div>
-
-      <div class="hint">
-        Zoom: <code>músarhjól</code> eða takkarnir. Pan: <code>drag</code>.<br/>
-        Debug (til að stilla hnit): ýttu <code>D</code> til að sjá hnita-úttak í console.
       </div>
     </div>
 
@@ -286,13 +281,14 @@
         <div class="row">
           <button class="small" id="zoomIn">+</button>
           <button class="small" id="zoomOut">−</button>
+          <button class="small" id="fitBtn">Miðja</button>
         </div>
       </div>
 
       <div class="mapViewport" id="viewport" aria-label="Kort">
         <div class="mapLayer" id="layer">
           <img id="mapImg" class="mapImg" alt="Kort af Íslandi" />
-          <div class="marker guess" id="guessMarker" style="display:none;"></div>
+          <div class="marker guess" id="guessMarker"></div>
           <div class="marker truth" id="truthMarker"></div>
           <div class="line" id="line"></div>
         </div>
@@ -302,41 +298,31 @@
 
 <script>
 (() => {
-  // ====== SETTINGS YOU CARE ABOUT ======
-  const MAP_SRC = "./assets/iceland_map.png"; // settu myndina þína hér
+  const MAP_SRC = "./assets/iceland_map.png";
 
-  // Staðsetningar eru normaliseruð (x,y) í [0..1] yfir sjálfa myndina.
-  // Þegar kortið þitt er komið inn þarftu líklega að fínstilla þessi gildi.
   const CITIES = [
     { name: "Reykjavík",   x: 0.28, y: 0.70 },
-    { name: "Ísafjörður",  x: 0.20, y: 0.25 },
+    { name: "Ísafjörður",  x: 0.20, y: 0.27 },
     { name: "Akureyri",    x: 0.52, y: 0.34 },
     { name: "Egilsstaðir", x: 0.78, y: 0.48 },
     { name: "Höfn í Hornafirði", x: 0.73, y: 0.75 },
   ];
 
-  // Skorun: 0..100 stig eftir fjarlægð (í pixlum á upprunamynd).
-  // Þetta er “tuning knob”: hærra => meira “fyrirgefandi”.
   const MAX_DIST_PX = 380;
 
-  // ====== STATE ======
   let idx = 0;
   let total = 0;
   let last = null;
   let guessed = false;
 
-  // Transform for pan/zoom
+  // pan/zoom
   let scale = 1;
   let tx = 0, ty = 0;
 
-  // Drag state
+  // drag
   let isDragging = false;
   let dragStart = { x:0, y:0, tx:0, ty:0 };
 
-  // Debug
-  let debug = false;
-
-  // ====== DOM ======
   const mapImg = document.getElementById("mapImg");
   const viewport = document.getElementById("viewport");
   const layer = document.getElementById("layer");
@@ -352,22 +338,69 @@
   const lineEl = document.getElementById("line");
 
   const nextBtn = document.getElementById("nextBtn");
-  const recenterBtn = document.getElementById("recenterBtn");
-  const resetZoomBtn = document.getElementById("resetZoomBtn");
   const restartBtn = document.getElementById("restartBtn");
   const zoomIn = document.getElementById("zoomIn");
   const zoomOut = document.getElementById("zoomOut");
+  const fitBtn = document.getElementById("fitBtn");
 
-  // ====== HELPERS ======
   function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
+  function imageSize(){
+    return { w: mapImg.naturalWidth || 1, h: mapImg.naturalHeight || 1 };
+  }
+
   function applyTransform(){
+    clampTransform(); // <-- lásinn: heldur myndinni inni í rammanum
     layer.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
   }
 
-  function imageSize(){
-    // natural sizes (upprunapixlar) eru það sem við notum fyrir skorun
-    return { w: mapImg.naturalWidth || 1, h: mapImg.naturalHeight || 1 };
+  function clampTransform(){
+    const rect = viewport.getBoundingClientRect();
+    const vw = rect.width, vh = rect.height;
+    const s = imageSize();
+    const iw = s.w * scale;
+    const ih = s.h * scale;
+
+    // Við viljum ekki geta dregið myndina alveg út.
+    // Ef myndin er minni en viewport: miðjum við hana.
+    // Ef hún er stærri: tx/ty eru clamped þannig að enginn “tómur” bakgrunnur birtist.
+    if (iw <= vw){
+      tx = (vw - iw) / 2;
+    } else {
+      const minTx = vw - iw;
+      const maxTx = 0;
+      tx = clamp(tx, minTx, maxTx);
+    }
+
+    if (ih <= vh){
+      ty = (vh - ih) / 2;
+    } else {
+      const minTy = vh - ih;
+      const maxTy = 0;
+      ty = clamp(ty, minTy, maxTy);
+    }
+  }
+
+  function pxFromNormalized(p){
+    const s = imageSize();
+    return { x: p.x * s.w, y: p.y * s.h };
+  }
+
+  function normalizedFromClick(clientX, clientY){
+    const rect = viewport.getBoundingClientRect();
+    const vx = clientX - rect.left;
+    const vy = clientY - rect.top;
+
+    const lx = (vx - tx) / scale;
+    const ly = (vy - ty) / scale;
+
+    const s = imageSize();
+    return { x: lx / s.w, y: ly / s.h };
+  }
+
+  function scoreFromDistance(distPx){
+    const t = 1 - clamp(distPx / MAX_DIST_PX, 0, 1);
+    return Math.round(Math.pow(t, 1.6) * 100);
   }
 
   function setMarkers(guessPx, truthPx){
@@ -379,7 +412,6 @@
     truthMarker.style.top  = truthPx.y + "px";
     truthMarker.style.display = "block";
 
-    // line
     const dx = truthPx.x - guessPx.x;
     const dy = truthPx.y - guessPx.y;
     const len = Math.hypot(dx, dy);
@@ -392,42 +424,14 @@
     lineEl.style.display = "block";
   }
 
-  function pxFromNormalized(p){
-    const s = imageSize();
-    return { x: p.x * s.w, y: p.y * s.h };
-  }
-
-  function normalizedFromClick(clientX, clientY){
-    const rect = viewport.getBoundingClientRect();
-
-    // click position inside viewport
-    const vx = clientX - rect.left;
-    const vy = clientY - rect.top;
-
-    // convert to layer local before transform: (vx - tx)/scale
-    const lx = (vx - tx) / scale;
-    const ly = (vy - ty) / scale;
-
-    const s = imageSize();
-    const nx = lx / s.w;
-    const ny = ly / s.h;
-
-    return { x: nx, y: ny };
-  }
-
-  function scoreFromDistance(distPx){
-    const t = 1 - clamp(distPx / MAX_DIST_PX, 0, 1);
-    // smá “feel-good” curve
-    const curved = Math.pow(t, 1.6);
-    return Math.round(curved * 100);
-  }
-
   function resetRoundUI(){
     guessed = false;
     nextBtn.disabled = true;
+
     truthMarker.style.display = "none";
     lineEl.style.display = "none";
     guessMarker.style.display = "none";
+
     toastMsg.textContent = "Smelltu á kortið til að giska.";
     lastScore.textContent = last === null ? "—" : String(last);
   }
@@ -439,20 +443,18 @@
     resetRoundUI();
   }
 
-  function recenter(){
-    // Fit-ish: center image in viewport at current scale
+  function fit(){
+    // “fit-to-view” + miðja
     const s = imageSize();
     const rect = viewport.getBoundingClientRect();
     const vw = rect.width, vh = rect.height;
 
+    const fitScale = Math.min(vw / s.w, vh / s.h);
+    scale = clamp(fitScale, 0.6, 6);
+
     tx = (vw - s.w * scale) / 2;
     ty = (vh - s.h * scale) / 2;
     applyTransform();
-  }
-
-  function resetZoom(){
-    scale = 1;
-    recenter();
   }
 
   function zoomAt(factor, clientX, clientY){
@@ -462,12 +464,10 @@
 
     const newScale = clamp(scale * factor, 0.6, 6);
 
-    // Keep point under cursor stable:
-    // layer local coords before zoom:
+    // point under cursor stays put
     const lx = (vx - tx) / scale;
     const ly = (vy - ty) / scale;
 
-    // after zoom, solve for new tx/ty:
     tx = vx - lx * newScale;
     ty = vy - ly * newScale;
     scale = newScale;
@@ -482,11 +482,9 @@
     const guessPx = pxFromNormalized(guessN);
     const truthPx = pxFromNormalized(truthN);
 
-    const dx = (guessPx.x - truthPx.x);
-    const dy = (guessPx.y - truthPx.y);
-    const distPx = Math.hypot(dx, dy);
-
+    const distPx = Math.hypot(guessPx.x - truthPx.x, guessPx.y - truthPx.y);
     const pts = scoreFromDistance(distPx);
+
     last = pts;
     total += pts;
 
@@ -495,20 +493,15 @@
 
     setMarkers(guessPx, truthPx);
 
-    const nice = pts >= 70 ? "Nálægt!" : (pts >= 35 ? "Ekki slæmt." : "Það er alltaf næsta umferð 😄");
-    toastMsg.innerHTML = `<span class="${pts>=70?'good':(pts>=35?'':'bad')}">${pts} stig</span> — fjarlægð ~ ${Math.round(distPx)} px. ${nice}`;
+    const vibe = pts >= 70 ? "Nálægt!" : (pts >= 35 ? "Ekki slæmt." : "Þetta var… skapandi 😄");
+    toastMsg.innerHTML = `<span class="${pts>=70?'good':(pts>=35?'':'bad')}">${pts} stig</span> — fjarlægð ~ ${Math.round(distPx)} px. ${vibe}`;
 
     guessed = true;
     nextBtn.disabled = false;
-
-    if (debug){
-      console.log(`[DEBUG] ${c.name} guess normalized:`, guessN, "truth:", truthN, "distPx:", distPx);
-    }
   }
 
-  // ====== EVENTS ======
+  // ===== Events =====
   viewport.addEventListener("pointerdown", (e) => {
-    // Left click/touch starts drag; a quick click (no drag) will still count as guess on pointerup if not moved much.
     isDragging = true;
     viewport.setPointerCapture(e.pointerId);
     dragStart = { x: e.clientX, y: e.clientY, tx, ty };
@@ -532,7 +525,6 @@
 
     if (!guessed && isClick){
       const n = normalizedFromClick(e.clientX, e.clientY);
-      // accept only if inside image bounds
       if (n.x >= 0 && n.x <= 1 && n.y >= 0 && n.y <= 1){
         finishGuess(n);
       } else {
@@ -547,18 +539,22 @@
     zoomAt(factor, e.clientX, e.clientY);
   }, { passive:false });
 
-  zoomIn.addEventListener("click", () => zoomAt(1.18, viewport.getBoundingClientRect().left + viewport.clientWidth/2, viewport.getBoundingClientRect().top + viewport.clientHeight/2));
-  zoomOut.addEventListener("click", () => zoomAt(0.85, viewport.getBoundingClientRect().left + viewport.clientWidth/2, viewport.getBoundingClientRect().top + viewport.clientHeight/2));
-
-  resetZoomBtn.addEventListener("click", resetZoom);
-  recenterBtn.addEventListener("click", recenter);
+  zoomIn.addEventListener("click", () => {
+    const r = viewport.getBoundingClientRect();
+    zoomAt(1.18, r.left + r.width/2, r.top + r.height/2);
+  });
+  zoomOut.addEventListener("click", () => {
+    const r = viewport.getBoundingClientRect();
+    zoomAt(0.85, r.left + r.width/2, r.top + r.height/2);
+  });
+  fitBtn.addEventListener("click", fit);
 
   nextBtn.addEventListener("click", () => {
     if (!guessed) return;
     idx++;
     if (idx >= CITIES.length){
-      const msg = `Leik lokið! Samtals: ${total} stig (meðaltal ${Math.round(total / CITIES.length)}).`;
-      toastMsg.innerHTML = `<span class="good">${msg}</span>`;
+      const avg = Math.round(total / CITIES.length);
+      toastMsg.innerHTML = `<span class="good">Leik lokið!</span> Samtals: <b>${total}</b> stig (meðaltal ${avg}).`;
       cityName.textContent = "—";
       roundChip.textContent = `Lokið (${CITIES.length}/${CITIES.length})`;
       nextBtn.disabled = true;
@@ -572,28 +568,20 @@
     totalScore.textContent = "0";
     lastScore.textContent = "—";
     setRound();
-    resetZoom();
+    fit();
   });
 
-  // Debug toggle
-  window.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === "d"){
-      debug = !debug;
-      toastMsg.innerHTML = debug
-        ? `Debug <span class="good">ON</span> — giskaðu og skoðaðu console (F12).`
-        : `Debug <span class="bad">OFF</span> — smelltu á kortið til að giska.`;
-    }
-  });
+  // keep clamped on resize
+  window.addEventListener("resize", () => applyTransform());
 
-  // ====== INIT ======
+  // ===== init =====
   mapImg.src = MAP_SRC;
 
   mapImg.addEventListener("load", () => {
-    // Set layer size to image natural size so markers use pixel coords
     const s = imageSize();
     layer.style.width = s.w + "px";
     layer.style.height = s.h + "px";
-    resetZoom();
+    fit();
     setRound();
   });
 
@@ -604,4 +592,3 @@
 </script>
 </body>
 </html>
-
