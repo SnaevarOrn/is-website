@@ -11,6 +11,7 @@
       --ice-blue: #bfe9ff;
       --deep-blue: #0b2a3d;
       --glow: rgba(180, 230, 255, 0.6);
+      --line: rgba(255,255,255,.12);
     }
 
     * {
@@ -29,6 +30,7 @@
       background: radial-gradient(circle at top, #1b4f72, #081823 70%);
       color: #ffffff;
       overflow: hidden;
+      padding: 18px;
     }
 
     .container {
@@ -39,39 +41,65 @@
       backdrop-filter: blur(10px);
       box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
       animation: fadeIn 1s ease-out forwards;
+      max-width: 560px;
+      width: 100%;
     }
 
     h1 {
       font-size: clamp(2.5rem, 6vw, 4rem);
-      letter-spacing: 0.1em;
-      margin-bottom: 1rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.9rem;
     }
 
     p {
       opacity: 0.85;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2.2rem;
       font-size: 1.1rem;
+    }
+
+    .btnRow{
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
     .btn {
       display: inline-block;
-      padding: 1rem 2.8rem;
-      font-size: 1.15rem;
+      padding: 1rem 2.2rem;
+      font-size: 1.05rem;
       border-radius: 999px;
       text-decoration: none;
       color: var(--deep-blue);
       background: linear-gradient(135deg, #ffffff, var(--ice-blue));
       box-shadow: 0 0 25px var(--glow);
       transition: transform 0.25s ease, box-shadow 0.25s ease;
+      min-width: 180px;
     }
 
     .btn:hover {
-      transform: scale(1.05);
+      transform: scale(1.04);
       box-shadow: 0 0 45px var(--glow);
     }
 
     .btn:active {
       transform: scale(0.98);
+    }
+
+    .banner{
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      background: rgba(0,0,0,.18);
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+      white-space: nowrap;
     }
 
     @keyframes fadeIn {
@@ -99,10 +127,16 @@
 
 <body>
   <main class="container">
-    <h1>ÍS</h1>
-    <p>Smelltu til að kanna jöklana á Íslandi</p>
-    <a href="/spil/" class="btn">Opna jöklaleik ❄️</a>
+    <h1>ís.is</h1>
+    <p>Lærum á Ísland</p>
+
+    <div class="btnRow">
+      <a href="/spil/" class="btn">Jöklar ❄️</a>
+      <a href="/borg/" class="btn">Bæjir 🏘️</a>
+    </div>
   </main>
+
+  <div class="banner">Vefur stofnaður 2025. Engar vafrakökur - bara ís.</div>
 
   <script>
     // decorative frost particles (non-critical)
