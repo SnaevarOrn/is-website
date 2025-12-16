@@ -1,1 +1,607 @@
+<!doctype html>
+<html lang="is">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Borg — giskaðu staðsetningu</title>
+  <style>
+    :root{
+      --bg:#07090f;
+      --panel:#0d1220;
+      --panel2:#0b1020;
+      --text:#e9eefc;
+      --muted:#9aa6c3;
+      --line:rgba(255,255,255,.10);
+      --accent:#7dd3fc;
+      --good:#86efac;
+      --bad:#fca5a5;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 700px at 50% -10%, rgba(125,211,252,.15), transparent 55%),
+                  radial-gradient(900px 600px at 20% 20%, rgba(167,139,250,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .app{
+      width:min(1100px, 100%);
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+    }
+    @media (max-width: 900px){
+      .app{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .left{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .title h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    .chip{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--line);
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(0,0,0,.15);
+    }
+    .prompt{
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+    }
+    .prompt .label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .prompt .city{
+      font-size:22px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .stat{
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.12);
+    }
+    .stat .k{ font-size:12px; color:var(--muted); }
+    .stat .v{ font-size:18px; font-weight:700; margin-top:2px; }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      transition: transform .05s ease, background .15s ease;
+      user-select:none;
+    }
+    button:hover{ background: rgba(255,255,255,.06); }
+    button:active{ transform: translateY(1px); }
+    .primary{
+      border-color: rgba(125,211,252,.35);
+      background: rgba(125,211,252,.10);
+    }
+    .danger{
+      border-color: rgba(252,165,165,.35);
+      background: rgba(252,165,165,.08);
+    }
+    .small{
+      padding:8px 10px;
+      font-size:13px;
+      border-radius:10px;
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      padding:10px 2px 0;
+    }
+    .hint code{
+      color: var(--accent);
+      background: rgba(125,211,252,.10);
+      border: 1px solid rgba(125,211,252,.20);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    /* Map area */
+    .mapWrap{
+      position:relative;
+      height: min(78vh, 720px);
+      min-height: 420px;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+    }
+    .mapViewport{
+      position:absolute;
+      inset:0;
+      cursor: grab;
+      touch-action: none; /* allow custom pan on touch */
+      background: rgba(0,0,0,.10);
+    }
+    .mapViewport:active{ cursor: grabbing; }
+
+    .mapLayer{
+      position:absolute;
+      left:0; top:0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    .mapImg{
+      display:block;
+      user-drag:none;
+      -webkit-user-drag:none;
+      user-select:none;
+      pointer-events:none; /* clicks handled by viewport */
+      max-width:none;
+    }
+
+    /* markers */
+    .marker{
+      position:absolute;
+      width:16px; height:16px;
+      border-radius:50%;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255,255,255,.9);
+      box-shadow: 0 10px 22px rgba(0,0,0,.45);
+      pointer-events:none;
+    }
+    .marker.guess{ background: rgba(125,211,252,.95); }
+    .marker.truth{ background: rgba(134,239,172,.95); display:none; }
+
+    .line{
+      position:absolute;
+      height:2px;
+      background: rgba(255,255,255,.75);
+      transform-origin: 0 50%;
+      display:none;
+      pointer-events:none;
+      box-shadow: 0 8px 18px rgba(0,0,0,.35);
+    }
+
+    /* overlay controls */
+    .overlay{
+      position:absolute;
+      right:12px;
+      top:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      z-index: 5;
+    }
+    .overlay .row{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+    }
+
+    .toast{
+      margin-top:4px;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      min-height: 64px;
+    }
+    .toast .t{ font-size:12px; color:var(--muted); }
+    .toast .m{ margin-top:6px; font-size:14px; line-height:1.35; }
+    .good{ color: var(--good); font-weight:700; }
+    .bad{ color: var(--bad); font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card left">
+      <div class="title">
+        <h1>Borg</h1>
+        <div class="chip" id="roundChip">Umferð 1/5</div>
+      </div>
+
+      <div class="prompt">
+        <div class="label">Staðsettu bæinn með því að smella á kortið</div>
+        <div class="city" id="cityName">—</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="k">Stig (samtals)</div>
+          <div class="v" id="totalScore">0</div>
+        </div>
+        <div class="stat">
+          <div class="k">Síðasta gisk</div>
+          <div class="v" id="lastScore">—</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="nextBtn" disabled>Næsti bær</button>
+        <button id="recenterBtn">Miðja kort</button>
+        <button id="resetZoomBtn">Reset zoom</button>
+        <button class="danger" id="restartBtn">Byrja upp á nýtt</button>
+      </div>
+
+      <div class="toast" id="toast">
+        <div class="t">Niðurstaða</div>
+        <div class="m" id="toastMsg">Smelltu á kortið til að giska.</div>
+      </div>
+
+      <div class="hint">
+        Zoom: <code>músarhjól</code> eða takkarnir. Pan: <code>drag</code>.<br/>
+        Debug (til að stilla hnit): ýttu <code>D</code> til að sjá hnita-úttak í console.
+      </div>
+    </div>
+
+    <div class="mapWrap">
+      <div class="overlay">
+        <div class="row">
+          <button class="small" id="zoomIn">+</button>
+          <button class="small" id="zoomOut">−</button>
+        </div>
+      </div>
+
+      <div class="mapViewport" id="viewport" aria-label="Kort">
+        <div class="mapLayer" id="layer">
+          <img id="mapImg" class="mapImg" alt="Kort af Íslandi" />
+          <div class="marker guess" id="guessMarker" style="display:none;"></div>
+          <div class="marker truth" id="truthMarker"></div>
+          <div class="line" id="line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ====== SETTINGS YOU CARE ABOUT ======
+  const MAP_SRC = "./assets/iceland_map.png"; // settu myndina þína hér
+
+  // Staðsetningar eru normaliseruð (x,y) í [0..1] yfir sjálfa myndina.
+  // Þegar kortið þitt er komið inn þarftu líklega að fínstilla þessi gildi.
+  const CITIES = [
+    { name: "Reykjavík",   x: 0.28, y: 0.70 },
+    { name: "Ísafjörður",  x: 0.20, y: 0.33 },
+    { name: "Akureyri",    x: 0.52, y: 0.34 },
+    { name: "Egilsstaðir", x: 0.78, y: 0.48 },
+    { name: "Höfn í Hornafirði", x: 0.73, y: 0.80 },
+  ];
+
+  // Skorun: 0..100 stig eftir fjarlægð (í pixlum á upprunamynd).
+  // Þetta er “tuning knob”: hærra => meira “fyrirgefandi”.
+  const MAX_DIST_PX = 380;
+
+  // ====== STATE ======
+  let idx = 0;
+  let total = 0;
+  let last = null;
+  let guessed = false;
+
+  // Transform for pan/zoom
+  let scale = 1;
+  let tx = 0, ty = 0;
+
+  // Drag state
+  let isDragging = false;
+  let dragStart = { x:0, y:0, tx:0, ty:0 };
+
+  // Debug
+  let debug = false;
+
+  // ====== DOM ======
+  const mapImg = document.getElementById("mapImg");
+  const viewport = document.getElementById("viewport");
+  const layer = document.getElementById("layer");
+
+  const cityName = document.getElementById("cityName");
+  const roundChip = document.getElementById("roundChip");
+  const totalScore = document.getElementById("totalScore");
+  const lastScore = document.getElementById("lastScore");
+  const toastMsg = document.getElementById("toastMsg");
+
+  const guessMarker = document.getElementById("guessMarker");
+  const truthMarker = document.getElementById("truthMarker");
+  const lineEl = document.getElementById("line");
+
+  const nextBtn = document.getElementById("nextBtn");
+  const recenterBtn = document.getElementById("recenterBtn");
+  const resetZoomBtn = document.getElementById("resetZoomBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  const zoomIn = document.getElementById("zoomIn");
+  const zoomOut = document.getElementById("zoomOut");
+
+  // ====== HELPERS ======
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+  function applyTransform(){
+    layer.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+  }
+
+  function imageSize(){
+    // natural sizes (upprunapixlar) eru það sem við notum fyrir skorun
+    return { w: mapImg.naturalWidth || 1, h: mapImg.naturalHeight || 1 };
+  }
+
+  function setMarkers(guessPx, truthPx){
+    guessMarker.style.left = guessPx.x + "px";
+    guessMarker.style.top  = guessPx.y + "px";
+    guessMarker.style.display = "block";
+
+    truthMarker.style.left = truthPx.x + "px";
+    truthMarker.style.top  = truthPx.y + "px";
+    truthMarker.style.display = "block";
+
+    // line
+    const dx = truthPx.x - guessPx.x;
+    const dy = truthPx.y - guessPx.y;
+    const len = Math.hypot(dx, dy);
+    const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    lineEl.style.left = guessPx.x + "px";
+    lineEl.style.top = guessPx.y + "px";
+    lineEl.style.width = len + "px";
+    lineEl.style.transform = `rotate(${ang}deg)`;
+    lineEl.style.display = "block";
+  }
+
+  function pxFromNormalized(p){
+    const s = imageSize();
+    return { x: p.x * s.w, y: p.y * s.h };
+  }
+
+  function normalizedFromClick(clientX, clientY){
+    const rect = viewport.getBoundingClientRect();
+
+    // click position inside viewport
+    const vx = clientX - rect.left;
+    const vy = clientY - rect.top;
+
+    // convert to layer local before transform: (vx - tx)/scale
+    const lx = (vx - tx) / scale;
+    const ly = (vy - ty) / scale;
+
+    const s = imageSize();
+    const nx = lx / s.w;
+    const ny = ly / s.h;
+
+    return { x: nx, y: ny };
+  }
+
+  function scoreFromDistance(distPx){
+    const t = 1 - clamp(distPx / MAX_DIST_PX, 0, 1);
+    // smá “feel-good” curve
+    const curved = Math.pow(t, 1.6);
+    return Math.round(curved * 100);
+  }
+
+  function resetRoundUI(){
+    guessed = false;
+    nextBtn.disabled = true;
+    truthMarker.style.display = "none";
+    lineEl.style.display = "none";
+    guessMarker.style.display = "none";
+    toastMsg.textContent = "Smelltu á kortið til að giska.";
+    lastScore.textContent = last === null ? "—" : String(last);
+  }
+
+  function setRound(){
+    const c = CITIES[idx];
+    cityName.textContent = c.name;
+    roundChip.textContent = `Umferð ${idx+1}/${CITIES.length}`;
+    resetRoundUI();
+  }
+
+  function recenter(){
+    // Fit-ish: center image in viewport at current scale
+    const s = imageSize();
+    const rect = viewport.getBoundingClientRect();
+    const vw = rect.width, vh = rect.height;
+
+    tx = (vw - s.w * scale) / 2;
+    ty = (vh - s.h * scale) / 2;
+    applyTransform();
+  }
+
+  function resetZoom(){
+    scale = 1;
+    recenter();
+  }
+
+  function zoomAt(factor, clientX, clientY){
+    const rect = viewport.getBoundingClientRect();
+    const vx = clientX - rect.left;
+    const vy = clientY - rect.top;
+
+    const newScale = clamp(scale * factor, 0.6, 6);
+
+    // Keep point under cursor stable:
+    // layer local coords before zoom:
+    const lx = (vx - tx) / scale;
+    const ly = (vy - ty) / scale;
+
+    // after zoom, solve for new tx/ty:
+    tx = vx - lx * newScale;
+    ty = vy - ly * newScale;
+    scale = newScale;
+
+    applyTransform();
+  }
+
+  function finishGuess(guessN){
+    const c = CITIES[idx];
+    const truthN = { x: c.x, y: c.y };
+
+    const guessPx = pxFromNormalized(guessN);
+    const truthPx = pxFromNormalized(truthN);
+
+    const dx = (guessPx.x - truthPx.x);
+    const dy = (guessPx.y - truthPx.y);
+    const distPx = Math.hypot(dx, dy);
+
+    const pts = scoreFromDistance(distPx);
+    last = pts;
+    total += pts;
+
+    totalScore.textContent = String(total);
+    lastScore.textContent = String(last);
+
+    setMarkers(guessPx, truthPx);
+
+    const nice = pts >= 70 ? "Nálægt!" : (pts >= 35 ? "Ekki slæmt." : "Það er alltaf næsta umferð 😄");
+    toastMsg.innerHTML = `<span class="${pts>=70?'good':(pts>=35?'':'bad')}">${pts} stig</span> — fjarlægð ~ ${Math.round(distPx)} px. ${nice}`;
+
+    guessed = true;
+    nextBtn.disabled = false;
+
+    if (debug){
+      console.log(`[DEBUG] ${c.name} guess normalized:`, guessN, "truth:", truthN, "distPx:", distPx);
+    }
+  }
+
+  // ====== EVENTS ======
+  viewport.addEventListener("pointerdown", (e) => {
+    // Left click/touch starts drag; a quick click (no drag) will still count as guess on pointerup if not moved much.
+    isDragging = true;
+    viewport.setPointerCapture(e.pointerId);
+    dragStart = { x: e.clientX, y: e.clientY, tx, ty };
+  });
+
+  viewport.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    tx = dragStart.tx + dx;
+    ty = dragStart.ty + dy;
+    applyTransform();
+  });
+
+  viewport.addEventListener("pointerup", (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const moved = Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y);
+    const isClick = moved < 6;
+
+    if (!guessed && isClick){
+      const n = normalizedFromClick(e.clientX, e.clientY);
+      // accept only if inside image bounds
+      if (n.x >= 0 && n.x <= 1 && n.y >= 0 && n.y <= 1){
+        finishGuess(n);
+      } else {
+        toastMsg.textContent = "Smelltu innan myndarinnar.";
+      }
+    }
+  });
+
+  viewport.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+    zoomAt(factor, e.clientX, e.clientY);
+  }, { passive:false });
+
+  zoomIn.addEventListener("click", () => zoomAt(1.18, viewport.getBoundingClientRect().left + viewport.clientWidth/2, viewport.getBoundingClientRect().top + viewport.clientHeight/2));
+  zoomOut.addEventListener("click", () => zoomAt(0.85, viewport.getBoundingClientRect().left + viewport.clientWidth/2, viewport.getBoundingClientRect().top + viewport.clientHeight/2));
+
+  resetZoomBtn.addEventListener("click", resetZoom);
+  recenterBtn.addEventListener("click", recenter);
+
+  nextBtn.addEventListener("click", () => {
+    if (!guessed) return;
+    idx++;
+    if (idx >= CITIES.length){
+      const msg = `Leik lokið! Samtals: ${total} stig (meðaltal ${Math.round(total / CITIES.length)}).`;
+      toastMsg.innerHTML = `<span class="good">${msg}</span>`;
+      cityName.textContent = "—";
+      roundChip.textContent = `Lokið (${CITIES.length}/${CITIES.length})`;
+      nextBtn.disabled = true;
+      return;
+    }
+    setRound();
+  });
+
+  restartBtn.addEventListener("click", () => {
+    idx = 0; total = 0; last = null; guessed = false;
+    totalScore.textContent = "0";
+    lastScore.textContent = "—";
+    setRound();
+    resetZoom();
+  });
+
+  // Debug toggle
+  window.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "d"){
+      debug = !debug;
+      toastMsg.innerHTML = debug
+        ? `Debug <span class="good">ON</span> — giskaðu og skoðaðu console (F12).`
+        : `Debug <span class="bad">OFF</span> — smelltu á kortið til að giska.`;
+    }
+  });
+
+  // ====== INIT ======
+  mapImg.src = MAP_SRC;
+
+  mapImg.addEventListener("load", () => {
+    // Set layer size to image natural size so markers use pixel coords
+    const s = imageSize();
+    layer.style.width = s.w + "px";
+    layer.style.height = s.h + "px";
+    resetZoom();
+    setRound();
+  });
+
+  mapImg.addEventListener("error", () => {
+    toastMsg.innerHTML = `<span class="bad">Finn ekki kortmynd:</span> <code>${MAP_SRC}</code> — settu mynd í <code>borg/assets/</code> og lagaðu slóðina.`;
+  });
+})();
+</script>
+</body>
+</html>
 
