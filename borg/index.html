@@ -30,8 +30,40 @@
       padding:18px;
     }
 
-    .card{
+    /* Top site header (back + prototype) */
+    .siteHeader{
       width:min(1100px, 100%);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow);
+    }
+    .siteHeader a{
+      color: var(--text);
+      text-decoration:none;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .siteHeader .right{
+      color: var(--muted);
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .wrap{
+      width:min(1100px, 100%);
+    }
+
+    .card{
+      width:100%;
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       border: 1px solid var(--line);
       border-radius: 18px;
@@ -112,16 +144,6 @@
     .good{ color: var(--good); font-weight:900; }
     .bad{ color: var(--bad); font-weight:900; }
 
-    .bottomBar{
-      padding:10px 14px;
-      border-bottom:1px solid var(--line);
-      background: rgba(0,0,0,.06);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
     button{
       appearance:none;
       border:1px solid var(--line);
@@ -153,7 +175,7 @@
       position:absolute;
       inset:0;
       cursor: grab;
-      touch-action: none; /* mikilvægt fyrir pinch + custom pan */
+      touch-action: none; /* pan + pinch */
       background: rgba(0,0,0,.10);
     }
     .mapViewport:active{ cursor: grabbing; }
@@ -172,6 +194,7 @@
       max-width:none;
     }
 
+    /* Markers */
     .marker{
       position:absolute;
       width:16px; height:16px;
@@ -180,10 +203,11 @@
       border: 2px solid rgba(255,255,255,.9);
       box-shadow: 0 10px 22px rgba(0,0,0,.45);
       pointer-events:none;
-      display:none;
     }
-    .marker.truth{ background: rgba(125,211,252,.95); }
+    .marker.cityDone{ background: rgba(125,211,252,.95); }
+    .marker.tap{ background: rgba(255,255,255,.20); border-color: rgba(255,255,255,.75); box-shadow: 0 10px 22px rgba(0,0,0,.25); }
 
+    /* Overlay zoom controls (right) */
     .overlay{
       position:absolute;
       right:12px;
@@ -196,93 +220,107 @@
     .overlay .row{ display:flex; gap:8px; justify-content:flex-end; }
     .small{ padding:8px 10px; font-size:13px; border-radius:10px; }
 
-    /* Confirm modal */
-    .modal{
-      position:fixed;
-      inset:0;
+    /* Tiny confirm bubble near tap */
+    .confirmBubble{
+      position:absolute;
+      z-index: 10;
       display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-      background: rgba(0,0,0,.55);
-      backdrop-filter: blur(6px);
-      z-index: 999;
-    }
-    .modal.show{ display:flex; }
-    .modalCard{
-      width:min(520px, 100%);
+      min-width: 220px;
+      max-width: 260px;
+      padding:10px;
       border:1px solid var(--line);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.25));
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.35));
       box-shadow: var(--shadow);
-      overflow:hidden;
+      backdrop-filter: blur(6px);
     }
-    .modalBody{ padding:14px; }
-    .modalTitle{ font-weight:900; margin:0 0 6px; }
-    .modalText{ color:var(--muted); margin:0; line-height:1.4; }
-    .modalActions{
-      padding:12px 14px;
-      border-top:1px solid var(--line);
+    .confirmBubble.show{ display:block; }
+    .confirmBubble .t{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .confirmBubble .m{
+      font-size:13px;
+      line-height:1.35;
+      margin-bottom:10px;
+    }
+    .confirmBubble .actions{
       display:flex;
-      gap:10px;
+      gap:8px;
       justify-content:flex-end;
-      background: rgba(0,0,0,.18);
+    }
+    .confirmBubble .mini{
+      padding:8px 10px;
+      font-size:13px;
+      border-radius:10px;
+    }
+    .confirmBubble:before{
+      content:"";
+      position:absolute;
+      left:12px;
+      top:-7px;
+      width:12px; height:12px;
+      transform: rotate(45deg);
+      background: rgba(0,0,0,.28);
+      border-left:1px solid var(--line);
+      border-top:1px solid var(--line);
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="top">
-      <div class="prompt">
-        <div class="left">
-          <div class="label">Ýttu á kortið til að velja staðsetningu</div>
-          <div class="city" id="cityName">—</div>
-        </div>
-        <div class="chipStack">
-          <div class="chip" id="roundChip">Umferð 1/5</div>
-          <div class="chip chipScore" id="scoreChip">Samtals: 0</div>
-        </div>
-      </div>
-
-      <div class="toast" id="toast">
-        <div class="t">Niðurstaða</div>
-        <div class="m" id="toastMsg">Ýttu á kortið til að velja staðsetningu.</div>
-      </div>
+  <div class="wrap">
+    <div class="siteHeader">
+      <!-- Still there, you can change href as needed -->
+      <a href="../index.html">← Til baka</a>
+      <div class="right">ís.is — prótótýpa</div>
     </div>
 
-    <div class="bottomBar">
-      <div class="chip" id="statusChip">—</div>
-      <button class="primary" id="nextBtn" disabled>Næsti bær</button>
-    </div>
+    <div class="card">
+      <div class="top">
+        <div class="prompt">
+          <div class="left">
+            <div class="label">Ýttu á kortið til að velja staðsetningu</div>
+            <div class="city" id="cityName">—</div>
+          </div>
+          <div class="chipStack">
+            <div class="chip" id="roundChip">Umferð 1/5</div>
+            <div class="chip chipScore" id="scoreChip">Samtals: 0</div>
+          </div>
+        </div>
 
-    <div class="mapWrap">
-      <div class="overlay">
-        <div class="row">
-          <button class="small" id="zoomIn">+</button>
-          <button class="small" id="zoomOut">−</button>
-          <button class="small" id="centerBtn">Miðja</button>
+        <div class="toast" id="toast">
+          <div class="t">Niðurstaða</div>
+          <div class="m" id="toastMsg">Ýttu á kortið til að velja staðsetningu.</div>
         </div>
       </div>
 
-      <div class="mapViewport" id="viewport" aria-label="Kort">
-        <div class="mapLayer" id="layer">
-          <img id="mapImg" class="mapImg" alt="Kort af Íslandi" />
-          <div class="marker truth" id="truthMarker"></div>
+      <div class="mapWrap" id="mapWrap">
+        <div class="overlay">
+          <div class="row">
+            <button class="small" id="zoomIn">+</button>
+            <button class="small" id="zoomOut">−</button>
+            <button class="small" id="centerBtn">Miðja</button>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Confirm modal -->
-  <div class="modal" id="confirmModal" role="dialog" aria-modal="true">
-    <div class="modalCard">
-      <div class="modalBody">
-        <h3 class="modalTitle">Staðfesta staðsetningu?</h3>
-        <p class="modalText">Ýttu á <b>Staðfesta</b> til að skrá gisk og halda áfram í næsta bæ.</p>
-      </div>
-      <div class="modalActions">
-        <button id="cancelGuessBtn">Hætta við</button>
-        <button class="primary" id="confirmGuessBtn">Staðfesta</button>
+        <!-- tiny confirm bubble -->
+        <div class="confirmBubble" id="confirmBubble" aria-hidden="true">
+          <div class="t">Staðfesta?</div>
+          <div class="m">Skrá gisk og fara sjálfkrafa í næsta bæ.</div>
+          <div class="actions">
+            <button class="mini" id="cancelGuessBtn">Hætta við</button>
+            <button class="mini primary" id="confirmGuessBtn">Staðfesta</button>
+          </div>
+        </div>
+
+        <div class="mapViewport" id="viewport" aria-label="Kort">
+          <div class="mapLayer" id="layer">
+            <img id="mapImg" class="mapImg" alt="Kort af Íslandi" />
+            <!-- temporary tap marker (shows where you tapped) -->
+            <div class="marker tap" id="tapMarker" style="display:none;"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -293,11 +331,11 @@
 
   const CITIES = [
     { name: "Reykjavík",   x: 0.28, y: 0.70 },
-    { name: "Ísafjörður",  x: 0.20, y: 0.27 },
+    { name: "Ísafjörður",  x: 0.20, y: 0.33 },
     { name: "Akureyri",    x: 0.52, y: 0.34 },
+    { name: "Sauðárkrókur",    x: 0.42, y: 0.34 },
     { name: "Egilsstaðir", x: 0.78, y: 0.48 },
-    { name: "Sauðárkrókur", x: 0.40, y: 0.42 },
-    { name: "Höfn í Hornafirði", x: 0.73, y: 0.75 },
+    { name: "Höfn í Hornafirði", x: 0.73, y: 0.80 },
   ];
 
   const MAX_DIST_PX = 380;
@@ -312,36 +350,37 @@
   let tx = 0, ty = 0;
 
   // Pointer tracking for pan + pinch
-  const pointers = new Map(); // id -> {x,y}
+  const pointers = new Map();
   let panPointerId = null;
   let isPanning = false;
   let panStart = { x:0, y:0, tx:0, ty:0 };
 
   let isPinching = false;
-  let pinchStart = { dist:0, scale:1, midX:0, midY:0, tx:0, ty:0 };
+  let pinchStart = { dist:0, scale:1, midVX:0, midVY:0, tx:0, ty:0 };
 
-  // Pending guess (for confirm modal)
+  // Pending guess (for confirm bubble)
   let pendingGuessN = null;
+  let pendingTapVX = 0, pendingTapVY = 0; // viewport coords
   let pendingWasClick = false;
 
   // DOM
   const mapImg = document.getElementById("mapImg");
   const viewport = document.getElementById("viewport");
   const layer = document.getElementById("layer");
+  const mapWrap = document.getElementById("mapWrap");
 
   const cityName = document.getElementById("cityName");
   const roundChip = document.getElementById("roundChip");
   const scoreChip = document.getElementById("scoreChip");
-  const statusChip = document.getElementById("statusChip");
   const toastMsg = document.getElementById("toastMsg");
 
-  const truthMarker = document.getElementById("truthMarker");
-  const nextBtn = document.getElementById("nextBtn");
+  const tapMarker = document.getElementById("tapMarker");
+
   const zoomIn = document.getElementById("zoomIn");
   const zoomOut = document.getElementById("zoomOut");
   const centerBtn = document.getElementById("centerBtn");
 
-  const confirmModal = document.getElementById("confirmModal");
+  const confirmBubble = document.getElementById("confirmBubble");
   const confirmGuessBtn = document.getElementById("confirmGuessBtn");
   const cancelGuessBtn = document.getElementById("cancelGuessBtn");
 
@@ -396,35 +435,63 @@
     return Math.round(Math.pow(t, 1.6) * 100);
   }
 
-  function resetRoundUI(){
-    guessed = false;
-    nextBtn.disabled = true;
-    truthMarker.style.display = "none";
-    toastMsg.textContent = "Ýttu á kortið til að velja staðsetningu.";
-    statusChip.textContent = "—";
-  }
-
   function setRound(){
     const c = CITIES[idx];
     cityName.textContent = c.name;
     roundChip.textContent = `Umferð ${idx+1}/${CITIES.length}`;
     scoreChip.textContent = `Samtals: ${total}`;
-    resetRoundUI();
+    guessed = false;
+    toastMsg.textContent = "Ýttu á kortið til að velja staðsetningu.";
+    hideConfirm();
+    tapMarker.style.display = "none";
   }
 
-  function showTruthMarkerAtCity(){
+  function addCityMarkerForCurrent(){
     const c = CITIES[idx];
     const truthPx = pxFromNormalized({ x: c.x, y: c.y });
-    truthMarker.style.left = truthPx.x + "px";
-    truthMarker.style.top  = truthPx.y + "px";
-    truthMarker.style.display = "block";
+
+    // ✅ hanga eftir: býr til nýjan marker sem verður eftir á layer
+    const m = document.createElement("div");
+    m.className = "marker cityDone";
+    m.style.left = truthPx.x + "px";
+    m.style.top  = truthPx.y + "px";
+    layer.appendChild(m);
   }
 
-  function openConfirm(){
-    confirmModal.classList.add("show");
+  function hideConfirm(){
+    confirmBubble.classList.remove("show");
+    confirmBubble.setAttribute("aria-hidden", "true");
+    pendingGuessN = null;
   }
-  function closeConfirm(){
-    confirmModal.classList.remove("show");
+
+  function showConfirmAt(vx, vy){
+    // place bubble near tap inside mapWrap (clamped so it stays visible)
+    const wrapRect = mapWrap.getBoundingClientRect();
+    const viewRect = viewport.getBoundingClientRect();
+
+    // bubble positioned relative to mapWrap
+    confirmBubble.classList.add("show");
+    confirmBubble.setAttribute("aria-hidden", "false");
+
+    // preferred position: slightly right + down from tap
+    const bubbleW = confirmBubble.offsetWidth || 240;
+    const bubbleH = confirmBubble.offsetHeight || 110;
+
+    const tapX = (viewRect.left + vx) - wrapRect.left;
+    const tapY = (viewRect.top + vy) - wrapRect.top;
+
+    let x = tapX + 12;
+    let y = tapY + 12;
+
+    // clamp inside wrap
+    x = clamp(x, 10, wrapRect.width - bubbleW - 10);
+    y = clamp(y, 10, wrapRect.height - bubbleH - 10);
+
+    confirmBubble.style.left = x + "px";
+    confirmBubble.style.top  = y + "px";
+
+    // little arrow points "roughly" to tap (good enough)
+    // (If you want pixel-perfect arrow aiming, we can do it later)
   }
 
   function finishGuess(guessN){
@@ -440,30 +507,27 @@
     total += pts;
     scoreChip.textContent = `Samtals: ${total}`;
 
-    showTruthMarkerAtCity();
+    // ✅ marker hangs on the city (truth)
+    addCityMarkerForCurrent();
 
     const vibe = pts >= 70 ? "Nálægt!" : (pts >= 35 ? "Ekki slæmt." : "Það er alltaf næsta umferð 😄");
     toastMsg.innerHTML = `<span class="${pts>=70?'good':(pts>=35?'':'bad')}">${pts} stig</span> — fjarlægð ~ ${Math.round(distPx)} px. ${vibe}`;
-    statusChip.textContent = `+${pts} stig`;
 
     guessed = true;
-    nextBtn.disabled = false;
+    hideConfirm();
 
-    // auto-next eftir örstutt “feedback”
-    setTimeout(() => {
-      goNext();
-    }, 750);
+    // auto-next after a short feedback
+    setTimeout(() => goNext(), 650);
   }
 
   function goNext(){
     idx++;
+    tapMarker.style.display = "none";
     if (idx >= CITIES.length){
       const avg = Math.round(total / CITIES.length);
       toastMsg.innerHTML = `<span class="good">Leik lokið!</span> Samtals: <b>${total}</b> stig (meðaltal ${avg}).`;
       cityName.textContent = "—";
       roundChip.textContent = `Lokið (${CITIES.length}/${CITIES.length})`;
-      statusChip.textContent = `Lokið — ${total} stig`;
-      nextBtn.disabled = true;
       return;
     }
     setRound();
@@ -488,7 +552,6 @@
   }
 
   function zoomAtViewportPoint(newScale, vx, vy){
-    // vx,vy eru í viewport-coords (ekki client)
     newScale = clamp(newScale, MIN_SCALE, MAX_SCALE);
     if (newScale === scale) return;
 
@@ -502,32 +565,35 @@
     applyTransform();
   }
 
-  // ===== Pointer events: pan + pinch =====
+  // ===== Pointer events: pan + pinch + tap =====
   viewport.addEventListener("pointerdown", (e) => {
     viewport.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
+    // if confirm is open and user taps elsewhere: close (but don't break pinch)
+    if (confirmBubble.classList.contains("show") && pointers.size === 1){
+      // allow close on outside tap AFTER pointerup if it's a click; handled below
+    }
+
     if (pointers.size === 2){
-      // start pinch
       const pts = [...pointers.values()];
       const dx = pts[1].x - pts[0].x;
       const dy = pts[1].y - pts[0].y;
       const dist = Math.hypot(dx, dy);
 
       const rect = viewport.getBoundingClientRect();
-      const midX = ((pts[0].x + pts[1].x) / 2) - rect.left;
-      const midY = ((pts[0].y + pts[1].y) / 2) - rect.top;
+      const midVX = ((pts[0].x + pts[1].x) / 2) - rect.left;
+      const midVY = ((pts[0].y + pts[1].y) / 2) - rect.top;
 
       isPinching = true;
       isPanning = false;
       panPointerId = null;
       pendingWasClick = false;
 
-      pinchStart = { dist, scale, midX, midY, tx, ty };
+      pinchStart = { dist, scale, midVX, midVY, tx, ty };
       return;
     }
 
-    // one pointer => potential pan/click
     if (!isPinching){
       panPointerId = e.pointerId;
       isPanning = true;
@@ -549,11 +615,10 @@
       const ratio = dist / (pinchStart.dist || 1);
       const newScale = pinchStart.scale * ratio;
 
-      // zoom around pinch midpoint (viewport coords)
       tx = pinchStart.tx;
       ty = pinchStart.ty;
       scale = pinchStart.scale;
-      zoomAtViewportPoint(newScale, pinchStart.midX, pinchStart.midY);
+      zoomAtViewportPoint(newScale, pinchStart.midVX, pinchStart.midVY);
 
       pendingWasClick = false;
       return;
@@ -573,18 +638,15 @@
 
   viewport.addEventListener("pointerup", (e) => {
     if (!pointers.has(e.pointerId)) return;
-
     pointers.delete(e.pointerId);
 
     if (isPinching){
       if (pointers.size < 2){
         isPinching = false;
-        // ef einn putti eftir, leyfum honum að halda áfram að pan-a
         if (pointers.size === 1){
           const remainingId = [...pointers.keys()][0];
           panPointerId = remainingId;
           isPanning = true;
-
           const p = pointers.get(remainingId);
           panStart = { x: p.x, y: p.y, tx, ty };
           pendingWasClick = false;
@@ -597,15 +659,35 @@
       isPanning = false;
       panPointerId = null;
 
-      // click => open confirm (ef ekki búið að giska)
-      if (!guessed && pendingWasClick){
+      if (pendingWasClick){
         const n = normalizedFromClient(e.clientX, e.clientY);
-        if (n.x >= 0 && n.x <= 1 && n.y >= 0 && n.y <= 1){
-          pendingGuessN = n;
-          openConfirm();
-        } else {
+
+        // If tap is outside image => just message
+        if (!(n.x >= 0 && n.x <= 1 && n.y >= 0 && n.y <= 1)){
           toastMsg.textContent = "Ýttu innan myndarinnar.";
+          hideConfirm();
+          tapMarker.style.display = "none";
+          return;
         }
+
+        // If already guessed => ignore taps (don’t open confirm)
+        if (guessed) return;
+
+        // Save pending + show tiny confirm near tap
+        pendingGuessN = n;
+
+        const rect = viewport.getBoundingClientRect();
+        pendingTapVX = e.clientX - rect.left;
+        pendingTapVY = e.clientY - rect.top;
+
+        // Show a tiny tap marker at the tap position (optional but feels good)
+        const s = imageSize();
+        const tapPx = pxFromNormalized(n);
+        tapMarker.style.left = tapPx.x + "px";
+        tapMarker.style.top  = tapPx.y + "px";
+        tapMarker.style.display = "block";
+
+        showConfirmAt(pendingTapVX, pendingTapVY);
       }
     }
   });
@@ -636,32 +718,37 @@
   });
   centerBtn.addEventListener("click", center);
 
-  // Confirm modal actions
+  // Confirm bubble actions
   cancelGuessBtn.addEventListener("click", () => {
-    pendingGuessN = null;
-    closeConfirm();
+    hideConfirm();
+    tapMarker.style.display = "none";
   });
   confirmGuessBtn.addEventListener("click", () => {
     if (!pendingGuessN) return;
     const g = pendingGuessN;
-    pendingGuessN = null;
-    closeConfirm();
+    // keep tap marker for a moment? we’ll hide now
+    tapMarker.style.display = "none";
     finishGuess(g);
   });
-  confirmModal.addEventListener("click", (e) => {
-    if (e.target === confirmModal){
-      pendingGuessN = null;
-      closeConfirm();
+
+  // Clicking outside bubble closes it (but not if you click inside bubble)
+  mapWrap.addEventListener("pointerdown", (e) => {
+    if (!confirmBubble.classList.contains("show")) return;
+    const inside = confirmBubble.contains(e.target);
+    const insideViewport = viewport.contains(e.target);
+    if (!inside && !insideViewport){
+      hideConfirm();
+      tapMarker.style.display = "none";
     }
   });
 
-  // Next (fallback/manual)
-  nextBtn.addEventListener("click", () => {
-    if (!guessed) return;
-    goNext();
+  window.addEventListener("resize", () => {
+    applyTransform();
+    // if bubble open, keep it clamped on resize
+    if (confirmBubble.classList.contains("show")){
+      showConfirmAt(pendingTapVX, pendingTapVY);
+    }
   });
-
-  window.addEventListener("resize", () => applyTransform());
 
   // Init
   mapImg.src = MAP_SRC;
