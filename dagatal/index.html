@@ -6,28 +6,25 @@
   <title>Dagatal</title>
   <style>
     :root{
-      --bg:#06131c;
-      --panel:#0b2130;
-      --panel2:#0f2c3f;
+      --bg:#071a24;         /* einn bakgrunnslitur á öllu */
+      --panel:#0b2532;
+      --panel2:#0e2c3b;
       --text:#e8f6ff;
       --muted:#9fc5da;
       --ice:#bfe9ff;
-      --ice2:#67c7ff;
       --ring:#ff3b3b;
+      --border: rgba(191,233,255,.16);
       --shadow: rgba(0,0,0,.35);
-      --cell:#0c2636;
-      --cellHover:#113246;
-      --border: rgba(191,233,255,.18);
-      --focus: rgba(103,199,255,.55);
+      --focus: rgba(103,199,255,.45);
+      --cell:#0c2a39;
+      --cellHover:#103244;
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background: radial-gradient(1200px 700px at 15% 0%, rgba(103,199,255,.18), transparent 60%),
-                  radial-gradient(1000px 600px at 85% 10%, rgba(191,233,255,.12), transparent 55%),
-                  var(--bg);
+      background: var(--bg);
       color:var(--text);
     }
 
@@ -36,8 +33,7 @@
       position: sticky;
       top:0;
       z-index:10;
-      backdrop-filter: blur(10px);
-      background: rgba(6,19,28,.82);
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
     }
     .topbar-inner{
@@ -47,26 +43,25 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap:10px;
     }
 
     .btn{
       appearance:none;
       border:1px solid var(--border);
-      background: rgba(11,33,48,.65);
+      background: var(--panel);
       color:var(--text);
       padding:10px 12px;
       border-radius: 12px;
       cursor:pointer;
-      box-shadow: 0 10px 24px var(--shadow);
-      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
       user-select:none;
       display:inline-flex;
       align-items:center;
       gap:8px;
       white-space:nowrap;
     }
-    .btn:hover{ background: rgba(15,44,63,.72); border-color: rgba(191,233,255,.35); }
+    .btn:hover{ background: var(--panel2); border-color: rgba(191,233,255,.28); }
     .btn:active{ transform: translateY(1px); }
 
     .title-wrap{
@@ -74,26 +69,25 @@
       display:flex;
       align-items:center;
       gap:10px;
-      min-width: 220px;
       justify-content:center;
       flex: 1;
+      min-width: 220px;
     }
     .year{
-      font-size: 18px;
+      font-size: 17px;
       letter-spacing:.5px;
-      font-weight: 800;
+      font-weight: 900;
       color: var(--ice);
-      text-shadow: 0 0 18px rgba(103,199,255,.25);
       min-width: 70px;
       text-align:center;
       padding: 10px 12px;
       border-radius: 12px;
       border:1px solid rgba(191,233,255,.14);
-      background: rgba(11,33,48,.55);
+      background: var(--panel);
       cursor:pointer;
       user-select:none;
     }
-    .year:hover{ border-color: rgba(191,233,255,.35); background: rgba(15,44,63,.62); }
+    .year:hover{ border-color: rgba(191,233,255,.30); background: var(--panel2); }
 
     /* Year dropdown */
     .year-pop{
@@ -103,72 +97,111 @@
       transform: translateX(-50%);
       width: min(340px, 92vw);
       border-radius: 14px;
-      border:1px solid rgba(191,233,255,.20);
-      background: rgba(11,33,48,.92);
+      border:1px solid rgba(191,233,255,.18);
+      background: var(--panel);
       box-shadow: 0 22px 50px rgba(0,0,0,.45);
       padding: 12px;
       display:none;
     }
     .year-pop.show{ display:block; }
-    .year-pop .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      margin-bottom:10px;
-    }
+    .row{ display:flex; gap:10px; align-items:center; }
+    .row + .row{ margin-top:10px; }
+
     .year-pop input{
       flex:1;
       padding: 10px 12px;
       border-radius: 12px;
-      border:1px solid rgba(191,233,255,.18);
-      background: rgba(6,19,28,.55);
+      border:1px solid rgba(191,233,255,.14);
+      background: var(--bg);
       color: var(--text);
       outline:none;
       font-size: 16px;
     }
-    .year-pop input:focus{ border-color: rgba(103,199,255,.55); box-shadow: 0 0 0 3px rgba(103,199,255,.12); }
+    .year-pop input:focus{ border-color: rgba(103,199,255,.55); box-shadow: 0 0 0 3px rgba(103,199,255,.10); }
+
     .chip{
       appearance:none;
-      border:1px solid rgba(191,233,255,.18);
-      background: rgba(6,19,28,.40);
+      border:1px solid rgba(191,233,255,.14);
+      background: var(--bg);
       color: var(--text);
       padding: 8px 10px;
       border-radius: 999px;
       cursor:pointer;
-      font-weight:700;
+      font-weight:800;
     }
-    .chip:hover{ border-color: rgba(191,233,255,.35); background: rgba(15,44,63,.55); }
+    .chip:hover{ border-color: rgba(191,233,255,.28); background: var(--panel2); }
 
-    .controls{
-      max-width: 1100px;
-      margin: 10px auto 0;
-      padding: 0 14px 12px;
+    /* Settings */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      display:none;
+      z-index: 30;
+    }
+    .overlay.show{ display:block; }
+
+    .sheet{
+      position: fixed;
+      left: 50%;
+      top: 86px;
+      transform: translateX(-50%);
+      width: min(520px, 92vw);
+      border-radius: 16px;
+      border:1px solid rgba(191,233,255,.18);
+      background: var(--panel);
+      box-shadow: 0 30px 70px rgba(0,0,0,.55);
+      display:none;
+      z-index: 40;
+      overflow:hidden;
+    }
+    .sheet.show{ display:block; }
+
+    .sheet-header{
+      padding: 12px 14px;
       display:flex;
-      gap:12px;
       align-items:center;
       justify-content:space-between;
-      flex-wrap:wrap;
+      border-bottom:1px solid var(--border);
+      background: var(--panel);
+    }
+    .sheet-title{
+      font-weight: 900;
+      letter-spacing:.4px;
+      color: var(--ice);
+    }
+    .sheet-body{
+      padding: 12px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .group{
+      border:1px solid rgba(191,233,255,.12);
+      border-radius: 14px;
+      background: var(--bg);
+      padding: 10px 12px;
+    }
+    .group h4{
+      margin:0 0 10px 0;
+      font-size: 12px;
+      letter-spacing:.35px;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
-    .toggles{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
     .toggle{
       display:flex;
       align-items:center;
+      justify-content:space-between;
       gap:10px;
-      padding:10px 12px;
+      padding: 10px 8px;
       border-radius: 12px;
-      border:1px solid var(--border);
-      background: rgba(11,33,48,.55);
     }
     .toggle label{
       display:flex;
       align-items:center;
-      gap:8px;
-      color: var(--text);
+      gap:10px;
       cursor:pointer;
       user-select:none;
       font-size: 14px;
@@ -176,27 +209,57 @@
     .toggle input{
       width: 18px;
       height: 18px;
-      accent-color: var(--ice2);
+      accent-color: var(--ice);
       cursor:pointer;
     }
-    .hint{
-      color: var(--muted);
-      font-size: 13px;
-      opacity:.95;
-    }
 
+    .seg{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .seg button{
+      border:1px solid rgba(191,233,255,.14);
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+    .seg button.active{
+      border-color: rgba(103,199,255,.55);
+      box-shadow: 0 0 0 3px rgba(103,199,255,.10);
+    }
+    .seg button:hover{ background: var(--panel2); }
+
+    .linkbtn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(191,233,255,.14);
+      background: var(--panel);
+      cursor:pointer;
+      font-weight: 900;
+    }
+    .linkbtn:hover{ background: var(--panel2); border-color: rgba(191,233,255,.28); }
+
+    /* Main */
     .wrap{
       max-width: 1100px;
       margin: 0 auto;
       padding: 10px 14px 34px;
     }
 
-    /* Month blocks (eintóna) */
     .month{
       border:1px solid var(--border);
-      background: rgba(11,33,48,.55);
+      background: var(--panel);
       border-radius: 16px;
-      box-shadow: 0 18px 40px rgba(0,0,0,.28);
       margin: 14px 0;
       overflow:hidden;
     }
@@ -206,19 +269,11 @@
       justify-content:space-between;
       padding: 12px 14px;
       border-bottom:1px solid var(--border);
-      background: rgba(11,33,48,.55);
+      background: var(--panel);
     }
-    .month-name{
-      font-weight: 900;
-      color: var(--ice);
-      letter-spacing:.4px;
-    }
-    .month-meta{
-      color: var(--muted);
-      font-size: 13px;
-    }
+    .month-name{ font-weight: 900; color: var(--ice); letter-spacing:.4px; }
+    .month-meta{ color: var(--muted); font-size: 13px; }
 
-    /* Vikudagar */
     .dow{
       display:grid;
       grid-template-columns: repeat(7, 1fr);
@@ -226,16 +281,15 @@
       padding: 10px 12px 0;
       color: var(--muted);
       font-size: 12px;
-      letter-spacing:.3px;
       text-transform: lowercase;
     }
     .dow div{
-      height: 44px;
+      height: 42px;
       display:flex;
       align-items:center;
       justify-content:center;
       border-radius: 12px;
-      background: rgba(12,38,54,.35);
+      background: var(--bg);
       border: 1px solid rgba(191,233,255,.10);
     }
 
@@ -246,10 +300,9 @@
       padding: 10px 12px 12px;
     }
 
-    /* Dagakassar: bara talan -> minni og samræmt */
     .cell{
       position:relative;
-      height: 44px;
+      height: 42px;
       border-radius: 12px;
       border: 1px solid rgba(191,233,255,.14);
       background: var(--cell);
@@ -257,7 +310,6 @@
       align-items:center;
       justify-content:center;
       transition: background .15s ease, border-color .15s ease, transform .08s ease;
-      box-shadow: 0 12px 26px rgba(0,0,0,.22);
       overflow:hidden;
     }
     .cell:hover{
@@ -267,17 +319,10 @@
     .cell.is-empty{
       background: transparent;
       border: 1px dashed rgba(191,233,255,.12);
-      box-shadow:none;
       opacity:.25;
     }
-    .dnum{
-      font-size: 16px;
-      font-weight: 900;
-      color: var(--text);
-      line-height:1;
-    }
+    .dnum{ font-size: 16px; font-weight: 900; }
 
-    /* holiday ring */
     .cell.is-holiday::after{
       content:"";
       position:absolute;
@@ -287,46 +332,108 @@
       pointer-events:none;
       opacity: .95;
     }
-
-    /* moon badge */
     .moon{
       position:absolute;
       top: 6px;
       right: 8px;
       font-size: 14px;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,.35));
       opacity: .95;
     }
 
-    /* today highlight */
     .cell.is-today{
       border-color: rgba(103,199,255,.55);
-      box-shadow: 0 0 0 3px rgba(103,199,255,.12), 0 12px 26px rgba(0,0,0,.22);
-    }
-    .cell.flash{
-      animation: flash 1.1s ease-out 1;
-    }
-    @keyframes flash{
-      0%{ box-shadow: 0 0 0 0 rgba(103,199,255,.0), 0 12px 26px rgba(0,0,0,.22); }
-      30%{ box-shadow: 0 0 0 6px rgba(103,199,255,.22), 0 12px 26px rgba(0,0,0,.22); }
-      100%{ box-shadow: 0 0 0 0 rgba(103,199,255,.0), 0 12px 26px rgba(0,0,0,.22); }
+      box-shadow: 0 0 0 3px rgba(103,199,255,.10);
     }
 
-    .footer{
-      margin-top: 18px;
-      color: rgba(159,197,218,.85);
-      font-size: 12px;
-      text-align:center;
+    /* Weeks view */
+    .weeks{
+      border:1px solid var(--border);
+      border-radius: 16px;
+      overflow:hidden;
+      background: var(--panel);
+      margin: 14px 0;
     }
+    .weeks-header{
+      padding: 12px 14px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .weeks-title{ font-weight: 900; color: var(--ice); }
+    .weeks-meta{ color: var(--muted); font-size: 13px; }
+
+    .week-row{
+      display:grid;
+      grid-template-columns: 72px 1fr;
+      gap:10px;
+      padding: 10px 12px;
+      border-top:1px solid rgba(191,233,255,.10);
+      align-items:center;
+    }
+    .week-row:first-of-type{ border-top:none; }
+    .wn{
+      font-weight: 900;
+      color: var(--muted);
+      background: var(--bg);
+      border:1px solid rgba(191,233,255,.10);
+      border-radius: 12px;
+      height: 42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .week-grid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+    }
+
+    /* Holidays list view */
+    .holidays{
+      border:1px solid var(--border);
+      background: var(--panel);
+      border-radius: 16px;
+      overflow:hidden;
+      margin: 14px 0;
+    }
+    .holidays-header{
+      padding: 12px 14px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .holidays-title{ font-weight: 900; color: var(--ice); }
+    .hitem{
+      padding: 12px 14px;
+      border-top:1px solid rgba(191,233,255,.10);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:baseline;
+    }
+    .hitem:first-of-type{ border-top:none; }
+    .hleft{
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+    .hright{
+      color: var(--muted);
+      font-size: 13px;
+      white-space:nowrap;
+    }
+
+    .footer{ margin-top: 18px; color: rgba(159,197,218,.85); font-size: 12px; text-align:center; }
 
     @media (max-width: 520px){
-      .cell{ height: 44px; border-radius: 12px; }
-      .dow div{ height: 44px; border-radius: 12px; }
       .topbar-inner{ padding: 11px 12px; }
-      .controls{ padding: 0 12px 12px; }
       .wrap{ padding: 8px 12px 26px; }
-      .btn{ padding: 10px 11px; }
-      .year{ font-size: 17px; }
+      .cell{ height: 42px; }
+      .dow div{ height: 42px; }
+      .week-row{ grid-template-columns: 62px 1fr; }
+      .wn{ height: 42px; }
+      .sheet{ top: 78px; }
     }
   </style>
 </head>
@@ -344,9 +451,9 @@
         <div class="year-pop" id="yearPop" aria-hidden="true">
           <div class="row">
             <input id="yearInput" type="number" inputmode="numeric" />
-            <button class="btn" id="goYearBtn" style="padding:10px 12px;">Fara</button>
+            <button class="btn" id="goYearBtn">Fara</button>
           </div>
-          <div class="row" style="justify-content:space-between; margin-bottom:0;">
+          <div class="row" style="justify-content:space-between;">
             <button class="chip" data-jump="-50">-50</button>
             <button class="chip" data-jump="-10">-10</button>
             <button class="chip" data-jump="10">+10</button>
@@ -355,11 +462,29 @@
         </div>
       </div>
 
-      <button class="btn" id="todayBtn" title="Hoppa á daginn í dag">⤒ <span style="opacity:.9">Í dag</span></button>
+      <button class="btn" id="settingsBtn" title="Stillingar">⚙︎</button>
     </div>
+  </header>
 
-    <div class="controls">
-      <div class="toggles">
+  <!-- Settings overlay/sheet -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Stillingar">
+    <div class="sheet-header">
+      <div class="sheet-title">Stillingar</div>
+      <button class="btn" id="closeSheet" title="Loka">✕</button>
+    </div>
+    <div class="sheet-body">
+
+      <div class="group">
+        <h4>Sýn</h4>
+        <div class="seg" id="layoutSeg">
+          <button data-layout="months" class="active">Mánuðir</button>
+          <button data-layout="weeks">Vikur</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <h4>Merkingar</h4>
         <div class="toggle">
           <label><input type="checkbox" id="toggleHolidays" checked /> Lögbundnir frídagar</label>
         </div>
@@ -367,9 +492,21 @@
           <label><input type="checkbox" id="toggleMoon" checked /> Tungl (🌕 / 🌑)</label>
         </div>
       </div>
-      <div class="hint">Skrollaðu niður til að sjá allt árið.</div>
+
+      <div class="group">
+        <h4>Flýtileiðir</h4>
+        <button class="linkbtn" id="todayBtn">
+          <span>Í dag</span>
+          <span style="opacity:.85">⤒</span>
+        </button>
+        <button class="linkbtn" id="showHolidaysBtn">
+          <span>Skoða frídaga</span>
+          <span style="opacity:.85">›</span>
+        </button>
+      </div>
+
     </div>
-  </header>
+  </aside>
 
   <main class="wrap">
     <div id="calendar"></div>
@@ -380,13 +517,20 @@
 (() => {
   const pad2 = (n) => String(n).padStart(2, "0");
   const isoDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-
   const WEEKDAYS = ["mán","þri","mið","fim","fös","lau","sun"]; // Monday-first
   const MONTHS_LONG = ["janúar","febrúar","mars","apríl","maí","júní","júlí","ágúst","september","október","nóvember","desember"];
   const monIndex = (jsDay) => (jsDay + 6) % 7;
-
   const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
   const daysInMonth = (y, m) => new Date(y, m+1, 0).getDate();
+
+  // ISO week number (Monday-first)
+  function isoWeekNumber(date){
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7; // Mon=1..Sun=7
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
 
   // Easter (Meeus/Jones/Butcher)
   function easterSunday(year){
@@ -419,23 +563,36 @@
     return addDays(d, delta);
   }
 
-  function getIcelandHolidays(year){
-    const set = new Set();
-    [
-      [1,1],[1,6],[5,1],[6,17],[12,24],[12,25],[12,26],[12,31]
-    ].forEach(([m, d]) => set.add(`${year}-${pad2(m)}-${pad2(d)}`));
+  // Holiday names + set
+  function getIcelandHolidayMap(year){
+    const map = new Map(); // iso -> name
+    const add = (m,d,name) => map.set(`${year}-${pad2(m)}-${pad2(d)}`, name);
+
+    add(1,1,"Nýársdagur");
+    add(1,6,"Þrettándinn");
+    add(5,1,"Verkalýðsdagurinn");
+    add(6,17,"Þjóðhátíðardagurinn");
+    add(12,24,"Aðfangadagur");
+    add(12,25,"Jóladagur");
+    add(12,26,"Annar í jólum");
+    add(12,31,"Gamlársdagur");
 
     const easter = easterSunday(year);
-    [ addDays(easter,-3), addDays(easter,-2), easter, addDays(easter,1),
-      addDays(easter,39), addDays(easter,49), addDays(easter,50)
-    ].forEach(d => set.add(isoDate(d)));
+    map.set(isoDate(addDays(easter,-3)), "Skírdagur");
+    map.set(isoDate(addDays(easter,-2)), "Föstudagurinn langi");
+    map.set(isoDate(easter), "Páskadagur");
+    map.set(isoDate(addDays(easter,1)), "Annar í páskum");
+    map.set(isoDate(addDays(easter,39)), "Uppstigningardagur");
+    map.set(isoDate(addDays(easter,49)), "Hvítasunnudagur");
+    map.set(isoDate(addDays(easter,50)), "Annar í hvítasunnu");
 
-    set.add(isoDate(firstThursdayAfterApril18(year)));
-    set.add(isoDate(firstMondayOfAugust(year)));
-    return set;
+    map.set(isoDate(firstThursdayAfterApril18(year)), "Sumardagurinn fyrsti");
+    map.set(isoDate(firstMondayOfAugust(year)), "Frídagur verslunarmanna");
+
+    return map;
   }
 
-  // Moon phases: mark ONLY local minima -> no double days
+  // Moon phases: local minima -> no doubles
   const SYNODIC = 29.530588853;
   const REF_NEW = Date.UTC(2000,0,6,18,14,0);
   function moonAgeDays(date){
@@ -444,49 +601,30 @@
     const age = ((daysSince % SYNODIC) + SYNODIC) % SYNODIC;
     return age;
   }
-  function phaseDistance(age, target){
-    let d = Math.abs(age - target);
-    // wrap is not needed here because targets are 0 and SYNODIC/2 and age in [0,S)
-    return d;
-  }
+  function phaseDistance(age, target){ return Math.abs(age - target); }
   function computeMoonMarkersForYear(year){
     const markers = new Map(); // iso -> "new" | "full"
     const dates = [];
     const start = new Date(year,0,1);
     const end = new Date(year,11,31);
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)){
-      dates.push(new Date(d));
-    }
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(new Date(d));
 
     const fullT = SYNODIC/2;
-    const eps = 1.0; // only accept if within 1 day of exact phase
+    const eps = 1.0;
 
     for (let i=1; i<dates.length-1; i++){
-      const d = dates[i];
-      const prev = dates[i-1];
-      const next = dates[i+1];
+      const d = dates[i], prev = dates[i-1], next = dates[i+1];
+      const a  = moonAgeDays(d), ap = moonAgeDays(prev), an = moonAgeDays(next);
 
-      const a  = moonAgeDays(d);
-      const ap = moonAgeDays(prev);
-      const an = moonAgeDays(next);
-
-      // New moon: distance to 0 (also allow wrap via min(age, S-age))
       const dn  = Math.min(a, SYNODIC - a);
       const dnp = Math.min(ap, SYNODIC - ap);
       const dnn = Math.min(an, SYNODIC - an);
+      if (dn < dnp && dn < dnn && dn <= eps) markers.set(isoDate(d), "new");
 
-      if (dn < dnp && dn < dnn && dn <= eps){
-        markers.set(isoDate(d), "new");
-      }
-
-      // Full moon
       const df  = phaseDistance(a, fullT);
       const dfp = phaseDistance(ap, fullT);
       const dfn = phaseDistance(an, fullT);
-
-      if (df < dfp && df < dfn && df <= eps){
-        markers.set(isoDate(d), "full");
-      }
+      if (df < dfp && df < dfn && df <= eps) markers.set(isoDate(d), "full");
     }
     return markers;
   }
@@ -499,22 +637,65 @@
     year: 2025,
     showHolidays: true,
     showMoon: true,
-    holidaySet: new Set(),
+    layout: "months",      // "months" | "weeks"
+    view: "calendar",      // "calendar" | "holidays"
+    holidayMap: new Map(),
     moonMarkers: new Map(),
   };
 
-  function buildYear(year){
-    state.year = year;
-    yearLabel.textContent = year;
-    $("#yearInput").value = year;
+  function weekdayShort(date){ return WEEKDAYS[monIndex(date.getDay())]; }
+  function monthShort(m){ return ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"][m]; }
 
-    state.holidaySet = getIcelandHolidays(year);
-    state.moonMarkers = computeMoonMarkersForYear(year);
+  function build(){
+    yearLabel.textContent = state.year;
+    $("#yearInput").value = state.year;
+
+    state.holidayMap = getIcelandHolidayMap(state.year);
+    state.moonMarkers = computeMoonMarkersForYear(state.year);
 
     calendarEl.innerHTML = "";
 
-    const todayIso = isoDate(new Date());
+    if (state.view === "holidays"){
+      renderHolidayList();
+      return;
+    }
+    if (state.layout === "weeks"){
+      renderWeeks();
+      return;
+    }
+    renderMonths();
+  }
 
+  function makeDayCell(date){
+    const iso = isoDate(date);
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.iso = iso;
+
+    const dnum = document.createElement("div");
+    dnum.className = "dnum";
+    dnum.textContent = date.getDate();
+    cell.appendChild(dnum);
+
+    if (state.showHolidays && state.holidayMap.has(iso)) cell.classList.add("is-holiday");
+
+    if (state.showMoon){
+      const mk = state.moonMarkers.get(iso);
+      if (mk){
+        const moon = document.createElement("div");
+        moon.className = "moon";
+        moon.textContent = (mk === "full") ? "🌕" : "🌑";
+        cell.appendChild(moon);
+      }
+    }
+
+    const today = new Date();
+    if (iso === isoDate(today) && state.year === today.getFullYear()) cell.classList.add("is-today");
+
+    return cell;
+  }
+
+  function renderMonths(){
     for (let m = 0; m < 12; m++){
       const monthBlock = document.createElement("section");
       monthBlock.className = "month";
@@ -523,7 +704,7 @@
       mh.className = "month-header";
       mh.innerHTML = `
         <div class="month-name">${MONTHS_LONG[m]}</div>
-        <div class="month-meta">${year} — ${daysInMonth(year, m)} dagar${(m===1 && isLeapYear(year)) ? " (hlaupár)" : ""}</div>
+        <div class="month-meta">${state.year} — ${daysInMonth(state.year, m)} dagar${(m===1 && isLeapYear(state.year)) ? " (hlaupár)" : ""}</div>
       `;
       monthBlock.appendChild(mh);
 
@@ -539,7 +720,7 @@
       const grid = document.createElement("div");
       grid.className = "grid";
 
-      const first = new Date(year, m, 1);
+      const first = new Date(state.year, m, 1);
       const offset = monIndex(first.getDay());
       for (let i=0; i<offset; i++){
         const empty = document.createElement("div");
@@ -547,39 +728,9 @@
         grid.appendChild(empty);
       }
 
-      const dim = daysInMonth(year, m);
+      const dim = daysInMonth(state.year, m);
       for (let day=1; day<=dim; day++){
-        const date = new Date(year, m, day);
-        const iso = isoDate(date);
-
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.dataset.iso = iso;
-
-        const dnum = document.createElement("div");
-        dnum.className = "dnum";
-        dnum.textContent = day;
-        cell.appendChild(dnum);
-
-        if (state.showHolidays && state.holidaySet.has(iso)){
-          cell.classList.add("is-holiday");
-        }
-
-        if (state.showMoon){
-          const mk = state.moonMarkers.get(iso);
-          if (mk){
-            const moon = document.createElement("div");
-            moon.className = "moon";
-            moon.textContent = (mk === "full") ? "🌕" : "🌑";
-            cell.appendChild(moon);
-          }
-        }
-
-        if (iso === todayIso && year === new Date().getFullYear()){
-          cell.classList.add("is-today");
-        }
-
-        grid.appendChild(cell);
+        grid.appendChild(makeDayCell(new Date(state.year, m, day)));
       }
 
       monthBlock.appendChild(grid);
@@ -587,44 +738,123 @@
     }
   }
 
+  function renderWeeks(){
+    const box = document.createElement("section");
+    box.className = "weeks";
+
+    const wh = document.createElement("div");
+    wh.className = "weeks-header";
+    wh.innerHTML = `
+      <div class="weeks-title">Vikur</div>
+      <div class="weeks-meta">${state.year}</div>
+    `;
+    box.appendChild(wh);
+
+    // Find first Monday that starts the first ISO week covering the year
+    let d = new Date(state.year, 0, 1);
+    // move to Monday of week containing Jan 4th (ISO)
+    const jan4 = new Date(state.year,0,4);
+    const jan4MonOffset = monIndex(jan4.getDay()); // 0..6
+    d = new Date(jan4);
+    d.setDate(d.getDate() - jan4MonOffset);
+
+    const end = new Date(state.year,11,31);
+
+    while (d <= end){
+      const row = document.createElement("div");
+      row.className = "week-row";
+
+      const wn = document.createElement("div");
+      wn.className = "wn";
+      wn.textContent = "V" + isoWeekNumber(d);
+      row.appendChild(wn);
+
+      const wg = document.createElement("div");
+      wg.className = "week-grid";
+
+      for (let i=0; i<7; i++){
+        const day = new Date(d);
+        day.setDate(d.getDate() + i);
+
+        if (day.getFullYear() !== state.year){
+          const empty = document.createElement("div");
+          empty.className = "cell is-empty";
+          wg.appendChild(empty);
+        } else {
+          wg.appendChild(makeDayCell(day));
+        }
+      }
+
+      row.appendChild(wg);
+      box.appendChild(row);
+
+      d.setDate(d.getDate() + 7);
+    }
+
+    calendarEl.appendChild(box);
+  }
+
+  function renderHolidayList(){
+    const box = document.createElement("section");
+    box.className = "holidays";
+
+    const hh = document.createElement("div");
+    hh.className = "holidays-header";
+    hh.innerHTML = `
+      <div class="holidays-title">Frídagar</div>
+      <div class="month-meta">${state.year}</div>
+    `;
+    box.appendChild(hh);
+
+    const items = Array.from(state.holidayMap.entries())
+      .sort((a,b) => a[0].localeCompare(b[0]));
+
+    for (const [iso, name] of items){
+      const [y,mm,dd] = iso.split("-").map(Number);
+      const date = new Date(y, mm-1, dd);
+      const right = `${dd} ${monthShort(mm-1)} — ${weekdayShort(date)}`;
+
+      const item = document.createElement("div");
+      item.className = "hitem";
+      item.innerHTML = `<div class="hleft">${name}</div><div class="hright">${right}</div>`;
+      box.appendChild(item);
+    }
+
+    calendarEl.appendChild(box);
+  }
+
   function jumpToToday(){
     const now = new Date();
-    const y = now.getFullYear();
-    buildYear(y);
+    state.year = now.getFullYear();
+    state.view = "calendar";
+    build();
 
     const iso = isoDate(now);
     const el = document.querySelector(`[data-iso="${iso}"]`);
     if (el){
-      el.classList.add("flash");
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => el.classList.remove("flash"), 1200);
+      el.scrollIntoView({ behavior:"smooth", block:"center" });
+      el.style.boxShadow = "0 0 0 3px rgba(103,199,255,.12)";
+      setTimeout(() => el.style.boxShadow = "", 1200);
     }
   }
 
-  function rerender(){
-    buildYear(state.year);
-  }
-
-  // Year dropdown logic
+  // Year dropdown
   const pop = $("#yearPop");
   const titleWrap = $("#titleWrap");
-
   function togglePop(force){
     const show = (typeof force === "boolean") ? force : !pop.classList.contains("show");
     pop.classList.toggle("show", show);
     pop.setAttribute("aria-hidden", String(!show));
     if (show) $("#yearInput").focus();
   }
-
   document.addEventListener("click", (e) => {
     if (!pop.classList.contains("show")) return;
     if (!titleWrap.contains(e.target)) togglePop(false);
   });
-
   yearLabel.addEventListener("click", () => togglePop());
   $("#goYearBtn").addEventListener("click", () => {
     const v = parseInt($("#yearInput").value, 10);
-    if (Number.isFinite(v)) buildYear(v);
+    if (Number.isFinite(v)) { state.year = v; state.view="calendar"; build(); }
     togglePop(false);
   });
   $("#yearInput").addEventListener("keydown", (e) => {
@@ -634,28 +864,66 @@
   pop.querySelectorAll("[data-jump]").forEach(btn => {
     btn.addEventListener("click", () => {
       const j = parseInt(btn.getAttribute("data-jump"), 10);
-      buildYear(state.year + j);
+      state.year += j;
+      state.view="calendar";
+      build();
     });
   });
 
-  // Controls
+  // Settings sheet
+  const overlay = $("#overlay");
+  const sheet = $("#sheet");
+  function openSheet(){
+    overlay.classList.add("show");
+    sheet.classList.add("show");
+  }
+  function closeSheet(){
+    overlay.classList.remove("show");
+    sheet.classList.remove("show");
+  }
+  $("#settingsBtn").addEventListener("click", openSheet);
+  $("#closeSheet").addEventListener("click", closeSheet);
+  overlay.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { togglePop(false); closeSheet(); }
+  });
+
+  // Layout segmented control
+  $("#layoutSeg").querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("#layoutSeg").querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.layout = btn.dataset.layout;
+      state.view = "calendar";
+      build();
+    });
+  });
+
+  // Toggles (now in settings)
+  $("#toggleHolidays").addEventListener("change", (e) => { state.showHolidays = e.target.checked; build(); });
+  $("#toggleMoon").addEventListener("change", (e) => { state.showMoon = e.target.checked; build(); });
+
+  // Holidays view
+  $("#showHolidaysBtn").addEventListener("click", () => {
+    state.view = "holidays";
+    build();
+    closeSheet();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // Today button (in settings)
+  $("#todayBtn").addEventListener("click", () => {
+    closeSheet();
+    jumpToToday();
+  });
+
+  // Header nav
   $("#backBtn").addEventListener("click", () => history.back());
-  $("#prevYear").addEventListener("click", () => buildYear(state.year - 1));
-  $("#nextYear").addEventListener("click", () => buildYear(state.year + 1));
-  $("#todayBtn").addEventListener("click", jumpToToday);
-
-  $("#toggleHolidays").addEventListener("change", (e) => {
-    state.showHolidays = e.target.checked;
-    rerender();
-  });
-
-  $("#toggleMoon").addEventListener("change", (e) => {
-    state.showMoon = e.target.checked;
-    rerender();
-  });
+  $("#prevYear").addEventListener("click", () => { state.year -= 1; state.view="calendar"; build(); });
+  $("#nextYear").addEventListener("click", () => { state.year += 1; state.view="calendar"; build(); });
 
   // Init
-  buildYear(2025);
+  build();
 })();
 </script>
 </body>
