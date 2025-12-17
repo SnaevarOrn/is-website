@@ -18,8 +18,8 @@
       --cell:#0c2636;
       --cellHover:#113246;
       --border: rgba(191,233,255,.18);
+      --focus: rgba(103,199,255,.55);
     }
-
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
@@ -31,13 +31,13 @@
       color:var(--text);
     }
 
-    /* --- Header (eins og “protótýpa”): tilbaka + miðjuár + örvar --- */
+    /* Header */
     .topbar{
       position: sticky;
       top:0;
       z-index:10;
       backdrop-filter: blur(10px);
-      background: linear-gradient(to bottom, rgba(6,19,28,.92), rgba(6,19,28,.75));
+      background: rgba(6,19,28,.82);
       border-bottom: 1px solid var(--border);
     }
     .topbar-inner{
@@ -64,11 +64,13 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
+      white-space:nowrap;
     }
     .btn:hover{ background: rgba(15,44,63,.72); border-color: rgba(191,233,255,.35); }
     .btn:active{ transform: translateY(1px); }
 
     .title-wrap{
+      position:relative;
       display:flex;
       align-items:center;
       gap:10px;
@@ -79,12 +81,63 @@
     .year{
       font-size: 18px;
       letter-spacing:.5px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--ice);
       text-shadow: 0 0 18px rgba(103,199,255,.25);
       min-width: 70px;
       text-align:center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(191,233,255,.14);
+      background: rgba(11,33,48,.55);
+      cursor:pointer;
+      user-select:none;
     }
+    .year:hover{ border-color: rgba(191,233,255,.35); background: rgba(15,44,63,.62); }
+
+    /* Year dropdown */
+    .year-pop{
+      position:absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(340px, 92vw);
+      border-radius: 14px;
+      border:1px solid rgba(191,233,255,.20);
+      background: rgba(11,33,48,.92);
+      box-shadow: 0 22px 50px rgba(0,0,0,.45);
+      padding: 12px;
+      display:none;
+    }
+    .year-pop.show{ display:block; }
+    .year-pop .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .year-pop input{
+      flex:1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(191,233,255,.18);
+      background: rgba(6,19,28,.55);
+      color: var(--text);
+      outline:none;
+      font-size: 16px;
+    }
+    .year-pop input:focus{ border-color: rgba(103,199,255,.55); box-shadow: 0 0 0 3px rgba(103,199,255,.12); }
+    .chip{
+      appearance:none;
+      border:1px solid rgba(191,233,255,.18);
+      background: rgba(6,19,28,.40);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .chip:hover{ border-color: rgba(191,233,255,.35); background: rgba(15,44,63,.55); }
 
     .controls{
       max-width: 1100px;
@@ -138,10 +191,10 @@
       padding: 10px 14px 34px;
     }
 
-    /* --- Month blocks --- */
+    /* Month blocks (eintóna) */
     .month{
       border:1px solid var(--border);
-      background: linear-gradient(180deg, rgba(11,33,48,.62), rgba(11,33,48,.40));
+      background: rgba(11,33,48,.55);
       border-radius: 16px;
       box-shadow: 0 18px 40px rgba(0,0,0,.28);
       margin: 14px 0;
@@ -153,10 +206,10 @@
       justify-content:space-between;
       padding: 12px 14px;
       border-bottom:1px solid var(--border);
-      background: rgba(15,44,63,.55);
+      background: rgba(11,33,48,.55);
     }
     .month-name{
-      font-weight: 800;
+      font-weight: 900;
       color: var(--ice);
       letter-spacing:.4px;
     }
@@ -165,6 +218,7 @@
       font-size: 13px;
     }
 
+    /* Vikudagar */
     .dow{
       display:grid;
       grid-template-columns: repeat(7, 1fr);
@@ -176,9 +230,11 @@
       text-transform: lowercase;
     }
     .dow div{
-      padding: 6px 8px;
-      text-align:center;
-      border-radius: 10px;
+      height: 44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 12px;
       background: rgba(12,38,54,.35);
       border: 1px solid rgba(191,233,255,.10);
     }
@@ -190,54 +246,43 @@
       padding: 10px 12px 12px;
     }
 
+    /* Dagakassar: bara talan -> minni og samræmt */
     .cell{
       position:relative;
-      min-height: 58px;
-      border-radius: 14px;
+      height: 44px;
+      border-radius: 12px;
       border: 1px solid rgba(191,233,255,.14);
       background: var(--cell);
-      padding: 8px 10px;
       display:flex;
-      flex-direction:column;
-      justify-content:space-between;
+      align-items:center;
+      justify-content:center;
       transition: background .15s ease, border-color .15s ease, transform .08s ease;
       box-shadow: 0 12px 26px rgba(0,0,0,.22);
+      overflow:hidden;
     }
     .cell:hover{
       background: var(--cellHover);
       border-color: rgba(191,233,255,.28);
     }
-
     .cell.is-empty{
       background: transparent;
       border: 1px dashed rgba(191,233,255,.12);
       box-shadow:none;
-      opacity:.35;
+      opacity:.25;
     }
-
     .dnum{
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       color: var(--text);
       line-height:1;
     }
-    .meta{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:space-between;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .meta .m{ opacity:.95; }
-    .meta .w{ opacity:.95; }
 
     /* holiday ring */
     .cell.is-holiday::after{
       content:"";
       position:absolute;
       inset: 6px;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 2px solid var(--ring);
       pointer-events:none;
       opacity: .95;
@@ -248,12 +293,25 @@
       position:absolute;
       top: 6px;
       right: 8px;
-      font-size: 15px;
+      font-size: 14px;
       filter: drop-shadow(0 6px 12px rgba(0,0,0,.35));
       opacity: .95;
     }
 
-    /* small footer */
+    /* today highlight */
+    .cell.is-today{
+      border-color: rgba(103,199,255,.55);
+      box-shadow: 0 0 0 3px rgba(103,199,255,.12), 0 12px 26px rgba(0,0,0,.22);
+    }
+    .cell.flash{
+      animation: flash 1.1s ease-out 1;
+    }
+    @keyframes flash{
+      0%{ box-shadow: 0 0 0 0 rgba(103,199,255,.0), 0 12px 26px rgba(0,0,0,.22); }
+      30%{ box-shadow: 0 0 0 6px rgba(103,199,255,.22), 0 12px 26px rgba(0,0,0,.22); }
+      100%{ box-shadow: 0 0 0 0 rgba(103,199,255,.0), 0 12px 26px rgba(0,0,0,.22); }
+    }
+
     .footer{
       margin-top: 18px;
       color: rgba(159,197,218,.85);
@@ -262,8 +320,8 @@
     }
 
     @media (max-width: 520px){
-      .cell{ min-height: 56px; padding:8px; border-radius: 13px; }
-      .month-header{ padding: 11px 12px; }
+      .cell{ height: 44px; border-radius: 12px; }
+      .dow div{ height: 44px; border-radius: 12px; }
       .topbar-inner{ padding: 11px 12px; }
       .controls{ padding: 0 12px 12px; }
       .wrap{ padding: 8px 12px 26px; }
@@ -276,37 +334,40 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <button class="btn" id="backBtn" title="Til baka">
-        ← <span style="opacity:.9">Til baka</span>
-      </button>
+      <button class="btn" id="backBtn" title="Til baka">← <span style="opacity:.9">Til baka</span></button>
 
-      <div class="title-wrap">
+      <div class="title-wrap" id="titleWrap">
         <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
-        <div class="year" id="yearLabel">2025</div>
+        <div class="year" id="yearLabel" title="Velja ár">2025</div>
         <button class="btn" id="nextYear" title="Næsta ár">›</button>
+
+        <div class="year-pop" id="yearPop" aria-hidden="true">
+          <div class="row">
+            <input id="yearInput" type="number" inputmode="numeric" />
+            <button class="btn" id="goYearBtn" style="padding:10px 12px;">Fara</button>
+          </div>
+          <div class="row" style="justify-content:space-between; margin-bottom:0;">
+            <button class="chip" data-jump="-50">-50</button>
+            <button class="chip" data-jump="-10">-10</button>
+            <button class="chip" data-jump="10">+10</button>
+            <button class="chip" data-jump="50">+50</button>
+          </div>
+        </div>
       </div>
 
-      <button class="btn" id="todayBtn" title="Hoppa í núverandi ár">
-        ⤒ <span style="opacity:.9">Í dag</span>
-      </button>
+      <button class="btn" id="todayBtn" title="Hoppa á daginn í dag">⤒ <span style="opacity:.9">Í dag</span></button>
     </div>
 
     <div class="controls">
       <div class="toggles">
         <div class="toggle">
-          <label>
-            <input type="checkbox" id="toggleHolidays" checked />
-            Lögbundnir frídagar
-          </label>
+          <label><input type="checkbox" id="toggleHolidays" checked /> Lögbundnir frídagar</label>
         </div>
         <div class="toggle">
-          <label>
-            <input type="checkbox" id="toggleMoon" checked />
-            Tungl (🌕 / 🌑)
-          </label>
+          <label><input type="checkbox" id="toggleMoon" checked /> Tungl (🌕 / 🌑)</label>
         </div>
       </div>
-      <div class="hint">Skrollaðu niður til að sjá allt árið í kössum.</div>
+      <div class="hint">Skrollaðu niður til að sjá allt árið.</div>
     </div>
   </header>
 
@@ -317,23 +378,17 @@
 
 <script>
 (() => {
-  // ---------- Helpers ----------
   const pad2 = (n) => String(n).padStart(2, "0");
   const isoDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
-  // Icelandic weekday + month short names
   const WEEKDAYS = ["mán","þri","mið","fim","fös","lau","sun"]; // Monday-first
-  const MONTHS = ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"];
   const MONTHS_LONG = ["janúar","febrúar","mars","apríl","maí","júní","júlí","ágúst","september","október","nóvember","desember"];
-
-  // Convert JS Sunday-first (0=Sun) to Monday-first index (0=Mon)
   const monIndex = (jsDay) => (jsDay + 6) % 7;
 
   const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
   const daysInMonth = (y, m) => new Date(y, m+1, 0).getDate();
 
-  // ---------- Easter (Gregorian) ----------
-  // Meeus/Jones/Butcher algorithm
+  // Easter (Meeus/Jones/Butcher)
   function easterSunday(year){
     const a = year % 19;
     const b = Math.floor(year / 100);
@@ -347,93 +402,95 @@
     const k = c % 4;
     const l = (32 + 2*e + 2*i - h - k) % 7;
     const m = Math.floor((a + 11*h + 22*l) / 451);
-    const month = Math.floor((h + l - 7*m + 114) / 31); // 3=March, 4=April
+    const month = Math.floor((h + l - 7*m + 114) / 31);
     const day = ((h + l - 7*m + 114) % 31) + 1;
     return new Date(year, month-1, day);
   }
+  function addDays(date, n){ const d = new Date(date); d.setDate(d.getDate() + n); return d; }
 
-  function addDays(date, n){
-    const d = new Date(date);
-    d.setDate(d.getDate() + n);
-    return d;
-  }
-
-  // Sumardagurinn fyrsti: first Thursday on/after April 19 (i.e., after 18. apríl)
   function firstThursdayAfterApril18(year){
-    const start = new Date(year, 3, 19); // Apr=3, day=19
-    const startMonIdx = monIndex(start.getDay());
-    // Thursday in Monday-first index is 3 (mán=0, þri=1, mið=2, fim=3)
-    const delta = (3 - startMonIdx + 7) % 7;
+    const start = new Date(year, 3, 19);
+    const delta = (3 - monIndex(start.getDay()) + 7) % 7; // Thursday=3
     return addDays(start, delta);
   }
-
-  // Frídagur verslunarmanna: first Monday of August
   function firstMondayOfAugust(year){
-    const d = new Date(year, 7, 1); // Aug=7
-    const delta = (0 - monIndex(d.getDay()) + 7) % 7; // Monday = 0
+    const d = new Date(year, 7, 1);
+    const delta = (0 - monIndex(d.getDay()) + 7) % 7; // Monday=0
     return addDays(d, delta);
   }
 
-  // ---------- Iceland public holidays (set of ISO dates) ----------
   function getIcelandHolidays(year){
     const set = new Set();
-
-    // Fixed dates
     [
-      [1,1],   // Nýársdagur
-      [1,6],   // Þrettándinn
-      [5,1],   // Verkalýðsdagurinn
-      [6,17],  // Þjóðhátíðardagurinn
-      [12,24], // Aðfangadagur
-      [12,25], // Jóladagur
-      [12,26], // Annar í jólum
-      [12,31], // Gamlársdagur
+      [1,1],[1,6],[5,1],[6,17],[12,24],[12,25],[12,26],[12,31]
     ].forEach(([m, d]) => set.add(`${year}-${pad2(m)}-${pad2(d)}`));
 
-    // Movable (Easter-related)
     const easter = easterSunday(year);
-    const skirdagur = addDays(easter, -3);        // Maundy Thursday
-    const fostudagurinn_langi = addDays(easter, -2);
-    const paskadagur = easter;
-    const annar_i_paskum = addDays(easter, 1);
-    const uppstigningardagur = addDays(easter, 39);
-    const hvitasunna = addDays(easter, 49);
-    const annar_i_hvitasunnu = addDays(easter, 50);
+    [ addDays(easter,-3), addDays(easter,-2), easter, addDays(easter,1),
+      addDays(easter,39), addDays(easter,49), addDays(easter,50)
+    ].forEach(d => set.add(isoDate(d)));
 
-    [skirdagur, fostudagurinn_langi, paskadagur, annar_i_paskum, uppstigningardagur, hvitasunna, annar_i_hvitasunnu]
-      .forEach(d => set.add(isoDate(d)));
-
-    // Sumardagurinn fyrsti
     set.add(isoDate(firstThursdayAfterApril18(year)));
-
-    // Frídagur verslunarmanna
     set.add(isoDate(firstMondayOfAugust(year)));
-
     return set;
   }
 
-  // ---------- Moon phases (approx) ----------
-  // Simple synodic approximation:
-  // Reference new moon: 2000-01-06 18:14 UTC (often used baseline)
-  // We mark "new moon" if age is within ~0.7 days of 0, and "full moon" if within ~0.7 of 14.765...
+  // Moon phases: mark ONLY local minima -> no double days
   const SYNODIC = 29.530588853;
   const REF_NEW = Date.UTC(2000,0,6,18,14,0);
-
-  function moonMarkerForDate(date){
-    // Use noon local time to reduce timezone edge cases
+  function moonAgeDays(date){
     const t = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
     const daysSince = (t - REF_NEW) / 86400000;
     const age = ((daysSince % SYNODIC) + SYNODIC) % SYNODIC;
+    return age;
+  }
+  function phaseDistance(age, target){
+    let d = Math.abs(age - target);
+    // wrap is not needed here because targets are 0 and SYNODIC/2 and age in [0,S)
+    return d;
+  }
+  function computeMoonMarkersForYear(year){
+    const markers = new Map(); // iso -> "new" | "full"
+    const dates = [];
+    const start = new Date(year,0,1);
+    const end = new Date(year,11,31);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)){
+      dates.push(new Date(d));
+    }
 
-    const eps = 0.70; // days tolerance
-    const fullAge = SYNODIC / 2;
+    const fullT = SYNODIC/2;
+    const eps = 1.0; // only accept if within 1 day of exact phase
 
-    if (age < eps || age > (SYNODIC - eps)) return "new";            // 🌑
-    if (Math.abs(age - fullAge) < eps) return "full";                // 🌕
-    return null;
+    for (let i=1; i<dates.length-1; i++){
+      const d = dates[i];
+      const prev = dates[i-1];
+      const next = dates[i+1];
+
+      const a  = moonAgeDays(d);
+      const ap = moonAgeDays(prev);
+      const an = moonAgeDays(next);
+
+      // New moon: distance to 0 (also allow wrap via min(age, S-age))
+      const dn  = Math.min(a, SYNODIC - a);
+      const dnp = Math.min(ap, SYNODIC - ap);
+      const dnn = Math.min(an, SYNODIC - an);
+
+      if (dn < dnp && dn < dnn && dn <= eps){
+        markers.set(isoDate(d), "new");
+      }
+
+      // Full moon
+      const df  = phaseDistance(a, fullT);
+      const dfp = phaseDistance(ap, fullT);
+      const dfn = phaseDistance(an, fullT);
+
+      if (df < dfp && df < dfn && df <= eps){
+        markers.set(isoDate(d), "full");
+      }
+    }
+    return markers;
   }
 
-  // ---------- Rendering ----------
   const $ = (sel) => document.querySelector(sel);
   const calendarEl = $("#calendar");
   const yearLabel = $("#yearLabel");
@@ -443,14 +500,20 @@
     showHolidays: true,
     showMoon: true,
     holidaySet: new Set(),
+    moonMarkers: new Map(),
   };
 
   function buildYear(year){
     state.year = year;
     yearLabel.textContent = year;
+    $("#yearInput").value = year;
+
     state.holidaySet = getIcelandHolidays(year);
+    state.moonMarkers = computeMoonMarkersForYear(year);
 
     calendarEl.innerHTML = "";
+
+    const todayIso = isoDate(new Date());
 
     for (let m = 0; m < 12; m++){
       const monthBlock = document.createElement("section");
@@ -477,7 +540,7 @@
       grid.className = "grid";
 
       const first = new Date(year, m, 1);
-      const offset = monIndex(first.getDay()); // 0..6
+      const offset = monIndex(first.getDay());
       for (let i=0; i<offset; i++){
         const empty = document.createElement("div");
         empty.className = "cell is-empty";
@@ -493,34 +556,27 @@
         cell.className = "cell";
         cell.dataset.iso = iso;
 
-        const w = WEEKDAYS[monIndex(date.getDay())];
-        const mo = MONTHS[m];
-
         const dnum = document.createElement("div");
         dnum.className = "dnum";
         dnum.textContent = day;
-
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        meta.innerHTML = `<span class="m">${mo}</span><span class="w">${w}</span>`;
-
         cell.appendChild(dnum);
-        cell.appendChild(meta);
 
-        // Holiday ring
         if (state.showHolidays && state.holidaySet.has(iso)){
           cell.classList.add("is-holiday");
         }
 
-        // Moon badge
         if (state.showMoon){
-          const mk = moonMarkerForDate(date);
+          const mk = state.moonMarkers.get(iso);
           if (mk){
             const moon = document.createElement("div");
             moon.className = "moon";
             moon.textContent = (mk === "full") ? "🌕" : "🌑";
             cell.appendChild(moon);
           }
+        }
+
+        if (iso === todayIso && year === new Date().getFullYear()){
+          cell.classList.add("is-today");
         }
 
         grid.appendChild(cell);
@@ -531,29 +587,74 @@
     }
   }
 
-  function rerenderOverlays(){
-    // Update only holiday + moon decorations without rebuilding whole DOM? (snappy-enough)
-    // For simplicity: rebuild year view (still fast for 365/366).
+  function jumpToToday(){
+    const now = new Date();
+    const y = now.getFullYear();
+    buildYear(y);
+
+    const iso = isoDate(now);
+    const el = document.querySelector(`[data-iso="${iso}"]`);
+    if (el){
+      el.classList.add("flash");
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => el.classList.remove("flash"), 1200);
+    }
+  }
+
+  function rerender(){
     buildYear(state.year);
   }
 
-  // ---------- Events ----------
+  // Year dropdown logic
+  const pop = $("#yearPop");
+  const titleWrap = $("#titleWrap");
+
+  function togglePop(force){
+    const show = (typeof force === "boolean") ? force : !pop.classList.contains("show");
+    pop.classList.toggle("show", show);
+    pop.setAttribute("aria-hidden", String(!show));
+    if (show) $("#yearInput").focus();
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!pop.classList.contains("show")) return;
+    if (!titleWrap.contains(e.target)) togglePop(false);
+  });
+
+  yearLabel.addEventListener("click", () => togglePop());
+  $("#goYearBtn").addEventListener("click", () => {
+    const v = parseInt($("#yearInput").value, 10);
+    if (Number.isFinite(v)) buildYear(v);
+    togglePop(false);
+  });
+  $("#yearInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") $("#goYearBtn").click();
+    if (e.key === "Escape") togglePop(false);
+  });
+  pop.querySelectorAll("[data-jump]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const j = parseInt(btn.getAttribute("data-jump"), 10);
+      buildYear(state.year + j);
+    });
+  });
+
+  // Controls
   $("#backBtn").addEventListener("click", () => history.back());
   $("#prevYear").addEventListener("click", () => buildYear(state.year - 1));
   $("#nextYear").addEventListener("click", () => buildYear(state.year + 1));
-  $("#todayBtn").addEventListener("click", () => buildYear(new Date().getFullYear()));
+  $("#todayBtn").addEventListener("click", jumpToToday);
 
   $("#toggleHolidays").addEventListener("change", (e) => {
     state.showHolidays = e.target.checked;
-    rerenderOverlays();
+    rerender();
   });
 
   $("#toggleMoon").addEventListener("change", (e) => {
     state.showMoon = e.target.checked;
-    rerenderOverlays();
+    rerender();
   });
 
-  // ---------- Init ----------
+  // Init
   buildYear(2025);
 })();
 </script>
