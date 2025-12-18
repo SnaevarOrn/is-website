@@ -4,156 +4,390 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is</title>
+
+  <!-- Favicons -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.png" sizes="32x32">
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-
   <style>
-    :root {
-      --ice-light: #e6f6ff;
-      --ice-blue: #bfe9ff;
-      --deep-blue: #0b2a3d;
-      --glow: rgba(180, 230, 255, 0.6);
-      --line: rgba(255,255,255,.12);
+    :root{
+      --bg: #071a28;          /* aðaltónn */
+      --panel: #0a2336;       /* kassar */
+      --panel2:#081f30;       /* header/botn */
+      --line: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --btn: rgba(255,255,255,.92);
+      --btnText:#062033;
+      --glow: rgba(180,230,255,.16);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont,
-                   "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{
+      min-height:100vh;
+      background: var(--bg);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
     }
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, #1b4f72, #081823 70%);
-      color: #ffffff;
-      overflow: hidden;
-      padding: 18px;
-    }
-
-    .container {
-      text-align: center;
-      padding: 3rem 2.5rem;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.04);
+    /* Header */
+    header{
+      position:sticky; top:0; z-index:20;
+      background: linear-gradient(180deg, rgba(10,35,54,.92), rgba(10,35,54,.72));
+      border-bottom: 1px solid var(--line);
       backdrop-filter: blur(10px);
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
-      animation: fadeIn 1s ease-out forwards;
-      max-width: 560px;
+    }
+    .hdr{
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 14px 16px;
+      display:grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items:center;
+      gap: 10px;
+    }
+    .brand-left{
+      width:44px; height:44px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .brand-left img{
+      width:28px; height:28px;
+      filter: drop-shadow(0 0 12px rgba(180,230,255,.25));
+    }
+    .brand-title{
+      text-align:center;
+      font-weight:650;
+      letter-spacing:.3px;
+      font-size: 20px;
+      user-select:none;
+    }
+    .menu-btn{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 12px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .menu-btn:active{ transform: translateY(1px); }
+    .burger{
+      width:18px; height:12px; position:relative;
+    }
+    .burger span{
+      position:absolute; left:0; right:0;
+      height:2px; border-radius:2px;
+      background: rgba(255,255,255,.88);
+    }
+    .burger span:nth-child(1){ top:0; }
+    .burger span:nth-child(2){ top:5px; opacity:.85; }
+    .burger span:nth-child(3){ bottom:0; opacity:.75; }
+
+    /* Layout */
+    main{
+      flex:1;
+      display:flex;
+      justify-content:center;
+      padding: 24px 16px 18px;
+    }
+
+    .wrap{
+      width: min(760px, 100%);
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      align-items:center;
+      padding-top: 12px;
+    }
+
+    .card{
+      width: min(520px, 100%);
+      background: radial-gradient(140% 120% at 50% 0%, rgba(180,230,255,.10), transparent 55%),
+                  rgba(10,35,54,.85);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px 18px 18px;
+      box-shadow: 0 16px 60px rgba(0,0,0,.35);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero{
+      text-align:center;
+      padding: 8px 8px 14px;
+    }
+    .hero h1{
+      font-size: 40px;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+    .hero p{
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .section-title{
+      color: rgba(255,255,255,.86);
+      font-weight: 650;
+      letter-spacing:.2px;
+      margin: 4px 8px 14px;
+    }
+
+    .btns{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      padding: 0 8px 8px;
+    }
+
+    .btn{
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      padding: 16px 18px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor:pointer;
+      background: var(--btn);
+      color: var(--btnText);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 14px 40px rgba(0,0,0,.25);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    /* Footer banner */
+    .banner{
+      max-width: 760px;
+      margin: 0 auto 18px;
+      padding: 0 16px;
       width: 100%;
     }
-
-    h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem);
-      letter-spacing: 0.08em;
-      margin-bottom: 0.9rem;
-    }
-
-    p {
-      opacity: 0.85;
-      margin-bottom: 2.2rem;
-      font-size: 1.1rem;
-    }
-
-    .btnRow{
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 1rem 2.2rem;
-      font-size: 1.05rem;
-      border-radius: 999px;
-      text-decoration: none;
-      color: var(--deep-blue);
-      background: linear-gradient(135deg, #ffffff, var(--ice-blue));
-      box-shadow: 0 0 25px var(--glow);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-      min-width: 180px;
-    }
-
-    .btn:hover {
-      transform: scale(1.04);
-      box-shadow: 0 0 45px var(--glow);
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .banner{
-      position: fixed;
-      left: 50%;
-      bottom: 14px;
-      transform: translateX(-50%);
-      font-size: 12px;
-      color: rgba(255,255,255,.78);
-      background: rgba(0,0,0,.18);
+    .banner .pill{
+      background: rgba(255,255,255,.04);
       border: 1px solid var(--line);
-      padding: 8px 12px;
+      color: rgba(255,255,255,.72);
       border-radius: 999px;
+      padding: 10px 14px;
+      text-align:center;
+      font-size: 14px;
       backdrop-filter: blur(10px);
-      pointer-events: none;
-      white-space: nowrap;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
+    /* Modal + contact form */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index:50;
+    }
+    .overlay.open{ display:flex; }
+
+    .modal{
+      width: min(560px, 100%);
+      background: rgba(10,35,54,.92);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 24px 90px rgba(0,0,0,.55);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+    }
+    .modal-h{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7,26,40,.35);
+    }
+    .modal-h b{ font-size: 16px; letter-spacing:.2px; }
+    .close{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
     }
 
-    /* subtle frost particles */
-    .particle {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.25);
-      border-radius: 50%;
-      animation: float linear infinite;
-      pointer-events: none;
+    form{
+      padding: 14px;
+      display:grid;
+      gap: 10px;
+    }
+    label{ font-size: 13px; color: var(--muted); margin-left: 6px; }
+    input, textarea{
+      width:100%;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 12px;
+      outline:none;
+      font-size: 15px;
+    }
+    textarea{ min-height: 110px; resize: vertical; }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width:520px){
+      .row{ grid-template-columns: 1fr; }
+      .hero h1{ font-size: 36px; }
     }
 
-    @keyframes float {
-      from { transform: translateY(100vh); }
-      to   { transform: translateY(-10vh); }
+    .send{
+      margin-top: 2px;
+      border:0;
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-weight: 700;
+      cursor:pointer;
+      background: rgba(191,233,255,.92);
+      color: #052033;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.10), 0 14px 40px rgba(0,0,0,.25);
+    }
+
+    .status{
+      margin-top: 4px;
+      font-size: 13px;
+      color: rgba(255,255,255,.75);
+      padding: 0 2px 6px;
+      min-height: 18px;
     }
   </style>
 </head>
 
 <body>
-  <main class="container">
-    <h1>ís.is</h1>
-    <p>Lærum á Ísland</p>
+  <header>
+    <div class="hdr">
+      <div class="brand-left" aria-hidden="true">
+        <img src="/favicon.svg" alt="">
+      </div>
+      <div class="brand-title">ís.is</div>
+      <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
+        <div class="burger" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </header>
 
-    <div class="btnRow">
-      <a href="/spil/" class="btn">Jöklar ❄️</a>
-      <a href="/borg/" class="btn">Bæjir 🏘️</a>  
-      <a href="/dagatal/" class="btn">Dagatal 📅</a>
+  <main>
+    <div class="wrap">
+
+      <div class="card">
+        <div class="hero">
+          <h1>ís.is</h1>
+          <p>Lærum á Ísland</p>
+        </div>
+
+        <div class="btns">
+          <button class="btn" onclick="location.href='/joklar/'">Jöklar ❄️</button>
+          <button class="btn" onclick="location.href='/borg/'">Bæjir 🏘️</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Verkfæri</div>
+        <div class="btns">
+          <button class="btn" onclick="location.href='/dagatal/'">Dagatal 🗓️</button>
+        </div>
+      </div>
+
     </div>
   </main>
 
-  <div class="banner">Vefur stofnaður 2025. Engar vafrakökur - bara ís.</div>
+  <div class="banner">
+    <div class="pill">Vefur stofnaður 2025. Engar vafrakökur - bara ís.</div>
+  </div>
+
+  <!-- Contact modal -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <div class="modal">
+      <div class="modal-h">
+        <b id="contactTitle">Hafa samband</b>
+        <button class="close" id="closeBtn" aria-label="Loka">✕</button>
+      </div>
+
+      <form id="contactForm" autocomplete="on">
+        <div class="row">
+          <div>
+            <label for="name">Nafn</label>
+            <input id="name" name="name" required placeholder="Nafn" />
+          </div>
+          <div>
+            <label for="email">Tölvupóstur</label>
+            <input id="email" name="email" type="email" required placeholder="nafn@dæmi.is" />
+          </div>
+        </div>
+
+        <div>
+          <label for="message">Erindi</label>
+          <textarea id="message" name="message" required placeholder="Skrifaðu erindið hér..."></textarea>
+        </div>
+
+        <button class="send" type="submit">Senda</button>
+        <div class="status" id="status"></div>
+      </form>
+    </div>
+  </div>
 
   <script>
-    // decorative frost particles (non-critical)
-    for (let i = 0; i < 25; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.left = Math.random() * 100 + 'vw';
-      p.style.animationDuration = 10 + Math.random() * 20 + 's';
-      p.style.opacity = Math.random() * 0.4 + 0.1;
-      document.body.appendChild(p);
+    const overlay = document.getElementById('overlay');
+    const menuBtn = document.getElementById('menuBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const form = document.getElementById('contactForm');
+    const statusEl = document.getElementById('status');
+
+    function openModal(){
+      overlay.classList.add('open');
+      statusEl.textContent = '';
+      setTimeout(() => document.getElementById('name').focus(), 50);
     }
+    function closeModal(){
+      overlay.classList.remove('open');
+    }
+
+    menuBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = 'Sendi...';
+
+      const payload = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        message: form.message.value.trim(),
+        // simple honey-pot option if you add a hidden field later
+      };
+
+      try{
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if(!res.ok){
+          const txt = await res.text().catch(() => '');
+          throw new Error(txt || 'Villa við sendingu.');
+        }
+
+        statusEl.textContent = 'Sent. Takk!';
+        form.reset();
+        setTimeout(closeModal, 700);
+      }catch(err){
+        statusEl.textContent = 'Tókst ekki að senda. Reyndu aftur eftir smá.';
+      }
+    });
   </script>
 </body>
 </html>
