@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="is">
+<html lang="is" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,16 +12,32 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <style>
+    /* ---------------- THEME ---------------- */
     :root{
-      --bg: #071a28;          /* aðaltónn */
-      --panel: #0a2336;       /* kassar */
-      --panel2:#081f30;       /* header/botn */
-      --line: rgba(255,255,255,.10);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.70);
-      --btn: rgba(255,255,255,.92);
-      --btnText:#062033;
-      --glow: rgba(180,230,255,.16);
+      --bg:#0b0c0f;
+      --panel:#12141a;
+      --panel2:#0f1116;
+      --line:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.70);
+
+      --btn:#f2f2f2;
+      --btnText:#0b0c0f;
+
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    html[data-theme="light"]{
+      --bg:#f6f7f9;
+      --panel:#ffffff;
+      --panel2:#ffffff;
+      --line:rgba(0,0,0,.10);
+      --text:rgba(0,0,0,.88);
+      --muted:rgba(0,0,0,.58);
+
+      --btn:#111318;
+      --btnText:#ffffff;
+
+      --shadow: 0 18px 60px rgba(0,0,0,.10);
     }
 
     *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
@@ -33,19 +49,19 @@
       flex-direction:column;
     }
 
-    /* Header */
+    /* ---------------- HEADER ---------------- */
     header{
-      position:sticky; top:0; z-index:20;
-      background: linear-gradient(180deg, rgba(10,35,54,.92), rgba(10,35,54,.72));
+      position:sticky; top:0; z-index:30;
+      background: color-mix(in srgb, var(--panel2) 92%, transparent);
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(10px);
     }
     .hdr{
       max-width: 760px;
       margin: 0 auto;
-      padding: 14px 16px;
+      padding: 12px 14px;
       display:grid;
-      grid-template-columns: 44px 1fr 44px;
+      grid-template-columns: 44px 1fr 44px; /* logo | title | burger */
       align-items:center;
       gap: 10px;
     }
@@ -54,108 +70,145 @@
       display:flex; align-items:center; justify-content:center;
     }
     .brand-left img{
-      width:28px; height:28px;
-      filter: drop-shadow(0 0 12px rgba(180,230,255,.25));
+      width:26px; height:26px;
+      opacity:.95;
     }
     .brand-title{
       text-align:center;
-      font-weight:650;
-      letter-spacing:.3px;
+      font-weight:750;
+      letter-spacing:.2px;
       font-size: 20px;
       user-select:none;
     }
+
+    .menu-wrap{ position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
     .menu-btn{
       width:44px; height:44px;
       border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
+      background: transparent;
       border-radius: 12px;
       display:flex; align-items:center; justify-content:center;
       cursor:pointer;
     }
     .menu-btn:active{ transform: translateY(1px); }
-    .burger{
-      width:18px; height:12px; position:relative;
-    }
+
+    .burger{ width:18px; height:12px; position:relative; }
     .burger span{
       position:absolute; left:0; right:0;
       height:2px; border-radius:2px;
-      background: rgba(255,255,255,.88);
+      background: color-mix(in srgb, var(--text) 92%, transparent);
     }
     .burger span:nth-child(1){ top:0; }
-    .burger span:nth-child(2){ top:5px; opacity:.85; }
-    .burger span:nth-child(3){ bottom:0; opacity:.75; }
+    .burger span:nth-child(2){ top:5px; opacity:.80; }
+    .burger span:nth-child(3){ bottom:0; opacity:.65; }
 
-    /* Layout */
+    /* Dropdown menu */
+    .dropdown{
+      position:absolute;
+      top: 50px;
+      right: 0;
+      width: 210px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:none;
+      z-index:40;
+    }
+    .dropdown.open{ display:block; }
+    .drop-btn{
+      width:100%;
+      background:transparent;
+      border:0;
+      color: var(--text);
+      text-align:left;
+      padding: 12px 12px;
+      font-size: 15px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .drop-btn:hover{
+      background: color-mix(in srgb, var(--text) 6%, transparent);
+    }
+    .drop-sep{
+      height:1px;
+      background: var(--line);
+      margin: 0;
+    }
+    .drop-hint{
+      font-size:12px;
+      color: var(--muted);
+      padding: 10px 12px 12px;
+    }
+
+    /* ---------------- LAYOUT ---------------- */
     main{
       flex:1;
       display:flex;
       justify-content:center;
       padding: 24px 16px 18px;
     }
-
     .wrap{
       width: min(760px, 100%);
       display:flex;
       flex-direction:column;
       gap: 14px;
       align-items:center;
-      padding-top: 12px;
+      padding-top: 10px;
     }
-
     .card{
       width: min(520px, 100%);
-      background: radial-gradient(140% 120% at 50% 0%, rgba(180,230,255,.10), transparent 55%),
-                  rgba(10,35,54,.85);
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 22px;
-      padding: 22px 18px 18px;
-      box-shadow: 0 16px 60px rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
+      padding: 20px 18px 16px;
+      box-shadow: var(--shadow);
     }
-
     .hero{
       text-align:center;
-      padding: 8px 8px 14px;
+      padding: 6px 8px 14px;
     }
     .hero h1{
-      font-size: 40px;
-      letter-spacing: .5px;
+      font-size: 38px;
+      letter-spacing:.2px;
       margin-bottom: 6px;
     }
     .hero p{
       color: var(--muted);
       font-size: 16px;
     }
-
     .section-title{
-      color: rgba(255,255,255,.86);
-      font-weight: 650;
+      color: var(--muted);
+      font-weight: 750;
       letter-spacing:.2px;
-      margin: 4px 8px 14px;
+      margin: 4px 8px 12px;
+      text-transform: none;
     }
-
     .btns{
       display:flex;
       flex-direction:column;
       gap: 12px;
       padding: 0 8px 8px;
     }
-
     .btn{
       width: 100%;
       border: 0;
       border-radius: 999px;
-      padding: 16px 18px;
+      padding: 15px 18px;
       font-size: 18px;
-      font-weight: 600;
+      font-weight: 750;
       cursor:pointer;
       background: var(--btn);
       color: var(--btnText);
-      box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 14px 40px rgba(0,0,0,.25);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 80%, transparent);
     }
     .btn:active{ transform: translateY(1px); }
 
-    /* Footer banner */
+    /* ---------------- FOOTER BANNER ---------------- */
     .banner{
       max-width: 760px;
       margin: 0 auto 18px;
@@ -163,9 +216,9 @@
       width: 100%;
     }
     .banner .pill{
-      background: rgba(255,255,255,.04);
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
       border: 1px solid var(--line);
-      color: rgba(255,255,255,.72);
+      color: var(--muted);
       border-radius: 999px;
       padding: 10px 14px;
       text-align:center;
@@ -173,7 +226,7 @@
       backdrop-filter: blur(10px);
     }
 
-    /* Modal + contact form */
+    /* ---------------- MODALS ---------------- */
     .overlay{
       position:fixed; inset:0;
       background: rgba(0,0,0,.55);
@@ -187,11 +240,10 @@
 
     .modal{
       width: min(560px, 100%);
-      background: rgba(10,35,54,.92);
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 18px;
-      box-shadow: 0 24px 90px rgba(0,0,0,.55);
-      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
       overflow:hidden;
     }
     .modal-h{
@@ -200,18 +252,20 @@
       justify-content:space-between;
       padding: 14px 14px 12px;
       border-bottom: 1px solid var(--line);
-      background: rgba(7,26,40,.35);
+      background: color-mix(in srgb, var(--panel2) 80%, transparent);
     }
     .modal-h b{ font-size: 16px; letter-spacing:.2px; }
+
     .close{
       border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
+      background: transparent;
       color: var(--text);
       border-radius: 12px;
       padding: 8px 10px;
       cursor:pointer;
     }
 
+    /* Contact form */
     form{
       padding: 14px;
       display:grid;
@@ -220,7 +274,7 @@
     label{ font-size: 13px; color: var(--muted); margin-left: 6px; }
     input, textarea{
       width:100%;
-      background: rgba(255,255,255,.04);
+      background: transparent;
       border: 1px solid var(--line);
       color: var(--text);
       border-radius: 14px;
@@ -237,27 +291,69 @@
     }
     @media (max-width:520px){
       .row{ grid-template-columns: 1fr; }
-      .hero h1{ font-size: 36px; }
+      .hero h1{ font-size: 34px; }
     }
-
     .send{
       margin-top: 2px;
       border:0;
       border-radius: 14px;
       padding: 13px 14px;
-      font-weight: 700;
+      font-weight: 800;
       cursor:pointer;
-      background: rgba(191,233,255,.92);
-      color: #052033;
-      box-shadow: 0 0 0 1px rgba(255,255,255,.10), 0 14px 40px rgba(0,0,0,.25);
+      background: var(--btn);
+      color: var(--btnText);
     }
-
     .status{
       margin-top: 4px;
       font-size: 13px;
-      color: rgba(255,255,255,.75);
+      color: var(--muted);
       padding: 0 2px 6px;
       min-height: 18px;
+    }
+
+    /* Settings content */
+    .settings-body{
+      padding: 14px;
+      display:grid;
+      gap: 12px;
+    }
+    .setting-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: color-mix(in srgb, var(--panel2) 60%, transparent);
+    }
+    .setting-row .left{
+      display:grid;
+      gap: 2px;
+    }
+    .setting-row .left b{ font-size: 14px; }
+    .setting-row .left span{ font-size: 12px; color: var(--muted); }
+
+    .toggle{
+      display:flex; gap:8px; align-items:center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px;
+      background: transparent;
+    }
+    .chip{
+      border:0;
+      cursor:pointer;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-weight: 800;
+      font-size: 12px;
+      background: transparent;
+      color: var(--muted);
+    }
+    .chip.active{
+      background: var(--btn);
+      color: var(--btnText);
     }
   </style>
 </head>
@@ -265,15 +361,33 @@
 <body>
   <header>
     <div class="hdr">
+      <!-- VINSTRI: logo -->
       <div class="brand-left" aria-hidden="true">
         <img src="/favicon.svg" alt="">
       </div>
+
+      <!-- MIÐJA: titill -->
       <div class="brand-title">ís.is</div>
-      <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
-        <div class="burger" aria-hidden="true">
-          <span></span><span></span><span></span>
+
+      <!-- HÆGRI: hamborgari + dropdown -->
+      <div class="menu-wrap">
+        <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
+          <div class="burger" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </button>
+
+        <div class="dropdown" id="dropdown" role="menu" aria-label="Valmynd">
+          <button class="drop-btn" id="contactOpen" role="menuitem">
+            Hafa samband <span>✉️</span>
+          </button>
+          <div class="drop-sep"></div>
+          <button class="drop-btn" id="settingsOpen" role="menuitem">
+            Stillingar <span>⚙️</span>
+          </button>
+          <div class="drop-hint">Veldu ham eða sendu skilaboð.</div>
         </div>
-      </button>
+      </div>
     </div>
   </header>
 
@@ -296,6 +410,7 @@
         <div class="section-title">Verkfæri</div>
         <div class="btns">
           <button class="btn" onclick="location.href='/dagatal/'">Dagatal 🗓️</button>
+          <button class="btn" onclick="location.href='/klukka/'">Klukka 🕒</button>
         </div>
       </div>
 
@@ -306,12 +421,12 @@
     <div class="pill">Vefur stofnaður 2025. Engar vafrakökur - bara ís.</div>
   </div>
 
-  <!-- Contact modal -->
-  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+  <!-- CONTACT MODAL -->
+  <div class="overlay" id="contactOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
     <div class="modal">
       <div class="modal-h">
         <b id="contactTitle">Hafa samband</b>
-        <button class="close" id="closeBtn" aria-label="Loka">✕</button>
+        <button class="close" id="contactClose" aria-label="Loka">✕</button>
       </div>
 
       <form id="contactForm" autocomplete="on">
@@ -337,26 +452,116 @@
     </div>
   </div>
 
-  <script>
-    const overlay = document.getElementById('overlay');
-    const menuBtn = document.getElementById('menuBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const form = document.getElementById('contactForm');
-    const statusEl = document.getElementById('status');
+  <!-- SETTINGS MODAL -->
+  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal">
+      <div class="modal-h">
+        <b id="settingsTitle">Stillingar</b>
+        <button class="close" id="settingsClose" aria-label="Loka">✕</button>
+      </div>
 
-    function openModal(){
-      overlay.classList.add('open');
-      statusEl.textContent = '';
-      setTimeout(() => document.getElementById('name').focus(), 50);
+      <div class="settings-body">
+        <div class="setting-row">
+          <div class="left">
+            <b>Hamur</b>
+            <span>Light eða Dark</span>
+          </div>
+
+          <div class="toggle" role="group" aria-label="Velja ham">
+            <button class="chip" id="lightBtn" type="button">Light</button>
+            <button class="chip" id="darkBtn" type="button">Dark</button>
+          </div>
+        </div>
+
+        <div style="color:var(--muted); font-size:12px; padding: 0 2px 4px;">
+          (Vistað á tækinu þínu. Engar kökur — bara smá sjálfsmynd.)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------- Theme (persisted) -------
+    const root = document.documentElement;
+    const lightBtn = document.getElementById('lightBtn');
+    const darkBtn  = document.getElementById('darkBtn');
+
+    function applyTheme(theme){
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      lightBtn.classList.toggle('active', theme === 'light');
+      darkBtn.classList.toggle('active', theme === 'dark');
     }
-    function closeModal(){
+    const saved = localStorage.getItem('theme');
+    applyTheme(saved === 'light' ? 'light' : 'dark');
+
+    lightBtn.addEventListener('click', () => applyTheme('light'));
+    darkBtn.addEventListener('click',  () => applyTheme('dark'));
+
+    // ------- Dropdown menu -------
+    const menuBtn = document.getElementById('menuBtn');
+    const dropdown = document.getElementById('dropdown');
+    const contactOpen = document.getElementById('contactOpen');
+    const settingsOpen = document.getElementById('settingsOpen');
+
+    function toggleDropdown(){
+      dropdown.classList.toggle('open');
+    }
+    function closeDropdown(){
+      dropdown.classList.remove('open');
+    }
+
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown();
+    });
+
+    document.addEventListener('click', () => closeDropdown());
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') closeDropdown();
+    });
+
+    dropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    // ------- Modals -------
+    const contactOverlay = document.getElementById('contactOverlay');
+    const contactClose = document.getElementById('contactClose');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const settingsClose = document.getElementById('settingsClose');
+
+    function openModal(overlay){
+      overlay.classList.add('open');
+    }
+    function closeModal(overlay){
       overlay.classList.remove('open');
     }
 
-    menuBtn.addEventListener('click', openModal);
-    closeBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
-    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+    contactOpen.addEventListener('click', () => {
+      closeDropdown();
+      openModal(contactOverlay);
+      setTimeout(() => document.getElementById('name').focus(), 50);
+    });
+    settingsOpen.addEventListener('click', () => {
+      closeDropdown();
+      openModal(settingsOverlay);
+    });
+
+    contactClose.addEventListener('click', () => closeModal(contactOverlay));
+    settingsClose.addEventListener('click', () => closeModal(settingsOverlay));
+
+    contactOverlay.addEventListener('click', (e) => { if(e.target === contactOverlay) closeModal(contactOverlay); });
+    settingsOverlay.addEventListener('click', (e) => { if(e.target === settingsOverlay) closeModal(settingsOverlay); });
+
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape'){
+        closeModal(contactOverlay);
+        closeModal(settingsOverlay);
+      }
+    });
+
+    // ------- Contact submit -------
+    const form = document.getElementById('contactForm');
+    const statusEl = document.getElementById('status');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -366,7 +571,6 @@
         name: form.name.value.trim(),
         email: form.email.value.trim(),
         message: form.message.value.trim(),
-        // simple honey-pot option if you add a hidden field later
       };
 
       try{
@@ -383,7 +587,7 @@
 
         statusEl.textContent = 'Sent. Takk!';
         form.reset();
-        setTimeout(closeModal, 700);
+        setTimeout(() => closeModal(contactOverlay), 700);
       }catch(err){
         statusEl.textContent = 'Tókst ekki að senda. Reyndu aftur eftir smá.';
       }
