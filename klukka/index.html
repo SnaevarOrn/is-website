@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — Klukka</title>
+
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- Apply theme ASAP (prevents flash) -->
+  <script>
+    (function(){
+      const t = localStorage.getItem('theme');
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    })();
+  </script>
+
+  <style>
+    :root{
+      --bg:#0b0c0f;
+      --panel:#12141a;
+      --panel2:#0f1116;
+      --line:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.70);
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --btn:#f2f2f2;
+      --btnText:#0b0c0f;
+    }
+    html[data-theme="light"]{
+      --bg:#f6f7f9;
+      --panel:#ffffff;
+      --panel2:#ffffff;
+      --line:rgba(0,0,0,.10);
+      --text:rgba(0,0,0,.88);
+      --muted:rgba(0,0,0,.58);
+      --shadow: 0 18px 60px rgba(0,0,0,.10);
+      --btn:#111318;
+      --btnText:#ffffff;
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{
+      min-height:100vh;
+      background: var(--bg);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
+    }
+
+    header{
+      position:sticky; top:0; z-index:30;
+      background: color-mix(in srgb, var(--panel2) 92%, transparent);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+    .hdr{
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      display:grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items:center;
+      gap: 10px;
+    }
+    .back{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: transparent;
+      border-radius: 12px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      color: var(--text);
+      text-decoration:none;
+      font-weight: 900;
+      user-select:none;
+    }
+    .back:active{ transform: translateY(1px); }
+    .brand-title{
+      text-align:center;
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size: 18px;
+      user-select:none;
+    }
+    .ghost{
+      width:44px; height:44px;
+      opacity:.0;
+      pointer-events:none;
+    }
+
+    main{
+      flex:1;
+      display:flex;
+      justify-content:center;
+      padding: 24px 16px 18px;
+    }
+    .wrap{
+      width: min(760px, 100%);
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      align-items:center;
+      padding-top: 6px;
+    }
+    .card{
+      width: min(560px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+    }
+    .title{
+      font-weight: 850;
+      letter-spacing:.2px;
+      margin: 2px 4px 10px;
+    }
+    .sub{
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 4px 12px;
+    }
+
+    /* ---- Analog clock ---- */
+    .clock-wrap{
+      display:flex;
+      justify-content:center;
+      padding: 6px 6px 10px;
+    }
+    .analog{
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel2) 85%, transparent);
+      box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--text) 3%, transparent);
+      position: relative;
+    }
+    .center-dot{
+      position:absolute;
+      left:50%; top:50%;
+      width:10px; height:10px;
+      border-radius:50%;
+      background: color-mix(in srgb, var(--text) 80%, transparent);
+      transform: translate(-50%,-50%);
+      z-index: 10;
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 8%, transparent);
+    }
+    .hand{
+      position:absolute;
+      left:50%; top:50%;
+      transform-origin: 50% 100%;
+      transform: translate(-50%,-100%) rotate(0deg);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--text) 85%, transparent);
+    }
+    .hand.hour{ width:8px; height:78px; opacity:.92; }
+    .hand.min { width:6px; height:104px; opacity:.88; }
+    .hand.sec { width:2px; height:118px; opacity:.70; }
+
+    .ticks{
+      position:absolute; inset: 12px;
+      border-radius: 50%;
+      pointer-events:none;
+    }
+    .tick{
+      position:absolute;
+      left:50%; top:50%;
+      width:2px; height:10px;
+      background: color-mix(in srgb, var(--text) 20%, transparent);
+      transform-origin: 50% 118px;
+      transform: translate(-50%,-118px) rotate(0deg);
+      border-radius:2px;
+    }
+    .tick.big{
+      height:14px;
+      background: color-mix(in srgb, var(--text) 28%, transparent);
+    }
+
+    /* ---- Digital clock ---- */
+    .digital{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 10px;
+      padding: 4px 6px 2px;
+    }
+    .time{
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .8px;
+      font-weight: 900;
+      font-size: 44px;
+      padding: 10px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel2) 85%, transparent);
+      box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--text) 3%, transparent);
+      text-align:center;
+      min-width: 260px;
+    }
+    .date{
+      color: var(--muted);
+      font-size: 14px;
+      text-align:center;
+    }
+
+    .meta{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: color-mix(in srgb, var(--panel2) 70%, transparent);
+    }
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background: color-mix(in srgb, var(--text) 35%, transparent);
+      opacity:.9;
+    }
+    .dot.ok{ background: #2ecc71; }
+    .dot.bad{ background: #e74c3c; }
+
+    @media (max-width:420px){
+      .analog{ width: 230px; height: 230px; }
+      .time{ font-size: 38px; min-width: 240px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="hdr">
+      <a class="back" href="/" aria-label="Til baka">←</a>
+      <div class="brand-title">Klukka</div>
+      <div class="ghost" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+
+      <div class="card">
+        <div class="title">Analog</div>
+        <div class="sub">Vísar hreyfast í rauntíma.</div>
+
+        <div class="clock-wrap">
+          <div class="analog" aria-label="Analog klukka">
+            <div class="ticks" id="ticks"></div>
+            <div class="hand hour" id="hHand"></div>
+            <div class="hand min" id="mHand"></div>
+            <div class="hand sec" id="sHand"></div>
+            <div class="center-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="title">Digital</div>
+        <div class="sub">Tölustafir + dagsetning.</div>
+
+        <div class="digital">
+          <div class="time" id="digitalTime">--:--:--</div>
+          <div class="date" id="digitalDate">—</div>
+
+          <div class="meta">
+            <span class="pill">
+              <span class="dot" id="syncDot"></span>
+              <span id="syncText">Tími: tæki</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // --------- Optional: fetch "true" time once, then run locally with offset ---------
+    // Uses WorldTimeAPI for Iceland timezone. If it fails, uses device time.
+    let timeOffsetMs = 0;
+    let timeSource = 'tæki'; // or 'net'
+
+    const syncDot  = document.getElementById('syncDot');
+    const syncText = document.getElementById('syncText');
+
+    function setSource(ok){
+      syncDot.classList.toggle('ok', ok);
+      syncDot.classList.toggle('bad', !ok);
+      syncText.textContent = ok ? 'Tími: net (Reykjavík)' : 'Tími: tæki';
+    }
+
+    async function syncTimeOnce(){
+      try{
+        const res = await fetch('https://worldtimeapi.org/api/timezone/Atlantic/Reykjavik', { cache: 'no-store' });
+        if(!res.ok) throw new Error('bad response');
+        const data = await res.json();
+
+        // data.datetime is ISO string with offset; Date can parse it
+        const netMs = new Date(data.datetime).getTime();
+        const localMs = Date.now();
+
+        if(!Number.isFinite(netMs)) throw new Error('bad time');
+        timeOffsetMs = netMs - localMs;
+        timeSource = 'net';
+        setSource(true);
+      }catch(e){
+        timeOffsetMs = 0;
+        timeSource = 'tæki';
+        setSource(false);
+      }
+    }
+
+    function now(){
+      return new Date(Date.now() + timeOffsetMs);
+    }
+
+    // --------- Build ticks on analog clock ---------
+    (function buildTicks(){
+      const ticks = document.getElementById('ticks');
+      for(let i=0;i<60;i++){
+        const t = document.createElement('div');
+        t.className = 'tick' + (i%5===0 ? ' big' : '');
+        t.style.transform = `translate(-50%,-118px) rotate(${i*6}deg)`;
+        ticks.appendChild(t);
+      }
+    })();
+
+    // --------- Render clocks ---------
+    const hHand = document.getElementById('hHand');
+    const mHand = document.getElementById('mHand');
+    const sHand = document.getElementById('sHand');
+    const digitalTime = document.getElementById('digitalTime');
+    const digitalDate = document.getElementById('digitalDate');
+
+    function pad(n){ return String(n).padStart(2,'0'); }
+
+    function render(){
+      const d = now();
+      const ms = d.getMilliseconds();
+      const sec = d.getSeconds() + ms/1000;
+      const min = d.getMinutes() + sec/60;
+      const hr  = (d.getHours()%12) + min/60;
+
+      const secDeg = sec * 6;       // 360/60
+      const minDeg = min * 6;
+      const hrDeg  = hr  * 30;      // 360/12
+
+      sHand.style.transform = `translate(-50%,-100%) rotate(${secDeg}deg)`;
+      mHand.style.transform = `translate(-50%,-100%) rotate(${minDeg}deg)`;
+      hHand.style.transform = `translate(-50%,-100%) rotate(${hrDeg}deg)`;
+
+      const HH = pad(d.getHours());
+      const MM = pad(d.getMinutes());
+      const SS = pad(d.getSeconds());
+      digitalTime.textContent = `${HH}:${MM}:${SS}`;
+
+      const wd = d.toLocaleDateString('is-IS', { weekday:'long' });
+      const dateStr = d.toLocaleDateString('is-IS', { year:'numeric', month:'long', day:'numeric' });
+      digitalDate.textContent = `${wd} • ${dateStr}`;
+
+      requestAnimationFrame(render);
+    }
+
+    // Start
+    (async function init(){
+      // Try net time once; keep the UI snappy regardless
+      syncTimeOnce();
+      requestAnimationFrame(render);
+    })();
+  </script>
+</body>
+</html>
