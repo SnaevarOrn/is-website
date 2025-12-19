@@ -15,23 +15,30 @@
 
   <style>
     :root{
-      --bg:#071a24;
-      --panel:#0b2532;
-      --panel2:#0e2c3b;
-      --text:#e8f6ff;
-      --muted:#9fc5da;
-      --ice:#bfe9ff;
-      --ring:#ff3b3b;
-      --border: rgba(191,233,255,.16);
-      --shadow: rgba(0,0,0,.35);
-      --focus: rgba(103,199,255,.45);
-      --cell:#0c2a39;
-      --cellHover:#103244;
-      --today:#ff3b3b;
-      --today2: rgba(255,59,59,.18);
+  /* Neutral dark (svipað og forsíða/klukka) */
+  --bg:#0b0c0f;
+  --panel:#12141a;
+  --panel2:#0f1116;
 
-      --headerH: 132px; /* fastur header: notað til padding */
-    }
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.65);
+
+  /* Accent (má vera aðeins “ís” en án bláa veggja) */
+  --ice:#e9f7ff;                 /* titlar */
+  --ring:#ff3b3b;                /* frídagahringur */
+
+  --border: rgba(255,255,255,.10);
+  --shadow: rgba(0,0,0,.55);
+  --focus: rgba(180,230,255,.25);
+
+  --cell:#141821;
+  --cellHover:#1a2030;
+
+  --today:#ff3b3b;
+  --today2: rgba(255,59,59,.16);
+
+  --headerH: 132px;
+}
     html[data-theme="light"]{
       --bg:#f6f7f9;
       --panel:#ffffff;
