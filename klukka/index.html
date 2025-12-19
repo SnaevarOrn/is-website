@@ -80,30 +80,29 @@
       user-select:none;
     }
     .back:active{ transform: translateY(1px); }
-    .brand-title{
+    .hdr-date{
       text-align:center;
-      font-weight:800;
+      font-weight: 850;
       letter-spacing:.2px;
-      font-size: 18px;
+      font-size: 15px;
       user-select:none;
+      color: var(--text);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
     }
-    .ghost{
-      width:44px; height:44px;
-      opacity:.0;
-      pointer-events:none;
-    }
+    .ghost{ width:44px; height:44px; opacity:0; pointer-events:none; }
 
     main{
       flex:1;
       display:flex;
       justify-content:center;
-      padding: 24px 16px 18px;
+      padding: 18px 16px 18px;
     }
     .wrap{
       width: min(760px, 100%);
       display:flex;
       flex-direction:column;
-      gap: 14px;
       align-items:center;
       padding-top: 6px;
     }
@@ -112,34 +111,39 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 22px;
-      padding: 18px 16px;
+      padding: 16px 14px 14px;
       box-shadow: var(--shadow);
-    }
-    .title{
-      font-weight: 850;
-      letter-spacing:.2px;
-      margin: 2px 4px 10px;
-    }
-    .sub{
-      color: var(--muted);
-      font-size: 13px;
-      margin: 0 4px 12px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 12px;
     }
 
-    /* ---- Analog clock ---- */
-    .clock-wrap{
-      display:flex;
-      justify-content:center;
-      padding: 6px 6px 10px;
+    /* Digital (top) */
+    .digitalTime{
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .9px;
+      font-weight: 900;
+      font-size: 46px;
+      padding: 10px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel2) 85%, transparent);
+      box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--text) 3%, transparent);
+      text-align:center;
+      min-width: 270px;
     }
+
+    /* Analog (middle) */
     .analog{
-      width: 260px;
-      height: 260px;
+      width: 270px;
+      height: 270px;
       border-radius: 50%;
       border: 1px solid var(--line);
       background: color-mix(in srgb, var(--panel2) 85%, transparent);
       box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--text) 3%, transparent);
       position: relative;
+      margin: 2px 0;
     }
     .center-dot{
       position:absolute;
@@ -159,22 +163,18 @@
       border-radius: 999px;
       background: color-mix(in srgb, var(--text) 85%, transparent);
     }
-    .hand.hour{ width:8px; height:78px; opacity:.92; }
-    .hand.min { width:6px; height:104px; opacity:.88; }
-    .hand.sec { width:2px; height:118px; opacity:.70; }
+    .hand.hour{ width:8px; height:80px; opacity:.92; }
+    .hand.min { width:6px; height:108px; opacity:.88; }
+    .hand.sec { width:2px; height:124px; opacity:.70; }
 
-    .ticks{
-      position:absolute; inset: 12px;
-      border-radius: 50%;
-      pointer-events:none;
-    }
+    .ticks{ position:absolute; inset: 12px; border-radius: 50%; pointer-events:none; }
     .tick{
       position:absolute;
       left:50%; top:50%;
       width:2px; height:10px;
       background: color-mix(in srgb, var(--text) 20%, transparent);
-      transform-origin: 50% 118px;
-      transform: translate(-50%,-118px) rotate(0deg);
+      transform-origin: 50% 120px;
+      transform: translate(-50%,-120px) rotate(0deg);
       border-radius:2px;
     }
     .tick.big{
@@ -182,39 +182,7 @@
       background: color-mix(in srgb, var(--text) 28%, transparent);
     }
 
-    /* ---- Digital clock ---- */
-    .digital{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap: 10px;
-      padding: 4px 6px 2px;
-    }
-    .time{
-      font-variant-numeric: tabular-nums;
-      letter-spacing: .8px;
-      font-weight: 900;
-      font-size: 44px;
-      padding: 10px 16px;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: color-mix(in srgb, var(--panel2) 85%, transparent);
-      box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--text) 3%, transparent);
-      text-align:center;
-      min-width: 260px;
-    }
-    .date{
-      color: var(--muted);
-      font-size: 14px;
-      text-align:center;
-    }
-
-    .meta{
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 12px;
-      text-align:center;
-    }
+    /* Status pill (bottom) */
     .pill{
       display:inline-flex;
       align-items:center;
@@ -223,18 +191,21 @@
       border-radius: 999px;
       padding: 8px 12px;
       background: color-mix(in srgb, var(--panel2) 70%, transparent);
+      color: var(--muted);
+      font-size: 12px;
     }
     .dot{
       width:8px; height:8px; border-radius:50%;
       background: color-mix(in srgb, var(--text) 35%, transparent);
-      opacity:.9;
+      opacity:.95;
     }
-    .dot.ok{ background: #2ecc71; }
-    .dot.bad{ background: #e74c3c; }
+    .dot.ok{ background:#2ecc71; }
+    .dot.warn{ background:#f1c40f; }
+    .dot.bad{ background:#e74c3c; }
 
     @media (max-width:420px){
-      .analog{ width: 230px; height: 230px; }
-      .time{ font-size: 38px; min-width: 240px; }
+      .analog{ width: 240px; height: 240px; }
+      .digitalTime{ font-size: 40px; min-width: 250px; }
     }
   </style>
 </head>
@@ -243,140 +214,247 @@
   <header>
     <div class="hdr">
       <a class="back" href="/" aria-label="Til baka">←</a>
-      <div class="brand-title">Klukka</div>
+      <div class="hdr-date" id="hdrDate">—</div>
       <div class="ghost" aria-hidden="true"></div>
     </div>
   </header>
 
   <main>
     <div class="wrap">
-
       <div class="card">
-        <div class="title">Analog</div>
-        <div class="sub">Vísar hreyfast í rauntíma.</div>
+        <div class="digitalTime" id="digitalTime">--:--:--</div>
 
-        <div class="clock-wrap">
-          <div class="analog" aria-label="Analog klukka">
-            <div class="ticks" id="ticks"></div>
-            <div class="hand hour" id="hHand"></div>
-            <div class="hand min" id="mHand"></div>
-            <div class="hand sec" id="sHand"></div>
-            <div class="center-dot"></div>
-          </div>
+        <div class="analog" aria-label="Analog klukka">
+          <div class="ticks" id="ticks"></div>
+          <div class="hand hour" id="hHand"></div>
+          <div class="hand min" id="mHand"></div>
+          <div class="hand sec" id="sHand"></div>
+          <div class="center-dot"></div>
+        </div>
+
+        <div class="pill">
+          <span class="dot" id="syncDot"></span>
+          <span id="syncText">Tími: net (Reykjavík)</span>
         </div>
       </div>
-
-      <div class="card">
-        <div class="title">Digital</div>
-        <div class="sub">Tölustafir + dagsetning.</div>
-
-        <div class="digital">
-          <div class="time" id="digitalTime">--:--:--</div>
-          <div class="date" id="digitalDate">—</div>
-
-          <div class="meta">
-            <span class="pill">
-              <span class="dot" id="syncDot"></span>
-              <span id="syncText">Tími: tæki</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
     </div>
   </main>
 
   <script>
-    // --------- Optional: fetch "true" time once, then run locally with offset ---------
-    // Uses WorldTimeAPI for Iceland timezone. If it fails, uses device time.
-    let timeOffsetMs = 0;
-    let timeSource = 'tæki'; // or 'net'
+    // ---------------------------
+    // Real net-sync + smooth drift correction (PLL-ish)
+    // ---------------------------
+    // We sample WorldTimeAPI regularly, estimate offset at midpoint of request,
+    // estimate drift (clock rate error), and SLEW corrections smoothly:
+    // - Offset is slewed with max ms per second (no jumps)
+    // - Rate correction (scale) is low-pass filtered (ppm-level)
+    //
+    // If network fails, we keep running on last good model and show warning/bad.
+    // ---------------------------
+
+    const TZ_URL = 'https://worldtimeapi.org/api/timezone/Atlantic/Reykjavik';
 
     const syncDot  = document.getElementById('syncDot');
     const syncText = document.getElementById('syncText');
 
-    function setSource(ok){
-      syncDot.classList.toggle('ok', ok);
-      syncDot.classList.toggle('bad', !ok);
-      syncText.textContent = ok ? 'Tími: net (Reykjavík)' : 'Tími: tæki';
+    function setStatus(kind, txt){
+      syncDot.classList.remove('ok','warn','bad');
+      syncDot.classList.add(kind);
+      syncText.textContent = txt;
     }
 
-    async function syncTimeOnce(){
+    // Model: correctedTime = baseNetMs + (localPerfNow - basePerfNow) * scale + offsetSlew
+    // where scale ~= 1 + drift (e.g. 20ppm -> 1.00002)
+    let basePerf = performance.now();
+    let baseNet  = Date.now();     // initial guess = local wall clock
+    let scale    = 1.0;            // rate correction
+    let targetScale = 1.0;
+
+    // Offset slewing (ms) toward targetOffset (ms)
+    let offsetMs = 0;
+    let targetOffsetMs = 0;
+
+    // Sync bookkeeping
+    let lastGoodSyncPerf = null;
+    let lastGoodOffset = null;
+    let lastGoodSyncAgeMs = 0;
+    let consecutiveFails = 0;
+
+    // Slew limits (feel free to tweak)
+    const MAX_OFFSET_SLEW_MS_PER_S = 8;     // max 8ms per second correction (smooth, no jumps)
+    const SCALE_SLEW_PER_S = 2e-6;          // max scale change per second (~2 ppm/s)
+
+    function correctedNowMs(){
+      const p = performance.now();
+      const elapsed = p - basePerf; // ms
+      // baseNet already includes base offset at sync moment; offsetMs is a slowly changing extra offset.
+      return baseNet + elapsed * scale + offsetMs;
+    }
+
+    function isFiniteNum(x){ return Number.isFinite(x) && !Number.isNaN(x); }
+
+    async function sampleNetTime(){
+      const t0p = performance.now();
+      const t0w = Date.now();
+
+      const res = await fetch(TZ_URL, { cache: 'no-store' });
+
+      const t1p = performance.now();
+      const t1w = Date.now();
+
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      // Parse server-provided datetime
+      const serverMs = new Date(data.datetime).getTime();
+      if(!isFiniteNum(serverMs)) throw new Error('bad datetime');
+
+      // Estimate midpoint local wall time (reduces latency bias)
+      const midWall = (t0w + t1w) / 2;
+      const rtt = (t1p - t0p);
+
+      // Offset sample: how much we must add to local wall clock to match server time at midpoint
+      const offsetSample = serverMs - midWall;
+
+      return { offsetSample, rtt, tMidPerf: (t0p + t1p)/2 };
+    }
+
+    function applySync(offsetSample, rtt, tMidPerf){
+      // Weight based on RTT: lower RTT -> higher weight
+      // Clamp RTT influence so we don't go wild on mobile
+      const rttClamped = Math.min(Math.max(rtt, 20), 2000);
+      const w = 1 / (1 + (rttClamped / 200)); // ~0.91 at 20ms, ~0.17 at 1000ms
+
+      // Estimate drift from change in offset over time (offset slope)
+      if(lastGoodSyncPerf !== null && lastGoodOffset !== null){
+        const dt = (tMidPerf - lastGoodSyncPerf) / 1000; // seconds
+        if(dt > 0.5){
+          const dOffset = (offsetSample - lastGoodOffset); // ms
+          const drift = (dOffset / (dt * 1000)); // ms per ms => dimensionless (≈ ppm)
+          // Convert to scale target
+          const newTargetScale = 1 + drift;
+          if(isFiniteNum(newTargetScale)){
+            // Low-pass filter into targetScale (weighted)
+            targetScale = targetScale + (newTargetScale - targetScale) * (0.25 * w);
+          }
+        }
+      }
+
+      // Target offset: offsetSample relative to our model's raw local wall time.
+      // Our model uses performance clock + baseNet, so set a target offset correction:
+      targetOffsetMs = targetOffsetMs + (offsetSample - targetOffsetMs) * (0.6 * w);
+
+      // Anchor base at the sync midpoint to keep numbers stable
+      // We want correctedNow(mid) == serverMs (approximately).
+      // serverMs ≈ midWall + offsetSample.
+      const midWall = Date.now() + (tMidPerf - performance.now()); // approx wall at that perf time
+      const serverAtMid = midWall + offsetSample;
+
+      basePerf = tMidPerf;
+      baseNet  = serverAtMid; // includes the offset at mid
+
+      lastGoodSyncPerf = tMidPerf;
+      lastGoodOffset = offsetSample;
+      consecutiveFails = 0;
+    }
+
+    function tickSlews(dtSeconds){
+      // Slew offset toward targetOffsetMs with max rate
+      const maxStep = MAX_OFFSET_SLEW_MS_PER_S * dtSeconds;
+      const diff = targetOffsetMs - offsetMs;
+      const step = Math.max(-maxStep, Math.min(maxStep, diff));
+      offsetMs += step;
+
+      // Slew scale toward targetScale with max rate
+      const maxScaleStep = SCALE_SLEW_PER_S * dtSeconds;
+      const sd = targetScale - scale;
+      const sstep = Math.max(-maxScaleStep, Math.min(maxScaleStep, sd));
+      scale += sstep;
+    }
+
+    async function syncLoop(){
       try{
-        const res = await fetch('https://worldtimeapi.org/api/timezone/Atlantic/Reykjavik', { cache: 'no-store' });
-        if(!res.ok) throw new Error('bad response');
-        const data = await res.json();
-
-        // data.datetime is ISO string with offset; Date can parse it
-        const netMs = new Date(data.datetime).getTime();
-        const localMs = Date.now();
-
-        if(!Number.isFinite(netMs)) throw new Error('bad time');
-        timeOffsetMs = netMs - localMs;
-        timeSource = 'net';
-        setSource(true);
-      }catch(e){
-        timeOffsetMs = 0;
-        timeSource = 'tæki';
-        setSource(false);
+        const { offsetSample, rtt, tMidPerf } = await sampleNetTime();
+        applySync(offsetSample, rtt, tMidPerf);
+        setStatus('ok', 'Tími: net (Reykjavík)');
+      }catch(err){
+        consecutiveFails++;
+        // If we recently had a good sync, treat as warning; else bad.
+        if(lastGoodSyncPerf !== null){
+          setStatus('warn', 'Tími: net (Reykjavík) — óstöðugt net');
+        }else{
+          setStatus('bad', 'Tími: tæki (net náðist ekki)');
+        }
+      }finally{
+        // Resync cadence: fast after failures, slower when stable
+        const base = (consecutiveFails === 0) ? 60_000 : 10_000; // 60s stable, 10s retry
+        const jitter = Math.random() * 8000; // avoid thundering herd
+        setTimeout(syncLoop, base + jitter);
       }
     }
 
-    function now(){
-      return new Date(Date.now() + timeOffsetMs);
-    }
+    // ---------------------------
+    // UI rendering
+    // ---------------------------
+    const hHand = document.getElementById('hHand');
+    const mHand = document.getElementById('mHand');
+    const sHand = document.getElementById('sHand');
+    const digitalTime = document.getElementById('digitalTime');
+    const hdrDate = document.getElementById('hdrDate');
 
-    // --------- Build ticks on analog clock ---------
+    function pad(n){ return String(n).padStart(2,'0'); }
+
+    // ticks
     (function buildTicks(){
       const ticks = document.getElementById('ticks');
       for(let i=0;i<60;i++){
         const t = document.createElement('div');
         t.className = 'tick' + (i%5===0 ? ' big' : '');
-        t.style.transform = `translate(-50%,-118px) rotate(${i*6}deg)`;
+        t.style.transform = `translate(-50%,-120px) rotate(${i*6}deg)`;
         ticks.appendChild(t);
       }
     })();
 
-    // --------- Render clocks ---------
-    const hHand = document.getElementById('hHand');
-    const mHand = document.getElementById('mHand');
-    const sHand = document.getElementById('sHand');
-    const digitalTime = document.getElementById('digitalTime');
-    const digitalDate = document.getElementById('digitalDate');
-
-    function pad(n){ return String(n).padStart(2,'0'); }
+    let lastPerf = performance.now();
+    let lastHeaderDayKey = '';
 
     function render(){
-      const d = now();
-      const ms = d.getMilliseconds();
-      const sec = d.getSeconds() + ms/1000;
+      const nowPerf = performance.now();
+      const dt = (nowPerf - lastPerf) / 1000;
+      lastPerf = nowPerf;
+
+      if(dt > 0 && dt < 0.5) tickSlews(dt);
+
+      const ms = correctedNowMs();
+      const d = new Date(ms);
+
+      // Digital time
+      digitalTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+      // Header date (update only when day changes, avoids extra work)
+      const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if(dayKey !== lastHeaderDayKey){
+        lastHeaderDayKey = dayKey;
+        hdrDate.textContent = d.toLocaleDateString('is-IS', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      }
+
+      // Analog hands (smooth seconds)
+      const sec = d.getSeconds() + d.getMilliseconds()/1000;
       const min = d.getMinutes() + sec/60;
       const hr  = (d.getHours()%12) + min/60;
 
-      const secDeg = sec * 6;       // 360/60
-      const minDeg = min * 6;
-      const hrDeg  = hr  * 30;      // 360/12
-
-      sHand.style.transform = `translate(-50%,-100%) rotate(${secDeg}deg)`;
-      mHand.style.transform = `translate(-50%,-100%) rotate(${minDeg}deg)`;
-      hHand.style.transform = `translate(-50%,-100%) rotate(${hrDeg}deg)`;
-
-      const HH = pad(d.getHours());
-      const MM = pad(d.getMinutes());
-      const SS = pad(d.getSeconds());
-      digitalTime.textContent = `${HH}:${MM}:${SS}`;
-
-      const wd = d.toLocaleDateString('is-IS', { weekday:'long' });
-      const dateStr = d.toLocaleDateString('is-IS', { year:'numeric', month:'long', day:'numeric' });
-      digitalDate.textContent = `${wd} • ${dateStr}`;
+      sHand.style.transform = `translate(-50%,-100%) rotate(${sec*6}deg)`;
+      mHand.style.transform = `translate(-50%,-100%) rotate(${min*6}deg)`;
+      hHand.style.transform = `translate(-50%,-100%) rotate(${hr*30}deg)`;
 
       requestAnimationFrame(render);
     }
 
     // Start
-    (async function init(){
-      // Try net time once; keep the UI snappy regardless
-      syncTimeOnce();
+    (function init(){
+      // Start syncing immediately, and render immediately.
+      // If net is blocked, it gracefully falls back (and keeps smoothing anyway).
+      syncLoop();
       requestAnimationFrame(render);
     })();
   </script>
