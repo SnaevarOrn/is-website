@@ -5,474 +5,623 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is</title>
 
+  <!-- Favicons -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.png" sizes="32x32">
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+  <meta name="theme-color" content="#050607" id="metaThemeColor">
+
   <style>
     :root{
-      --bg0:#07090c;
-      --bg1:#0b0f16;
-      --card: rgba(18,18,20,.72);
-      --card2: rgba(18,18,20,.92);
+      /* Light */
+      --bg: #f5f6f8;
+      --bg2:#eef1f5;
+      --panel:#ffffff;
+      --panel2:#f7f8fb;
+      --line: rgba(10,20,30,.10);
+      --text: rgba(10,20,30,.92);
+      --muted: rgba(10,20,30,.62);
+
+      --btnBg: #ffffff;
+      --btnLine: rgba(10,20,30,.12);
+      --btnText: rgba(10,20,30,.92);
+
+      --shadow: 0 18px 60px rgba(0,0,0,.10);
+      --shadow2: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    html[data-theme="dark"]{
+      /* True dark */
+      --bg: #050607;
+      --bg2:#0b0c0e;
+      --panel:#0d0f12;
+      --panel2:#0b0d10;
       --line: rgba(255,255,255,.10);
-      --txt: rgba(255,255,255,.92);
-      --ice: #bfe9ff;
-      --ice2:#e6f6ff;
-      --shadow: 0 20px 60px rgba(0,0,0,.55);
-      --r: 22px;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+
+      --btnBg: rgba(255,255,255,.92);
+      --btnLine: rgba(255,255,255,.14);
+      --btnText: #07080a;
+
+      --shadow: 0 24px 90px rgba(0,0,0,.65);
+      --shadow2: 0 14px 50px rgba(0,0,0,.50);
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
     body{
-      margin:0;
-      color:var(--txt);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 800px at 20% 10%, rgba(191,233,255,.12), transparent 60%),
-        radial-gradient(900px 700px at 85% 30%, rgba(191,233,255,.08), transparent 65%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
-      display:flex;
-      justify-content:center;
-      padding: 18px 14px 28px;
-    }
-
-    .wrap{
-      width:min(720px, 100%);
+      min-height:100vh;
+      background: radial-gradient(1200px 800px at 50% 0%, rgba(120,160,255,.10), transparent 55%),
+                  linear-gradient(180deg, var(--bg), var(--bg2));
+      color: var(--text);
       display:flex;
       flex-direction:column;
-      gap: 16px;
     }
 
-    /* Top bar */
-    .topbar{
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 10px 6px 0;
+    /* Header */
+    header{
+      position:sticky;
+      top:0;
+      z-index:20;
+      background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,0));
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    html[data-theme="dark"] header{
+      background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.18));
     }
 
-    .brand{
-      display:flex;
+    .hdr{
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 14px 16px;
+      display:grid;
+      grid-template-columns: 44px 1fr 44px;
       align-items:center;
       gap: 10px;
-      font-weight: 700;
-      letter-spacing: .2px;
+    }
+
+    .brand-left{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 14px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    html[data-theme="dark"] .brand-left{
+      background: rgba(255,255,255,.04);
+    }
+
+    .brand-left img{
+      width:26px; height:26px;
+      display:block;
+      opacity:.95;
+      /* Engin crazy filter sem getur “ruglað” logo */
+      filter:none;
+    }
+
+    .brand-title{
+      text-align:center;
+      font-weight:750;
+      letter-spacing:.3px;
       font-size: 20px;
-      opacity: .96;
       user-select:none;
     }
 
-    .left-icon{
-      width: 38px;
-      height: 38px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      display:grid;
-      place-items:center;
-      color: var(--ice2);
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    .menu-wrap{
+      position:relative;
+      display:flex;
+      justify-content:flex-end;
     }
 
-    .menuBtn{
-      width: 44px;
-      height: 44px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color: var(--txt);
-      display:grid;
-      place-items:center;
+    .menu-btn{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 14px;
+      display:flex; align-items:center; justify-content:center;
       cursor:pointer;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
     }
-    .menuBtn:active{transform: translateY(1px);}
+    html[data-theme="dark"] .menu-btn{ background: rgba(255,255,255,.04); }
+    .menu-btn:active{ transform: translateY(1px); }
+
+    .burger{
+      width:18px; height:12px; position:relative;
+    }
+    .burger span{
+      position:absolute; left:0; right:0;
+      height:2px; border-radius:2px;
+      background: currentColor;
+      opacity:.92;
+    }
+    .burger span:nth-child(1){ top:0; }
+    .burger span:nth-child(2){ top:5px; opacity:.80; }
+    .burger span:nth-child(3){ bottom:0; opacity:.70; }
 
     /* Dropdown */
-    .menu-dropdown{
+    .menu-pop{
       position:absolute;
+      top: 52px;
       right: 0;
-      top: 58px;
-      width: 280px;
-      background: var(--card2);
+      width: min(260px, 86vw);
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 16px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 8px;
+      box-shadow: var(--shadow2);
       display:none;
-      z-index: 50;
-      box-shadow: var(--shadow);
+      overflow:hidden;
     }
-    .menu-dropdown.open{display:block}
-
+    .menu-pop.show{ display:block; }
     .menu-item{
-      width: 100%;
+      width:100%;
+      border:0;
+      background: transparent;
+      color: var(--text);
+      padding: 14px 14px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap: 12px;
-      padding: 12px 12px;
-      border-radius: 14px;
-      background: transparent;
-      border: 0;
-      color: var(--txt);
-      font-size: 16px;
-      cursor: pointer;
-      text-align:left;
+      gap:10px;
+      cursor:pointer;
+      font-weight: 650;
     }
-    .menu-item:hover{ background: rgba(255,255,255,.06); }
+    .menu-item:hover{ background: var(--panel2); }
+    .menu-item + .menu-item{ border-top:1px solid var(--line); }
+    .menu-item .hint{ color: var(--muted); font-weight: 600; }
 
-    /* Cards + buttons */
+    /* Layout */
+    main{
+      flex:1;
+      display:flex;
+      justify-content:center;
+      padding: 22px 16px 18px;
+    }
+    .wrap{
+      width: min(760px, 100%);
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      align-items:center;
+      padding-top: 10px;
+    }
+
     .card{
-      background: var(--card);
+      width: min(520px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.35));
       border: 1px solid var(--line);
-      border-radius: var(--r);
-      padding: 16px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 16px 50px rgba(0,0,0,.35);
+      border-radius: 22px;
+      padding: 16px 14px 14px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    html[data-theme="dark"] .card{
+      background: radial-gradient(120% 120% at 50% 0%, rgba(120,160,255,.10), transparent 55%),
+                  rgba(10,12,14,.80);
     }
 
     .section-title{
-      font-size: 18px;
-      font-weight: 700;
-      margin: 0 0 10px;
-      opacity: .92;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing:.2px;
+      margin: 4px 8px 12px;
     }
 
-    .bigBtns{
+    .btns{
       display:flex;
       flex-direction:column;
       gap: 12px;
+      padding: 0 8px 8px;
     }
-
-    .pill{
+    .btn{
       width: 100%;
-      padding: 16px 16px;
+      border: 1px solid var(--btnLine);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.90);
-      color: #0b0f16;
+      padding: 16px 18px;
+      font-size: 18px;
       font-weight: 750;
-      font-size: 22px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
       cursor:pointer;
-      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      background: var(--btnBg);
+      color: var(--btnText);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.02), 0 14px 40px rgba(0,0,0,.18);
     }
-    .pill:active{transform: translateY(1px);}
-    .pill small{
-      font-size: 14px;
-      font-weight: 650;
-      opacity: .75;
-    }
-
-    .pill.secondary{
-      font-size: 20px;
-      background: rgba(255,255,255,.88);
-    }
+    .btn:active{ transform: translateY(1px); }
 
     /* Footer banner */
     .banner{
-      margin-top: auto;
-      padding: 12px 14px;
+      max-width: 760px;
+      margin: 0 auto 18px;
+      padding: 0 16px;
+      width: 100%;
+    }
+    .pill{
+      background: rgba(255,255,255,.55);
+      border: 1px solid var(--line);
+      color: var(--muted);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.05);
-      color: rgba(255,255,255,.70);
-      font-size: 14px;
+      padding: 10px 14px;
       text-align:center;
+      font-size: 14px;
+      backdrop-filter: blur(12px);
+    }
+    html[data-theme="dark"] .pill{
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.70);
     }
 
-    /* Modal */
-    .modal-backdrop{
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.55);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      display: grid;
-      place-items: center;
-      z-index: 100;
+    /* Overlays */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
       padding: 18px;
+      z-index:50;
     }
-    /* CRITICAL: tryggir að modal sé EKKI sýnilegt við load */
-    #aboutModal[hidden]{
-      display: none !important;
-    }
+    .overlay.open{ display:flex; }
 
     .modal{
-      width: min(620px, 100%);
-      background: var(--card2);
+      width: min(560px, 100%);
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 18px;
       box-shadow: var(--shadow);
-      overflow: hidden;
+      overflow:hidden;
     }
-
-    .modal-head{
+    .modal-h{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel2);
     }
-
-    .modal-head h2{
-      margin:0;
-      font-size: 18px;
-      color: var(--txt);
-    }
-
-    .icon-btn{
-      border:0;
+    .modal-h b{ font-size: 16px; letter-spacing:.2px; }
+    .close{
+      border:1px solid var(--line);
       background: transparent;
-      color: rgba(255,255,255,.85);
-      font-size: 18px;
-      cursor:pointer;
+      color: var(--text);
+      border-radius: 12px;
       padding: 8px 10px;
-      border-radius: 10px;
+      cursor:pointer;
     }
-    .icon-btn:hover{ background: rgba(255,255,255,.06); }
 
-    .modal-body{
-      padding: 14px 16px 16px;
-      color: rgba(255,255,255,.88);
-      line-height: 1.45;
+    form{
+      padding: 14px;
+      display:grid;
+      gap: 10px;
+    }
+    label{ font-size: 13px; color: var(--muted); margin-left: 6px; }
+    input, textarea{
+      width:100%;
+      background: rgba(255,255,255,.65);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 12px;
+      outline:none;
       font-size: 15px;
     }
-    .modal-body p{ margin: 10px 0; }
+    html[data-theme="dark"] input,
+    html[data-theme="dark"] textarea{
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+    }
+    textarea{ min-height: 110px; resize: vertical; }
 
-    .modal-actions{
-      display:flex;
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 14px;
-      flex-wrap: wrap;
+    }
+    @media (max-width:520px){
+      .row{ grid-template-columns: 1fr; }
     }
 
-    .primary-btn{
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(191,233,255,.16);
-      color: rgba(255,255,255,.95);
-      padding: 10px 12px;
-      border-radius: 12px;
+    .send{
+      margin-top: 2px;
+      border:1px solid var(--btnLine);
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-weight: 800;
       cursor:pointer;
-      font-weight: 700;
+      background: var(--btnBg);
+      color: var(--btnText);
     }
-    .primary-btn:hover{ background: rgba(191,233,255,.22); }
-
-    .ghost-btn{
-      border: 1px solid rgba(255,255,255,.14);
-      background: transparent;
-      color: rgba(255,255,255,.92);
-      padding: 10px 12px;
-      border-radius: 12px;
-      cursor:pointer;
-      font-weight: 700;
-    }
-    .ghost-btn:hover{ background: rgba(255,255,255,.06); }
-
-    .fineprint{
-      margin-top: 10px;
+    .status{
+      margin-top: 4px;
       font-size: 13px;
-      opacity: .8;
+      color: var(--muted);
+      padding: 0 2px 6px;
+      min-height: 18px;
     }
 
-    @media (max-width:420px){
-      .pill{ font-size: 21px; }
+    /* Settings small modal */
+    .settings-body{
+      padding: 14px;
+      display:grid;
+      gap: 12px;
+    }
+    .toggle-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+    }
+    .toggle-row b{ font-size: 14px; }
+    .toggle-row span{ color: var(--muted); font-size: 13px; }
+    .switch{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
+    }
+    .switch input{
+      width: 18px; height: 18px;
+      accent-color: #7aa7ff;
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-
-    <div class="topbar">
-      <div class="left-icon" title="ís.is">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M3 21L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M8 3l4 4-5 5-4-4 5-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M16 12l5 5-4 4-5-5 4-4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-        </svg>
-      </div>
-
-      <div class="brand">ís.is</div>
-
-      <button id="menuBtn" class="menuBtn" type="button" aria-label="Valmynd">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+  <header>
+    <div class="hdr">
+      <!-- Logo LEFT (favicon) -->
+      <button class="brand-left" id="logoBtn" aria-label="Heim">
+        <img id="logoImg" src="/favicon.svg" alt="ís.is"
+             onerror="this.onerror=null; this.src='/favicon.png';">
       </button>
 
-      <div id="menuDropdown" class="menu-dropdown" aria-hidden="true">
-        <button class="menu-item" id="menuContact" type="button">
-          <span>Hafa samband</span><span aria-hidden="true">✉️</span>
+      <div class="brand-title">ís.is</div>
+
+      <!-- Hamburger RIGHT -->
+      <div class="menu-wrap">
+        <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
+          <div class="burger" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
         </button>
-        <button class="menu-item" id="menuSettings" type="button">
-          <span>Stillingar</span><span aria-hidden="true">⚙️</span>
-        </button>
-        <button class="menu-item" id="menuAbout" type="button">
-          <span>Um vefinn</span><span aria-hidden="true">ℹ️</span>
-        </button>
+
+        <div class="menu-pop" id="menuPop" role="menu" aria-hidden="true">
+          <button class="menu-item" id="menuSettings" role="menuitem">
+            <span>Stillingar</span>
+            <span class="hint">⚙︎</span>
+          </button>
+          <button class="menu-item" id="menuContact" role="menuitem">
+            <span>Hafa samband</span>
+            <span class="hint">✉︎</span>
+          </button>
+        </div>
       </div>
     </div>
+  </header>
 
-    <div class="card">
-      <div class="bigBtns">
-        <button class="pill" type="button" onclick="go('/joklar/')">
-          Jöklar <small>🧊</small>
-        </button>
+  <main>
+    <div class="wrap">
+      <div class="card">
+        <div class="btns">
+          <button class="btn" onclick="location.href='/spil/'">Jöklar 🧊</button>
+          <button class="btn" onclick="location.href='/borg/'">Bæjir 🏘️</button>
+        </div>
+      </div>
 
-        <button class="pill secondary" type="button" onclick="go('/baejir/')">
-          Bæjir <small>🏘️</small>
-        </button>
+      <div class="card">
+        <div class="section-title">Verkfæri</div>
+        <div class="btns">
+          <button class="btn" onclick="location.href='/dagatal/'">Dagatal 🗓️</button>
+          <button class="btn" onclick="location.href='/klukka/'">Klukka 🕒</button>
+        </div>
       </div>
     </div>
+  </main>
 
-    <div class="card">
-      <div class="section-title">Verkfæri</div>
-      <div class="bigBtns">
-        <button class="pill secondary" type="button" onclick="go('/dagatal/')">
-          Dagatal <small>🗓️</small>
-        </button>
-
-        <button class="pill secondary" type="button" onclick="go('/klukka/')">
-          Klukka <small>🕒</small>
-        </button>
-      </div>
-    </div>
-
-    <div class="banner">Vefur stofnaður 2025. Engar vafrakökur – bara Ís.</div>
-
+  <div class="banner">
+    <div class="pill">Vefur stofnaður 2025. Engar vafrakökur – bara ís.</div>
   </div>
 
-  <!-- MODAL: UM VEFINN (ATH: hidden er á og CSS tryggir display:none) -->
-  <div id="aboutModal" class="modal-backdrop" hidden>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
-      <div class="modal-head">
-        <h2 id="aboutTitle">Um vefinn</h2>
-        <button class="icon-btn" id="aboutClose" type="button" aria-label="Loka">✕</button>
+  <!-- CONTACT MODAL -->
+  <div class="overlay" id="contactOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <div class="modal">
+      <div class="modal-h">
+        <b id="contactTitle">Hafa samband</b>
+        <button class="close" id="contactClose" aria-label="Loka">✕</button>
       </div>
 
-      <div class="modal-body">
-        <p><strong>ís.is</strong> er sjálfstætt verkefni unnið af einstaklingi, án auglýsinga, rekstrarfélaga eða gagnasöfnunar.</p>
-
-        <p>Markmið vefsins er að miðla þekkingu um Ísland á einfaldan, gagnvirkan og aðgengilegan hátt – í þágu almennings.</p>
-
-        <p><strong>Vefurinn er opinn og ókeypis.</strong><br>
-        Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald vefsins.</p>
-
-        <p><strong>Engar auglýsingar. Engar vafrakökur. Bara Ísland.</strong></p>
-
-        <div class="modal-actions">
-          <button id="donateBtn" class="primary-btn" type="button">Styrkja verkefnið</button>
-          <button id="feedbackBtn" class="ghost-btn" type="button">Senda endurgjöf</button>
+      <form id="contactForm" autocomplete="on">
+        <div class="row">
+          <div>
+            <label for="name">Nafn</label>
+            <input id="name" name="name" required placeholder="Nafn" />
+          </div>
+          <div>
+            <label for="email">Tölvupóstur</label>
+            <input id="email" name="email" type="email" required placeholder="nafn@dæmi.is" />
+          </div>
         </div>
 
-        <p class="fineprint" id="donateStatus" aria-live="polite"></p>
+        <div>
+          <label for="message">Erindi</label>
+          <textarea id="message" name="message" required placeholder="Skrifaðu erindið hér..."></textarea>
+        </div>
+
+        <button class="send" type="submit">Senda</button>
+        <div class="status" id="status"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal">
+      <div class="modal-h">
+        <b id="settingsTitle">Stillingar</b>
+        <button class="close" id="settingsClose" aria-label="Loka">✕</button>
+      </div>
+
+      <div class="settings-body">
+        <div class="toggle-row">
+          <div>
+            <b>Þema</b><br/>
+            <span>Light / Dark</span>
+          </div>
+          <label class="switch">
+            <span style="opacity:.8">🌙</span>
+            <input type="checkbox" id="themeToggle">
+          </label>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    function go(path){
-      if (!path.endsWith('/')) path += '/';
-      window.location.href = path;
+    // ---------- THEME (shared across pages) ----------
+    const THEME_KEY = "is_theme";
+
+    function setMetaThemeColor(theme){
+      const meta = document.getElementById("metaThemeColor");
+      meta.setAttribute("content", theme === "dark" ? "#050607" : "#f5f6f8");
     }
 
-    // ---- hamburger open/close
-    const menuBtn = document.getElementById('menuBtn');
-    const menu = document.getElementById('menuDropdown');
-
-    function closeMenu(){
-      menu.classList.remove('open');
-      menu.setAttribute('aria-hidden','true');
-    }
-    function openMenu(){
-      menu.classList.add('open');
-      menu.setAttribute('aria-hidden','false');
+    function applyTheme(theme){
+      const t = (theme === "dark") ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", t);
+      localStorage.setItem(THEME_KEY, t);
+      setMetaThemeColor(t);
+      const toggle = document.getElementById("themeToggle");
+      if (toggle) toggle.checked = (t === "dark");
     }
 
-    menuBtn.addEventListener('click', (e) => {
+    // init theme
+    (function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") return applyTheme(saved);
+
+      // fallback to system preference
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      applyTheme(prefersDark ? "dark" : "light");
+    })();
+
+    // ---------- MENU ----------
+    const menuBtn = document.getElementById("menuBtn");
+    const menuPop = document.getElementById("menuPop");
+    const menuSettings = document.getElementById("menuSettings");
+    const menuContact = document.getElementById("menuContact");
+
+    function openMenu(){ menuPop.classList.add("show"); menuPop.setAttribute("aria-hidden","false"); }
+    function closeMenu(){ menuPop.classList.remove("show"); menuPop.setAttribute("aria-hidden","true"); }
+    function toggleMenu(){ menuPop.classList.contains("show") ? closeMenu() : openMenu(); }
+
+    menuBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       e.stopPropagation();
-      menu.classList.contains('open') ? closeMenu() : openMenu();
+      toggleMenu();
     });
 
-    document.addEventListener('click', () => closeMenu());
-    menu.addEventListener('click', (e) => e.stopPropagation());
+    menuPop.addEventListener("click", (e) => e.stopPropagation());
 
-    // ---- menu actions
-    document.getElementById('menuContact').addEventListener('click', () => {
-      closeMenu();
-      window.location.href = 'mailto:hello@ís.is?subject=ís.is%20-%20samband';
+    // Close only when clicking outside (iOS-safe)
+    document.addEventListener("click", (e) => {
+      if (!menuPop.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
     });
 
-    document.getElementById('menuSettings').addEventListener('click', () => {
-      closeMenu();
-      alert('Stillingar: (placeholder)');
-    });
+    // ---------- CONTACT MODAL ----------
+    const contactOverlay = document.getElementById("contactOverlay");
+    const contactClose = document.getElementById("contactClose");
+    const form = document.getElementById("contactForm");
+    const statusEl = document.getElementById("status");
 
-    // ---- About modal (OPNAR AÐEINS VIÐ CLICK)
-    const aboutModal = document.getElementById('aboutModal');
-    const aboutClose = document.getElementById('aboutClose');
-    const menuAbout = document.getElementById('menuAbout');
-
-    function openAbout(){
-      closeMenu();
-      aboutModal.hidden = false;
-      document.body.style.overflow = 'hidden';
+    function openContact(){
+      contactOverlay.classList.add("open");
+      statusEl.textContent = "";
+      requestAnimationFrame(() => document.getElementById("name").focus());
     }
-    function closeAbout(){
-      aboutModal.hidden = true;
-      document.body.style.overflow = '';
-      document.getElementById('donateStatus').textContent = '';
-      document.getElementById('donateBtn').disabled = false;
+    function closeContact(){
+      contactOverlay.classList.remove("open");
     }
 
-    menuAbout.addEventListener('click', openAbout);
-    aboutClose.addEventListener('click', closeAbout);
-    aboutModal.addEventListener('click', (e) => { if(e.target === aboutModal) closeAbout(); });
-    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !aboutModal.hidden) closeAbout(); });
+    contactClose.addEventListener("click", closeContact);
+    contactOverlay.addEventListener("click", (e) => { if (e.target === contactOverlay) closeContact(); });
 
-    // ---- Donate + feedback
-    const donateBtn = document.getElementById('donateBtn');
-    const feedbackBtn = document.getElementById('feedbackBtn');
-    const donateStatus = document.getElementById('donateStatus');
+    // ---------- SETTINGS MODAL ----------
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const settingsClose = document.getElementById("settingsClose");
+    const themeToggle = document.getElementById("themeToggle");
 
-    feedbackBtn.addEventListener('click', () => {
-      window.location.href = 'mailto:hello@ís.is?subject=ís.is%20-%20endurgjöf';
+    function openSettings(){ settingsOverlay.classList.add("open"); }
+    function closeSettings(){ settingsOverlay.classList.remove("open"); }
+
+    settingsClose.addEventListener("click", closeSettings);
+    settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeSettings(); });
+
+    themeToggle.addEventListener("change", (e) => {
+      applyTheme(e.target.checked ? "dark" : "light");
     });
 
-    donateBtn.addEventListener('click', async () => {
-      donateStatus.textContent = 'Opna greiðslusíðu…';
-      donateBtn.disabled = true;
+    // Menu actions (important: open modal in next frame so iOS doesn't swallow click)
+    menuContact.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      closeMenu();
+      requestAnimationFrame(openContact);
+    });
+
+    menuSettings.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      closeMenu();
+      requestAnimationFrame(openSettings);
+    });
+
+    // ESC closes any open modal
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape"){
+        closeMenu();
+        closeContact();
+        closeSettings();
+      }
+    });
+
+    // ---------- CONTACT SUBMIT (Resend backend via CF function) ----------
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusEl.textContent = "Sendi...";
+
+      const payload = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        message: form.message.value.trim()
+      };
 
       try{
-        const res = await fetch('/api/create-checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source: 'about_modal' })
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
 
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        if(!data || !data.url) throw new Error('No URL returned');
+        if (!res.ok){
+          const txt = await res.text().catch(() => "");
+          throw new Error(txt || "Villa við sendingu.");
+        }
 
-        window.location.href = data.url;
+        statusEl.textContent = "Sent. Takk!";
+        form.reset();
+        setTimeout(closeContact, 700);
       }catch(err){
-        donateStatus.textContent =
-          'Greiðslulausn er ekki tengd enn (vantar /api/create-checkout).';
-        donateBtn.disabled = false;
+        statusEl.textContent = "Tókst ekki að senda. Reyndu aftur eftir smá.";
       }
+    });
+
+    // ---------- LOGO BUTTON ----------
+    document.getElementById("logoBtn").addEventListener("click", () => {
+      // Ef þú vilt að logo opni heim: location.href = "/";
+      // Ég læt það bara scrolla upp smooth (þægilegt á mobile):
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   </script>
 </body>
