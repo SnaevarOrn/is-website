@@ -18,8 +18,6 @@
       --card2: rgba(18,18,20,.92);
       --line: rgba(255,255,255,.10);
       --txt: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --muted2: rgba(255,255,255,.58);
       --ice: #bfe9ff;
       --ice2:#e6f6ff;
       --shadow: 0 20px 60px rgba(0,0,0,.55);
@@ -205,6 +203,10 @@
       z-index: 100;
       padding: 18px;
     }
+    /* CRITICAL: tryggir að modal sé EKKI sýnilegt við load */
+    #aboutModal[hidden]{
+      display: none !important;
+    }
 
     .modal{
       width: min(620px, 100%);
@@ -283,7 +285,6 @@
       opacity: .8;
     }
 
-    /* Mobile feel */
     @media (max-width:420px){
       .pill{ font-size: 21px; }
     }
@@ -295,7 +296,6 @@
 
     <div class="topbar">
       <div class="left-icon" title="ís.is">
-        <!-- simple crossed tools icon -->
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M3 21L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <path d="M8 3l4 4-5 5-4-4 5-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -306,7 +306,6 @@
       <div class="brand">ís.is</div>
 
       <button id="menuBtn" class="menuBtn" type="button" aria-label="Valmynd">
-        <!-- hamburger icon -->
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <path d="M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -314,26 +313,19 @@
         </svg>
       </button>
 
-      <!-- Dropdown -->
       <div id="menuDropdown" class="menu-dropdown" aria-hidden="true">
         <button class="menu-item" id="menuContact" type="button">
-          <span>Hafa samband</span>
-          <span aria-hidden="true">✉️</span>
+          <span>Hafa samband</span><span aria-hidden="true">✉️</span>
         </button>
-
         <button class="menu-item" id="menuSettings" type="button">
-          <span>Stillingar</span>
-          <span aria-hidden="true">⚙️</span>
+          <span>Stillingar</span><span aria-hidden="true">⚙️</span>
         </button>
-
         <button class="menu-item" id="menuAbout" type="button">
-          <span>Um vefinn</span>
-          <span aria-hidden="true">ℹ️</span>
+          <span>Um vefinn</span><span aria-hidden="true">ℹ️</span>
         </button>
       </div>
     </div>
 
-    <!-- Main buttons -->
     <div class="card">
       <div class="bigBtns">
         <button class="pill" type="button" onclick="go('/joklar/')">
@@ -346,7 +338,6 @@
       </div>
     </div>
 
-    <!-- Tools -->
     <div class="card">
       <div class="section-title">Verkfæri</div>
       <div class="bigBtns">
@@ -364,7 +355,7 @@
 
   </div>
 
-  <!-- MODAL: UM VEFINN -->
+  <!-- MODAL: UM VEFINN (ATH: hidden er á og CSS tryggir display:none) -->
   <div id="aboutModal" class="modal-backdrop" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
       <div class="modal-head">
@@ -393,9 +384,7 @@
   </div>
 
   <script>
-    // ---- routing helper
     function go(path){
-      // tryggir trailing slash "snyrtilega"
       if (!path.endsWith('/')) path += '/';
       window.location.href = path;
     }
@@ -429,10 +418,10 @@
 
     document.getElementById('menuSettings').addEventListener('click', () => {
       closeMenu();
-      alert('Stillingar: (placeholder) — setjum hér t.d. dökkt/ljóst, leturstærð, o.s.frv.');
+      alert('Stillingar: (placeholder)');
     });
 
-    // ---- About modal
+    // ---- About modal (OPNAR AÐEINS VIÐ CLICK)
     const aboutModal = document.getElementById('aboutModal');
     const aboutClose = document.getElementById('aboutClose');
     const menuAbout = document.getElementById('menuAbout');
@@ -446,6 +435,7 @@
       aboutModal.hidden = true;
       document.body.style.overflow = '';
       document.getElementById('donateStatus').textContent = '';
+      document.getElementById('donateBtn').disabled = false;
     }
 
     menuAbout.addEventListener('click', openAbout);
@@ -467,25 +457,20 @@
       donateBtn.disabled = true;
 
       try{
-        // ÞETTA endpoint býrð þú til í Cloudflare (Workers/Functions)
-        // Það skilar { url: "https://..." } sem er hosted checkout hjá greiðslugátt.
         const res = await fetch('/api/create-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ source: 'about_modal' })
         });
 
-        if(!res.ok){
-          throw new Error('HTTP ' + res.status);
-        }
-
+        if(!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if(!data || !data.url) throw new Error('No URL returned');
 
         window.location.href = data.url;
       }catch(err){
         donateStatus.textContent =
-          'Greiðslulausn er ekki tengd enn. (Backend endpoint /api/create-checkout vantar).';
+          'Greiðslulausn er ekki tengd enn (vantar /api/create-checkout).';
         donateBtn.disabled = false;
       }
     });
