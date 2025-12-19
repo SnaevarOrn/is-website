@@ -1,595 +1,492 @@
 <!DOCTYPE html>
-<html lang="is" data-theme="dark">
+<html lang="is">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is</title>
 
-  <!-- Favicons -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.png" sizes="32x32">
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <style>
-    /* ---------------- THEME ---------------- */
     :root{
-      --bg:#0b0c0f;
-      --panel:#12141a;
-      --panel2:#0f1116;
-      --line:rgba(255,255,255,.10);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.70);
-
-      --btn:#f2f2f2;
-      --btnText:#0b0c0f;
-
-      --shadow: 0 18px 60px rgba(0,0,0,.45);
-    }
-    html[data-theme="light"]{
-      --bg:#f6f7f9;
-      --panel:#ffffff;
-      --panel2:#ffffff;
-      --line:rgba(0,0,0,.10);
-      --text:rgba(0,0,0,.88);
-      --muted:rgba(0,0,0,.58);
-
-      --btn:#111318;
-      --btnText:#ffffff;
-
-      --shadow: 0 18px 60px rgba(0,0,0,.10);
+      --bg0:#07090c;
+      --bg1:#0b0f16;
+      --card: rgba(18,18,20,.72);
+      --card2: rgba(18,18,20,.92);
+      --line: rgba(255,255,255,.10);
+      --txt: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --muted2: rgba(255,255,255,.58);
+      --ice: #bfe9ff;
+      --ice2:#e6f6ff;
+      --shadow: 0 20px 60px rgba(0,0,0,.55);
+      --r: 22px;
     }
 
-    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      min-height:100vh;
-      background: var(--bg);
-      color: var(--text);
+      margin:0;
+      color:var(--txt);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(191,233,255,.12), transparent 60%),
+        radial-gradient(900px 700px at 85% 30%, rgba(191,233,255,.08), transparent 65%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      display:flex;
+      justify-content:center;
+      padding: 18px 14px 28px;
+    }
+
+    .wrap{
+      width:min(720px, 100%);
       display:flex;
       flex-direction:column;
+      gap: 16px;
     }
 
-    /* ---------------- HEADER ---------------- */
-    header{
-      position:sticky; top:0; z-index:30;
-      background: color-mix(in srgb, var(--panel2) 92%, transparent);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(10px);
+    /* Top bar */
+    .topbar{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 10px 6px 0;
     }
-    .hdr{
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 12px 14px;
-      display:grid;
-      grid-template-columns: 44px 1fr 44px; /* logo | title | burger */
+
+    .brand{
+      display:flex;
       align-items:center;
       gap: 10px;
-    }
-    .brand-left{
-      width:44px; height:44px;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .brand-left img{
-      width:26px; height:26px;
-      opacity:.95;
-    }
-    .brand-title{
-      text-align:center;
-      font-weight:750;
-      letter-spacing:.2px;
+      font-weight: 700;
+      letter-spacing: .2px;
       font-size: 20px;
+      opacity: .96;
       user-select:none;
     }
 
-    .menu-wrap{ position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
-    .menu-btn{
-      width:44px; height:44px;
-      border:1px solid var(--line);
-      background: transparent;
-      border-radius: 12px;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-    }
-    .menu-btn:active{ transform: translateY(1px); }
-
-    .burger{ width:18px; height:12px; position:relative; }
-    .burger span{
-      position:absolute; left:0; right:0;
-      height:2px; border-radius:2px;
-      background: color-mix(in srgb, var(--text) 92%, transparent);
-    }
-    .burger span:nth-child(1){ top:0; }
-    .burger span:nth-child(2){ top:5px; opacity:.80; }
-    .burger span:nth-child(3){ bottom:0; opacity:.65; }
-
-    /* Dropdown menu */
-    .dropdown{
-      position:absolute;
-      top: 50px;
-      right: 0;
-      width: 210px;
-      background: var(--panel);
-      border: 1px solid var(--line);
+    .left-icon{
+      width: 38px;
+      height: 38px;
       border-radius: 14px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      display:none;
-      z-index:40;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      display:grid;
+      place-items:center;
+      color: var(--ice2);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
     }
-    .dropdown.open{ display:block; }
-    .drop-btn{
-      width:100%;
-      background:transparent;
-      border:0;
-      color: var(--text);
-      text-align:left;
-      padding: 12px 12px;
-      font-size: 15px;
+
+    .menuBtn{
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--txt);
+      display:grid;
+      place-items:center;
       cursor:pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .menuBtn:active{transform: translateY(1px);}
+
+    /* Dropdown */
+    .menu-dropdown{
+      position:absolute;
+      right: 0;
+      top: 58px;
+      width: 280px;
+      background: var(--card2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 8px;
+      display:none;
+      z-index: 50;
+      box-shadow: var(--shadow);
+    }
+    .menu-dropdown.open{display:block}
+
+    .menu-item{
+      width: 100%;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap: 10px;
+      gap: 12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      background: transparent;
+      border: 0;
+      color: var(--txt);
+      font-size: 16px;
+      cursor: pointer;
+      text-align:left;
     }
-    .drop-btn:hover{
-      background: color-mix(in srgb, var(--text) 6%, transparent);
-    }
-    .drop-sep{
-      height:1px;
-      background: var(--line);
-      margin: 0;
-    }
-    .drop-hint{
-      font-size:12px;
-      color: var(--muted);
-      padding: 10px 12px 12px;
+    .menu-item:hover{ background: rgba(255,255,255,.06); }
+
+    /* Cards + buttons */
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 16px 50px rgba(0,0,0,.35);
     }
 
-    /* ---------------- LAYOUT ---------------- */
-    main{
-      flex:1;
-      display:flex;
-      justify-content:center;
-      padding: 24px 16px 18px;
-    }
-    .wrap{
-      width: min(760px, 100%);
-      display:flex;
-      flex-direction:column;
-      gap: 14px;
-      align-items:center;
-      padding-top: 10px;
-    }
-    .card{
-      width: min(520px, 100%);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 20px 18px 16px;
-      box-shadow: var(--shadow);
-    }
-    .hero{
-      text-align:center;
-      padding: 6px 8px 14px;
-    }
-    .hero h1{
-      font-size: 38px;
-      letter-spacing:.2px;
-      margin-bottom: 6px;
-    }
-    .hero p{
-      color: var(--muted);
-      font-size: 16px;
-    }
     .section-title{
-      color: var(--muted);
-      font-weight: 750;
-      letter-spacing:.2px;
-      margin: 4px 8px 12px;
-      text-transform: none;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      opacity: .92;
     }
-    .btns{
+
+    .bigBtns{
       display:flex;
       flex-direction:column;
       gap: 12px;
-      padding: 0 8px 8px;
     }
-    .btn{
+
+    .pill{
       width: 100%;
-      border: 0;
+      padding: 16px 16px;
       border-radius: 999px;
-      padding: 15px 18px;
-      font-size: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.90);
+      color: #0b0f16;
       font-weight: 750;
-      cursor:pointer;
-      background: var(--btn);
-      color: var(--btnText);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 80%, transparent);
-    }
-    .btn:active{ transform: translateY(1px); }
-
-    /* ---------------- FOOTER BANNER ---------------- */
-    .banner{
-      max-width: 760px;
-      margin: 0 auto 18px;
-      padding: 0 16px;
-      width: 100%;
-    }
-    .banner .pill{
-      background: color-mix(in srgb, var(--panel) 92%, transparent);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 10px 14px;
-      text-align:center;
-      font-size: 14px;
-      backdrop-filter: blur(10px);
-    }
-
-    /* ---------------- MODALS ---------------- */
-    .overlay{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.55);
-      display:none;
+      font-size: 22px;
+      display:flex;
       align-items:center;
       justify-content:center;
-      padding: 18px;
-      z-index:50;
+      gap: 10px;
+      cursor:pointer;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
     }
-    .overlay.open{ display:flex; }
+    .pill:active{transform: translateY(1px);}
+    .pill small{
+      font-size: 14px;
+      font-weight: 650;
+      opacity: .75;
+    }
+
+    .pill.secondary{
+      font-size: 20px;
+      background: rgba(255,255,255,.88);
+    }
+
+    /* Footer banner */
+    .banner{
+      margin-top: auto;
+      padding: 12px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.70);
+      font-size: 14px;
+      text-align:center;
+    }
+
+    /* Modal */
+    .modal-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: grid;
+      place-items: center;
+      z-index: 100;
+      padding: 18px;
+    }
 
     .modal{
-      width: min(560px, 100%);
-      background: var(--panel);
+      width: min(620px, 100%);
+      background: var(--card2);
       border: 1px solid var(--line);
       border-radius: 18px;
       box-shadow: var(--shadow);
-      overflow:hidden;
+      overflow: hidden;
     }
-    .modal-h{
+
+    .modal-head{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding: 14px 14px 12px;
-      border-bottom: 1px solid var(--line);
-      background: color-mix(in srgb, var(--panel2) 80%, transparent);
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .modal-h b{ font-size: 16px; letter-spacing:.2px; }
 
-    .close{
-      border:1px solid var(--line);
+    .modal-head h2{
+      margin:0;
+      font-size: 18px;
+      color: var(--txt);
+    }
+
+    .icon-btn{
+      border:0;
       background: transparent;
-      color: var(--text);
-      border-radius: 12px;
-      padding: 8px 10px;
+      color: rgba(255,255,255,.85);
+      font-size: 18px;
       cursor:pointer;
+      padding: 8px 10px;
+      border-radius: 10px;
     }
+    .icon-btn:hover{ background: rgba(255,255,255,.06); }
 
-    /* Contact form */
-    form{
-      padding: 14px;
-      display:grid;
-      gap: 10px;
-    }
-    label{ font-size: 13px; color: var(--muted); margin-left: 6px; }
-    input, textarea{
-      width:100%;
-      background: transparent;
-      border: 1px solid var(--line);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 12px 12px;
-      outline:none;
+    .modal-body{
+      padding: 14px 16px 16px;
+      color: rgba(255,255,255,.88);
+      line-height: 1.45;
       font-size: 15px;
     }
-    textarea{ min-height: 110px; resize: vertical; }
+    .modal-body p{ margin: 10px 0; }
 
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    @media (max-width:520px){
-      .row{ grid-template-columns: 1fr; }
-      .hero h1{ font-size: 34px; }
-    }
-    .send{
-      margin-top: 2px;
-      border:0;
-      border-radius: 14px;
-      padding: 13px 14px;
-      font-weight: 800;
-      cursor:pointer;
-      background: var(--btn);
-      color: var(--btnText);
-    }
-    .status{
-      margin-top: 4px;
-      font-size: 13px;
-      color: var(--muted);
-      padding: 0 2px 6px;
-      min-height: 18px;
-    }
-
-    /* Settings content */
-    .settings-body{
-      padding: 14px;
-      display:grid;
-      gap: 12px;
-    }
-    .setting-row{
+    .modal-actions{
       display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 12px;
-      background: color-mix(in srgb, var(--panel2) 60%, transparent);
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
     }
-    .setting-row .left{
-      display:grid;
-      gap: 2px;
-    }
-    .setting-row .left b{ font-size: 14px; }
-    .setting-row .left span{ font-size: 12px; color: var(--muted); }
 
-    .toggle{
-      display:flex; gap:8px; align-items:center;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 4px;
-      background: transparent;
-    }
-    .chip{
-      border:0;
+    .primary-btn{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(191,233,255,.16);
+      color: rgba(255,255,255,.95);
+      padding: 10px 12px;
+      border-radius: 12px;
       cursor:pointer;
-      border-radius: 999px;
-      padding: 8px 10px;
-      font-weight: 800;
-      font-size: 12px;
-      background: transparent;
-      color: var(--muted);
+      font-weight: 700;
     }
-    .chip.active{
-      background: var(--btn);
-      color: var(--btnText);
+    .primary-btn:hover{ background: rgba(191,233,255,.22); }
+
+    .ghost-btn{
+      border: 1px solid rgba(255,255,255,.14);
+      background: transparent;
+      color: rgba(255,255,255,.92);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 700;
+    }
+    .ghost-btn:hover{ background: rgba(255,255,255,.06); }
+
+    .fineprint{
+      margin-top: 10px;
+      font-size: 13px;
+      opacity: .8;
+    }
+
+    /* Mobile feel */
+    @media (max-width:420px){
+      .pill{ font-size: 21px; }
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <div class="hdr">
-      <!-- VINSTRI: logo -->
-      <div class="brand-left" aria-hidden="true">
-        <img src="/favicon.svg" alt="">
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="left-icon" title="ís.is">
+        <!-- simple crossed tools icon -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 21L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8 3l4 4-5 5-4-4 5-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M16 12l5 5-4 4-5-5 4-4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
       </div>
 
-      <!-- MIÐJA: titill -->
-      <div class="brand-title">ís.is</div>
+      <div class="brand">ís.is</div>
 
-      <!-- HÆGRI: hamborgari + dropdown -->
-      <div class="menu-wrap">
-        <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
-          <div class="burger" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </div>
+      <button id="menuBtn" class="menuBtn" type="button" aria-label="Valmynd">
+        <!-- hamburger icon -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <!-- Dropdown -->
+      <div id="menuDropdown" class="menu-dropdown" aria-hidden="true">
+        <button class="menu-item" id="menuContact" type="button">
+          <span>Hafa samband</span>
+          <span aria-hidden="true">✉️</span>
         </button>
 
-        <div class="dropdown" id="dropdown" role="menu" aria-label="Valmynd">
-          <button class="drop-btn" id="contactOpen" role="menuitem">
-            Hafa samband <span>✉️</span>
-          </button>
-          <div class="drop-sep"></div>
-          <button class="drop-btn" id="settingsOpen" role="menuitem">
-            Stillingar <span>⚙️</span>
-          </button>
-          <div class="drop-hint">Veldu ham eða sendu skilaboð.</div>
-        </div>
+        <button class="menu-item" id="menuSettings" type="button">
+          <span>Stillingar</span>
+          <span aria-hidden="true">⚙️</span>
+        </button>
+
+        <button class="menu-item" id="menuAbout" type="button">
+          <span>Um vefinn</span>
+          <span aria-hidden="true">ℹ️</span>
+        </button>
       </div>
     </div>
-  </header>
 
-  <main>
-    <div class="wrap">
+    <!-- Main buttons -->
+    <div class="card">
+      <div class="bigBtns">
+        <button class="pill" type="button" onclick="go('/joklar/')">
+          Jöklar <small>🧊</small>
+        </button>
 
-      <div class="card">
-        <div class="hero">
-          <h1>Leikir</h1>
-          <p>Lærum á Ísland</p>
-        </div>
-
-        <div class="btns">
-          <button class="btn" onclick="location.href='/spil/'">Jöklar ❄️</button>
-          <button class="btn" onclick="location.href='/borg/'">Bæjir 🏘️</button>
-        </div>
+        <button class="pill secondary" type="button" onclick="go('/baejir/')">
+          Bæjir <small>🏘️</small>
+        </button>
       </div>
-
-      <div class="card">
-        <div class="section-title">Verkfæri</div>
-        <div class="btns">
-          <button class="btn" onclick="location.href='/dagatal/'">Dagatal 🗓️</button>
-          <button class="btn" onclick="location.href='/klukka/'">Klukka 🕒</button>
-        </div>
-      </div>
-
     </div>
-  </main>
 
-  <div class="banner">
-    <div class="pill">Vefur stofnaður 2025. Engar vafrakökur - bara ís.</div>
+    <!-- Tools -->
+    <div class="card">
+      <div class="section-title">Verkfæri</div>
+      <div class="bigBtns">
+        <button class="pill secondary" type="button" onclick="go('/dagatal/')">
+          Dagatal <small>🗓️</small>
+        </button>
+
+        <button class="pill secondary" type="button" onclick="go('/klukka/')">
+          Klukka <small>🕒</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="banner">Vefur stofnaður 2025. Engar vafrakökur – bara Ís.</div>
+
   </div>
 
-  <!-- CONTACT MODAL -->
-  <div class="overlay" id="contactOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
-    <div class="modal">
-      <div class="modal-h">
-        <b id="contactTitle">Hafa samband</b>
-        <button class="close" id="contactClose" aria-label="Loka">✕</button>
+  <!-- MODAL: UM VEFINN -->
+  <div id="aboutModal" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+      <div class="modal-head">
+        <h2 id="aboutTitle">Um vefinn</h2>
+        <button class="icon-btn" id="aboutClose" type="button" aria-label="Loka">✕</button>
       </div>
 
-      <form id="contactForm" autocomplete="on">
-        <div class="row">
-          <div>
-            <label for="name">Nafn</label>
-            <input id="name" name="name" required placeholder="Nafn" />
-          </div>
-          <div>
-            <label for="email">Tölvupóstur</label>
-            <input id="email" name="email" type="email" required placeholder="nafn@dæmi.is" />
-          </div>
+      <div class="modal-body">
+        <p><strong>ís.is</strong> er sjálfstætt verkefni unnið af einstaklingi, án auglýsinga, rekstrarfélaga eða gagnasöfnunar.</p>
+
+        <p>Markmið vefsins er að miðla þekkingu um Ísland á einfaldan, gagnvirkan og aðgengilegan hátt – í þágu almennings.</p>
+
+        <p><strong>Vefurinn er opinn og ókeypis.</strong><br>
+        Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald vefsins.</p>
+
+        <p><strong>Engar auglýsingar. Engar vafrakökur. Bara Ísland.</strong></p>
+
+        <div class="modal-actions">
+          <button id="donateBtn" class="primary-btn" type="button">Styrkja verkefnið</button>
+          <button id="feedbackBtn" class="ghost-btn" type="button">Senda endurgjöf</button>
         </div>
 
-        <div>
-          <label for="message">Erindi</label>
-          <textarea id="message" name="message" required placeholder="Skrifaðu erindið hér..."></textarea>
-        </div>
-
-        <button class="send" type="submit">Senda</button>
-        <div class="status" id="status"></div>
-      </form>
-    </div>
-  </div>
-
-  <!-- SETTINGS MODAL -->
-  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-    <div class="modal">
-      <div class="modal-h">
-        <b id="settingsTitle">Stillingar</b>
-        <button class="close" id="settingsClose" aria-label="Loka">✕</button>
-      </div>
-
-      <div class="settings-body">
-        <div class="setting-row">
-          <div class="left">
-            <b>Hamur</b>
-            <span>Light eða Dark</span>
-          </div>
-
-          <div class="toggle" role="group" aria-label="Velja ham">
-            <button class="chip" id="lightBtn" type="button">Light</button>
-            <button class="chip" id="darkBtn" type="button">Dark</button>
-          </div>
-        </div>
-
-        <div style="color:var(--muted); font-size:12px; padding: 0 2px 4px;">
-          (Vistað á tækinu þínu. Engar kökur — bara smá sjálfsmynd.)
-        </div>
+        <p class="fineprint" id="donateStatus" aria-live="polite"></p>
       </div>
     </div>
   </div>
 
   <script>
-    // ------- Theme (persisted) -------
-    const root = document.documentElement;
-    const lightBtn = document.getElementById('lightBtn');
-    const darkBtn  = document.getElementById('darkBtn');
-
-    function applyTheme(theme){
-      root.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-      lightBtn.classList.toggle('active', theme === 'light');
-      darkBtn.classList.toggle('active', theme === 'dark');
+    // ---- routing helper
+    function go(path){
+      // tryggir trailing slash "snyrtilega"
+      if (!path.endsWith('/')) path += '/';
+      window.location.href = path;
     }
-    const saved = localStorage.getItem('theme');
-    applyTheme(saved === 'light' ? 'light' : 'dark');
 
-    lightBtn.addEventListener('click', () => applyTheme('light'));
-    darkBtn.addEventListener('click',  () => applyTheme('dark'));
-
-    // ------- Dropdown menu -------
+    // ---- hamburger open/close
     const menuBtn = document.getElementById('menuBtn');
-    const dropdown = document.getElementById('dropdown');
-    const contactOpen = document.getElementById('contactOpen');
-    const settingsOpen = document.getElementById('settingsOpen');
+    const menu = document.getElementById('menuDropdown');
 
-    function toggleDropdown(){
-      dropdown.classList.toggle('open');
+    function closeMenu(){
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden','true');
     }
-    function closeDropdown(){
-      dropdown.classList.remove('open');
+    function openMenu(){
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden','false');
     }
 
     menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleDropdown();
+      menu.classList.contains('open') ? closeMenu() : openMenu();
     });
 
-    document.addEventListener('click', () => closeDropdown());
-    document.addEventListener('keydown', (e) => {
-      if(e.key === 'Escape') closeDropdown();
+    document.addEventListener('click', () => closeMenu());
+    menu.addEventListener('click', (e) => e.stopPropagation());
+
+    // ---- menu actions
+    document.getElementById('menuContact').addEventListener('click', () => {
+      closeMenu();
+      window.location.href = 'mailto:hello@ís.is?subject=ís.is%20-%20samband';
     });
 
-    dropdown.addEventListener('click', (e) => e.stopPropagation());
+    document.getElementById('menuSettings').addEventListener('click', () => {
+      closeMenu();
+      alert('Stillingar: (placeholder) — setjum hér t.d. dökkt/ljóst, leturstærð, o.s.frv.');
+    });
 
-    // ------- Modals -------
-    const contactOverlay = document.getElementById('contactOverlay');
-    const contactClose = document.getElementById('contactClose');
-    const settingsOverlay = document.getElementById('settingsOverlay');
-    const settingsClose = document.getElementById('settingsClose');
+    // ---- About modal
+    const aboutModal = document.getElementById('aboutModal');
+    const aboutClose = document.getElementById('aboutClose');
+    const menuAbout = document.getElementById('menuAbout');
 
-    function openModal(overlay){
-      overlay.classList.add('open');
+    function openAbout(){
+      closeMenu();
+      aboutModal.hidden = false;
+      document.body.style.overflow = 'hidden';
     }
-    function closeModal(overlay){
-      overlay.classList.remove('open');
+    function closeAbout(){
+      aboutModal.hidden = true;
+      document.body.style.overflow = '';
+      document.getElementById('donateStatus').textContent = '';
     }
 
-    contactOpen.addEventListener('click', () => {
-      closeDropdown();
-      openModal(contactOverlay);
-      setTimeout(() => document.getElementById('name').focus(), 50);
-    });
-    settingsOpen.addEventListener('click', () => {
-      closeDropdown();
-      openModal(settingsOverlay);
-    });
+    menuAbout.addEventListener('click', openAbout);
+    aboutClose.addEventListener('click', closeAbout);
+    aboutModal.addEventListener('click', (e) => { if(e.target === aboutModal) closeAbout(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !aboutModal.hidden) closeAbout(); });
 
-    contactClose.addEventListener('click', () => closeModal(contactOverlay));
-    settingsClose.addEventListener('click', () => closeModal(settingsOverlay));
+    // ---- Donate + feedback
+    const donateBtn = document.getElementById('donateBtn');
+    const feedbackBtn = document.getElementById('feedbackBtn');
+    const donateStatus = document.getElementById('donateStatus');
 
-    contactOverlay.addEventListener('click', (e) => { if(e.target === contactOverlay) closeModal(contactOverlay); });
-    settingsOverlay.addEventListener('click', (e) => { if(e.target === settingsOverlay) closeModal(settingsOverlay); });
-
-    document.addEventListener('keydown', (e) => {
-      if(e.key === 'Escape'){
-        closeModal(contactOverlay);
-        closeModal(settingsOverlay);
-      }
+    feedbackBtn.addEventListener('click', () => {
+      window.location.href = 'mailto:hello@ís.is?subject=ís.is%20-%20endurgjöf';
     });
 
-    // ------- Contact submit -------
-    const form = document.getElementById('contactForm');
-    const statusEl = document.getElementById('status');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      statusEl.textContent = 'Sendi...';
-
-      const payload = {
-        name: form.name.value.trim(),
-        email: form.email.value.trim(),
-        message: form.message.value.trim(),
-      };
+    donateBtn.addEventListener('click', async () => {
+      donateStatus.textContent = 'Opna greiðslusíðu…';
+      donateBtn.disabled = true;
 
       try{
-        const res = await fetch('/api/contact', {
+        // ÞETTA endpoint býrð þú til í Cloudflare (Workers/Functions)
+        // Það skilar { url: "https://..." } sem er hosted checkout hjá greiðslugátt.
+        const res = await fetch('/api/create-checkout', {
           method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: 'about_modal' })
         });
 
         if(!res.ok){
-          const txt = await res.text().catch(() => '');
-          throw new Error(txt || 'Villa við sendingu.');
+          throw new Error('HTTP ' + res.status);
         }
 
-        statusEl.textContent = 'Sent. Takk!';
-        form.reset();
-        setTimeout(() => closeModal(contactOverlay), 700);
+        const data = await res.json();
+        if(!data || !data.url) throw new Error('No URL returned');
+
+        window.location.href = data.url;
       }catch(err){
-        statusEl.textContent = 'Tókst ekki að senda. Reyndu aftur eftir smá.';
+        donateStatus.textContent =
+          'Greiðslulausn er ekki tengd enn. (Backend endpoint /api/create-checkout vantar).';
+        donateBtn.disabled = false;
       }
     });
   </script>
