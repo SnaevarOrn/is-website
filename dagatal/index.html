@@ -1,12 +1,21 @@
 <!doctype html>
-<html lang="is">
+<html lang="is" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dagatal</title>
+
+  <!-- Theme ASAP -->
+  <script>
+    (function(){
+      const t = localStorage.getItem('theme');
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    })();
+  </script>
+
   <style>
     :root{
-      --bg:#071a24;         /* einn bakgrunnslitur á öllu */
+      --bg:#071a24;
       --panel:#0b2532;
       --panel2:#0e2c3b;
       --text:#e8f6ff;
@@ -20,7 +29,26 @@
       --cellHover:#103244;
       --today:#ff3b3b;
       --today2: rgba(255,59,59,.18);
+
+      --headerH: 132px; /* fastur header: notað til padding */
     }
+    html[data-theme="light"]{
+      --bg:#f6f7f9;
+      --panel:#ffffff;
+      --panel2:#ffffff;
+      --text:rgba(0,0,0,.88);
+      --muted:rgba(0,0,0,.58);
+      --ice:#0b2a3d;
+      --ring:#ff3b3b;
+      --border: rgba(0,0,0,.10);
+      --shadow: rgba(0,0,0,.10);
+      --focus: rgba(25,118,210,.25);
+      --cell:#ffffff;
+      --cellHover:#f1f3f6;
+      --today:#ff3b3b;
+      --today2: rgba(255,59,59,.14);
+    }
+
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
@@ -30,10 +58,10 @@
       color:var(--text);
     }
 
-    /* Header (sticky) */
+    /* Header (FIXED - robust on iOS) */
     .topbar{
-      position: sticky;
-      top:0;
+      position: fixed;
+      top:0; left:0; right:0;
       z-index:20;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
@@ -63,7 +91,7 @@
       gap:8px;
       white-space:nowrap;
     }
-    .btn:hover{ background: var(--panel2); border-color: rgba(191,233,255,.28); }
+    .btn:hover{ background: var(--panel2); border-color: color-mix(in srgb, var(--border) 60%, transparent); }
     .btn:active{ transform: translateY(1px); }
 
     .title-wrap{
@@ -84,14 +112,13 @@
       text-align:center;
       padding: 10px 12px;
       border-radius: 12px;
-      border:1px solid rgba(191,233,255,.14);
+      border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
       background: var(--panel);
       cursor:pointer;
       user-select:none;
     }
-    .year:hover{ border-color: rgba(191,233,255,.30); background: var(--panel2); }
+    .year:hover{ border-color: color-mix(in srgb, var(--border) 55%, transparent); background: var(--panel2); }
 
-    /* Gear bigger */
     #settingsBtn .gear{
       font-size: 24px;
       line-height: 1;
@@ -107,9 +134,9 @@
       transform: translateX(-50%);
       width: min(340px, 92vw);
       border-radius: 14px;
-      border:1px solid rgba(191,233,255,.18);
+      border:1px solid var(--border);
       background: var(--panel);
-      box-shadow: 0 22px 50px rgba(0,0,0,.45);
+      box-shadow: 0 22px 50px color-mix(in srgb, var(--shadow) 90%, transparent);
       padding: 12px;
       display:none;
       z-index:50;
@@ -122,17 +149,17 @@
       flex:1;
       padding: 10px 12px;
       border-radius: 12px;
-      border:1px solid rgba(191,233,255,.14);
+      border:1px solid var(--border);
       background: var(--bg);
       color: var(--text);
       outline:none;
       font-size: 16px;
     }
-    .year-pop input:focus{ border-color: rgba(103,199,255,.55); box-shadow: 0 0 0 3px rgba(103,199,255,.10); }
+    .year-pop input:focus{ border-color: color-mix(in srgb, var(--focus) 80%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent); }
 
     .chip{
       appearance:none;
-      border:1px solid rgba(191,233,255,.14);
+      border:1px solid var(--border);
       background: var(--bg);
       color: var(--text);
       padding: 8px 10px;
@@ -140,12 +167,11 @@
       cursor:pointer;
       font-weight:800;
     }
-    .chip:hover{ border-color: rgba(191,233,255,.28); background: var(--panel2); }
+    .chip:hover{ border-color: color-mix(in srgb, var(--border) 55%, transparent); background: var(--panel2); }
 
-    /* Sticky sub-header: month label + weekdays (frozen) */
+    /* Sub-header */
     .subbar{
-      border-top: 1px solid rgba(191,233,255,.08);
-      border-bottom: 1px solid var(--border);
+      border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
       background: var(--bg);
     }
     .subbar-inner{
@@ -168,7 +194,7 @@
       letter-spacing:.4px;
       font-size: 14px;
       padding: 10px 12px;
-      border:1px solid rgba(191,233,255,.14);
+      border:1px solid var(--border);
       background: var(--panel);
       border-radius: 12px;
       min-width: 140px;
@@ -196,8 +222,10 @@
       justify-content:center;
       border-radius: 12px;
       background: var(--bg);
-      border: 1px solid rgba(191,233,255,.10);
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
     }
+    /* hide weekdays when in holidays view */
+    .dowbar.is-hidden{ display:none; }
 
     /* Settings */
     .overlay{
@@ -212,13 +240,13 @@
     .sheet{
       position: fixed;
       left: 50%;
-      top: 86px;
+      top: calc(var(--headerH) + 10px);
       transform: translateX(-50%);
       width: min(520px, 92vw);
       border-radius: 16px;
-      border:1px solid rgba(191,233,255,.18);
+      border:1px solid var(--border);
       background: var(--panel);
-      box-shadow: 0 30px 70px rgba(0,0,0,.55);
+      box-shadow: 0 30px 70px color-mix(in srgb, var(--shadow) 90%, transparent);
       display:none;
       z-index: 40;
       overflow:hidden;
@@ -245,7 +273,7 @@
       gap:12px;
     }
     .group{
-      border:1px solid rgba(191,233,255,.12);
+      border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
       border-radius: 14px;
       background: var(--bg);
       padding: 10px 12px;
@@ -287,7 +315,7 @@
       flex-wrap:wrap;
     }
     .seg button{
-      border:1px solid rgba(191,233,255,.14);
+      border:1px solid var(--border);
       background: var(--panel);
       color: var(--text);
       padding: 10px 12px;
@@ -297,8 +325,8 @@
       letter-spacing:.2px;
     }
     .seg button.active{
-      border-color: rgba(103,199,255,.55);
-      box-shadow: 0 0 0 3px rgba(103,199,255,.10);
+      border-color: color-mix(in srgb, var(--focus) 80%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
     }
     .seg button:hover{ background: var(--panel2); }
 
@@ -310,18 +338,18 @@
       gap:10px;
       padding: 12px 12px;
       border-radius: 14px;
-      border:1px solid rgba(191,233,255,.14);
+      border:1px solid var(--border);
       background: var(--panel);
       cursor:pointer;
       font-weight: 900;
     }
-    .linkbtn:hover{ background: var(--panel2); border-color: rgba(191,233,255,.28); }
+    .linkbtn:hover{ background: var(--panel2); border-color: color-mix(in srgb, var(--border) 55%, transparent); }
 
     /* Main */
     .wrap{
       max-width: 1100px;
       margin: 0 auto;
-      padding: 12px 14px 34px;
+      padding: calc(var(--headerH) + 12px) 14px 34px;
     }
 
     .month{
@@ -353,7 +381,7 @@
       position:relative;
       height: 42px;
       border-radius: 12px;
-      border: 1px solid rgba(191,233,255,.14);
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
       background: var(--cell);
       display:flex;
       align-items:center;
@@ -363,12 +391,12 @@
     }
     .cell:hover{
       background: var(--cellHover);
-      border-color: rgba(191,233,255,.28);
+      border-color: color-mix(in srgb, var(--border) 55%, transparent);
     }
     .cell.is-empty{
       background: transparent;
-      border: 1px dashed rgba(191,233,255,.12);
-      opacity:.25;
+      border: 1px dashed color-mix(in srgb, var(--border) 65%, transparent);
+      opacity:.35;
     }
     .dnum{ font-size: 16px; font-weight: 900; }
 
@@ -390,7 +418,6 @@
       opacity: .95;
     }
 
-    /* Today: full red + shimmer */
     .cell.is-today{
       background: var(--today);
       border-color: rgba(255,255,255,.35);
@@ -433,18 +460,14 @@
     .weeks-title{ font-weight: 900; color: var(--ice); }
     .weeks-meta{ color: var(--muted); font-size: 13px; }
 
-    /* Frozen weekday header for weeks is in the global header (subbar),
-       but we keep a subtle spacer row inside weeks to align visually */
-    .weeks-dow-spacer{
-      padding: 10px 12px 0;
-    }
+    .weeks-dow-spacer{ padding: 10px 12px 0; }
 
     .week-row{
       display:grid;
       grid-template-columns: 72px 1fr;
       gap:10px;
       padding: 10px 12px;
-      border-top:1px solid rgba(191,233,255,.10);
+      border-top:1px solid color-mix(in srgb, var(--border) 60%, transparent);
       align-items:center;
     }
     .week-row:first-of-type{ border-top:none; }
@@ -452,7 +475,7 @@
       font-weight: 900;
       color: var(--muted);
       background: var(--bg);
-      border:1px solid rgba(191,233,255,.10);
+      border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
       border-radius: 12px;
       height: 42px;
       display:flex;
@@ -483,33 +506,25 @@
     .holidays-title{ font-weight: 900; color: var(--ice); }
     .hitem{
       padding: 12px 14px;
-      border-top:1px solid rgba(191,233,255,.10);
+      border-top:1px solid color-mix(in srgb, var(--border) 60%, transparent);
       display:flex;
       justify-content:space-between;
       gap:10px;
       align-items:baseline;
     }
     .hitem:first-of-type{ border-top:none; }
-    .hleft{
-      font-weight: 900;
-      letter-spacing:.2px;
-    }
-    .hright{
-      color: var(--muted);
-      font-size: 13px;
-      white-space:nowrap;
-    }
+    .hleft{ font-weight: 900; letter-spacing:.2px; }
+    .hright{ color: var(--muted); font-size: 13px; white-space:nowrap; }
 
-    .footer{ margin-top: 18px; color: rgba(159,197,218,.85); font-size: 12px; text-align:center; }
+    .footer{ margin-top: 18px; color: color-mix(in srgb, var(--muted) 85%, transparent); font-size: 12px; text-align:center; }
 
     @media (max-width: 520px){
+      :root{ --headerH: 128px; }
       .topbar-inner{ padding: 11px 12px; }
       .subbar-inner{ padding: 9px 12px 11px; }
-      .wrap{ padding: 10px 12px 26px; }
-      .cell{ height: 42px; }
+      .wrap{ padding-left:12px; padding-right:12px; padding-bottom:26px; }
       .week-row{ grid-template-columns: 62px 1fr; }
       .wn{ height: 42px; }
-      .sheet{ top: 78px; }
       .sub-title{ min-width: 120px; }
     }
   </style>
@@ -542,7 +557,6 @@
       <button class="btn" id="settingsBtn" title="Stillingar"><span class="gear">⚙︎</span></button>
     </div>
 
-    <!-- Frozen month + weekdays -->
     <div class="subbar">
       <div class="subbar-inner">
         <div class="subrow">
@@ -556,7 +570,6 @@
     </div>
   </header>
 
-  <!-- Settings overlay/sheet -->
   <div class="overlay" id="overlay"></div>
   <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Stillingar">
     <div class="sheet-header">
@@ -564,7 +577,6 @@
       <button class="btn" id="closeSheet" title="Loka">✕</button>
     </div>
     <div class="sheet-body">
-
       <div class="group">
         <h4>Sýn</h4>
         <div class="seg" id="layoutSeg">
@@ -586,15 +598,12 @@
       <div class="group">
         <h4>Flýtileiðir</h4>
         <button class="linkbtn" id="todayBtn">
-          <span>Í dag</span>
-          <span style="opacity:.85">⤒</span>
+          <span>Í dag</span><span style="opacity:.85">⤒</span>
         </button>
         <button class="linkbtn" id="showHolidaysBtn">
-          <span>Skoða frídaga</span>
-          <span style="opacity:.85">›</span>
+          <span>Skoða frídaga</span><span style="opacity:.85">›</span>
         </button>
       </div>
-
     </div>
   </aside>
 
@@ -612,15 +621,6 @@
   const monIndex = (jsDay) => (jsDay + 6) % 7;
   const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
   const daysInMonth = (y, m) => new Date(y, m+1, 0).getDate();
-
-  // ISO week number (Monday-first)
-  function isoWeekNumber(date){
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7; // Mon=1..Sun=7
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  }
 
   // Easter (Meeus/Jones/Butcher)
   function easterSunday(year){
@@ -653,9 +653,8 @@
     return addDays(d, delta);
   }
 
-  // Holiday names + set
   function getIcelandHolidayMap(year){
-    const map = new Map(); // iso -> name
+    const map = new Map();
     const add = (m,d,name) => map.set(`${year}-${pad2(m)}-${pad2(d)}`, name);
 
     add(1,1,"Nýársdagur");
@@ -682,7 +681,7 @@
     return map;
   }
 
-  // Moon phases: local minima -> no doubles
+  // Moon phases
   const SYNODIC = 29.530588853;
   const REF_NEW = Date.UTC(2000,0,6,18,14,0);
   function moonAgeDays(date){
@@ -693,7 +692,7 @@
   }
   function phaseDistance(age, target){ return Math.abs(age - target); }
   function computeMoonMarkersForYear(year){
-    const markers = new Map(); // iso -> "new" | "full"
+    const markers = new Map();
     const dates = [];
     const start = new Date(year,0,1);
     const end = new Date(year,11,31);
@@ -724,13 +723,14 @@
   const yearLabel = $("#yearLabel");
   const monthLabel = $("#monthLabel");
   const subMeta = $("#subMeta");
+  const dowBar = $("#dowBar");
 
   const state = {
     year: 2025,
-    showHolidays: false, // default: ekkert hakað
-    showMoon: false,     // default: ekkert hakað
-    layout: "months",    // "months" | "weeks"
-    view: "calendar",    // "calendar" | "holidays"
+    showHolidays: false,
+    showMoon: false,
+    layout: "months",    // months | weeks
+    view: "calendar",    // calendar | holidays
     holidayMap: new Map(),
     moonMarkers: new Map(),
     monthObserver: null,
@@ -740,18 +740,19 @@
   function monthShort(m){ return ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"][m]; }
 
   function setHeaderContext(){
-    // Month label depends on view/layout
     if (state.view === "holidays"){
       monthLabel.textContent = "frídagar";
       subMeta.textContent = String(state.year);
+      dowBar.classList.add("is-hidden");   // <-- felur vikudaga
       return;
     }
+    dowBar.classList.remove("is-hidden");
+
     if (state.layout === "weeks"){
       monthLabel.textContent = "vikur";
       subMeta.textContent = String(state.year);
       return;
     }
-    // months layout: month label is dynamic via observer, but ensure year is shown
     subMeta.textContent = String(state.year);
   }
 
@@ -769,21 +770,17 @@
     const monthSections = Array.from(document.querySelectorAll(".month[data-month]"));
     if (!monthSections.length) return;
 
-    // Set initial label to first month
     const firstM = parseInt(monthSections[0].dataset.month, 10);
     if (Number.isFinite(firstM)) monthLabel.textContent = MONTHS_LONG[firstM];
 
     const obs = new IntersectionObserver((entries) => {
-      // pick the entry closest to top (highest intersection ratio + isIntersecting)
       const visible = entries.filter(e => e.isIntersecting);
       if (!visible.length) return;
-
       visible.sort((a,b) => (b.intersectionRatio - a.intersectionRatio));
       const m = parseInt(visible[0].target.dataset.month, 10);
       if (Number.isFinite(m)) monthLabel.textContent = MONTHS_LONG[m];
     }, {
       root: null,
-      // This makes “current” month switch around mid-screen
       rootMargin: "-45% 0px -50% 0px",
       threshold: [0.01, 0.1, 0.25, 0.5]
     });
@@ -796,7 +793,6 @@
     yearLabel.textContent = state.year;
     $("#yearInput").value = state.year;
 
-    // ensure UI toggles match state
     $("#toggleHolidays").checked = state.showHolidays;
     $("#toggleMoon").checked = state.showMoon;
 
@@ -862,8 +858,6 @@
       `;
       monthBlock.appendChild(mh);
 
-      // NOTE: vikudagar eru nú frystir í header (óþarfi í hverjum mánuði)
-
       const grid = document.createElement("div");
       grid.className = "grid";
 
@@ -885,6 +879,7 @@
     }
   }
 
+  // WEEKS VIEW (non-ISO): V1 is the week that contains Jan 1.
   function renderWeeks(){
     const box = document.createElement("section");
     box.className = "weeks";
@@ -897,28 +892,37 @@
     `;
     box.appendChild(wh);
 
-    // Small spacer so it doesn't feel glued (weekday header is frozen globally)
     const spacer = document.createElement("div");
     spacer.className = "weeks-dow-spacer";
     spacer.innerHTML = `<div style="height:1px;opacity:.0"></div>`;
     box.appendChild(spacer);
 
-    // Find first Monday that starts the first ISO week covering the year
-    let d = new Date(state.year, 0, 1);
-    const jan4 = new Date(state.year,0,4);
-    const jan4MonOffset = monIndex(jan4.getDay()); // 0..6
-    d = new Date(jan4);
-    d.setDate(d.getDate() - jan4MonOffset);
+    const jan1 = new Date(state.year, 0, 1);
+    const start = new Date(jan1);
+    start.setDate(jan1.getDate() - monIndex(jan1.getDay())); // Monday of week containing Jan 1
 
-    const end = new Date(state.year,11,31);
+    const dec31 = new Date(state.year, 11, 31);
+    let weekIndex = 1;
+    let d = new Date(start);
 
-    while (d <= end){
+    function weekHasAnyDayInYear(monday){
+      for(let i=0;i<7;i++){
+        const x = new Date(monday);
+        x.setDate(monday.getDate()+i);
+        if(x.getFullYear() === state.year) return true;
+      }
+      return false;
+    }
+
+    while (d <= dec31 || weekHasAnyDayInYear(d)){
+      if(!weekHasAnyDayInYear(d)) break;
+
       const row = document.createElement("div");
       row.className = "week-row";
 
       const wn = document.createElement("div");
       wn.className = "wn";
-      wn.textContent = "V" + isoWeekNumber(d);
+      wn.textContent = "V" + weekIndex;
       row.appendChild(wn);
 
       const wg = document.createElement("div");
@@ -941,6 +945,7 @@
       box.appendChild(row);
 
       d.setDate(d.getDate() + 7);
+      weekIndex++;
     }
 
     calendarEl.appendChild(box);
@@ -958,8 +963,7 @@
     `;
     box.appendChild(hh);
 
-    const items = Array.from(state.holidayMap.entries())
-      .sort((a,b) => a[0].localeCompare(b[0]));
+    const items = Array.from(state.holidayMap.entries()).sort((a,b) => a[0].localeCompare(b[0]));
 
     for (const [iso, name] of items){
       const [y,mm,dd] = iso.split("-").map(Number);
@@ -980,12 +984,9 @@
     state.year = now.getFullYear();
     state.view = "calendar";
     build();
-
     const iso = isoDate(now);
     const el = document.querySelector(`[data-iso="${iso}"]`);
-    if (el){
-      el.scrollIntoView({ behavior:"smooth", block:"center" });
-    }
+    if (el) el.scrollIntoView({ behavior:"smooth", block:"center" });
   }
 
   // Year dropdown
@@ -1002,11 +1003,17 @@
     if (!titleWrap.contains(e.target)) togglePop(false);
   });
   yearLabel.addEventListener("click", () => togglePop());
-  $("#goYearBtn").addEventListener("click", () => {
-    const v = parseInt($("#yearInput").value, 10);
-    if (Number.isFinite(v)) { state.year = v; state.view="calendar"; build(); }
+
+  // IMPORTANT: keep current view when changing year
+  function setYear(y){
+    if(!Number.isFinite(y)) return;
+    state.year = y;
+    build();
     togglePop(false);
-  });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  $("#goYearBtn").addEventListener("click", () => setYear(parseInt($("#yearInput").value, 10)));
   $("#yearInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") $("#goYearBtn").click();
     if (e.key === "Escape") togglePop(false);
@@ -1014,23 +1021,15 @@
   pop.querySelectorAll("[data-jump]").forEach(btn => {
     btn.addEventListener("click", () => {
       const j = parseInt(btn.getAttribute("data-jump"), 10);
-      state.year += j;
-      state.view="calendar";
-      build();
+      setYear(state.year + j);
     });
   });
 
   // Settings sheet
   const overlay = $("#overlay");
   const sheet = $("#sheet");
-  function openSheet(){
-    overlay.classList.add("show");
-    sheet.classList.add("show");
-  }
-  function closeSheet(){
-    overlay.classList.remove("show");
-    sheet.classList.remove("show");
-  }
+  function openSheet(){ overlay.classList.add("show"); sheet.classList.add("show"); }
+  function closeSheet(){ overlay.classList.remove("show"); sheet.classList.remove("show"); }
   $("#settingsBtn").addEventListener("click", openSheet);
   $("#closeSheet").addEventListener("click", closeSheet);
   overlay.addEventListener("click", closeSheet);
@@ -1049,11 +1048,9 @@
     });
   });
 
-  // Toggles (default unchecked)
   $("#toggleHolidays").addEventListener("change", (e) => { state.showHolidays = e.target.checked; build(); });
   $("#toggleMoon").addEventListener("change", (e) => { state.showMoon = e.target.checked; build(); });
 
-  // Holidays view
   $("#showHolidaysBtn").addEventListener("click", () => {
     state.view = "holidays";
     build();
@@ -1061,20 +1058,16 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  // Today button (in settings)
-  $("#todayBtn").addEventListener("click", () => {
-    closeSheet();
-    jumpToToday();
-  });
+  $("#todayBtn").addEventListener("click", () => { closeSheet(); jumpToToday(); });
 
   // Header nav
   $("#backBtn").addEventListener("click", () => history.back());
 
-  // If user is viewing holidays, arrow navigation should exit holidays and return to calendar
+  // Year arrows: keep holidays open if that's current view
   function bumpYear(delta){
     state.year += delta;
-    if (state.view === "holidays") state.view = "calendar";
     build();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
   $("#prevYear").addEventListener("click", () => bumpYear(-1));
   $("#nextYear").addEventListener("click", () => bumpYear(1));
