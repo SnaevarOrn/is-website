@@ -99,7 +99,6 @@
       width:26px; height:26px;
       display:block;
       opacity:.95;
-      /* Engin crazy filter sem getur “ruglað” logo */
       filter:none;
     }
 
@@ -124,6 +123,7 @@
       border-radius: 14px;
       display:flex; align-items:center; justify-content:center;
       cursor:pointer;
+      color: var(--text);
     }
     html[data-theme="dark"] .menu-btn{ background: rgba(255,255,255,.04); }
     .menu-btn:active{ transform: translateY(1px); }
@@ -339,7 +339,7 @@
       min-height: 18px;
     }
 
-    /* Settings small modal */
+    /* Settings/About body blocks */
     .settings-body{
       padding: 14px;
       display:grid;
@@ -394,6 +394,12 @@
             <span>Stillingar</span>
             <span class="hint">⚙︎</span>
           </button>
+
+          <button class="menu-item" id="menuAbout" role="menuitem">
+            <span>Um vefinn</span>
+            <span class="hint">ℹ︎</span>
+          </button>
+
           <button class="menu-item" id="menuContact" role="menuitem">
             <span>Hafa samband</span>
             <span class="hint">✉︎</span>
@@ -480,6 +486,24 @@
     </div>
   </div>
 
+  <!-- ABOUT MODAL -->
+  <div class="overlay" id="aboutOverlay" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="modal">
+      <div class="modal-h">
+        <b id="aboutTitle">Um vefinn</b>
+        <button class="close" id="aboutClose" aria-label="Loka">✕</button>
+      </div>
+
+      <div class="settings-body">
+        <div class="toggle-row" style="display:block">
+          <b>ís.is</b><br/>
+          <span>Vefur stofnaður 2025. Engar vafrakökur – bara ís.</span><br><br>
+          <span>Leikir og verkfæri í einföldu, íslensku mini-labbi.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ---------- THEME (shared across pages) ----------
     const THEME_KEY = "is_theme";
@@ -498,12 +522,9 @@
       if (toggle) toggle.checked = (t === "dark");
     }
 
-    // init theme
     (function initTheme(){
       const saved = localStorage.getItem(THEME_KEY);
       if (saved === "dark" || saved === "light") return applyTheme(saved);
-
-      // fallback to system preference
       const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
       applyTheme(prefersDark ? "dark" : "light");
     })();
@@ -512,6 +533,7 @@
     const menuBtn = document.getElementById("menuBtn");
     const menuPop = document.getElementById("menuPop");
     const menuSettings = document.getElementById("menuSettings");
+    const menuAbout = document.getElementById("menuAbout");
     const menuContact = document.getElementById("menuContact");
 
     function openMenu(){ menuPop.classList.add("show"); menuPop.setAttribute("aria-hidden","false"); }
@@ -526,7 +548,6 @@
 
     menuPop.addEventListener("click", (e) => e.stopPropagation());
 
-    // Close only when clicking outside (iOS-safe)
     document.addEventListener("click", (e) => {
       if (!menuPop.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
     });
@@ -542,9 +563,7 @@
       statusEl.textContent = "";
       requestAnimationFrame(() => document.getElementById("name").focus());
     }
-    function closeContact(){
-      contactOverlay.classList.remove("open");
-    }
+    function closeContact(){ contactOverlay.classList.remove("open"); }
 
     contactClose.addEventListener("click", closeContact);
     contactOverlay.addEventListener("click", (e) => { if (e.target === contactOverlay) closeContact(); });
@@ -564,17 +583,33 @@
       applyTheme(e.target.checked ? "dark" : "light");
     });
 
-    // Menu actions (important: open modal in next frame so iOS doesn't swallow click)
-    menuContact.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
-      closeMenu();
-      requestAnimationFrame(openContact);
-    });
+    // ---------- ABOUT MODAL ----------
+    const aboutOverlay = document.getElementById("aboutOverlay");
+    const aboutClose = document.getElementById("aboutClose");
 
+    function openAbout(){ aboutOverlay.classList.add("open"); }
+    function closeAbout(){ aboutOverlay.classList.remove("open"); }
+
+    aboutClose.addEventListener("click", closeAbout);
+    aboutOverlay.addEventListener("click", (e) => { if (e.target === aboutOverlay) closeAbout(); });
+
+    // Menu actions (open modal in next frame for iOS/Safari)
     menuSettings.addEventListener("click", (e) => {
       e.preventDefault(); e.stopPropagation();
       closeMenu();
       requestAnimationFrame(openSettings);
+    });
+
+    menuAbout.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      closeMenu();
+      requestAnimationFrame(openAbout);
+    });
+
+    menuContact.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      closeMenu();
+      requestAnimationFrame(openContact);
     });
 
     // ESC closes any open modal
@@ -583,6 +618,7 @@
         closeMenu();
         closeContact();
         closeSettings();
+        closeAbout();
       }
     });
 
@@ -619,8 +655,6 @@
 
     // ---------- LOGO BUTTON ----------
     document.getElementById("logoBtn").addEventListener("click", () => {
-      // Ef þú vilt að logo opni heim: location.href = "/";
-      // Ég læt það bara scrolla upp smooth (þægilegt á mobile):
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   </script>
