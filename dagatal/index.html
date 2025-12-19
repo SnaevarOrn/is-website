@@ -1,346 +1,1444 @@
 <!doctype html>
 <html lang="is" data-theme="dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dagatalið – ís.is</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dagatal</title>
 
-<!-- THEME INIT -->
-<script>
-(() => {
-  const t = localStorage.getItem('theme');
-  document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
-})();
-</script>
+  <!-- Theme ASAP (same convention as front page/clock) -->
+  <script>
+    (function(){
+      const t = localStorage.getItem('theme');
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    })();
+  </script>
 
-<style>
-/* =======================
-   THEME TOKENS
-======================= */
+  <style>
+    /* =========================
+       THEME TOKENS
+       ========================= */
+    :root{
+      /* Neutral dark (match front page / clock) */
+      --bg:#0b0c0f;
+      --panel:#12141a;
+      --panel2:#0f1116;
 
-html[data-theme="dark"]{
-  --bg:#0b0c0f;
-  --panel:#12141a;
-  --panel2:#0f1116;
-  --text:rgba(255,255,255,.92);
-  --muted:rgba(255,255,255,.62);
-  --border:rgba(255,255,255,.10);
-  --cell:#141821;
-  --cellHover:#1a2030;
-  --accent:#ffffff;
-}
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --ice: rgba(255,255,255,.92);
 
-html[data-theme="light"]{
-  --bg:#f6f7f8;
-  --panel:#ffffff;
-  --panel2:#f0f1f2;
-  --text:#111;
-  --muted:#555;
-  --border:rgba(0,0,0,.12);
-  --cell:#ffffff;
-  --cellHover:#f2f3f4;
-  --accent:#000;
-}
+      --ring:#ff3b3b;
+      --border: rgba(255,255,255,.10);
+      --shadow: rgba(0,0,0,.55);
+      --focus: rgba(180,230,255,.25);
 
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family: system-ui,-apple-system,Segoe UI,Roboto;
-  background:var(--bg);
-  color:var(--text);
-}
+      --cell:#141821;
+      --cellHover:#1a2030;
 
-/* =======================
-   HEADER
-======================= */
+      --today:#ff3b3b;
+      --today2: rgba(255,59,59,.16);
 
-header{
-  position:sticky;
-  top:0;
-  z-index:100;
-  background:linear-gradient(180deg,var(--panel),var(--panel2));
-  border-bottom:1px solid var(--border);
-}
+      --headerH: 132px;
+      --gap: 8px; /* IMPORTANT: single source of truth for alignment */
+      --padX: 14px; /* IMPORTANT: shared horizontal padding for header + grids */
+    }
 
-.hdr{
-  max-width:1100px;
-  margin:0 auto;
-  padding:12px 14px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
+    html[data-theme="light"]{
+      --bg:#f6f7f9;
+      --panel:#ffffff;
+      --panel2:#ffffff;
+      --text:rgba(0,0,0,.88);
+      --muted:rgba(0,0,0,.58);
+      --ice:#0b2a3d;
 
-.btn{
-  background:var(--panel);
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:12px;
-  cursor:pointer;
-}
+      --ring:#ff3b3b;
+      --border: rgba(0,0,0,.10);
+      --shadow: rgba(0,0,0,.10);
+      --focus: rgba(25,118,210,.25);
 
-.year{
-  font-weight:800;
-  padding:10px 16px;
-}
+      --cell:#ffffff;
+      --cellHover:#f1f3f6;
 
-.menu{
-  position:relative;
-}
+      --today:#ff3b3b;
+      --today2: rgba(255,59,59,.14);
+    }
 
-.menu-pop{
-  display:none;
-  position:absolute;
-  right:0;
-  top:120%;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:14px;
-  overflow:hidden;
-  min-width:180px;
-}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg);
+      color:var(--text);
+    }
 
-.menu-pop button{
-  width:100%;
-  background:none;
-  border:none;
-  color:var(--text);
-  padding:12px 14px;
-  text-align:left;
-  cursor:pointer;
-}
+    /* =========================
+       HEADER (FIXED / ALWAYS VISIBLE)
+       ========================= */
+    .topbar{
+      position: fixed;
+      top:0; left:0; right:0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--panel2) 92%, transparent);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
 
-.menu-pop button:hover{
-  background:var(--cellHover);
-}
+    .topbar-inner{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px var(--padX);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
 
-/* =======================
-   WEEKDAY BAR
-======================= */
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background: transparent;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+    .btn:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
+    .btn:active{ transform: translateY(1px); }
 
-.weekdays{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-  padding:10px 14px;
-  border-top:1px solid var(--border);
-}
+    .title-wrap{
+      position:relative;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:center;
+      flex: 1;
+      min-width: 220px;
+    }
 
-.weekdays div{
-  text-align:center;
-  padding:8px;
-  border-radius:10px;
-  background:var(--panel);
-  border:1px solid var(--border);
-  font-size:13px;
-}
+    .year{
+      font-size: 17px;
+      letter-spacing:.5px;
+      font-weight: 900;
+      color: var(--ice);
+      min-width: 70px;
+      text-align:center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background: transparent;
+      cursor:pointer;
+      user-select:none;
+    }
+    .year:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
-/* =======================
-   CALENDAR GRID
-======================= */
+    /* Year dropdown */
+    .year-pop{
+      position:absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(340px, 92vw);
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 22px 50px var(--shadow);
+      padding: 12px;
+      display:none;
+      z-index:60;
+    }
+    .year-pop.show{ display:block; }
+    .row{ display:flex; gap:10px; align-items:center; }
+    .row + .row{ margin-top:10px; }
+    .year-pop input{
+      flex:1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      outline:none;
+      font-size: 16px;
+    }
+    .year-pop input:focus{ border-color: color-mix(in srgb, var(--focus) 80%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent); }
 
-main{
-  max-width:1100px;
-  margin:0 auto;
-  padding:14px;
-}
+    .chip{
+      appearance:none;
+      border:1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .chip:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
-.month-title{
-  margin:24px 0 8px;
-  font-weight:800;
-}
+    /* =========================
+       SUBBAR: month label + weekdays (aligned)
+       ========================= */
+    .subbar{
+      border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+      background: color-mix(in srgb, var(--panel2) 92%, transparent);
+    }
+    .subbar-inner{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 10px var(--padX) 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .subrow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .sub-title{
+      font-weight: 900;
+      color: var(--ice);
+      letter-spacing:.4px;
+      font-size: 14px;
+      padding: 10px 12px;
+      border:1px solid var(--border);
+      background: transparent;
+      border-radius: 12px;
+      min-width: 140px;
+      text-transform: none; /* allow capitalized "Frídagar" */
+    }
+    .sub-meta{
+      color: var(--muted);
+      font-size: 13px;
+      white-space:nowrap;
+      opacity:.95;
+    }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-}
+    /* Alignment fix:
+       - Same grid columns, same gap, same outer padding as day grids.
+       - No extra padding inside weekday cells that changes width. */
+    .dowbar{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: var(--gap);
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: lowercase;
+    }
+    .dowbar div{
+      height: 42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+    }
+    .dowbar.is-hidden{ display:none; }
 
-.cell{
-  height:42px;
-  border-radius:10px;
-  background:var(--cell);
-  border:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-}
+    /* =========================
+       HAMBURGER MENU (replaces gear)
+       ========================= */
+    .menu-wrap{ position:relative; }
+    .menu-btn{
+      width:44px; height:44px;
+      border:1px solid var(--border);
+      background: transparent;
+      border-radius: 12px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .menu-btn:active{ transform: translateY(1px); }
+    .burger{ width:18px; height:12px; position:relative; }
+    .burger span{
+      position:absolute; left:0; right:0;
+      height:2px; border-radius:2px;
+      background: color-mix(in srgb, var(--text) 92%, transparent);
+    }
+    .burger span:nth-child(1){ top:0; }
+    .burger span:nth-child(2){ top:5px; opacity:.80; }
+    .burger span:nth-child(3){ bottom:0; opacity:.65; }
 
-.cell:hover{
-  background:var(--cellHover);
-}
+    .menu-pop{
+      position:absolute;
+      top: 54px;
+      right: 0;
+      width: 220px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 22px 50px var(--shadow);
+      overflow:hidden;
+      display:none;
+      z-index:80;
+    }
+    .menu-pop.show{ display:block; }
+    .menu-item{
+      width:100%;
+      border:0;
+      background: transparent;
+      color: var(--text);
+      padding: 12px 12px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-weight: 900;
+    }
+    .menu-item:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
+    .menu-item small{ color: var(--muted); font-weight: 800; }
 
-.cell.empty{
-  opacity:.15;
-}
+    /* =========================
+       SETTINGS SHEET (unchanged behavior)
+       ========================= */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      display:none;
+      z-index: 60;
+    }
+    .overlay.show{ display:block; }
 
-.cell.holiday::after{
-  content:"🎉";
-  position:absolute;
-  top:4px;
-  right:6px;
-}
+    .sheet{
+      position: fixed;
+      left: 50%;
+      top: calc(var(--headerH) + 10px);
+      transform: translateX(-50%);
+      width: min(520px, 92vw);
+      border-radius: 16px;
+      border:1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 30px 70px var(--shadow);
+      display:none;
+      z-index: 70;
+      overflow:hidden;
+    }
+    .sheet.show{ display:block; }
 
-/* =======================
-   HOLIDAYS LIST
-======================= */
+    .sheet-header{
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--border);
+      background: transparent;
+    }
+    .sheet-title{
+      font-weight: 900;
+      letter-spacing:.4px;
+      color: var(--ice);
+    }
+    .sheet-body{
+      padding: 12px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .group{
+      border:1px solid color-mix(in srgb, var(--border) 75%, transparent);
+      border-radius: 14px;
+      background: transparent;
+      padding: 10px 12px;
+    }
+    .group h4{
+      margin:0 0 10px 0;
+      font-size: 12px;
+      letter-spacing:.35px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
 
-.holidays{
-  margin-top:20px;
-  border:1px solid var(--border);
-  border-radius:16px;
-  overflow:hidden;
-}
+    .toggle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 8px;
+      border-radius: 12px;
+    }
+    .toggle label{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      cursor:pointer;
+      user-select:none;
+      font-size: 14px;
+    }
+    .toggle input{
+      width: 18px;
+      height: 18px;
+      accent-color: color-mix(in srgb, var(--ice) 90%, transparent);
+      cursor:pointer;
+    }
 
-.holidays .item{
-  display:flex;
-  justify-content:space-between;
-  padding:12px 14px;
-  border-top:1px solid var(--border);
-}
+    .seg{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .seg button{
+      border:1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+    .seg button.active{
+      border-color: color-mix(in srgb, var(--focus) 80%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
+    }
+    .seg button:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
-.holidays .item:first-child{
-  border-top:none;
-}
+    .linkbtn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: transparent;
+      cursor:pointer;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .linkbtn:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
-.holidays .name{
-  font-weight:700;
-}
+    /* =========================
+       MAIN WRAP
+       ========================= */
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: calc(var(--headerH) + 12px) var(--padX) 34px;
+    }
 
-/* =======================
-   FOOTER
-======================= */
+    /* =========================
+       MONTHS: "freed" look
+       - no heavy boxes; keep subtle separators
+       ========================= */
+    .month{
+      border:0;                 /* freed */
+      background: transparent;  /* freed */
+      border-radius: 0;
+      margin: 18px 0;
+      overflow: visible;
+    }
+    .month-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 8px 0 10px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      background: transparent;
+    }
+    .month-name{
+      font-weight: 900;
+      color: var(--ice);
+      letter-spacing:.4px;
+      text-transform: none;
+    }
+    .month-meta{ color: var(--muted); font-size: 13px; }
 
-footer{
-  text-align:center;
-  font-size:12px;
-  opacity:.6;
-  padding:24px 0;
-}
-</style>
+    /* Core alignment: same gap as weekday bar, and NO inner padding */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: var(--gap);
+      padding: 12px 0 0; /* top spacing only */
+    }
+
+    .cell{
+      position:relative;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--cell);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition: background .15s ease, border-color .15s ease, transform .08s ease;
+      overflow:hidden;
+    }
+    .cell:hover{
+      background: var(--cellHover);
+      border-color: color-mix(in srgb, var(--border) 70%, transparent);
+    }
+    .cell.is-empty{
+      background: transparent;
+      border: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+      opacity:.25;
+    }
+    .dnum{ font-size: 16px; font-weight: 900; }
+
+    /* Holiday ring remains */
+    .cell.is-holiday::after{
+      content:"";
+      position:absolute;
+      inset: 6px;
+      border-radius: 10px;
+      border: 2px solid var(--ring);
+      pointer-events:none;
+      opacity: .95;
+    }
+
+    /* 🎉 only for legal holidays */
+    .cele{
+      position:absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 14px;
+      opacity: .95;
+      pointer-events:none;
+    }
+
+    /* Special days: subtle underline, NO emoji */
+    .cell.is-special{
+      box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--ice) 30%, transparent);
+    }
+
+    .moon{
+      position:absolute;
+      top: 6px;
+      left: 8px;
+      font-size: 14px;
+      opacity: .95;
+      pointer-events:none;
+    }
+
+    /* Today */
+    .cell.is-today{
+      background: var(--today);
+      border-color: rgba(255,255,255,.35);
+      color: #06131c;
+    }
+    html[data-theme="light"] .cell.is-today{
+      border-color: rgba(0,0,0,.10);
+      color: #ffffff;
+    }
+    .cell.is-today .dnum{ color:#06131c; }
+    html[data-theme="light"] .cell.is-today .dnum{ color:#ffffff; }
+
+    .cell.is-today::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+      transform: rotate(18deg) translateX(-120%);
+      animation: shimmer 2.6s ease-in-out infinite;
+      opacity:.9;
+      pointer-events:none;
+    }
+    @keyframes shimmer{
+      0%{ transform: rotate(18deg) translateX(-120%); opacity:.0; }
+      20%{ opacity:.55; }
+      50%{ opacity:.35; }
+      100%{ transform: rotate(18deg) translateX(120%); opacity:.0; }
+    }
+
+    /* =========================
+       WEEKS VIEW (kept)
+       ========================= */
+    .weeks{
+      border:1px solid var(--border);
+      border-radius: 16px;
+      overflow:hidden;
+      background: transparent;
+      margin: 14px 0;
+    }
+    .weeks-header{
+      padding: 12px 14px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background: transparent;
+    }
+    .weeks-title{ font-weight: 900; color: var(--ice); }
+    .weeks-meta{ color: var(--muted); font-size: 13px; }
+    .weeks-dow-spacer{ padding: 10px 12px 0; }
+    .week-row{
+      display:grid;
+      grid-template-columns: 72px 1fr;
+      gap:10px;
+      padding: 10px 12px;
+      border-top:1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      align-items:center;
+    }
+    .week-row:first-of-type{ border-top:none; }
+    .wn{
+      font-weight: 900;
+      color: var(--muted);
+      background: transparent;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      height: 42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .week-grid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: var(--gap);
+    }
+
+    /* =========================
+       HOLIDAYS LIST VIEW (no duplicate header)
+       ========================= */
+    .holidays{
+      border:1px solid var(--border);
+      background: transparent;
+      border-radius: 16px;
+      overflow:hidden;
+      margin: 14px 0;
+    }
+    .hitem{
+      padding: 12px 14px;
+      border-top:1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:baseline;
+    }
+    .hitem:first-of-type{ border-top:none; }
+    .hleft{ font-weight: 900; letter-spacing:.2px; }
+    .hright{ color: var(--muted); font-size: 13px; white-space:nowrap; }
+
+    .footer{ margin-top: 18px; color: color-mix(in srgb, var(--muted) 90%, transparent); font-size: 12px; text-align:center; }
+
+    @media (max-width: 520px){
+      :root{ --headerH: 128px; --padX: 12px; }
+      .wrap{ padding-bottom:26px; }
+      .week-row{ grid-template-columns: 62px 1fr; }
+      .wn{ height: 42px; }
+      .sub-title{ min-width: 120px; }
+      .year-pop{ width: min(340px, 94vw); }
+    }
+
+    /* =========================
+       CONTACT MODAL (same API as front page)
+       ========================= */
+    .c-overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 90;
+    }
+    .c-overlay.open{ display:flex; }
+
+    .c-modal{
+      width: min(560px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 24px 90px var(--shadow);
+      overflow:hidden;
+    }
+    .c-modal-h{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+    }
+    .c-modal-h b{ font-size: 16px; letter-spacing:.2px; }
+    .c-close{
+      border:1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+    }
+
+    .c-form{
+      padding: 14px;
+      display:grid;
+      gap: 10px;
+    }
+    .c-form label{ font-size: 13px; color: var(--muted); margin-left: 6px; }
+    .c-form input, .c-form textarea{
+      width:100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 12px;
+      outline:none;
+      font-size: 15px;
+    }
+    .c-form textarea{ min-height: 110px; resize: vertical; }
+    .c-row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width:520px){
+      .c-row{ grid-template-columns: 1fr; }
+    }
+
+    .c-send{
+      margin-top: 2px;
+      border:0;
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-weight: 900;
+      cursor:pointer;
+      background: color-mix(in srgb, var(--text) 92%, transparent);
+      color: color-mix(in srgb, var(--bg) 92%, transparent);
+    }
+    html[data-theme="light"] .c-send{
+      background: #111318;
+      color: #fff;
+    }
+    .c-status{
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 0 2px 6px;
+      min-height: 18px;
+    }
+  </style>
 </head>
 
 <body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="btn" id="backBtn" title="Til baka">← <span style="opacity:.9">Til baka</span></button>
 
-<header>
-  <div class="hdr">
-    <button class="btn" onclick="history.back()">← Til baka</button>
+      <div class="title-wrap" id="titleWrap">
+        <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
+        <div class="year" id="yearLabel" title="Velja ár">2025</div>
+        <button class="btn" id="nextYear" title="Næsta ár">›</button>
 
-    <div class="year" id="year">2025</div>
-
-    <div class="menu">
-      <button class="btn" id="menuBtn">☰</button>
-      <div class="menu-pop" id="menuPop">
-        <button onclick="toggleTheme()">⚙️ Stillingar</button>
-        <button onclick="openContact()">✉️ Hafa samband</button>
+        <div class="year-pop" id="yearPop" aria-hidden="true">
+          <div class="row">
+            <input id="yearInput" type="number" inputmode="numeric" />
+            <button class="btn" id="goYearBtn">Fara</button>
+          </div>
+          <div class="row" style="justify-content:space-between;">
+            <button class="chip" data-jump="-50">-50</button>
+            <button class="chip" data-jump="-10">-10</button>
+            <button class="chip" data-jump="10">+10</button>
+            <button class="chip" data-jump="50">+50</button>
+          </div>
+        </div>
       </div>
+
+      <!-- HAMBURGER MENU -->
+      <div class="menu-wrap">
+        <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
+          <div class="burger" aria-hidden="true"><span></span><span></span><span></span></div>
+        </button>
+        <div class="menu-pop" id="menuPop" role="menu" aria-label="Valmynd">
+          <button class="menu-item" id="menuSettings" type="button">Stillingar <small>⚙︎</small></button>
+          <button class="menu-item" id="menuContact" type="button">Hafa samband <small>✉︎</small></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="subbar">
+      <div class="subbar-inner">
+        <div class="subrow">
+          <div class="sub-title" id="monthLabel">janúar</div>
+          <div class="sub-meta" id="subMeta">2025</div>
+        </div>
+        <div class="dowbar" id="dowBar">
+          <div>mán</div><div>þri</div><div>mið</div><div>fim</div><div>fös</div><div>lau</div><div>sun</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Settings overlay/sheet -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Stillingar">
+    <div class="sheet-header">
+      <div class="sheet-title">Stillingar</div>
+      <button class="btn" id="closeSheet" title="Loka">✕</button>
+    </div>
+    <div class="sheet-body">
+
+      <div class="group">
+        <h4>Sýn</h4>
+        <div class="seg" id="layoutSeg">
+          <button data-layout="months" class="active">Mánuðir</button>
+          <button data-layout="weeks">Vikur</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <h4>Merkingar</h4>
+        <div class="toggle">
+          <label><input type="checkbox" id="toggleHolidays" /> Lögbundnir frídagar</label>
+        </div>
+        <div class="toggle">
+          <label><input type="checkbox" id="toggleSpecial" /> Merkisdagar (án emoji)</label>
+        </div>
+        <div class="toggle">
+          <label><input type="checkbox" id="toggleMoon" /> Tungl (🌕 / 🌑)</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <h4>Flýtileiðir</h4>
+        <button class="linkbtn" id="todayBtn">
+          <span>Í dag</span>
+          <span style="opacity:.85">⤒</span>
+        </button>
+        <button class="linkbtn" id="showHolidaysBtn">
+          <span>Skoða frídaga</span>
+          <span style="opacity:.85">›</span>
+        </button>
+      </div>
+
+    </div>
+  </aside>
+
+  <main class="wrap">
+    <div id="calendar"></div>
+    <div class="footer">ís.is — dagatal protótýpa</div>
+  </main>
+
+  <!-- Contact modal -->
+  <div class="c-overlay" id="cOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <div class="c-modal">
+      <div class="c-modal-h">
+        <b id="contactTitle">Hafa samband</b>
+        <button class="c-close" id="cCloseBtn" aria-label="Loka">✕</button>
+      </div>
+
+      <form class="c-form" id="contactForm" autocomplete="on">
+        <div class="c-row">
+          <div>
+            <label for="cName">Nafn</label>
+            <input id="cName" name="name" required placeholder="Nafn" />
+          </div>
+          <div>
+            <label for="cEmail">Tölvupóstur</label>
+            <input id="cEmail" name="email" type="email" required placeholder="nafn@dæmi.is" />
+          </div>
+        </div>
+
+        <div>
+          <label for="cMessage">Erindi</label>
+          <textarea id="cMessage" name="message" required placeholder="Skrifaðu erindið hér..."></textarea>
+        </div>
+
+        <button class="c-send" type="submit">Senda</button>
+        <div class="c-status" id="cStatus"></div>
+      </form>
     </div>
   </div>
 
-  <div class="weekdays">
-    <div>mán</div><div>þri</div><div>mið</div><div>fim</div><div>fös</div><div>lau</div><div>sun</div>
-  </div>
-</header>
-
-<main id="calendar"></main>
-
-<footer>ís.is — dagatal</footer>
-
 <script>
-/* =======================
-   MENU
-======================= */
-const menuBtn=document.getElementById('menuBtn');
-const menuPop=document.getElementById('menuPop');
-menuBtn.onclick=()=>menuPop.classList.toggle('show');
-document.addEventListener('click',e=>{
-  if(!menuBtn.contains(e.target)&&!menuPop.contains(e.target))menuPop.classList.remove('show');
-});
+(() => {
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const isoDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  const WEEKDAYS = ["mán","þri","mið","fim","fös","lau","sun"]; // Monday-first
+  const MONTHS_LONG = ["janúar","febrúar","mars","apríl","maí","júní","júlí","ágúst","september","október","nóvember","desember"];
+  const monIndex = (jsDay) => (jsDay + 6) % 7;
+  const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+  const daysInMonth = (y, m) => new Date(y, m+1, 0).getDate();
 
-/* =======================
-   THEME
-======================= */
-function toggleTheme(){
-  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',t);
-  localStorage.setItem('theme',t);
-}
+  // Easter (Meeus/Jones/Butcher)
+  function easterSunday(year){
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19*a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2*e + 2*i - h - k) % 7;
+    const m = Math.floor((a + 11*h + 22*l) / 451);
+    const month = Math.floor((h + l - 7*m + 114) / 31);
+    const day = ((h + l - 7*m + 114) % 31) + 1;
+    return new Date(year, month-1, day);
+  }
+  function addDays(date, n){ const d = new Date(date); d.setDate(d.getDate() + n); return d; }
 
-/* =======================
-   CONTACT
-======================= */
-function openContact(){
-  window.location.href="/#contact";
-}
-
-/* =======================
-   CALENDAR LOGIC
-======================= */
-const cal=document.getElementById('calendar');
-const yearEl=document.getElementById('year');
-const year=2025;
-
-const holidays={
-  "2025-01-01":"Nýársdagur",
-  "2025-01-06":"Þrettándinn",
-  "2025-04-17":"Skírdagur",
-  "2025-04-18":"Föstudagurinn langi",
-  "2025-04-20":"Páskadagur",
-  "2025-04-21":"Annar í páskum",
-  "2025-05-01":"Verkalýðsdagurinn",
-  "2025-06-17":"Þjóðhátíðardagurinn",
-  "2025-12-25":"Jóladagur",
-  "2025-12-26":"Annar í jólum"
-};
-
-const months=["janúar","febrúar","mars","apríl","maí","júní","júlí","ágúst","september","október","nóvember","desember"];
-
-function build(){
-  for(let m=0;m<12;m++){
-    const title=document.createElement('div');
-    title.className='month-title';
-    title.textContent=months[m];
-    cal.appendChild(title);
-
-    const grid=document.createElement('div');
-    grid.className='grid';
-
-    const first=new Date(year,m,1);
-    const offset=(first.getDay()+6)%7;
-    for(let i=0;i<offset;i++){
-      const e=document.createElement('div');
-      e.className='cell empty';
-      grid.appendChild(e);
-    }
-
-    const days=new Date(year,m+1,0).getDate();
-    for(let d=1;d<=days;d++){
-      const iso=`${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const c=document.createElement('div');
-      c.className='cell';
-      if(holidays[iso])c.classList.add('holiday');
-      c.textContent=d;
-      grid.appendChild(c);
-    }
-    cal.appendChild(grid);
+  function firstThursdayAfterApril18(year){
+    const start = new Date(year, 3, 19);
+    const delta = (3 - monIndex(start.getDay()) + 7) % 7; // Thursday=3
+    return addDays(start, delta);
+  }
+  function firstMondayOfAugust(year){
+    const d = new Date(year, 7, 1);
+    const delta = (0 - monIndex(d.getDay()) + 7) % 7; // Monday=0
+    return addDays(d, delta);
   }
 
-  const list=document.createElement('div');
-  list.className='holidays';
-  Object.entries(holidays).forEach(([k,v])=>{
-    const i=document.createElement('div');
-    i.className='item';
-    i.innerHTML=`<div class="name">${v}</div><div>${k}</div>`;
-    list.appendChild(i);
+  // Lögbundnir frídagar (kept as your original map basis)
+  function getIcelandHolidayMap(year){
+    const map = new Map(); // iso -> name
+    const add = (m,d,name) => map.set(`${year}-${pad2(m)}-${pad2(d)}`, name);
+
+    add(1,1,"Nýársdagur");
+    add(1,6,"Þrettándinn");
+    add(5,1,"Verkalýðsdagurinn");
+    add(6,17,"Þjóðhátíðardagurinn");
+    add(12,24,"Aðfangadagur");
+    add(12,25,"Jóladagur");
+    add(12,26,"Annar í jólum");
+    add(12,31,"Gamlársdagur");
+
+    const easter = easterSunday(year);
+    map.set(isoDate(addDays(easter,-3)), "Skírdagur");
+    map.set(isoDate(addDays(easter,-2)), "Föstudagurinn langi");
+    map.set(isoDate(easter), "Páskadagur");
+    map.set(isoDate(addDays(easter,1)), "Annar í páskum");
+    map.set(isoDate(addDays(easter,39)), "Uppstigningardagur");
+    map.set(isoDate(addDays(easter,49)), "Hvítasunnudagur");
+    map.set(isoDate(addDays(easter,50)), "Annar í hvítasunnu");
+
+    map.set(isoDate(firstThursdayAfterApril18(year)), "Sumardagurinn fyrsti");
+    map.set(isoDate(firstMondayOfAugust(year)), "Frídagur verslunarmanna");
+
+    return map;
+  }
+
+  // Merkisdagar (engin emoji) — deliberately exclude any "kvár" day.
+  // Minimal set, safe and non-controversial.
+  function getIcelandSpecialDays(year){
+    const map = new Map(); // iso -> name
+    const add = (m,d,name) => map.set(`${year}-${pad2(m)}-${pad2(d)}`, name);
+
+    add(2,14,"Valentínusardagur");
+    add(12,23,"Þorláksmessa");
+    add(10,31,"Hrekkjavaka");
+
+    // Bolludagur / Sprengidagur / Öskudagur: 48/47/46 days before Easter (Mon/Tue/Wed)
+    const easter = easterSunday(year);
+    map.set(isoDate(addDays(easter,-48)), "Bolludagur");
+    map.set(isoDate(addDays(easter,-47)), "Sprengidagur");
+    map.set(isoDate(addDays(easter,-46)), "Öskudagur");
+
+    // Sjómannadagurinn: first Sunday in June
+    const june1 = new Date(year,5,1);
+    const delta = (6 - monIndex(june1.getDay()) + 7) % 7; // Sunday=6 in monIndex
+    map.set(isoDate(addDays(june1, delta)), "Sjómannadagurinn");
+
+    return map;
+  }
+
+  // Moon phases
+  const SYNODIC = 29.530588853;
+  const REF_NEW = Date.UTC(2000,0,6,18,14,0);
+  function moonAgeDays(date){
+    const t = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+    const daysSince = (t - REF_NEW) / 86400000;
+    const age = ((daysSince % SYNODIC) + SYNODIC) % SYNODIC;
+    return age;
+  }
+  function phaseDistance(age, target){ return Math.abs(age - target); }
+  function computeMoonMarkersForYear(year){
+    const markers = new Map(); // iso -> "new" | "full"
+    const dates = [];
+    const start = new Date(year,0,1);
+    const end = new Date(year,11,31);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(new Date(d));
+
+    const fullT = SYNODIC/2;
+    const eps = 1.0;
+
+    for (let i=1; i<dates.length-1; i++){
+      const d = dates[i], prev = dates[i-1], next = dates[i+1];
+      const a  = moonAgeDays(d), ap = moonAgeDays(prev), an = moonAgeDays(next);
+
+      const dn  = Math.min(a, SYNODIC - a);
+      const dnp = Math.min(ap, SYNODIC - ap);
+      const dnn = Math.min(an, SYNODIC - an);
+      if (dn < dnp && dn < dnn && dn <= eps) markers.set(isoDate(d), "new");
+
+      const df  = phaseDistance(a, fullT);
+      const dfp = phaseDistance(ap, fullT);
+      const dfn = phaseDistance(an, fullT);
+      if (df < dfp && df < dfn && df <= eps) markers.set(isoDate(d), "full");
+    }
+    return markers;
+  }
+
+  const $ = (sel) => document.querySelector(sel);
+  const calendarEl = $("#calendar");
+  const yearLabel = $("#yearLabel");
+  const monthLabel = $("#monthLabel");
+  const subMeta = $("#subMeta");
+  const dowBar = $("#dowBar");
+
+  const state = {
+    year: 2025,
+    showHolidays: false,
+    showSpecial: true,   // default ON (no emoji). You can change default.
+    showMoon: false,
+    layout: "months",    // "months" | "weeks"
+    view: "calendar",    // "calendar" | "holidays"
+    holidayMap: new Map(),
+    specialMap: new Map(),
+    moonMarkers: new Map(),
+    monthObserver: null,
+  };
+
+  function weekdayShort(date){ return WEEKDAYS[monIndex(date.getDay())]; }
+  function monthShort(m){ return ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"][m]; }
+
+  function setHeaderContext(){
+    if (state.view === "holidays"){
+      monthLabel.textContent = "Frídagar"; // capital first letter (as requested)
+      subMeta.textContent = String(state.year);
+      dowBar.classList.add("is-hidden");
+      return;
+    }
+    dowBar.classList.remove("is-hidden");
+
+    if (state.layout === "weeks"){
+      monthLabel.textContent = "Vikur";
+      subMeta.textContent = String(state.year);
+      return;
+    }
+    subMeta.textContent = String(state.year);
+    // monthLabel is handled by observer in months view
+  }
+
+  function disconnectMonthObserver(){
+    if (state.monthObserver){
+      state.monthObserver.disconnect();
+      state.monthObserver = null;
+    }
+  }
+
+  function setupMonthObserver(){
+    disconnectMonthObserver();
+    if (state.view !== "calendar" || state.layout !== "months") return;
+
+    const monthSections = Array.from(document.querySelectorAll(".month[data-month]"));
+    if (!monthSections.length) return;
+
+    const firstM = parseInt(monthSections[0].dataset.month, 10);
+    if (Number.isFinite(firstM)) monthLabel.textContent = MONTHS_LONG[firstM];
+
+    const obs = new IntersectionObserver((entries) => {
+      const visible = entries.filter(e => e.isIntersecting);
+      if (!visible.length) return;
+      visible.sort((a,b) => (b.intersectionRatio - a.intersectionRatio));
+      const m = parseInt(visible[0].target.dataset.month, 10);
+      if (Number.isFinite(m)) monthLabel.textContent = MONTHS_LONG[m];
+    }, {
+      root: null,
+      rootMargin: "-45% 0px -50% 0px",
+      threshold: [0.01, 0.1, 0.25, 0.5]
+    });
+
+    monthSections.forEach(sec => obs.observe(sec));
+    state.monthObserver = obs;
+  }
+
+  function build(){
+    yearLabel.textContent = state.year;
+    $("#yearInput").value = state.year;
+
+    $("#toggleHolidays").checked = state.showHolidays;
+    $("#toggleSpecial").checked = state.showSpecial;
+    $("#toggleMoon").checked = state.showMoon;
+
+    state.holidayMap = getIcelandHolidayMap(state.year);
+    state.specialMap = getIcelandSpecialDays(state.year);
+    state.moonMarkers = computeMoonMarkersForYear(state.year);
+
+    calendarEl.innerHTML = "";
+    disconnectMonthObserver();
+    setHeaderContext();
+
+    if (state.view === "holidays"){
+      renderHolidayList();   // no duplicate header inside
+      return;
+    }
+    if (state.layout === "weeks"){
+      renderWeeks();
+      return;
+    }
+    renderMonths();
+    setupMonthObserver();
+  }
+
+  function makeDayCell(date){
+    const iso = isoDate(date);
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.iso = iso;
+
+    const dnum = document.createElement("div");
+    dnum.className = "dnum";
+    dnum.textContent = date.getDate();
+    cell.appendChild(dnum);
+
+    // Lögbundnir frídagar
+    const isHoliday = state.holidayMap.has(iso);
+    if (state.showHolidays && isHoliday){
+      cell.classList.add("is-holiday");
+      // 🎉 only for holidays
+      const ce = document.createElement("div");
+      ce.className = "cele";
+      ce.textContent = "🎉";
+      cell.appendChild(ce);
+    }
+
+    // Merkisdagar (no emoji)
+    if (state.showSpecial && state.specialMap.has(iso) && !isHoliday){
+      cell.classList.add("is-special");
+      // (No emoji on purpose.)
+    }
+
+    // Moon
+    if (state.showMoon){
+      const mk = state.moonMarkers.get(iso);
+      if (mk){
+        const moon = document.createElement("div");
+        moon.className = "moon";
+        moon.textContent = (mk === "full") ? "🌕" : "🌑";
+        cell.appendChild(moon);
+      }
+    }
+
+    // Today
+    const today = new Date();
+    if (iso === isoDate(today) && state.year === today.getFullYear()) cell.classList.add("is-today");
+
+    return cell;
+  }
+
+  function renderMonths(){
+    for (let m = 0; m < 12; m++){
+      const monthBlock = document.createElement("section");
+      monthBlock.className = "month";
+      monthBlock.dataset.month = String(m);
+
+      const mh = document.createElement("div");
+      mh.className = "month-header";
+      mh.innerHTML = `
+        <div class="month-name">${MONTHS_LONG[m]}</div>
+        <div class="month-meta">${state.year} — ${daysInMonth(state.year, m)} dagar${(m===1 && isLeapYear(state.year)) ? " (hlaupár)" : ""}</div>
+      `;
+      monthBlock.appendChild(mh);
+
+      const grid = document.createElement("div");
+      grid.className = "grid";
+
+      const first = new Date(state.year, m, 1);
+      const offset = monIndex(first.getDay());
+      for (let i=0; i<offset; i++){
+        const empty = document.createElement("div");
+        empty.className = "cell is-empty";
+        grid.appendChild(empty);
+      }
+
+      const dim = daysInMonth(state.year, m);
+      for (let day=1; day<=dim; day++){
+        grid.appendChild(makeDayCell(new Date(state.year, m, day)));
+      }
+
+      monthBlock.appendChild(grid);
+      calendarEl.appendChild(monthBlock);
+    }
+  }
+
+  // Weeks view: V1 = week containing Jan 1 (as in your earlier fix)
+  function renderWeeks(){
+    const box = document.createElement("section");
+    box.className = "weeks";
+
+    const wh = document.createElement("div");
+    wh.className = "weeks-header";
+    wh.innerHTML = `
+      <div class="weeks-title">Vikur</div>
+      <div class="weeks-meta">${state.year}</div>
+    `;
+    box.appendChild(wh);
+
+    const spacer = document.createElement("div");
+    spacer.className = "weeks-dow-spacer";
+    spacer.innerHTML = `<div style="height:1px;opacity:.0"></div>`;
+    box.appendChild(spacer);
+
+    const jan1 = new Date(state.year, 0, 1);
+    const start = new Date(jan1);
+    start.setDate(jan1.getDate() - monIndex(jan1.getDay())); // Monday of week containing Jan 1
+
+    const dec31 = new Date(state.year, 11, 31);
+    let weekIndex = 1;
+    let d = new Date(start);
+
+    function weekHasAnyDayInYear(monday){
+      for(let i=0;i<7;i++){
+        const x = new Date(monday);
+        x.setDate(monday.getDate()+i);
+        if(x.getFullYear() === state.year) return true;
+      }
+      return false;
+    }
+
+    while (d <= dec31 || weekHasAnyDayInYear(d)){
+      if(!weekHasAnyDayInYear(d)) break;
+
+      const row = document.createElement("div");
+      row.className = "week-row";
+
+      const wn = document.createElement("div");
+      wn.className = "wn";
+      wn.textContent = "V" + weekIndex;
+      row.appendChild(wn);
+
+      const wg = document.createElement("div");
+      wg.className = "week-grid";
+
+      for (let i=0; i<7; i++){
+        const day = new Date(d);
+        day.setDate(d.getDate() + i);
+
+        if (day.getFullYear() !== state.year){
+          const empty = document.createElement("div");
+          empty.className = "cell is-empty";
+          wg.appendChild(empty);
+        } else {
+          wg.appendChild(makeDayCell(day));
+        }
+      }
+
+      row.appendChild(wg);
+      box.appendChild(row);
+
+      d.setDate(d.getDate() + 7);
+      weekIndex++;
+    }
+
+    calendarEl.appendChild(box);
+  }
+
+  function renderHolidayList(){
+    // NOTE: no internal header (no duplicate "Frídagar / ár")
+    const box = document.createElement("section");
+    box.className = "holidays";
+
+    const items = Array.from(state.holidayMap.entries())
+      .sort((a,b) => a[0].localeCompare(b[0]));
+
+    for (const [iso, name] of items){
+      const [y,mm,dd] = iso.split("-").map(Number);
+      const date = new Date(y, mm-1, dd);
+      const right = `${dd} ${monthShort(mm-1)} — ${weekdayShort(date)}`;
+
+      const item = document.createElement("div");
+      item.className = "hitem";
+      // 🎉 in list too (only holidays)
+      item.innerHTML = `<div class="hleft">🎉 ${name}</div><div class="hright">${right}</div>`;
+      box.appendChild(item);
+    }
+
+    calendarEl.appendChild(box);
+  }
+
+  function jumpToToday(){
+    const now = new Date();
+    state.year = now.getFullYear();
+    state.view = "calendar";
+    build();
+
+    const iso = isoDate(now);
+    const el = document.querySelector(`[data-iso="${iso}"]`);
+    if (el){
+      el.scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+  }
+
+  /* =========================
+     YEAR DROPDOWN
+     ========================= */
+  const pop = $("#yearPop");
+  const titleWrap = $("#titleWrap");
+  function togglePop(force){
+    const show = (typeof force === "boolean") ? force : !pop.classList.contains("show");
+    pop.classList.toggle("show", show);
+    pop.setAttribute("aria-hidden", String(!show));
+    if (show) $("#yearInput").focus();
+  }
+  document.addEventListener("click", (e) => {
+    if (!pop.classList.contains("show")) return;
+    if (!titleWrap.contains(e.target)) togglePop(false);
   });
-  cal.appendChild(list);
-}
+  yearLabel.addEventListener("click", () => togglePop());
 
-build();
+  function setYear(y){
+    if (!Number.isFinite(y)) return;
+    state.year = y;
+    build();
+    togglePop(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  $("#goYearBtn").addEventListener("click", () => setYear(parseInt($("#yearInput").value, 10)));
+  $("#yearInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") $("#goYearBtn").click();
+    if (e.key === "Escape") togglePop(false);
+  });
+  pop.querySelectorAll("[data-jump]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const j = parseInt(btn.getAttribute("data-jump"), 10);
+      setYear(state.year + j);
+    });
+  });
+
+  /* =========================
+     SETTINGS SHEET
+     ========================= */
+  const overlay = $("#overlay");
+  const sheet = $("#sheet");
+  function openSheet(){
+    overlay.classList.add("show");
+    sheet.classList.add("show");
+  }
+  function closeSheet(){
+    overlay.classList.remove("show");
+    sheet.classList.remove("show");
+  }
+  $("#closeSheet").addEventListener("click", closeSheet);
+  overlay.addEventListener("click", closeSheet);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { togglePop(false); closeSheet(); closeMenu(); closeContact(); }
+  });
+
+  $("#layoutSeg").querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("#layoutSeg").querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.layout = btn.dataset.layout;
+      state.view = "calendar";
+      build();
+    });
+  });
+
+  $("#toggleHolidays").addEventListener("change", (e) => { state.showHolidays = e.target.checked; build(); });
+  $("#toggleSpecial").addEventListener("change", (e) => { state.showSpecial = e.target.checked; build(); });
+  $("#toggleMoon").addEventListener("change", (e) => { state.showMoon = e.target.checked; build(); });
+
+  $("#showHolidaysBtn").addEventListener("click", () => {
+    state.view = "holidays";
+    build();
+    closeSheet();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  $("#todayBtn").addEventListener("click", () => {
+    closeSheet();
+    jumpToToday();
+  });
+
+  $("#backBtn").addEventListener("click", () => history.back());
+
+  function bumpYear(delta){
+    state.year += delta;
+    build();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  $("#prevYear").addEventListener("click", () => bumpYear(-1));
+  $("#nextYear").addEventListener("click", () => bumpYear(1));
+
+  /* =========================
+     HAMBURGER MENU
+     ========================= */
+  const menuBtn = $("#menuBtn");
+  const menuPop = $("#menuPop");
+  function toggleMenu(){ menuPop.classList.toggle("show"); }
+  function closeMenu(){ menuPop.classList.remove("show"); }
+
+  menuBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleMenu(); });
+  menuPop.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", () => closeMenu());
+
+  $("#menuSettings").addEventListener("click", () => {
+    closeMenu();
+    openSheet();
+  });
+
+  $("#menuContact").addEventListener("click", () => {
+    closeMenu();
+    openContact();
+  });
+
+  /* =========================
+     CONTACT MODAL (same API as front page)
+     ========================= */
+  const cOverlay = $("#cOverlay");
+  const cCloseBtn = $("#cCloseBtn");
+  const cForm = $("#contactForm");
+  const cStatus = $("#cStatus");
+
+  function openContact(){
+    cOverlay.classList.add("open");
+    cStatus.textContent = "";
+    setTimeout(() => $("#cName").focus(), 50);
+  }
+  function closeContact(){
+    cOverlay.classList.remove("open");
+  }
+  cCloseBtn.addEventListener("click", closeContact);
+  cOverlay.addEventListener("click", (e) => { if(e.target === cOverlay) closeContact(); });
+
+  cForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    cStatus.textContent = "Sendi...";
+
+    const payload = {
+      name: cForm.name.value.trim(),
+      email: cForm.email.value.trim(),
+      message: cForm.message.value.trim(),
+    };
+
+    try{
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if(!res.ok){
+        const txt = await res.text().catch(() => '');
+        throw new Error(txt || 'Villa við sendingu.');
+      }
+
+      cStatus.textContent = "Sent. Takk!";
+      cForm.reset();
+      setTimeout(closeContact, 700);
+    }catch(err){
+      cStatus.textContent = "Tókst ekki að senda. Reyndu aftur eftir smá.";
+    }
+  });
+
+  /* =========================
+     INIT
+     ========================= */
+  build();
+
+})();
 </script>
-
 </body>
 </html>
