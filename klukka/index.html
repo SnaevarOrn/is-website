@@ -86,12 +86,88 @@
       letter-spacing:.2px;
       font-size: 15px;
       user-select:none;
-      color: var(--text);
       white-space: nowrap;
       overflow:hidden;
       text-overflow: ellipsis;
     }
-    .ghost{ width:44px; height:44px; opacity:0; pointer-events:none; }
+
+    /* Hamburger (like front page) */
+    .menu-wrap{ position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
+    .menu-btn{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: transparent;
+      border-radius: 12px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .menu-btn:active{ transform: translateY(1px); }
+    .burger{ width:18px; height:12px; position:relative; }
+    .burger span{
+      position:absolute; left:0; right:0;
+      height:2px; border-radius:2px;
+      background: color-mix(in srgb, var(--text) 92%, transparent);
+    }
+    .burger span:nth-child(1){ top:0; }
+    .burger span:nth-child(2){ top:5px; opacity:.80; }
+    .burger span:nth-child(3){ bottom:0; opacity:.65; }
+
+    .dropdown{
+      position:absolute;
+      top: 50px;
+      right: 0;
+      width: 250px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:none;
+      z-index:40;
+    }
+    .dropdown.open{ display:block; }
+    .drop-row{
+      padding: 12px 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .drop-label{
+      font-size:12px;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+    .drop-sep{ height:1px; background: var(--line); }
+
+    select{
+      width:100%;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 10px;
+      outline:none;
+      font-size: 14px;
+    }
+    option{ color: #111; }
+
+    .drop-btn{
+      width:100%;
+      border:1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 10px;
+      cursor:pointer;
+      font-weight: 800;
+      font-size: 14px;
+      text-align:left;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .drop-btn:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
     main{
       flex:1;
@@ -119,7 +195,6 @@
       gap: 12px;
     }
 
-    /* Digital (top) */
     .digitalTime{
       font-variant-numeric: tabular-nums;
       letter-spacing: .9px;
@@ -134,7 +209,6 @@
       min-width: 270px;
     }
 
-    /* Analog (middle) */
     .analog{
       width: 270px;
       height: 270px;
@@ -182,7 +256,13 @@
       background: color-mix(in srgb, var(--text) 28%, transparent);
     }
 
-    /* Status pill (bottom) */
+    .pill-row{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+    }
     .pill{
       display:inline-flex;
       align-items:center;
@@ -203,9 +283,40 @@
     .dot.warn{ background:#f1c40f; }
     .dot.bad{ background:#e74c3c; }
 
+    .info-btn{
+      width:36px; height:36px;
+      border:1px solid var(--line);
+      background: transparent;
+      border-radius: 999px;
+      cursor:pointer;
+      color: var(--text);
+      font-weight: 900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .info-btn:active{ transform: translateY(1px); }
+
+    .nerd{
+      width: 100%;
+      display:none;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 12px;
+      background: color-mix(in srgb, var(--panel2) 60%, transparent);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .nerd.open{ display:block; }
+    .nerd b{ color: color-mix(in srgb, var(--text) 85%, transparent); font-weight: 900; }
+    .kv{ display:flex; justify-content:space-between; gap: 10px; }
+    .kv span{ font-variant-numeric: tabular-nums; }
+
     @media (max-width:420px){
       .analog{ width: 240px; height: 240px; }
       .digitalTime{ font-size: 40px; min-width: 250px; }
+      .dropdown{ width: 240px; }
     }
   </style>
 </head>
@@ -215,7 +326,30 @@
     <div class="hdr">
       <a class="back" href="/" aria-label="Til baka">←</a>
       <div class="hdr-date" id="hdrDate">—</div>
-      <div class="ghost" aria-hidden="true"></div>
+
+      <div class="menu-wrap">
+        <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
+          <div class="burger" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </button>
+
+        <div class="dropdown" id="dropdown" role="menu" aria-label="Valmynd">
+          <div class="drop-row">
+            <div class="drop-label">Tímabelti</div>
+            <select id="tzSelect" aria-label="Velja tímabelti"></select>
+          </div>
+
+          <div class="drop-sep"></div>
+
+          <div class="drop-row">
+            <button class="drop-btn" id="fsBtn" type="button">
+              Fullscreen <span>⛶</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </header>
 
@@ -232,9 +366,22 @@
           <div class="center-dot"></div>
         </div>
 
-        <div class="pill">
-          <span class="dot" id="syncDot"></span>
-          <span id="syncText">Tími: net (Reykjavík)</span>
+        <div class="pill-row">
+          <div class="pill">
+            <span class="dot" id="syncDot"></span>
+            <span id="syncText">Tími: net</span>
+          </div>
+          <button class="info-btn" id="infoBtn" aria-label="Upplýsingar">ⓘ</button>
+        </div>
+
+        <div class="nerd" id="nerdBox" aria-live="polite">
+          <div class="kv"><b>Zone</b><span id="nTz">—</span></div>
+          <div class="kv"><b>Sync age</b><span id="nAge">—</span></div>
+          <div class="kv"><b>RTT</b><span id="nRtt">—</span></div>
+          <div class="kv"><b>Offset target</b><span id="nOffT">—</span></div>
+          <div class="kv"><b>Offset live</b><span id="nOff">—</span></div>
+          <div class="kv"><b>Drift</b><span id="nPpm">—</span></div>
+          <div class="kv"><b>Scale</b><span id="nScale">—</span></div>
         </div>
       </div>
     </div>
@@ -242,18 +389,97 @@
 
   <script>
     // ---------------------------
-    // Real net-sync + smooth drift correction (PLL-ish)
+    // TZ list (minimal but nerd-approved)
     // ---------------------------
-    // We sample WorldTimeAPI regularly, estimate offset at midpoint of request,
-    // estimate drift (clock rate error), and SLEW corrections smoothly:
-    // - Offset is slewed with max ms per second (no jumps)
-    // - Rate correction (scale) is low-pass filtered (ppm-level)
-    //
-    // If network fails, we keep running on last good model and show warning/bad.
+    const TZ_PRESETS = [
+      { tz: 'Atlantic/Reykjavik', label: 'Reykjavík' },
+      { tz: 'UTC', label: 'UTC' },
+      { tz: 'Europe/London', label: 'London' },
+      { tz: 'Europe/Paris', label: 'Paris' },
+      { tz: 'Europe/Berlin', label: 'Berlin' },
+      { tz: 'America/New_York', label: 'New York' },
+      { tz: 'America/Los_Angeles', label: 'Los Angeles' },
+      { tz: 'Asia/Dubai', label: 'Dubai' },
+      { tz: 'Asia/Singapore', label: 'Singapore' },
+      { tz: 'Asia/Tokyo', label: 'Tokyo' },
+      { tz: 'Australia/Sydney', label: 'Sydney' },
+    ];
+
+    const tzSelect = document.getElementById('tzSelect');
+    let currentTz = localStorage.getItem('tz') || 'Atlantic/Reykjavik';
+    if(!TZ_PRESETS.some(x => x.tz === currentTz)) currentTz = 'Atlantic/Reykjavik';
+
+    for(const item of TZ_PRESETS){
+      const opt = document.createElement('option');
+      opt.value = item.tz;
+      opt.textContent = item.label;
+      tzSelect.appendChild(opt);
+    }
+    tzSelect.value = currentTz;
+
+    function tzLabel(tz){
+      const found = TZ_PRESETS.find(x => x.tz === tz);
+      return found ? found.label : tz;
+    }
+
     // ---------------------------
+    // Hamburger dropdown
+    // ---------------------------
+    const menuBtn = document.getElementById('menuBtn');
+    const dropdown = document.getElementById('dropdown');
+    function toggleDropdown(){ dropdown.classList.toggle('open'); }
+    function closeDropdown(){ dropdown.classList.remove('open'); }
 
-    const TZ_URL = 'https://worldtimeapi.org/api/timezone/Atlantic/Reykjavik';
+    menuBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
+    dropdown.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', () => closeDropdown());
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDropdown(); });
 
+    // ---------------------------
+    // Fullscreen (exit on any click/tap anywhere)
+    // ---------------------------
+    const fsBtn = document.getElementById('fsBtn');
+
+    async function enterFullscreen(){
+      const el = document.documentElement;
+      try{
+        if(el.requestFullscreen) await el.requestFullscreen();
+        else if(el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      }catch(_){}
+    }
+    async function exitFullscreen(){
+      try{
+        if(document.exitFullscreen) await document.exitFullscreen();
+        else if(document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      }catch(_){}
+    }
+    function inFullscreen(){
+      return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    fsBtn.addEventListener('click', async () => {
+      closeDropdown();
+      if(inFullscreen()) await exitFullscreen();
+      else await enterFullscreen();
+    });
+
+    // exit fullscreen if user taps/clicks anywhere
+    document.addEventListener('pointerdown', async () => {
+      if(inFullscreen()) await exitFullscreen();
+    }, { passive: true });
+
+    // ---------------------------
+    // Nerd info toggle (hidden unless ⓘ)
+    // ---------------------------
+    const infoBtn = document.getElementById('infoBtn');
+    const nerdBox = document.getElementById('nerdBox');
+    infoBtn.addEventListener('click', () => {
+      nerdBox.classList.toggle('open');
+    });
+
+    // ---------------------------
+    // Net-sync + smooth drift correction (PLL-ish)
+    // ---------------------------
     const syncDot  = document.getElementById('syncDot');
     const syncText = document.getElementById('syncText');
 
@@ -263,41 +489,44 @@
       syncText.textContent = txt;
     }
 
-    // Model: correctedTime = baseNetMs + (localPerfNow - basePerfNow) * scale + offsetSlew
-    // where scale ~= 1 + drift (e.g. 20ppm -> 1.00002)
-    let basePerf = performance.now();
-    let baseNet  = Date.now();     // initial guess = local wall clock
-    let scale    = 1.0;            // rate correction
-    let targetScale = 1.0;
+    function isFiniteNum(x){ return Number.isFinite(x) && !Number.isNaN(x); }
 
-    // Offset slewing (ms) toward targetOffset (ms)
-    let offsetMs = 0;
+    // Model state
+    let basePerf = performance.now();
+    let baseNet  = Date.now();   // anchor to "network time" at basePerf
+    let scale    = 1.0;          // live rate correction
+    let targetScale = 1.0;       // filtered target
+    let offsetMs = 0;            // slewed extra offset
     let targetOffsetMs = 0;
 
     // Sync bookkeeping
     let lastGoodSyncPerf = null;
     let lastGoodOffset = null;
-    let lastGoodSyncAgeMs = 0;
+    let lastRttMs = null;
     let consecutiveFails = 0;
 
-    // Slew limits (feel free to tweak)
-    const MAX_OFFSET_SLEW_MS_PER_S = 8;     // max 8ms per second correction (smooth, no jumps)
-    const SCALE_SLEW_PER_S = 2e-6;          // max scale change per second (~2 ppm/s)
+    // Slew limits
+    const MAX_OFFSET_SLEW_MS_PER_S = 8;     // smooth: max 8ms/s
+    const SCALE_SLEW_PER_S = 2e-6;          // ~2 ppm per second
 
     function correctedNowMs(){
       const p = performance.now();
       const elapsed = p - basePerf; // ms
-      // baseNet already includes base offset at sync moment; offsetMs is a slowly changing extra offset.
       return baseNet + elapsed * scale + offsetMs;
     }
 
-    function isFiniteNum(x){ return Number.isFinite(x) && !Number.isNaN(x); }
+    function worldTimeUrlForTz(tz){
+      if(tz === 'UTC') return 'https://worldtimeapi.org/api/timezone/Etc/UTC';
+      return 'https://worldtimeapi.org/api/timezone/' + encodeURIComponent(tz);
+    }
 
     async function sampleNetTime(){
+      const url = worldTimeUrlForTz(currentTz);
+
       const t0p = performance.now();
       const t0w = Date.now();
 
-      const res = await fetch(TZ_URL, { cache: 'no-store' });
+      const res = await fetch(url, { cache: 'no-store' });
 
       const t1p = performance.now();
       const t1w = Date.now();
@@ -305,53 +534,42 @@
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      // Parse server-provided datetime
-      const serverMs = new Date(data.datetime).getTime();
+      const serverMs = new Date(data.datetime).getTime(); // absolute UTC ms
       if(!isFiniteNum(serverMs)) throw new Error('bad datetime');
 
-      // Estimate midpoint local wall time (reduces latency bias)
       const midWall = (t0w + t1w) / 2;
       const rtt = (t1p - t0p);
-
-      // Offset sample: how much we must add to local wall clock to match server time at midpoint
       const offsetSample = serverMs - midWall;
 
       return { offsetSample, rtt, tMidPerf: (t0p + t1p)/2 };
     }
 
     function applySync(offsetSample, rtt, tMidPerf){
-      // Weight based on RTT: lower RTT -> higher weight
-      // Clamp RTT influence so we don't go wild on mobile
-      const rttClamped = Math.min(Math.max(rtt, 20), 2000);
-      const w = 1 / (1 + (rttClamped / 200)); // ~0.91 at 20ms, ~0.17 at 1000ms
+      lastRttMs = rtt;
 
-      // Estimate drift from change in offset over time (offset slope)
+      const rttClamped = Math.min(Math.max(rtt, 20), 2000);
+      const w = 1 / (1 + (rttClamped / 200));
+
       if(lastGoodSyncPerf !== null && lastGoodOffset !== null){
-        const dt = (tMidPerf - lastGoodSyncPerf) / 1000; // seconds
+        const dt = (tMidPerf - lastGoodSyncPerf) / 1000;
         if(dt > 0.5){
-          const dOffset = (offsetSample - lastGoodOffset); // ms
-          const drift = (dOffset / (dt * 1000)); // ms per ms => dimensionless (≈ ppm)
-          // Convert to scale target
+          const dOffset = (offsetSample - lastGoodOffset);
+          const drift = (dOffset / (dt * 1000)); // dimensionless
           const newTargetScale = 1 + drift;
           if(isFiniteNum(newTargetScale)){
-            // Low-pass filter into targetScale (weighted)
             targetScale = targetScale + (newTargetScale - targetScale) * (0.25 * w);
           }
         }
       }
 
-      // Target offset: offsetSample relative to our model's raw local wall time.
-      // Our model uses performance clock + baseNet, so set a target offset correction:
       targetOffsetMs = targetOffsetMs + (offsetSample - targetOffsetMs) * (0.6 * w);
 
-      // Anchor base at the sync midpoint to keep numbers stable
-      // We want correctedNow(mid) == serverMs (approximately).
-      // serverMs ≈ midWall + offsetSample.
-      const midWall = Date.now() + (tMidPerf - performance.now()); // approx wall at that perf time
-      const serverAtMid = midWall + offsetSample;
+      // Re-anchor at midpoint
+      const midWallNowApprox = Date.now() + (tMidPerf - performance.now());
+      const serverAtMid = midWallNowApprox + offsetSample;
 
       basePerf = tMidPerf;
-      baseNet  = serverAtMid; // includes the offset at mid
+      baseNet  = serverAtMid;
 
       lastGoodSyncPerf = tMidPerf;
       lastGoodOffset = offsetSample;
@@ -359,38 +577,65 @@
     }
 
     function tickSlews(dtSeconds){
-      // Slew offset toward targetOffsetMs with max rate
       const maxStep = MAX_OFFSET_SLEW_MS_PER_S * dtSeconds;
       const diff = targetOffsetMs - offsetMs;
-      const step = Math.max(-maxStep, Math.min(maxStep, diff));
-      offsetMs += step;
+      offsetMs += Math.max(-maxStep, Math.min(maxStep, diff));
 
-      // Slew scale toward targetScale with max rate
       const maxScaleStep = SCALE_SLEW_PER_S * dtSeconds;
       const sd = targetScale - scale;
-      const sstep = Math.max(-maxScaleStep, Math.min(maxScaleStep, sd));
-      scale += sstep;
+      scale += Math.max(-maxScaleStep, Math.min(maxScaleStep, sd));
     }
 
     async function syncLoop(){
       try{
         const { offsetSample, rtt, tMidPerf } = await sampleNetTime();
         applySync(offsetSample, rtt, tMidPerf);
-        setStatus('ok', 'Tími: net (Reykjavík)');
+        setStatus('ok', `Tími: net (${tzLabel(currentTz)})`);
       }catch(err){
         consecutiveFails++;
-        // If we recently had a good sync, treat as warning; else bad.
         if(lastGoodSyncPerf !== null){
-          setStatus('warn', 'Tími: net (Reykjavík) — óstöðugt net');
+          setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — óstöðugt net`);
         }else{
-          setStatus('bad', 'Tími: tæki (net náðist ekki)');
+          setStatus('bad', `Tími: tæki (net náðist ekki)`);
         }
       }finally{
-        // Resync cadence: fast after failures, slower when stable
-        const base = (consecutiveFails === 0) ? 60_000 : 10_000; // 60s stable, 10s retry
-        const jitter = Math.random() * 8000; // avoid thundering herd
+        const base = (consecutiveFails === 0) ? 60_000 : 10_000;
+        const jitter = Math.random() * 8000;
         setTimeout(syncLoop, base + jitter);
       }
+    }
+
+    // ---------------------------
+    // Timezone-safe rendering (Intl parts)
+    // ---------------------------
+    function makePartsFormatter(tz){
+      return new Intl.DateTimeFormat('is-IS', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute:'2-digit',
+        second:'2-digit',
+        weekday:'long',
+        year:'numeric',
+        month:'long',
+        day:'numeric'
+      });
+    }
+    let partsFmt = makePartsFormatter(currentTz);
+
+    function getTimeParts(ms){
+      const d = new Date(ms);
+      const parts = partsFmt.formatToParts(d);
+      const map = Object.create(null);
+      for(const p of parts){
+        if(p.type !== 'literal') map[p.type] = p.value;
+      }
+      // hour/minute/second are strings with leading zeros in is-IS
+      return {
+        hour: map.hour,
+        minute: map.minute,
+        second: map.second,
+        headerDate: `${map.weekday} • ${map.day}. ${map.month} ${map.year}`
+      };
     }
 
     // ---------------------------
@@ -402,7 +647,14 @@
     const digitalTime = document.getElementById('digitalTime');
     const hdrDate = document.getElementById('hdrDate');
 
-    function pad(n){ return String(n).padStart(2,'0'); }
+    // Nerd fields
+    const nTz   = document.getElementById('nTz');
+    const nAge  = document.getElementById('nAge');
+    const nRtt  = document.getElementById('nRtt');
+    const nOffT = document.getElementById('nOffT');
+    const nOff  = document.getElementById('nOff');
+    const nPpm  = document.getElementById('nPpm');
+    const nScale= document.getElementById('nScale');
 
     // ticks
     (function buildTicks(){
@@ -416,44 +668,87 @@
     })();
 
     let lastPerf = performance.now();
-    let lastHeaderDayKey = '';
+    let lastHeader = '';
 
     function render(){
       const nowPerf = performance.now();
       const dt = (nowPerf - lastPerf) / 1000;
       lastPerf = nowPerf;
-
       if(dt > 0 && dt < 0.5) tickSlews(dt);
 
       const ms = correctedNowMs();
-      const d = new Date(ms);
+      const frac = (ms % 1000) / 1000;
 
-      // Digital time
-      digitalTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      const tp = getTimeParts(ms);
+      digitalTime.textContent = `${tp.hour}:${tp.minute}:${tp.second}`;
 
-      // Header date (update only when day changes, avoids extra work)
-      const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      if(dayKey !== lastHeaderDayKey){
-        lastHeaderDayKey = dayKey;
-        hdrDate.textContent = d.toLocaleDateString('is-IS', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      if(tp.headerDate !== lastHeader){
+        lastHeader = tp.headerDate;
+        hdrDate.textContent = tp.headerDate;
       }
 
-      // Analog hands (smooth seconds)
-      const sec = d.getSeconds() + d.getMilliseconds()/1000;
-      const min = d.getMinutes() + sec/60;
-      const hr  = (d.getHours()%12) + min/60;
+      // Analog based on TZ hours/min/sec
+      const H = parseInt(tp.hour, 10);
+      const M = parseInt(tp.minute, 10);
+      const S = parseInt(tp.second, 10);
+
+      const sec = (S + frac);
+      const min = (M + sec/60);
+      const hr  = ((H % 12) + min/60);
 
       sHand.style.transform = `translate(-50%,-100%) rotate(${sec*6}deg)`;
       mHand.style.transform = `translate(-50%,-100%) rotate(${min*6}deg)`;
       hHand.style.transform = `translate(-50%,-100%) rotate(${hr*30}deg)`;
 
+      // Nerd panel (cheap updates)
+      nTz.textContent = `${tzLabel(currentTz)} (${currentTz})`;
+
+      if(lastGoodSyncPerf !== null){
+        const ageMs = performance.now() - lastGoodSyncPerf;
+        nAge.textContent = `${Math.round(ageMs/1000)}s`;
+      }else{
+        nAge.textContent = '—';
+      }
+
+      nRtt.textContent = lastRttMs != null ? `${Math.round(lastRttMs)} ms` : '—';
+      nOffT.textContent = `${targetOffsetMs.toFixed(1)} ms`;
+      nOff.textContent  = `${offsetMs.toFixed(1)} ms`;
+
+      const ppm = (scale - 1) * 1e6;
+      nPpm.textContent = `${ppm.toFixed(2)} ppm`;
+      nScale.textContent = scale.toFixed(9);
+
       requestAnimationFrame(render);
     }
 
+    // TZ change handling
+    function hardResetSyncModel(){
+      // keep it smooth: re-anchor and let PLL converge
+      basePerf = performance.now();
+      baseNet  = Date.now();
+      // keep current scale/offset but nudge target toward 0 for a clean settle
+      targetOffsetMs = offsetMs;
+      targetScale = scale;
+      lastGoodSyncPerf = null;
+      lastGoodOffset = null;
+      lastRttMs = null;
+      consecutiveFails = 0;
+    }
+
+    tzSelect.addEventListener('change', () => {
+      currentTz = tzSelect.value;
+      localStorage.setItem('tz', currentTz);
+      partsFmt = makePartsFormatter(currentTz);
+      setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
+      closeDropdown();
+      hardResetSyncModel();
+      // kick immediate sync
+      syncLoop();
+    });
+
     // Start
     (function init(){
-      // Start syncing immediately, and render immediately.
-      // If net is blocked, it gracefully falls back (and keeps smoothing anyway).
+      setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
       syncLoop();
       requestAnimationFrame(render);
     })();
