@@ -666,11 +666,12 @@
     };
 
     function getInitialLang(){
-      const saved = localStorage.getItem('lang');
-      if (saved === 'is' || saved === 'en') return saved;
-      const nav = (navigator.language || '').toLowerCase();
-      return nav.startsWith('is') ? 'is' : 'en';
-    }
+  const saved = localStorage.getItem('lang');
+  if (saved === 'is' || saved === 'en') return saved;
+
+  // DEFAULT: Icelandic
+  return 'is';
+}
 
     function applyLang(lang){
       const L = (lang === 'en') ? 'en' : 'is';
