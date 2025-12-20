@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is — Klukka</title>
 
-  <!-- Favicons -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.png" sizes="32x32">
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <!-- Apply theme ASAP (prevents flash). Uses shared key: localStorage.theme -->
   <script>
     (function(){
       const t = localStorage.getItem('theme');
@@ -46,13 +44,7 @@
     }
 
     *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-    body{
-      min-height:100vh;
-      background: var(--bg);
-      color: var(--text);
-      display:flex;
-      flex-direction:column;
-    }
+    body{ min-height:100vh; background: var(--bg); color: var(--text); display:flex; flex-direction:column; }
 
     header{
       position:sticky; top:0; z-index:30;
@@ -61,223 +53,88 @@
       backdrop-filter: blur(10px);
     }
     .hdr{
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 10px 14px;
-      display:grid;
-      grid-template-columns: 44px 1fr 44px;
-      align-items:center;
-      gap: 10px;
+      max-width: 760px; margin: 0 auto; padding: 10px 14px;
+      display:grid; grid-template-columns: 44px 1fr 44px; align-items:center; gap: 10px;
     }
     .back{
-      width:44px; height:44px;
-      border:1px solid var(--line);
-      background: transparent;
-      border-radius: 12px;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-      color: var(--text);
-      text-decoration:none;
-      font-weight: 900;
-      user-select:none;
+      width:44px; height:44px; border:1px solid var(--line); background: transparent; border-radius: 12px;
+      display:flex; align-items:center; justify-content:center; cursor:pointer; color: var(--text);
+      text-decoration:none; font-weight: 900; user-select:none;
     }
     .back:active{ transform: translateY(1px); }
 
-    /* Header center: date top, weekday bottom */
-    .hdr-center{
-      text-align:center;
-      user-select:none;
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-      line-height: 1.15;
-      padding: 2px 0;
-    }
-    .hdr-date-top{
-      font-weight: 900;
-      letter-spacing: .2px;
-      font-size: 15px;
-    }
-    .hdr-weekday-bottom{
-      margin-top: 2px;
-      font-weight: 850;
-      font-size: 13px;
-      color: var(--muted);
-    }
+    .hdr-center{ text-align:center; user-select:none; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; line-height: 1.15; padding: 2px 0; }
+    .hdr-date-top{ font-weight: 900; letter-spacing: .2px; font-size: 15px; }
+    .hdr-weekday-bottom{ margin-top: 2px; font-weight: 850; font-size: 13px; color: var(--muted); }
 
-    /* Hamburger */
     .menu-wrap{ position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
     .menu-btn{
-      width:44px; height:44px;
-      border:1px solid var(--line);
-      background: transparent;
-      border-radius: 12px;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
+      width:44px; height:44px; border:1px solid var(--line); background: transparent; border-radius: 12px;
+      display:flex; align-items:center; justify-content:center; cursor:pointer;
     }
     .menu-btn:active{ transform: translateY(1px); }
     .burger{ width:18px; height:12px; position:relative; }
-    .burger span{
-      position:absolute; left:0; right:0;
-      height:2px; border-radius:2px;
-      background: color-mix(in srgb, var(--text) 92%, transparent);
-    }
+    .burger span{ position:absolute; left:0; right:0; height:2px; border-radius:2px; background: color-mix(in srgb, var(--text) 92%, transparent); }
     .burger span:nth-child(1){ top:0; }
     .burger span:nth-child(2){ top:5px; opacity:.80; }
     .burger span:nth-child(3){ bottom:0; opacity:.65; }
 
     .dropdown{
-      position:absolute;
-      top: 50px;
-      right: 0;
-      width: 290px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      display:none;
-      z-index:40;
+      position:absolute; top: 50px; right: 0; width: 290px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+      overflow:hidden; display:none; z-index:40;
     }
     .dropdown.open{ display:block; }
-    .drop-row{
-      padding: 12px 12px;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-    }
-    .drop-label{
-      font-size:12px;
-      color: var(--muted);
-      margin-left: 2px;
-    }
+    .drop-row{ padding: 12px 12px; display:flex; flex-direction:column; gap: 10px; }
+    .drop-label{ font-size:12px; color: var(--muted); margin-left: 2px; }
     .drop-sep{ height:1px; background: var(--line); }
 
     select{
-      width:100%;
-      background: transparent;
-      border: 1px solid var(--line);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 10px 10px;
-      outline:none;
-      font-size: 14px;
+      width:100%; background: transparent; border: 1px solid var(--line); color: var(--text);
+      border-radius: 12px; padding: 10px 10px; outline:none; font-size: 14px;
     }
     option{ color: #111; }
 
     .drop-btn{
-      width:100%;
-      border:1px solid var(--line);
-      background: transparent;
-      color: var(--text);
-      border-radius: 12px;
-      padding: 10px 10px;
-      cursor:pointer;
-      font-weight: 900;
-      font-size: 14px;
-      text-align:left;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
+      width:100%; border:1px solid var(--line); background: transparent; color: var(--text);
+      border-radius: 12px; padding: 10px 10px; cursor:pointer;
+      font-weight: 900; font-size: 14px; text-align:left;
+      display:flex; align-items:center; justify-content:space-between; gap: 10px;
     }
     .drop-btn:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
     .drop-sub{
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 10px;
+      border: 1px solid var(--line); border-radius: 12px; padding: 10px;
       background: color-mix(in srgb, var(--panel2) 65%, transparent);
-      display:none;
-      gap: 10px;
-      flex-direction:column;
+      display:none; gap: 10px; flex-direction:column;
     }
     .drop-sub.open{ display:flex; }
 
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-    }
-    .row-title{
-      font-size: 13px;
-      font-weight: 900;
-    }
+    .row{ display:flex; align-items:center; justify-content:space-between; gap: 10px; }
+    .row-title{ font-size: 13px; font-weight: 900; }
 
-    /* Switch */
-    .toggle{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-    }
-    .toggle label{
-      font-size: 13px;
-      font-weight: 900;
-    }
+    .toggle{ display:flex; align-items:center; justify-content:space-between; gap: 10px; }
+    .toggle label{ font-size: 13px; font-weight: 900; }
     .toggle input[type="checkbox"]{
-      appearance:none;
-      width: 44px;
-      height: 26px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: transparent;
-      position:relative;
-      cursor:pointer;
-      outline:none;
-      flex: 0 0 auto;
+      appearance:none; width: 44px; height: 26px; border-radius: 999px; border: 1px solid var(--line);
+      background: transparent; position:relative; cursor:pointer; outline:none; flex: 0 0 auto;
     }
     .toggle input[type="checkbox"]::after{
-      content:"";
-      position:absolute;
-      top: 3px; left: 3px;
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      background: color-mix(in srgb, var(--text) 85%, transparent);
-      opacity:.92;
-      transition: transform .18s ease;
+      content:""; position:absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+      background: color-mix(in srgb, var(--text) 85%, transparent); opacity:.92; transition: transform .18s ease;
     }
-    .toggle input[type="checkbox"]:checked{
-      background: color-mix(in srgb, var(--text) 10%, transparent);
-    }
-    .toggle input[type="checkbox"]:checked::after{
-      transform: translateX(18px);
-    }
+    .toggle input[type="checkbox"]:checked{ background: color-mix(in srgb, var(--text) 10%, transparent); }
+    .toggle input[type="checkbox"]:checked::after{ transform: translateX(18px); }
 
-    input[type="color"]{
-      width: 44px;
-      height: 30px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      background: transparent;
-      padding: 0;
-    }
+    input[type="color"]{ width: 44px; height: 30px; border-radius: 10px; border: 1px solid var(--line); background: transparent; padding: 0; }
 
-    main{
-      flex:1;
-      display:flex;
-      justify-content:center;
-      padding: 18px 16px 18px;
-    }
-    .wrap{
-      width: min(760px, 100%);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding-top: 6px;
-    }
+    main{ flex:1; display:flex; justify-content:center; padding: 18px 16px 18px; }
+    .wrap{ width: min(760px, 100%); display:flex; flex-direction:column; align-items:center; padding-top: 6px; }
     .card{
       width: min(560px, 100%);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 16px 14px 14px;
-      box-shadow: var(--shadow);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap: 12px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 22px;
+      padding: 16px 14px 14px; box-shadow: var(--shadow);
+      display:flex; flex-direction:column; align-items:center; gap: 12px;
     }
 
     .digitalWrap{ width: 100%; display:flex; justify-content:center; }
@@ -298,29 +155,19 @@
     .digitalTime.seven{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       letter-spacing: 2.2px;
-      text-shadow:
-        0 0 0.6px var(--digitColor),
-        0 0 14px var(--digitGlow);
+      text-shadow: 0 0 0.6px var(--digitColor), 0 0 14px var(--digitGlow);
       box-shadow:
         inset 0 0 0 6px color-mix(in srgb, var(--digitColor) 8%, transparent),
         0 0 20px color-mix(in srgb, var(--digitGlow) 75%, transparent);
     }
     .ampm{
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .8px;
-      color: var(--muted);
-      margin-left: 10px;
-      vertical-align: middle;
-      display:inline-block;
-      transform: translateY(-6px);
+      font-size: 12px; font-weight: 900; letter-spacing: .8px; color: var(--muted);
+      margin-left: 10px; display:inline-block; transform: translateY(-6px);
     }
 
     .analogWrap{ width:100%; display:flex; justify-content:center; }
     .analog{
-      width: 270px;
-      height: 270px;
-      border-radius: 50%;
+      width: 270px; height: 270px; border-radius: 50%;
       border: 1px solid var(--line);
       background: color-mix(in srgb, var(--panel2) 85%, transparent);
       box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--text) 3%, transparent);
@@ -329,52 +176,20 @@
       overflow: hidden;
     }
 
-    .center-dot{
-      position:absolute;
-      left:50%; top:50%;
-      width:10px; height:10px;
-      border-radius:50%;
-      background: color-mix(in srgb, var(--text) 80%, transparent);
-      transform: translate(-50%,-50%);
-      z-index: 10;
-      box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 8%, transparent);
-    }
-    .hand{
-      position:absolute;
-      left:50%; top:50%;
-      transform-origin: 50% 100%;
-      transform: translate(-50%,-100%) rotate(0deg);
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--text) 85%, transparent);
-    }
-    .hand.hour{ width:8px; height:80px; opacity:.92; }
-    .hand.min { width:6px; height:108px; opacity:.88; }
-    .hand.sec { width:2px; height:124px; opacity:.70; }
-
     .ticks{ position:absolute; inset: 12px; border-radius: 50%; pointer-events:none; }
     .tick{
-      position:absolute;
-      left:50%; top:50%;
+      position:absolute; left:50%; top:50%;
       width:2px; height:10px;
       background: color-mix(in srgb, var(--text) 20%, transparent);
       transform-origin: 50% 120px;
       transform: translate(-50%,-120px) rotate(0deg);
       border-radius:2px;
     }
-    .tick.big{
-      height:14px;
-      background: color-mix(in srgb, var(--text) 28%, transparent);
-    }
+    .tick.big{ height:14px; background: color-mix(in srgb, var(--text) 28%, transparent); }
 
-    /* Numbers */
-    .numbers{
-      position:absolute;
-      inset: 0;
-      pointer-events:none;
-    }
+    .numbers{ position:absolute; inset: 0; pointer-events:none; }
     .num{
-      position:absolute;
-      left:50%; top:50%;
+      position:absolute; left:50%; top:50%;
       transform: translate(-50%,-50%);
       font-variant-numeric: tabular-nums;
       font-weight: 900;
@@ -386,37 +201,41 @@
     .num.hourNum{ font-size: 12px; }
     .num.minNum{ font-size: 10px; opacity:.85; color: color-mix(in srgb, var(--text) 55%, transparent); }
 
-    .pill-row{
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
+    .center-dot{
+      position:absolute; left:50%; top:50%;
+      width:10px; height:10px; border-radius:50%;
+      background: color-mix(in srgb, var(--text) 80%, transparent);
+      transform: translate(-50%,-50%);
+      z-index: 10;
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 8%, transparent);
     }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      border: 1px solid var(--line);
+    .hand{
+      position:absolute; left:50%; top:50%;
+      transform-origin: 50% 100%;
+      transform: translate(-50%,-100%) rotate(0deg);
       border-radius: 999px;
+      background: color-mix(in srgb, var(--text) 85%, transparent);
+    }
+    .hand.hour{ width:8px; height:80px; opacity:.92; }
+    .hand.min { width:6px; height:108px; opacity:.88; }
+    .hand.sec { width:2px; height:124px; opacity:.70; }
+
+    .pill-row{ width:100%; display:flex; align-items:center; justify-content:center; gap: 10px; }
+    .pill{
+      display:inline-flex; align-items:center; gap: 8px;
+      border: 1px solid var(--line); border-radius: 999px;
       padding: 8px 12px;
       background: color-mix(in srgb, var(--panel2) 70%, transparent);
       color: var(--muted);
       font-size: 12px;
     }
-    .dot{
-      width:8px; height:8px; border-radius:50%;
-      background: color-mix(in srgb, var(--text) 35%, transparent);
-      opacity:.95;
-    }
+    .dot{ width:8px; height:8px; border-radius:50%; background: color-mix(in srgb, var(--text) 35%, transparent); opacity:.95; }
     .dot.ok{ background:#2ecc71; }
     .dot.warn{ background:#f1c40f; }
     .dot.bad{ background:#e74c3c; }
 
     .spinner{
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
+      width: 14px; height: 14px; border-radius: 50%;
       border: 2px solid color-mix(in srgb, var(--text) 20%, transparent);
       border-top-color: color-mix(in srgb, var(--text) 70%, transparent);
       animation: spin 0.9s linear infinite;
@@ -426,16 +245,9 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .info-btn{
-      width:36px; height:36px;
-      border:1px solid var(--line);
-      background: transparent;
-      border-radius: 999px;
-      cursor:pointer;
-      color: var(--text);
-      font-weight: 900;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      width:36px; height:36px; border:1px solid var(--line); background: transparent;
+      border-radius: 999px; cursor:pointer; color: var(--text);
+      font-weight: 900; display:flex; align-items:center; justify-content:center;
     }
     .info-btn:active{ transform: translateY(1px); }
 
@@ -621,622 +433,581 @@
   </main>
 
   <script>
-    // ---------------------------
-    // UI panel memory keys
-    // ---------------------------
-    const UI_KEY_SETUP_OPEN  = 'clock.ui.setupOpen';
-    const UI_KEY_ANALOG_OPEN = 'clock.ui.analogOpen';
-    const UI_KEY_DIGI_OPEN   = 'clock.ui.digitalOpen';
+    document.addEventListener('DOMContentLoaded', () => {
+      // ---------------------------
+      // Keys
+      // ---------------------------
+      const UI_KEY_SETUP_OPEN  = 'clock.ui.setupOpen';
+      const UI_KEY_ANALOG_OPEN = 'clock.ui.analogOpen';
+      const UI_KEY_DIGI_OPEN   = 'clock.ui.digitalOpen';
 
-    // ---------------------------
-    // TZ list
-    // ---------------------------
-    const TZ_PRESETS = [
-      { tz: 'Atlantic/Reykjavik', label: 'Reykjavík' },
-      { tz: 'UTC', label: 'UTC' },
-      { tz: 'Europe/London', label: 'London' },
-      { tz: 'Europe/Paris', label: 'Paris' },
-      { tz: 'Europe/Berlin', label: 'Berlin' },
-      { tz: 'America/New_York', label: 'New York' },
-      { tz: 'America/Los_Angeles', label: 'Los Angeles' },
-      { tz: 'Asia/Dubai', label: 'Dubai' },
-      { tz: 'Asia/Singapore', label: 'Singapore' },
-      { tz: 'Asia/Tokyo', label: 'Tokyo' },
-      { tz: 'Australia/Sydney', label: 'Sydney' },
-    ];
+      // ---------------------------
+      // Elements
+      // ---------------------------
+      const hdrDateTop = document.getElementById('hdrDateTop');
+      const hdrWeekday = document.getElementById('hdrWeekday');
 
-    const tzSelect = document.getElementById('tzSelect');
-    let currentTz = localStorage.getItem('tz') || 'Atlantic/Reykjavik';
-    if(!TZ_PRESETS.some(x => x.tz === currentTz)) currentTz = 'Atlantic/Reykjavik';
+      const menuBtn = document.getElementById('menuBtn');
+      const dropdown = document.getElementById('dropdown');
 
-    for(const item of TZ_PRESETS){
-      const opt = document.createElement('option');
-      opt.value = item.tz;
-      opt.textContent = item.label;
-      tzSelect.appendChild(opt);
-    }
-    tzSelect.value = currentTz;
+      const tzSelect = document.getElementById('tzSelect');
+      const fsBtn = document.getElementById('fsBtn');
 
-    function tzLabel(tz){
-      const found = TZ_PRESETS.find(x => x.tz === tz);
-      return found ? found.label : tz;
-    }
+      const themeToggle = document.getElementById('themeToggle');
+      const setupBtn = document.getElementById('setupBtn');
+      const setupPanel = document.getElementById('setupPanel');
+      const setupChevron = document.getElementById('setupChevron');
 
-    // ---------------------------
-    // Hamburger dropdown
-    // ---------------------------
-    const menuBtn = document.getElementById('menuBtn');
-    const dropdown = document.getElementById('dropdown');
-    function toggleDropdown(){ dropdown.classList.toggle('open'); }
-    function closeDropdown(){ dropdown.classList.remove('open'); }
+      const timeFormat = document.getElementById('timeFormat');
+      const showAnalog = document.getElementById('showAnalog');
+      const showDigital = document.getElementById('showDigital');
 
-    menuBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
-    dropdown.addEventListener('click', (e) => e.stopPropagation());
-    document.addEventListener('click', () => closeDropdown());
-    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDropdown(); });
+      const analogBtn = document.getElementById('analogBtn');
+      const analogPanel = document.getElementById('analogPanel');
+      const analogChevron = document.getElementById('analogChevron');
+      const handMode = document.getElementById('handMode');
+      const showHourNums = document.getElementById('showHourNums');
+      const showMinNums = document.getElementById('showMinNums');
 
-    // ---------------------------
-    // Fullscreen
-    // ---------------------------
-    const fsBtn = document.getElementById('fsBtn');
+      const digitalBtn = document.getElementById('digitalBtn');
+      const digitalPanel = document.getElementById('digitalPanel');
+      const digitalChevron = document.getElementById('digitalChevron');
+      const sevenSeg = document.getElementById('sevenSeg');
+      const digitColor = document.getElementById('digitColor');
 
-    async function enterFullscreen(){
-      const el = document.documentElement;
-      try{
-        if(el.requestFullscreen) await el.requestFullscreen();
-        else if(el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-      }catch(_){}
-    }
-    async function exitFullscreen(){
-      try{
-        if(document.exitFullscreen) await document.exitFullscreen();
-        else if(document.webkitExitFullscreen) await document.webkitExitFullscreen();
-      }catch(_){}
-    }
-    function inFullscreen(){
-      return !!(document.fullscreenElement || document.webkitFullscreenElement);
-    }
+      const analogWrap = document.getElementById('analogWrap');
+      const digitalWrap = document.getElementById('digitalWrap');
+      const digitalTimeEl = document.getElementById('digitalTime');
 
-    fsBtn.addEventListener('click', async () => {
-      closeDropdown();
-      if(inFullscreen()) await exitFullscreen();
-      else await enterFullscreen();
-    });
+      const analogClock = document.getElementById('analogClock');
+      const numbersEl = document.getElementById('numbers');
 
-    document.addEventListener('pointerdown', async () => {
-      if(inFullscreen()) await exitFullscreen();
-    }, { passive: true });
+      const hHand = document.getElementById('hHand');
+      const mHand = document.getElementById('mHand');
+      const sHand = document.getElementById('sHand');
 
-    // ---------------------------
-    // Settings UI
-    // ---------------------------
-    const themeToggle = document.getElementById('themeToggle');
+      const syncDot  = document.getElementById('syncDot');
+      const syncText = document.getElementById('syncText');
+      const syncSpin = document.getElementById('syncSpin');
 
-    const setupBtn = document.getElementById('setupBtn');
-    const setupPanel = document.getElementById('setupPanel');
-    const setupChevron = document.getElementById('setupChevron');
+      const infoBtn = document.getElementById('infoBtn');
+      const nerdBox = document.getElementById('nerdBox');
+      const nTz   = document.getElementById('nTz');
+      const nAge  = document.getElementById('nAge');
+      const nRtt  = document.getElementById('nRtt');
+      const nOffT = document.getElementById('nOffT');
+      const nOff  = document.getElementById('nOff');
+      const nPpm  = document.getElementById('nPpm');
+      const nScale= document.getElementById('nScale');
+      const nSrc  = document.getElementById('nSrc');
 
-    const timeFormat = document.getElementById('timeFormat');
-    const showAnalog = document.getElementById('showAnalog');
-    const showDigital = document.getElementById('showDigital');
+      // ---------------------------
+      // TZ list
+      // ---------------------------
+      const TZ_PRESETS = [
+        { tz: 'Atlantic/Reykjavik', label: 'Reykjavík' },
+        { tz: 'UTC', label: 'UTC' },
+        { tz: 'Europe/London', label: 'London' },
+        { tz: 'Europe/Paris', label: 'Paris' },
+        { tz: 'Europe/Berlin', label: 'Berlin' },
+        { tz: 'America/New_York', label: 'New York' },
+        { tz: 'America/Los_Angeles', label: 'Los Angeles' },
+        { tz: 'Asia/Dubai', label: 'Dubai' },
+        { tz: 'Asia/Singapore', label: 'Singapore' },
+        { tz: 'Asia/Tokyo', label: 'Tokyo' },
+        { tz: 'Australia/Sydney', label: 'Sydney' },
+      ];
 
-    const analogBtn = document.getElementById('analogBtn');
-    const analogPanel = document.getElementById('analogPanel');
-    const analogChevron = document.getElementById('analogChevron');
-    const handMode = document.getElementById('handMode');
-    const showHourNums = document.getElementById('showHourNums');
-    const showMinNums = document.getElementById('showMinNums');
-
-    const digitalBtn = document.getElementById('digitalBtn');
-    const digitalPanel = document.getElementById('digitalPanel');
-    const digitalChevron = document.getElementById('digitalChevron');
-    const sevenSeg = document.getElementById('sevenSeg');
-    const digitColor = document.getElementById('digitColor');
-
-    const analogWrap = document.getElementById('analogWrap');
-    const digitalWrap = document.getElementById('digitalWrap');
-    const digitalTimeEl = document.getElementById('digitalTime');
-
-    function setTheme(t){
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t); // shared across all pages
-      themeToggle.checked = (t === 'light');
-    }
-
-    function hexToRgba(hex, a){
-      const h = hex.replace('#','').trim();
-      if(h.length !== 6) return `rgba(255,255,255,${a})`;
-      const r = parseInt(h.slice(0,2),16);
-      const g = parseInt(h.slice(2,4),16);
-      const b = parseInt(h.slice(4,6),16);
-      return `rgba(${r},${g},${b},${a})`;
-    }
-
-    function applyDigitalLook(){
-      digitalTimeEl.classList.toggle('seven', sevenSeg.checked);
-      document.documentElement.style.setProperty('--digitColor', hexToRgba(digitColor.value, 0.95));
-      document.documentElement.style.setProperty('--digitGlow', hexToRgba(digitColor.value, 0.22));
-      localStorage.setItem('sevenSeg', sevenSeg.checked ? 'true' : 'false');
-      localStorage.setItem('digitColor', digitColor.value);
-    }
-
-    function applyVisibility(){
-      analogWrap.style.display = showAnalog.checked ? 'flex' : 'none';
-      digitalWrap.style.display = showDigital.checked ? 'flex' : 'none';
-      if(!showAnalog.checked && !showDigital.checked){
-        showDigital.checked = true;
-        digitalWrap.style.display = 'flex';
+      function tzLabel(tz){
+        const found = TZ_PRESETS.find(x => x.tz === tz);
+        return found ? found.label : tz;
       }
-      rebuildNumbers(); // important when showing again
-    }
 
-    // Panel open/close with memory
-    function setPanel(panel, chev, isOpen){
-      panel.classList.toggle('open', isOpen);
-      if(chev) chev.textContent = isOpen ? '▴' : '▾';
-    }
-    function togglePanel(panel, chev, storageKey){
-      const open = !panel.classList.contains('open');
-      setPanel(panel, chev, open);
-      if(storageKey) localStorage.setItem(storageKey, open ? '1' : '0');
-    }
+      let currentTz = localStorage.getItem('tz') || 'Atlantic/Reykjavik';
+      if(!TZ_PRESETS.some(x => x.tz === currentTz)) currentTz = 'Atlantic/Reykjavik';
 
-    setupBtn.addEventListener('click', () => togglePanel(setupPanel, setupChevron, UI_KEY_SETUP_OPEN));
-    analogBtn.addEventListener('click', () => togglePanel(analogPanel, analogChevron, UI_KEY_ANALOG_OPEN));
-    digitalBtn.addEventListener('click', () => togglePanel(digitalPanel, digitalChevron, UI_KEY_DIGI_OPEN));
+      tzSelect.innerHTML = '';
+      for(const item of TZ_PRESETS){
+        const opt = document.createElement('option');
+        opt.value = item.tz;
+        opt.textContent = item.label;
+        tzSelect.appendChild(opt);
+      }
+      tzSelect.value = currentTz;
 
-    themeToggle.addEventListener('change', () => {
-      setTheme(themeToggle.checked ? 'light' : 'dark');
-    });
+      // ---------------------------
+      // Helpers
+      // ---------------------------
+      function closeDropdown(){ dropdown.classList.remove('open'); }
+      function setPanel(panel, chev, isOpen){
+        panel.classList.toggle('open', isOpen);
+        if(chev) chev.textContent = isOpen ? '▴' : '▾';
+      }
+      function togglePanel(panel, chev, storageKey){
+        const open = !panel.classList.contains('open');
+        setPanel(panel, chev, open);
+        localStorage.setItem(storageKey, open ? '1' : '0');
+      }
 
-    timeFormat.addEventListener('change', () => {
-      localStorage.setItem('timeFormat', timeFormat.value);
-      buildFormatters();
-      rebuildNumbers();
-    });
+      function setTheme(t){
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+        themeToggle.checked = (t === 'light');
+      }
+      function hexToRgba(hex, a){
+        const h = hex.replace('#','').trim();
+        if(h.length !== 6) return `rgba(255,255,255,${a})`;
+        const r = parseInt(h.slice(0,2),16);
+        const g = parseInt(h.slice(2,4),16);
+        const b = parseInt(h.slice(4,6),16);
+        return `rgba(${r},${g},${b},${a})`;
+      }
+      function applyDigitalLook(){
+        digitalTimeEl.classList.toggle('seven', sevenSeg.checked);
+        document.documentElement.style.setProperty('--digitColor', hexToRgba(digitColor.value, 0.95));
+        document.documentElement.style.setProperty('--digitGlow', hexToRgba(digitColor.value, 0.22));
+        localStorage.setItem('sevenSeg', sevenSeg.checked ? 'true' : 'false');
+        localStorage.setItem('digitColor', digitColor.value);
+      }
+      function applyVisibility(){
+        analogWrap.style.display = showAnalog.checked ? 'flex' : 'none';
+        digitalWrap.style.display = showDigital.checked ? 'flex' : 'none';
+        if(!showAnalog.checked && !showDigital.checked){
+          showDigital.checked = true;
+          digitalWrap.style.display = 'flex';
+        }
+        rebuildNumbers();
+      }
 
-    showAnalog.addEventListener('change', () => {
-      localStorage.setItem('showAnalog', showAnalog.checked ? 'true' : 'false');
-      applyVisibility();
-    });
-    showDigital.addEventListener('change', () => {
-      localStorage.setItem('showDigital', showDigital.checked ? 'true' : 'false');
-      applyVisibility();
-    });
+      // ---------------------------
+      // Build ticks once
+      // ---------------------------
+      (function buildTicks(){
+        const ticks = document.getElementById('ticks');
+        ticks.innerHTML = '';
+        for(let i=0;i<60;i++){
+          const t = document.createElement('div');
+          t.className = 'tick' + (i%5===0 ? ' big' : '');
+          t.style.transform = `translate(-50%,-120px) rotate(${i*6}deg)`;
+          ticks.appendChild(t);
+        }
+      })();
 
-    handMode.addEventListener('change', () => localStorage.setItem('handMode', handMode.value));
-    showHourNums.addEventListener('change', () => { localStorage.setItem('showHourNums', showHourNums.checked ? 'true' : 'false'); rebuildNumbers(); });
-    showMinNums.addEventListener('change', () => { localStorage.setItem('showMinNums', showMinNums.checked ? 'true' : 'false'); rebuildNumbers(); });
+      // ---------------------------
+      // Numbers (responsive)
+      // ---------------------------
+      function polarToXY(angleDeg, r){
+        const a = (angleDeg - 90) * Math.PI/180;
+        return { x: Math.cos(a) * r, y: Math.sin(a) * r };
+      }
+      function buildHourLabels(){
+        const labels = [];
+        if(timeFormat.value === '24'){
+          for(let h=0; h<24; h++) labels.push({ label: String(h), angleDeg: h*15 });
+        }else{
+          for(let h=1; h<=12; h++) labels.push({ label: String(h), angleDeg: (h%12)*30 });
+        }
+        return labels;
+      }
+      function rebuildNumbers(){
+        numbersEl.innerHTML = '';
+        if(!showAnalog.checked) return;
 
-    sevenSeg.addEventListener('change', applyDigitalLook);
-    digitColor.addEventListener('input', applyDigitalLook);
+        const rect = analogClock.getBoundingClientRect();
+        const size = Math.min(rect.width, rect.height);
+        const half = size / 2;
 
-    // init settings from storage
-    (function initSettingsUI(){
-      const savedTheme = localStorage.getItem('theme');
-      setTheme(savedTheme === 'light' ? 'light' : 'dark');
+        const padOuter = Math.max(18, Math.round(size * 0.085));
+        const hourFont = Math.max(10, Math.round(size * 0.045));
+        const minFont  = Math.max(9,  Math.round(size * 0.038));
 
-      timeFormat.value = localStorage.getItem('timeFormat') || '24';
+        const rHour = half - padOuter - hourFont;
+        const rMin  = half - padOuter - minFont - 6;
 
-      showAnalog.checked = (localStorage.getItem('showAnalog') !== 'false');
-      showDigital.checked = (localStorage.getItem('showDigital') !== 'false');
+        const hours = buildHourLabels();
 
-      handMode.value = localStorage.getItem('handMode') || 'smooth';
-      showHourNums.checked = (localStorage.getItem('showHourNums') === 'true');
-      showMinNums.checked = (localStorage.getItem('showMinNums') === 'true');
+        if(showHourNums.checked){
+          for(const it of hours){
+            const div = document.createElement('div');
+            div.className = 'num hourNum';
+            div.style.fontSize = hourFont + 'px';
+            const {x,y} = polarToXY(it.angleDeg, rHour);
+            div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            div.textContent = it.label;
+            numbersEl.appendChild(div);
+          }
+        }
 
-      sevenSeg.checked = (localStorage.getItem('sevenSeg') === 'true');
-      digitColor.value = localStorage.getItem('digitColor') || (document.documentElement.getAttribute('data-theme') === 'light' ? '#111111' : '#eaf6ff');
-
-      applyVisibility();
-      applyDigitalLook();
-
-      // restore panel open/close states
-      const setupOpen  = localStorage.getItem(UI_KEY_SETUP_OPEN) === '1';
-      const analogOpen = localStorage.getItem(UI_KEY_ANALOG_OPEN) === '1';
-      const digiOpen   = localStorage.getItem(UI_KEY_DIGI_OPEN) === '1';
-
-      setPanel(setupPanel, setupChevron, setupOpen);
-      setPanel(analogPanel, analogChevron, analogOpen);
-      setPanel(digitalPanel, digitalChevron, digiOpen);
-    })();
-
-    // ---------------------------
-    // Nerd info toggle
-    // ---------------------------
-    const infoBtn = document.getElementById('infoBtn');
-    const nerdBox = document.getElementById('nerdBox');
-    infoBtn.addEventListener('click', () => {
-      nerdBox.classList.toggle('open');
-    });
-
-    // ---------------------------
-    // Net-sync + drift correction
-    // ---------------------------
-    const syncDot  = document.getElementById('syncDot');
-    const syncText = document.getElementById('syncText');
-    const syncSpin = document.getElementById('syncSpin');
-
-    function setStatus(kind, txt){
-      syncDot.classList.remove('ok','warn','bad');
-      syncDot.classList.add(kind);
-      syncText.textContent = txt;
-      syncSpin.classList.toggle('on', kind !== 'ok');
-    }
-
-    function isFiniteNum(x){ return Number.isFinite(x) && !Number.isNaN(x); }
-
-    let basePerf = performance.now();
-    let baseNet  = Date.now();
-    let scale    = 1.0;
-    let targetScale = 1.0;
-    let offsetMs = 0;
-    let targetOffsetMs = 0;
-
-    let lastGoodSyncPerf = null;
-    let lastGoodOffset = null;
-    let lastRttMs = null;
-    let consecutiveFails = 0;
-
-    const MAX_OFFSET_SLEW_MS_PER_S = 8;
-    const SCALE_SLEW_PER_S = 2e-6;
-
-    function correctedNowMs(){
-      const p = performance.now();
-      const elapsed = p - basePerf;
-      return baseNet + elapsed * scale + offsetMs;
-    }
-
-    function worldTimeUrlForTz(tz){
-      if(tz === 'UTC') return 'https://worldtimeapi.org/api/timezone/Etc/UTC';
-      return 'https://worldtimeapi.org/api/timezone/' + encodeURIComponent(tz);
-    }
-
-    async function sampleNetTime(){
-      const url = worldTimeUrlForTz(currentTz);
-      const t0p = performance.now();
-      const t0w = Date.now();
-
-      const res = await fetch(url, { cache: 'no-store' });
-
-      const t1p = performance.now();
-      const t1w = Date.now();
-
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-
-      const serverMs = new Date(data.datetime).getTime();
-      if(!isFiniteNum(serverMs)) throw new Error('bad datetime');
-
-      const midWall = (t0w + t1w) / 2;
-      const rtt = (t1p - t0p);
-      const offsetSample = serverMs - midWall;
-
-      return { offsetSample, rtt, tMidPerf: (t0p + t1p)/2 };
-    }
-
-    function applySync(offsetSample, rtt, tMidPerf){
-      lastRttMs = rtt;
-
-      const rttClamped = Math.min(Math.max(rtt, 20), 2000);
-      const w = 1 / (1 + (rttClamped / 200));
-
-      if(lastGoodSyncPerf !== null && lastGoodOffset !== null){
-        const dt = (tMidPerf - lastGoodSyncPerf) / 1000;
-        if(dt > 0.5){
-          const dOffset = (offsetSample - lastGoodOffset);
-          const drift = (dOffset / (dt * 1000));
-          const newTargetScale = 1 + drift;
-          if(isFiniteNum(newTargetScale)){
-            targetScale = targetScale + (newTargetScale - targetScale) * (0.25 * w);
+        if(showMinNums.checked){
+          for(let m=0; m<60; m+=5){
+            const div = document.createElement('div');
+            div.className = 'num minNum';
+            div.style.fontSize = minFont + 'px';
+            const {x,y} = polarToXY(m*6, rMin);
+            div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            div.textContent = String(m);
+            numbersEl.appendChild(div);
           }
         }
       }
 
-      targetOffsetMs = targetOffsetMs + (offsetSample - targetOffsetMs) * (0.6 * w);
-
-      const midWallNowApprox = Date.now() + (tMidPerf - performance.now());
-      const serverAtMid = midWallNowApprox + offsetSample;
-
-      basePerf = tMidPerf;
-      baseNet  = serverAtMid;
-
-      lastGoodSyncPerf = tMidPerf;
-      lastGoodOffset = offsetSample;
-      consecutiveFails = 0;
-    }
-
-    function tickSlews(dtSeconds){
-      const maxStep = MAX_OFFSET_SLEW_MS_PER_S * dtSeconds;
-      const diff = targetOffsetMs - offsetMs;
-      offsetMs += Math.max(-maxStep, Math.min(maxStep, diff));
-
-      const maxScaleStep = SCALE_SLEW_PER_S * dtSeconds;
-      const sd = targetScale - scale;
-      scale += Math.max(-maxScaleStep, Math.min(maxScaleStep, sd));
-    }
-
-    async function syncLoop(){
-      try{
-        const { offsetSample, rtt, tMidPerf } = await sampleNetTime();
-        applySync(offsetSample, rtt, tMidPerf);
-        setStatus('ok', `Tími: net (${tzLabel(currentTz)})`);
-      }catch(err){
-        consecutiveFails++;
-        if(lastGoodSyncPerf !== null){
-          setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — óstöðugt net`);
-        }else{
-          setStatus('bad', `Tími: tæki (net náðist ekki)`);
-        }
-      }finally{
-        const base = (consecutiveFails === 0) ? 60_000 : 10_000;
-        const jitter = Math.random() * 8000;
-        setTimeout(syncLoop, base + jitter);
+      let resizeTimer = null;
+      function scheduleRebuild(){
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(rebuildNumbers, 80);
       }
-    }
+      window.addEventListener('resize', scheduleRebuild, { passive:true });
+      window.addEventListener('orientationchange', scheduleRebuild, { passive:true });
 
-    // ---------------------------
-    // Intl formatters (24/12)
-    // ---------------------------
-    let partsFmt = null;
+      // ---------------------------
+      // Formatters
+      // ---------------------------
+      let partsFmt = null;
+      function makePartsFormatter(tz, hour12){
+        return new Intl.DateTimeFormat('is-IS', {
+          timeZone: tz,
+          hour: '2-digit',
+          minute:'2-digit',
+          second:'2-digit',
+          hour12,
+          weekday:'long',
+          year:'numeric',
+          month:'long',
+          day:'numeric'
+        });
+      }
+      function buildFormatters(){
+        const hour12 = (timeFormat.value === '12');
+        partsFmt = makePartsFormatter(currentTz, hour12);
+      }
+      function getTimeParts(ms){
+        const d = new Date(ms);
+        const parts = partsFmt.formatToParts(d);
+        const map = Object.create(null);
+        for(const p of parts){
+          if(p.type !== 'literal') map[p.type] = p.value;
+        }
+        return {
+          hour: map.hour,
+          minute: map.minute,
+          second: map.second,
+          dayPeriod: map.dayPeriod || '',
+          weekday: map.weekday,
+          dateTop: `${map.day}. ${map.month} ${map.year}`
+        };
+      }
 
-    function makePartsFormatter(tz, hour12){
-      return new Intl.DateTimeFormat('is-IS', {
-        timeZone: tz,
-        hour: '2-digit',
-        minute:'2-digit',
-        second:'2-digit',
-        hour12,
-        weekday:'long',
-        year:'numeric',
-        month:'long',
-        day:'numeric'
+      // ---------------------------
+      // Status + net sync model
+      // ---------------------------
+      function setStatus(kind, txt){
+        syncDot.classList.remove('ok','warn','bad');
+        syncDot.classList.add(kind);
+        syncText.textContent = txt;
+        syncSpin.classList.toggle('on', kind !== 'ok');
+      }
+      function isFiniteNum(x){ return Number.isFinite(x) && !Number.isNaN(x); }
+
+      let basePerf = performance.now();
+      let baseNet  = Date.now();
+      let scale    = 1.0;
+      let targetScale = 1.0;
+      let offsetMs = 0;
+      let targetOffsetMs = 0;
+
+      let lastGoodSyncPerf = null;
+      let lastGoodOffset = null;
+      let lastRttMs = null;
+      let consecutiveFails = 0;
+
+      const MAX_OFFSET_SLEW_MS_PER_S = 8;
+      const SCALE_SLEW_PER_S = 2e-6;
+
+      function correctedNowMs(){
+        const p = performance.now();
+        const elapsed = p - basePerf;
+        return baseNet + elapsed * scale + offsetMs;
+      }
+      function tickSlews(dtSeconds){
+        const maxStep = MAX_OFFSET_SLEW_MS_PER_S * dtSeconds;
+        const diff = targetOffsetMs - offsetMs;
+        offsetMs += Math.max(-maxStep, Math.min(maxStep, diff));
+
+        const maxScaleStep = SCALE_SLEW_PER_S * dtSeconds;
+        const sd = targetScale - scale;
+        scale += Math.max(-maxScaleStep, Math.min(maxScaleStep, sd));
+      }
+
+      function worldTimeUrlForTz(tz){
+        if(tz === 'UTC') return 'https://worldtimeapi.org/api/timezone/Etc/UTC';
+        return 'https://worldtimeapi.org/api/timezone/' + encodeURIComponent(tz);
+      }
+
+      async function sampleNetTime(){
+        const url = worldTimeUrlForTz(currentTz);
+
+        const t0p = performance.now();
+        const t0w = Date.now();
+
+        const res = await fetch(url, { cache: 'no-store' });
+
+        const t1p = performance.now();
+        const t1w = Date.now();
+
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        const serverMs = new Date(data.datetime).getTime();
+        if(!isFiniteNum(serverMs)) throw new Error('bad datetime');
+
+        const midWall = (t0w + t1w) / 2;
+        const rtt = (t1p - t0p);
+        const offsetSample = serverMs - midWall;
+
+        return { offsetSample, rtt, tMidPerf: (t0p + t1p)/2 };
+      }
+
+      function applySync(offsetSample, rtt, tMidPerf){
+        lastRttMs = rtt;
+
+        const rttClamped = Math.min(Math.max(rtt, 20), 2000);
+        const w = 1 / (1 + (rttClamped / 200));
+
+        if(lastGoodSyncPerf !== null && lastGoodOffset !== null){
+          const dt = (tMidPerf - lastGoodSyncPerf) / 1000;
+          if(dt > 0.5){
+            const dOffset = (offsetSample - lastGoodOffset);
+            const drift = (dOffset / (dt * 1000));
+            const newTargetScale = 1 + drift;
+            if(isFiniteNum(newTargetScale)){
+              targetScale = targetScale + (newTargetScale - targetScale) * (0.25 * w);
+            }
+          }
+        }
+
+        targetOffsetMs = targetOffsetMs + (offsetSample - targetOffsetMs) * (0.6 * w);
+
+        const midWallNowApprox = Date.now() + (tMidPerf - performance.now());
+        const serverAtMid = midWallNowApprox + offsetSample;
+
+        basePerf = tMidPerf;
+        baseNet  = serverAtMid;
+
+        lastGoodSyncPerf = tMidPerf;
+        lastGoodOffset = offsetSample;
+        consecutiveFails = 0;
+      }
+
+      async function syncLoop(){
+        try{
+          const { offsetSample, rtt, tMidPerf } = await sampleNetTime();
+          applySync(offsetSample, rtt, tMidPerf);
+          setStatus('ok', `Tími: net (${tzLabel(currentTz)})`);
+        }catch(_){
+          consecutiveFails++;
+          if(lastGoodSyncPerf !== null){
+            setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — óstöðugt net`);
+          }else{
+            setStatus('bad', `Tími: tæki (net náðist ekki)`);
+          }
+        }finally{
+          const base = (consecutiveFails === 0) ? 60_000 : 10_000;
+          const jitter = Math.random() * 8000;
+          setTimeout(syncLoop, base + jitter);
+        }
+      }
+
+      function hardResetSyncModel(){
+        basePerf = performance.now();
+        baseNet  = Date.now();
+        targetOffsetMs = offsetMs;
+        targetScale = scale;
+        lastGoodSyncPerf = null;
+        lastGoodOffset = null;
+        lastRttMs = null;
+        consecutiveFails = 0;
+      }
+
+      // ---------------------------
+      // Menu interactions
+      // ---------------------------
+      function toggleDropdown(){ dropdown.classList.toggle('open'); }
+
+      menuBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
+      dropdown.addEventListener('click', (e) => e.stopPropagation());
+      document.addEventListener('click', () => closeDropdown());
+      document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDropdown(); });
+
+      // ---------------------------
+      // Fullscreen
+      // ---------------------------
+      async function enterFullscreen(){
+        const el = document.documentElement;
+        try{
+          if(el.requestFullscreen) await el.requestFullscreen();
+          else if(el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+        }catch(_){}
+      }
+      async function exitFullscreen(){
+        try{
+          if(document.exitFullscreen) await document.exitFullscreen();
+          else if(document.webkitExitFullscreen) await document.webkitExitFullscreen();
+        }catch(_){}
+      }
+      function inFullscreen(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+
+      fsBtn.addEventListener('click', async () => {
+        closeDropdown();
+        if(inFullscreen()) await exitFullscreen();
+        else await enterFullscreen();
       });
-    }
 
-    function buildFormatters(){
-      const hour12 = (timeFormat.value === '12');
-      partsFmt = makePartsFormatter(currentTz, hour12);
-    }
-    buildFormatters();
+      document.addEventListener('pointerdown', async () => {
+        if(inFullscreen()) await exitFullscreen();
+      }, { passive: true });
 
-    function getTimeParts(ms){
-      const d = new Date(ms);
-      const parts = partsFmt.formatToParts(d);
-      const map = Object.create(null);
-      for(const p of parts){
-        if(p.type !== 'literal') map[p.type] = p.value;
-      }
-      return {
-        hour: map.hour,
-        minute: map.minute,
-        second: map.second,
-        dayPeriod: map.dayPeriod || '',
-        weekday: map.weekday,
-        dateTop: `${map.day}. ${map.month} ${map.year}`
-      };
-    }
+      // ---------------------------
+      // Panels with memory
+      // ---------------------------
+      setupBtn.addEventListener('click', () => togglePanel(setupPanel, setupChevron, UI_KEY_SETUP_OPEN));
+      analogBtn.addEventListener('click', () => togglePanel(analogPanel, analogChevron, UI_KEY_ANALOG_OPEN));
+      digitalBtn.addEventListener('click', () => togglePanel(digitalPanel, digitalChevron, UI_KEY_DIGI_OPEN));
 
-    // ---------------------------
-    // UI rendering
-    // ---------------------------
-    const hHand = document.getElementById('hHand');
-    const mHand = document.getElementById('mHand');
-    const sHand = document.getElementById('sHand');
-    const hdrDateTop = document.getElementById('hdrDateTop');
-    const hdrWeekday = document.getElementById('hdrWeekday');
+      // ---------------------------
+      // Nerd info
+      // ---------------------------
+      infoBtn.addEventListener('click', () => nerdBox.classList.toggle('open'));
 
-    const nTz   = document.getElementById('nTz');
-    const nAge  = document.getElementById('nAge');
-    const nRtt  = document.getElementById('nRtt');
-    const nOffT = document.getElementById('nOffT');
-    const nOff  = document.getElementById('nOff');
-    const nPpm  = document.getElementById('nPpm');
-    const nScale= document.getElementById('nScale');
-    const nSrc  = document.getElementById('nSrc');
+      // ---------------------------
+      // Init UI values from storage
+      // ---------------------------
+      (function initUI(){
+        const savedTheme = localStorage.getItem('theme');
+        setTheme(savedTheme === 'light' ? 'light' : 'dark');
 
-    // ticks
-    (function buildTicks(){
-      const ticks = document.getElementById('ticks');
-      for(let i=0;i<60;i++){
-        const t = document.createElement('div');
-        t.className = 'tick' + (i%5===0 ? ' big' : '');
-        t.style.transform = `translate(-50%,-120px) rotate(${i*6}deg)`;
-        ticks.appendChild(t);
-      }
-    })();
+        timeFormat.value = localStorage.getItem('timeFormat') || '24';
 
-    // ---------------------------
-    // Numbers: responsive radii (fixes portrait clipping)
-    // ---------------------------
-    const analogClock = document.getElementById('analogClock');
-    const numbersEl = document.getElementById('numbers');
+        showAnalog.checked = (localStorage.getItem('showAnalog') !== 'false');
+        showDigital.checked = (localStorage.getItem('showDigital') !== 'false');
 
-    function polarToXY(angleDeg, r){
-      const a = (angleDeg - 90) * Math.PI/180;
-      return { x: Math.cos(a) * r, y: Math.sin(a) * r };
-    }
+        handMode.value = localStorage.getItem('handMode') || 'smooth';
+        showHourNums.checked = (localStorage.getItem('showHourNums') === 'true');
+        showMinNums.checked = (localStorage.getItem('showMinNums') === 'true');
 
-    function clearNumbers(){
-      numbersEl.innerHTML = '';
-    }
+        sevenSeg.checked = (localStorage.getItem('sevenSeg') === 'true');
+        digitColor.value = localStorage.getItem('digitColor') || (document.documentElement.getAttribute('data-theme') === 'light' ? '#111111' : '#eaf6ff');
 
-    function buildHourLabels(){
-      // 24h => 0..23 (24 positions, every 15°)
-      // 12h => 1..12 (12 positions, every 30°)
-      const labels = [];
-      if(timeFormat.value === '24'){
-        for(let h=0; h<24; h++){
-          labels.push({ label: String(h), angleDeg: h*15 });
+        const setupOpen  = localStorage.getItem(UI_KEY_SETUP_OPEN) === '1';
+        const analogOpen = localStorage.getItem(UI_KEY_ANALOG_OPEN) === '1';
+        const digiOpen   = localStorage.getItem(UI_KEY_DIGI_OPEN) === '1';
+        setPanel(setupPanel, setupChevron, setupOpen);
+        setPanel(analogPanel, analogChevron, analogOpen);
+        setPanel(digitalPanel, digitalChevron, digiOpen);
+
+        buildFormatters();
+        applyVisibility();
+        applyDigitalLook();
+        rebuildNumbers();
+      })();
+
+      themeToggle.addEventListener('change', () => setTheme(themeToggle.checked ? 'light' : 'dark'));
+      sevenSeg.addEventListener('change', applyDigitalLook);
+      digitColor.addEventListener('input', applyDigitalLook);
+
+      showAnalog.addEventListener('change', () => {
+        localStorage.setItem('showAnalog', showAnalog.checked ? 'true' : 'false');
+        applyVisibility();
+      });
+      showDigital.addEventListener('change', () => {
+        localStorage.setItem('showDigital', showDigital.checked ? 'true' : 'false');
+        applyVisibility();
+      });
+
+      timeFormat.addEventListener('change', () => {
+        localStorage.setItem('timeFormat', timeFormat.value);
+        buildFormatters();
+        rebuildNumbers();
+      });
+
+      handMode.addEventListener('change', () => localStorage.setItem('handMode', handMode.value));
+      showHourNums.addEventListener('change', () => { localStorage.setItem('showHourNums', showHourNums.checked ? 'true' : 'false'); rebuildNumbers(); });
+      showMinNums.addEventListener('change', () => { localStorage.setItem('showMinNums', showMinNums.checked ? 'true' : 'false'); rebuildNumbers(); });
+
+      // ---------------------------
+      // TZ change
+      // ---------------------------
+      tzSelect.addEventListener('change', () => {
+        currentTz = tzSelect.value;
+        localStorage.setItem('tz', currentTz);
+        buildFormatters();
+        hardResetSyncModel();
+        rebuildNumbers();
+        closeDropdown();
+        setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
+        syncLoop();
+      });
+
+      // ---------------------------
+      // Render loop (with fallback safety)
+      // ---------------------------
+      let lastPerf = performance.now();
+
+      function renderFrame(){
+        try{
+          const nowPerf = performance.now();
+          const dt = (nowPerf - lastPerf) / 1000;
+          lastPerf = nowPerf;
+          if(dt > 0 && dt < 0.5) tickSlews(dt);
+
+          const ms = correctedNowMs();
+          const tp = getTimeParts(ms);
+
+          hdrDateTop.textContent = tp.dateTop || '—';
+          hdrWeekday.textContent = tp.weekday || '—';
+
+          const dp = (timeFormat.value === '12' && tp.dayPeriod) ? ` <span class="ampm">${tp.dayPeriod}</span>` : '';
+          digitalTimeEl.innerHTML = `${tp.hour || '--'}:${tp.minute || '--'}:${tp.second || '--'}${dp}`;
+
+          const H = parseInt(tp.hour, 10);
+          const M = parseInt(tp.minute, 10);
+          const S = parseInt(tp.second, 10);
+
+          const mode = handMode.value;
+          const frac = (mode === 'smooth') ? ((ms % 1000) / 1000) : 0;
+
+          const sec = (Number.isFinite(S) ? (S + frac) : 0);
+          const min = (Number.isFinite(M) ? (mode === 'smooth' ? (M + sec/60) : M) : 0);
+          const hr  = (Number.isFinite(H) ? ((H % 12) + min/60) : 0);
+
+          sHand.style.transform = `translate(-50%,-100%) rotate(${sec*6}deg)`;
+          mHand.style.transform = `translate(-50%,-100%) rotate(${min*6}deg)`;
+          hHand.style.transform = `translate(-50%,-100%) rotate(${hr*30}deg)`;
+
+          nTz.textContent = `${tzLabel(currentTz)} (${currentTz})`;
+          nAge.textContent = (lastGoodSyncPerf !== null) ? `${Math.round((performance.now()-lastGoodSyncPerf)/1000)}s` : '—';
+          nRtt.textContent = (lastRttMs != null) ? `${Math.round(lastRttMs)} ms` : '—';
+          nOffT.textContent = `${targetOffsetMs.toFixed(1)} ms`;
+          nOff.textContent  = `${offsetMs.toFixed(1)} ms`;
+          nPpm.textContent  = `${((scale-1)*1e6).toFixed(2)} ppm`;
+          nScale.textContent = scale.toFixed(9);
+          nSrc.textContent = 'worldtimeapi.org';
+        }catch(_){
+          // fallback: show device time so page never "dies"
+          const d = new Date();
+          const h = String(d.getHours()).padStart(2,'0');
+          const m = String(d.getMinutes()).padStart(2,'0');
+          const s = String(d.getSeconds()).padStart(2,'0');
+          digitalTimeEl.textContent = `${h}:${m}:${s}`;
         }
-      }else{
-        for(let h=1; h<=12; h++){
-          labels.push({ label: String(h), angleDeg: (h%12)*30 }); // 12 at 0°
-        }
-      }
-      return labels;
-    }
 
-    function rebuildNumbers(){
-      clearNumbers();
-      if(!showAnalog.checked) return;
-
-      const rect = analogClock.getBoundingClientRect();
-      const size = Math.min(rect.width, rect.height);
-      const half = size / 2;
-
-      // safe padding so nothing gets clipped even on small 240px clock
-      const padOuter = Math.max(18, Math.round(size * 0.08)); // ~18..22
-      const hourFont = Math.max(10, Math.round(size * 0.045)); // ~11..12
-      const minFont  = Math.max(9,  Math.round(size * 0.038)); // ~9..10
-
-      // radii
-      const rHour = half - padOuter - hourFont; // pull in by font size
-      const rMin  = half - padOuter - minFont - 6;
-
-      // apply font sizes (inline, so they scale)
-      const hourLabels = buildHourLabels();
-
-      if(showHourNums.checked){
-        for(const it of hourLabels){
-          const div = document.createElement('div');
-          div.className = 'num hourNum';
-          div.style.fontSize = hourFont + 'px';
-          const {x,y} = polarToXY(it.angleDeg, rHour);
-          div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-          div.textContent = it.label;
-          numbersEl.appendChild(div);
-        }
+        requestAnimationFrame(renderFrame);
       }
 
-      if(showMinNums.checked){
-        for(let m=0; m<60; m+=5){
-          const div = document.createElement('div');
-          div.className = 'num minNum';
-          div.style.fontSize = minFont + 'px';
-          const {x,y} = polarToXY(m*6, rMin);
-          div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-          div.textContent = String(m);
-          numbersEl.appendChild(div);
-        }
-      }
-    }
-
-    // rebuild on resize / orientation changes (portrait clipping fix)
-    let resizeTimer = null;
-    function scheduleRebuild(){
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(rebuildNumbers, 80);
-    }
-    window.addEventListener('resize', scheduleRebuild, { passive:true });
-    window.addEventListener('orientationchange', scheduleRebuild, { passive:true });
-
-    // ---------------------------
-    // Digital text render
-    // ---------------------------
-    let lastPerf = performance.now();
-    let lastTop = '';
-    let lastWeekday = '';
-    let lastDigital = '';
-
-    function render(){
-      const nowPerf = performance.now();
-      const dt = (nowPerf - lastPerf) / 1000;
-      lastPerf = nowPerf;
-      if(dt > 0 && dt < 0.5) tickSlews(dt);
-
-      const ms = correctedNowMs();
-      const tp = getTimeParts(ms);
-
-      if(tp.dateTop !== lastTop){
-        lastTop = tp.dateTop;
-        hdrDateTop.textContent = tp.dateTop;
-      }
-      if(tp.weekday !== lastWeekday){
-        lastWeekday = tp.weekday;
-        hdrWeekday.textContent = tp.weekday;
-      }
-
-      const dp = (timeFormat.value === '12' && tp.dayPeriod) ? ` <span class="ampm">${tp.dayPeriod}</span>` : '';
-      const digitalStr = `${tp.hour}:${tp.minute}:${tp.second}`;
-      if(digitalStr !== lastDigital || timeFormat.value === '12'){
-        digitalTimeEl.innerHTML = digitalStr + dp;
-        lastDigital = digitalStr;
-      }
-
-      // analog hands
-      const H = parseInt(tp.hour, 10);
-      const M = parseInt(tp.minute, 10);
-      const S = parseInt(tp.second, 10);
-
-      const mode = handMode.value; // smooth | tick
-      const frac = (mode === 'smooth') ? ((ms % 1000) / 1000) : 0;
-
-      const sec = (S + frac);
-      const min = (mode === 'smooth') ? (M + sec/60) : M;
-      const hr  = ((H % 12) + min/60);
-
-      sHand.style.transform = `translate(-50%,-100%) rotate(${sec*6}deg)`;
-      mHand.style.transform = `translate(-50%,-100%) rotate(${min*6}deg)`;
-      hHand.style.transform = `translate(-50%,-100%) rotate(${hr*30}deg)`;
-
-      // nerd
-      nTz.textContent = `${tzLabel(currentTz)} (${currentTz})`;
-      if(lastGoodSyncPerf !== null){
-        const ageMs = performance.now() - lastGoodSyncPerf;
-        nAge.textContent = `${Math.round(ageMs/1000)}s`;
-      }else nAge.textContent = '—';
-
-      nRtt.textContent = lastRttMs != null ? `${Math.round(lastRttMs)} ms` : '—';
-      nOffT.textContent = `${targetOffsetMs.toFixed(1)} ms`;
-      nOff.textContent  = `${offsetMs.toFixed(1)} ms`;
-      const ppm = (scale - 1) * 1e6;
-      nPpm.textContent = `${ppm.toFixed(2)} ppm`;
-      nScale.textContent = scale.toFixed(9);
-      nSrc.textContent = 'worldtimeapi.org';
-
-      requestAnimationFrame(render);
-    }
-
-    // TZ change handling
-    function hardResetSyncModel(){
-      basePerf = performance.now();
-      baseNet  = Date.now();
-      targetOffsetMs = offsetMs;
-      targetScale = scale;
-      lastGoodSyncPerf = null;
-      lastGoodOffset = null;
-      lastRttMs = null;
-      consecutiveFails = 0;
-    }
-
-    tzSelect.addEventListener('change', () => {
-      currentTz = tzSelect.value;
-      localStorage.setItem('tz', currentTz);
-      buildFormatters();
+      // start
       setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
-      closeDropdown();
-      hardResetSyncModel();
-      rebuildNumbers();
       syncLoop();
+      requestAnimationFrame(renderFrame);
     });
-
-    // ---------------------------
-    // Start
-    // ---------------------------
-    (function init(){
-      // ensure toggles are persisted
-      localStorage.setItem('showAnalog', showAnalog.checked ? 'true' : 'false');
-      localStorage.setItem('showDigital', showDigital.checked ? 'true' : 'false');
-      localStorage.setItem('handMode', handMode.value);
-      localStorage.setItem('timeFormat', timeFormat.value);
-
-      rebuildNumbers();
-
-      setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
-      syncLoop();
-      requestAnimationFrame(render);
-    })();
   </script>
 </body>
 </html>
