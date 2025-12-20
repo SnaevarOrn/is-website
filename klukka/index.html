@@ -11,7 +11,7 @@
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <!-- Apply theme ASAP (prevents flash) -->
+  <!-- Apply theme ASAP (prevents flash). Uses shared key: localStorage.theme -->
   <script>
     (function(){
       const t = localStorage.getItem('theme');
@@ -28,8 +28,6 @@
       --text:rgba(255,255,255,.92);
       --muted:rgba(255,255,255,.70);
       --shadow: 0 18px 60px rgba(0,0,0,.45);
-      --btn:#f2f2f2;
-      --btnText:#0b0c0f;
 
       --digitColor: rgba(255,255,255,.92);
       --digitGlow: rgba(180, 230, 255, 0.25);
@@ -42,8 +40,6 @@
       --text:rgba(0,0,0,.88);
       --muted:rgba(0,0,0,.58);
       --shadow: 0 18px 60px rgba(0,0,0,.10);
-      --btn:#111318;
-      --btnText:#ffffff;
 
       --digitColor: rgba(0,0,0,.88);
       --digitGlow: rgba(10, 20, 40, 0.18);
@@ -87,7 +83,7 @@
     }
     .back:active{ transform: translateY(1px); }
 
-    /* NEW header center: date on top, weekday below */
+    /* Header center: date top, weekday bottom */
     .hdr-center{
       text-align:center;
       user-select:none;
@@ -148,7 +144,7 @@
       padding: 12px 12px;
       display:flex;
       flex-direction:column;
-      gap: 8px;
+      gap: 10px;
     }
     .drop-label{
       font-size:12px;
@@ -177,7 +173,7 @@
       border-radius: 12px;
       padding: 10px 10px;
       cursor:pointer;
-      font-weight: 800;
+      font-weight: 900;
       font-size: 14px;
       text-align:left;
       display:flex;
@@ -188,7 +184,6 @@
     .drop-btn:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
     .drop-sub{
-      margin-top: 6px;
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 10px;
@@ -205,22 +200,21 @@
       justify-content:space-between;
       gap: 10px;
     }
-    .row .hint{
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.25;
+    .row-title{
+      font-size: 13px;
+      font-weight: 900;
     }
 
-    /* Switch / checkbox styling */
+    /* Switch */
     .toggle{
       display:flex;
       align-items:center;
-      gap: 10px;
       justify-content:space-between;
+      gap: 10px;
     }
     .toggle label{
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 900;
     }
     .toggle input[type="checkbox"]{
       appearance:none;
@@ -372,7 +366,7 @@
       background: color-mix(in srgb, var(--text) 28%, transparent);
     }
 
-    /* Analog numbers */
+    /* Numbers */
     .numbers{
       position:absolute;
       inset: 0;
@@ -384,12 +378,13 @@
       transform: translate(-50%,-50%);
       font-variant-numeric: tabular-nums;
       font-weight: 900;
-      color: color-mix(in srgb, var(--text) 70%, transparent);
-      text-shadow: 0 1px 0 color-mix(in srgb, var(--bg) 40%, transparent);
+      color: color-mix(in srgb, var(--text) 72%, transparent);
+      text-shadow: 0 1px 0 color-mix(in srgb, var(--bg) 35%, transparent);
       user-select:none;
+      white-space: nowrap;
     }
-    .num.hourNum{ font-size: 14px; }
-    .num.minNum{ font-size: 11px; opacity:.85; color: color-mix(in srgb, var(--text) 55%, transparent); }
+    .num.hourNum{ font-size: 12px; }
+    .num.minNum{ font-size: 10px; opacity:.85; color: color-mix(in srgb, var(--text) 55%, transparent); }
 
     .pill-row{
       width:100%;
@@ -418,7 +413,6 @@
     .dot.warn{ background:#f1c40f; }
     .dot.bad{ background:#e74c3c; }
 
-    /* Spinner for warn/bad */
     .spinner{
       width: 14px;
       height: 14px;
@@ -510,10 +504,7 @@
 
             <div class="drop-sub" id="setupPanel">
               <div class="row">
-                <div>
-                  <div style="font-weight:900;">Tímasnið</div>
-                  <div class="hint">24h er sjálfgefið</div>
-                </div>
+                <div class="row-title">Tímasnið</div>
                 <select id="timeFormat" aria-label="Tímasnið">
                   <option value="24">24h</option>
                   <option value="12">12h (AM/PM)</option>
@@ -538,10 +529,7 @@
               </button>
               <div class="drop-sub" id="analogPanel">
                 <div class="row">
-                  <div>
-                    <div style="font-weight:900;">Hreyfing vísa</div>
-                    <div class="hint">Smooth er sjálfgefið</div>
-                  </div>
+                  <div class="row-title">Hreyfing vísa</div>
                   <select id="handMode" aria-label="Hreyfing vísa">
                     <option value="smooth">Smooth</option>
                     <option value="tick">Tick</option>
@@ -549,12 +537,12 @@
                 </div>
 
                 <div class="toggle">
-                  <label for="showHourNums">Tölur (3/6/9/12)</label>
+                  <label for="showHourNums">Klst tölur</label>
                   <input id="showHourNums" type="checkbox">
                 </div>
 
                 <div class="toggle">
-                  <label for="showMinNums">Mínútur (0..55)</label>
+                  <label for="showMinNums">Mínútur</label>
                   <input id="showMinNums" type="checkbox">
                 </div>
               </div>
@@ -569,10 +557,7 @@
                 </div>
 
                 <div class="row">
-                  <div>
-                    <div style="font-weight:900;">Litur</div>
-                    <div class="hint">Gildir bara fyrir digital</div>
-                  </div>
+                  <div class="row-title">Litur</div>
                   <input type="color" id="digitColor" aria-label="Velja lit">
                 </div>
               </div>
@@ -601,7 +586,7 @@
         </div>
 
         <div class="analogWrap" id="analogWrap">
-          <div class="analog" aria-label="Analog klukka">
+          <div class="analog" id="analogClock" aria-label="Analog klukka">
             <div class="ticks" id="ticks"></div>
             <div class="numbers" id="numbers"></div>
             <div class="hand hour" id="hHand"></div>
@@ -637,24 +622,11 @@
 
   <script>
     // ---------------------------
-    // Persisted settings
+    // UI panel memory keys
     // ---------------------------
-    const SETTINGS_KEY = 'clockSettings.v1';
-    const defaultSettings = {
-      theme: (localStorage.getItem('theme') === 'light') ? 'light' : 'dark',
-      timeFormat: localStorage.getItem('timeFormat') || '24', // '24' | '12'
-      showAnalog: localStorage.getItem('showAnalog') !== 'false',
-      showDigital: localStorage.getItem('showDigital') !== 'false',
-      handMode: localStorage.getItem('handMode') || 'smooth', // smooth | tick
-      showHourNums: localStorage.getItem('showHourNums') === 'true',
-      showMinNums: localStorage.getItem('showMinNums') === 'true',
-      sevenSeg: localStorage.getItem('sevenSeg') === 'true',
-      digitColor: localStorage.getItem('digitColor') || (document.documentElement.getAttribute('data-theme') === 'light' ? '#111111' : '#eaf6ff'),
-    };
-
-    function saveSetting(k, v){
-      localStorage.setItem(k, String(v));
-    }
+    const UI_KEY_SETUP_OPEN  = 'clock.ui.setupOpen';
+    const UI_KEY_ANALOG_OPEN = 'clock.ui.analogOpen';
+    const UI_KEY_DIGI_OPEN   = 'clock.ui.digitalOpen';
 
     // ---------------------------
     // TZ list
@@ -739,6 +711,7 @@
     // Settings UI
     // ---------------------------
     const themeToggle = document.getElementById('themeToggle');
+
     const setupBtn = document.getElementById('setupBtn');
     const setupPanel = document.getElementById('setupPanel');
     const setupChevron = document.getElementById('setupChevron');
@@ -766,54 +739,9 @@
 
     function setTheme(t){
       document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
+      localStorage.setItem('theme', t); // shared across all pages
       themeToggle.checked = (t === 'light');
-      // nudge defaults for digit color if user never touched it
-      document.documentElement.style.setProperty('--digitColor', hexToRgba(digitColor.value, 0.95));
     }
-
-    function togglePanel(btn, panel, chev){
-      const open = panel.classList.toggle('open');
-      if(chev) chev.textContent = open ? '▴' : '▾';
-    }
-
-    setupBtn.addEventListener('click', () => togglePanel(setupBtn, setupPanel, setupChevron));
-    analogBtn.addEventListener('click', () => togglePanel(analogBtn, analogPanel, analogChevron));
-    digitalBtn.addEventListener('click', () => togglePanel(digitalBtn, digitalPanel, digitalChevron));
-
-    themeToggle.addEventListener('change', () => {
-      setTheme(themeToggle.checked ? 'light' : 'dark');
-    });
-
-    function applyVisibility(){
-      analogWrap.style.display = showAnalog.checked ? 'flex' : 'none';
-      digitalWrap.style.display = showDigital.checked ? 'flex' : 'none';
-      // ef notandi slekkur á báðu: þá kveikjum við a.m.k. á digital aftur (til að forðast tómt UI)
-      if(!showAnalog.checked && !showDigital.checked){
-        showDigital.checked = true;
-        digitalWrap.style.display = 'flex';
-      }
-    }
-
-    showAnalog.addEventListener('change', () => {
-      saveSetting('showAnalog', showAnalog.checked);
-      applyVisibility();
-      rebuildNumbers(); // because clock face might reappear
-    });
-    showDigital.addEventListener('change', () => {
-      saveSetting('showDigital', showDigital.checked);
-      applyVisibility();
-    });
-
-    timeFormat.addEventListener('change', () => {
-      saveSetting('timeFormat', timeFormat.value);
-      buildFormatters();
-      rebuildNumbers();
-    });
-
-    handMode.addEventListener('change', () => saveSetting('handMode', handMode.value));
-    showHourNums.addEventListener('change', () => { saveSetting('showHourNums', showHourNums.checked); rebuildNumbers(); });
-    showMinNums.addEventListener('change', () => { saveSetting('showMinNums', showMinNums.checked); rebuildNumbers(); });
 
     function hexToRgba(hex, a){
       const h = hex.replace('#','').trim();
@@ -827,29 +755,90 @@
     function applyDigitalLook(){
       digitalTimeEl.classList.toggle('seven', sevenSeg.checked);
       document.documentElement.style.setProperty('--digitColor', hexToRgba(digitColor.value, 0.95));
-      // glow follows current theme + chosen color
       document.documentElement.style.setProperty('--digitGlow', hexToRgba(digitColor.value, 0.22));
-      saveSetting('sevenSeg', sevenSeg.checked);
-      saveSetting('digitColor', digitColor.value);
+      localStorage.setItem('sevenSeg', sevenSeg.checked ? 'true' : 'false');
+      localStorage.setItem('digitColor', digitColor.value);
     }
+
+    function applyVisibility(){
+      analogWrap.style.display = showAnalog.checked ? 'flex' : 'none';
+      digitalWrap.style.display = showDigital.checked ? 'flex' : 'none';
+      if(!showAnalog.checked && !showDigital.checked){
+        showDigital.checked = true;
+        digitalWrap.style.display = 'flex';
+      }
+      rebuildNumbers(); // important when showing again
+    }
+
+    // Panel open/close with memory
+    function setPanel(panel, chev, isOpen){
+      panel.classList.toggle('open', isOpen);
+      if(chev) chev.textContent = isOpen ? '▴' : '▾';
+    }
+    function togglePanel(panel, chev, storageKey){
+      const open = !panel.classList.contains('open');
+      setPanel(panel, chev, open);
+      if(storageKey) localStorage.setItem(storageKey, open ? '1' : '0');
+    }
+
+    setupBtn.addEventListener('click', () => togglePanel(setupPanel, setupChevron, UI_KEY_SETUP_OPEN));
+    analogBtn.addEventListener('click', () => togglePanel(analogPanel, analogChevron, UI_KEY_ANALOG_OPEN));
+    digitalBtn.addEventListener('click', () => togglePanel(digitalPanel, digitalChevron, UI_KEY_DIGI_OPEN));
+
+    themeToggle.addEventListener('change', () => {
+      setTheme(themeToggle.checked ? 'light' : 'dark');
+    });
+
+    timeFormat.addEventListener('change', () => {
+      localStorage.setItem('timeFormat', timeFormat.value);
+      buildFormatters();
+      rebuildNumbers();
+    });
+
+    showAnalog.addEventListener('change', () => {
+      localStorage.setItem('showAnalog', showAnalog.checked ? 'true' : 'false');
+      applyVisibility();
+    });
+    showDigital.addEventListener('change', () => {
+      localStorage.setItem('showDigital', showDigital.checked ? 'true' : 'false');
+      applyVisibility();
+    });
+
+    handMode.addEventListener('change', () => localStorage.setItem('handMode', handMode.value));
+    showHourNums.addEventListener('change', () => { localStorage.setItem('showHourNums', showHourNums.checked ? 'true' : 'false'); rebuildNumbers(); });
+    showMinNums.addEventListener('change', () => { localStorage.setItem('showMinNums', showMinNums.checked ? 'true' : 'false'); rebuildNumbers(); });
 
     sevenSeg.addEventListener('change', applyDigitalLook);
     digitColor.addEventListener('input', applyDigitalLook);
 
-    // init settings UI state
+    // init settings from storage
     (function initSettingsUI(){
-      themeToggle.checked = (localStorage.getItem('theme') === 'light');
-      timeFormat.value = defaultSettings.timeFormat;
-      showAnalog.checked = defaultSettings.showAnalog;
-      showDigital.checked = defaultSettings.showDigital;
-      handMode.value = defaultSettings.handMode;
-      showHourNums.checked = defaultSettings.showHourNums;
-      showMinNums.checked = defaultSettings.showMinNums;
-      sevenSeg.checked = defaultSettings.sevenSeg;
-      digitColor.value = defaultSettings.digitColor;
+      const savedTheme = localStorage.getItem('theme');
+      setTheme(savedTheme === 'light' ? 'light' : 'dark');
+
+      timeFormat.value = localStorage.getItem('timeFormat') || '24';
+
+      showAnalog.checked = (localStorage.getItem('showAnalog') !== 'false');
+      showDigital.checked = (localStorage.getItem('showDigital') !== 'false');
+
+      handMode.value = localStorage.getItem('handMode') || 'smooth';
+      showHourNums.checked = (localStorage.getItem('showHourNums') === 'true');
+      showMinNums.checked = (localStorage.getItem('showMinNums') === 'true');
+
+      sevenSeg.checked = (localStorage.getItem('sevenSeg') === 'true');
+      digitColor.value = localStorage.getItem('digitColor') || (document.documentElement.getAttribute('data-theme') === 'light' ? '#111111' : '#eaf6ff');
 
       applyVisibility();
       applyDigitalLook();
+
+      // restore panel open/close states
+      const setupOpen  = localStorage.getItem(UI_KEY_SETUP_OPEN) === '1';
+      const analogOpen = localStorage.getItem(UI_KEY_ANALOG_OPEN) === '1';
+      const digiOpen   = localStorage.getItem(UI_KEY_DIGI_OPEN) === '1';
+
+      setPanel(setupPanel, setupChevron, setupOpen);
+      setPanel(analogPanel, analogChevron, analogOpen);
+      setPanel(digitalPanel, digitalChevron, digiOpen);
     })();
 
     // ---------------------------
@@ -872,14 +861,11 @@
       syncDot.classList.remove('ok','warn','bad');
       syncDot.classList.add(kind);
       syncText.textContent = txt;
-
-      // spinner on warn/bad
       syncSpin.classList.toggle('on', kind !== 'ok');
     }
 
     function isFiniteNum(x){ return Number.isFinite(x) && !Number.isNaN(x); }
 
-    // Model state
     let basePerf = performance.now();
     let baseNet  = Date.now();
     let scale    = 1.0;
@@ -908,7 +894,6 @@
 
     async function sampleNetTime(){
       const url = worldTimeUrlForTz(currentTz);
-
       const t0p = performance.now();
       const t0w = Date.now();
 
@@ -991,7 +976,7 @@
     }
 
     // ---------------------------
-    // Intl formatters (switchable 24/12)
+    // Intl formatters (24/12)
     // ---------------------------
     let partsFmt = null;
 
@@ -1012,7 +997,6 @@
     function buildFormatters(){
       const hour12 = (timeFormat.value === '12');
       partsFmt = makePartsFormatter(currentTz, hour12);
-      localStorage.setItem('timeFormat', timeFormat.value);
     }
     buildFormatters();
 
@@ -1023,7 +1007,6 @@
       for(const p of parts){
         if(p.type !== 'literal') map[p.type] = p.value;
       }
-      // map: hour, minute, second, day, month, year, weekday (+ possibly dayPeriod)
       return {
         hour: map.hour,
         minute: map.minute,
@@ -1043,7 +1026,6 @@
     const hdrDateTop = document.getElementById('hdrDateTop');
     const hdrWeekday = document.getElementById('hdrWeekday');
 
-    // Nerd fields
     const nTz   = document.getElementById('nTz');
     const nAge  = document.getElementById('nAge');
     const nRtt  = document.getElementById('nRtt');
@@ -1064,92 +1046,94 @@
       }
     })();
 
-    // numbers
+    // ---------------------------
+    // Numbers: responsive radii (fixes portrait clipping)
+    // ---------------------------
+    const analogClock = document.getElementById('analogClock');
     const numbersEl = document.getElementById('numbers');
-    const HOUR_POS = [
-      { key:'3',  angleDeg: 90,  r: 102 },
-      { key:'6',  angleDeg: 180, r: 102 },
-      { key:'9',  angleDeg: 270, r: 102 },
-      { key:'12', angleDeg: 0,   r: 102 },
-    ];
-    const MINUTE_KEYS = Array.from({length:12}, (_,i)=> i*5); // 0..55
-
-    let builtNums = false;
-    let lastHourLabelMode = ''; // 'std' or '24pm'
 
     function polarToXY(angleDeg, r){
       const a = (angleDeg - 90) * Math.PI/180;
-      const x = Math.cos(a) * r;
-      const y = Math.sin(a) * r;
-      return { x, y };
+      return { x: Math.cos(a) * r, y: Math.sin(a) * r };
     }
 
     function clearNumbers(){
       numbersEl.innerHTML = '';
-      builtNums = false;
-      lastHourLabelMode = '';
+    }
+
+    function buildHourLabels(){
+      // 24h => 0..23 (24 positions, every 15°)
+      // 12h => 1..12 (12 positions, every 30°)
+      const labels = [];
+      if(timeFormat.value === '24'){
+        for(let h=0; h<24; h++){
+          labels.push({ label: String(h), angleDeg: h*15 });
+        }
+      }else{
+        for(let h=1; h<=12; h++){
+          labels.push({ label: String(h), angleDeg: (h%12)*30 }); // 12 at 0°
+        }
+      }
+      return labels;
     }
 
     function rebuildNumbers(){
       clearNumbers();
       if(!showAnalog.checked) return;
-      // build hour numbers placeholders
+
+      const rect = analogClock.getBoundingClientRect();
+      const size = Math.min(rect.width, rect.height);
+      const half = size / 2;
+
+      // safe padding so nothing gets clipped even on small 240px clock
+      const padOuter = Math.max(18, Math.round(size * 0.08)); // ~18..22
+      const hourFont = Math.max(10, Math.round(size * 0.045)); // ~11..12
+      const minFont  = Math.max(9,  Math.round(size * 0.038)); // ~9..10
+
+      // radii
+      const rHour = half - padOuter - hourFont; // pull in by font size
+      const rMin  = half - padOuter - minFont - 6;
+
+      // apply font sizes (inline, so they scale)
+      const hourLabels = buildHourLabels();
+
       if(showHourNums.checked){
-        for(const p of HOUR_POS){
+        for(const it of hourLabels){
           const div = document.createElement('div');
           div.className = 'num hourNum';
-          div.dataset.kind = 'hour';
-          div.dataset.key = p.key;
-          const {x,y} = polarToXY(p.angleDeg, p.r);
+          div.style.fontSize = hourFont + 'px';
+          const {x,y} = polarToXY(it.angleDeg, rHour);
           div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-          div.textContent = p.key;
+          div.textContent = it.label;
           numbersEl.appendChild(div);
         }
       }
-      // build minute numbers
+
       if(showMinNums.checked){
-        for(const m of MINUTE_KEYS){
-          const angle = m*6; // 6° per minute
+        for(let m=0; m<60; m+=5){
           const div = document.createElement('div');
           div.className = 'num minNum';
-          div.dataset.kind = 'min';
-          div.dataset.key = String(m);
-          const {x,y} = polarToXY(angle, 122);
+          div.style.fontSize = minFont + 'px';
+          const {x,y} = polarToXY(m*6, rMin);
           div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
           div.textContent = String(m);
           numbersEl.appendChild(div);
         }
       }
-      builtNums = true;
     }
 
-    // determine hour label set:
-    // If 24h AND time > 12:00 AND time < 24:00 -> use 15/18/21/0 on the 3/6/9/12 marks
-    function hourLabelMode(H, M){
-      if(timeFormat.value !== '24') return 'std';
-      const afterNoon = (H > 12 && H < 24); // 13..23
-      // (You asked: more than noon and less than midnight)
-      return afterNoon ? '24pm' : 'std';
+    // rebuild on resize / orientation changes (portrait clipping fix)
+    let resizeTimer = null;
+    function scheduleRebuild(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(rebuildNumbers, 80);
     }
+    window.addEventListener('resize', scheduleRebuild, { passive:true });
+    window.addEventListener('orientationchange', scheduleRebuild, { passive:true });
 
-    function updateHourLabels(H, M){
-      if(!builtNums || !showHourNums.checked) return;
-
-      const mode = hourLabelMode(H, M);
-      if(mode === lastHourLabelMode) return;
-      lastHourLabelMode = mode;
-
-      const map = (mode === '24pm')
-        ? { '3':'15', '6':'18', '9':'21', '12':'0' }
-        : { '3':'3',  '6':'6',  '9':'9',  '12':'12' };
-
-      for(const el of numbersEl.querySelectorAll('[data-kind="hour"]')){
-        el.textContent = map[el.dataset.key] || el.dataset.key;
-      }
-    }
-
-    rebuildNumbers();
-
+    // ---------------------------
+    // Digital text render
+    // ---------------------------
     let lastPerf = performance.now();
     let lastTop = '';
     let lastWeekday = '';
@@ -1162,10 +1146,8 @@
       if(dt > 0 && dt < 0.5) tickSlews(dt);
 
       const ms = correctedNowMs();
-
       const tp = getTimeParts(ms);
 
-      // header: date top + weekday bottom
       if(tp.dateTop !== lastTop){
         lastTop = tp.dateTop;
         hdrDateTop.textContent = tp.dateTop;
@@ -1175,29 +1157,22 @@
         hdrWeekday.textContent = tp.weekday;
       }
 
-      // digital
       const dp = (timeFormat.value === '12' && tp.dayPeriod) ? ` <span class="ampm">${tp.dayPeriod}</span>` : '';
       const digitalStr = `${tp.hour}:${tp.minute}:${tp.second}`;
       if(digitalStr !== lastDigital || timeFormat.value === '12'){
-        // use innerHTML to attach am/pm
         digitalTimeEl.innerHTML = digitalStr + dp;
         lastDigital = digitalStr;
       }
 
-      // analog
-      const H = parseInt(tp.hour, 10);    // note: in 12h mode this is 01..12 => ok for face
+      // analog hands
+      const H = parseInt(tp.hour, 10);
       const M = parseInt(tp.minute, 10);
       const S = parseInt(tp.second, 10);
 
-      // tick vs smooth
-      const mode = handMode.value; // 'smooth' | 'tick'
+      const mode = handMode.value; // smooth | tick
       const frac = (mode === 'smooth') ? ((ms % 1000) / 1000) : 0;
 
-      // second: smooth => S+frac, tick => S
       const sec = (S + frac);
-
-      // minute/hour behavior:
-      // smooth => minute includes seconds; tick => minute only (clean ticks)
       const min = (mode === 'smooth') ? (M + sec/60) : M;
       const hr  = ((H % 12) + min/60);
 
@@ -1205,27 +1180,7 @@
       mHand.style.transform = `translate(-50%,-100%) rotate(${min*6}deg)`;
       hHand.style.transform = `translate(-50%,-100%) rotate(${hr*30}deg)`;
 
-      // update hour labels rule (needs real 24h hour -> we derive from parts in 24-mode by using a 24h formatter)
-      // For label rule, we need true 0..23 in 24h mode.
-      // We'll compute H24 separately using a lightweight formatter when needed.
-      if(showAnalog.checked && showHourNums.checked){
-        if(timeFormat.value === '24'){
-          // compute H24 from an hour12:false formatter
-          const f24 = new Intl.DateTimeFormat('is-IS', { timeZone: currentTz, hour:'2-digit', hour12:false, minute:'2-digit' });
-          const parts = f24.formatToParts(new Date(ms));
-          let H24 = 0, M24 = 0;
-          for(const p of parts){
-            if(p.type === 'hour') H24 = parseInt(p.value,10);
-            if(p.type === 'minute') M24 = parseInt(p.value,10);
-          }
-          updateHourLabels(H24, M24);
-        }else{
-          // in 12h mode we keep std labels
-          updateHourLabels(10, 0);
-        }
-      }
-
-      // Nerd panel
+      // nerd
       nTz.textContent = `${tzLabel(currentTz)} (${currentTz})`;
       if(lastGoodSyncPerf !== null){
         const ageMs = performance.now() - lastGoodSyncPerf;
@@ -1262,6 +1217,7 @@
       setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
       closeDropdown();
       hardResetSyncModel();
+      rebuildNumbers();
       syncLoop();
     });
 
@@ -1269,18 +1225,11 @@
     // Start
     // ---------------------------
     (function init(){
-      // set theme toggle UI properly
-      themeToggle.checked = (document.documentElement.getAttribute('data-theme') === 'light');
-
-      // persist initial values (so user doesn’t lose defaults on first load)
-      saveSetting('showAnalog', showAnalog.checked);
-      saveSetting('showDigital', showDigital.checked);
-      saveSetting('handMode', handMode.value);
-      saveSetting('showHourNums', showHourNums.checked);
-      saveSetting('showMinNums', showMinNums.checked);
-      saveSetting('sevenSeg', sevenSeg.checked);
-      saveSetting('digitColor', digitColor.value);
-      saveSetting('timeFormat', timeFormat.value);
+      // ensure toggles are persisted
+      localStorage.setItem('showAnalog', showAnalog.checked ? 'true' : 'false');
+      localStorage.setItem('showDigital', showDigital.checked ? 'true' : 'false');
+      localStorage.setItem('handMode', handMode.value);
+      localStorage.setItem('timeFormat', timeFormat.value);
 
       rebuildNumbers();
 
