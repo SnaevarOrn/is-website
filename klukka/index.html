@@ -613,15 +613,70 @@
         const a = (angleDeg - 90) * Math.PI/180;
         return { x: Math.cos(a) * r, y: Math.sin(a) * r };
       }
-      function buildHourLabels(){
-        const labels = [];
-        if(timeFormat.value === '24'){
-          for(let h=0; h<24; h++) labels.push({ label: String(h), angleDeg: h*15 });
-        }else{
-          for(let h=1; h<=12; h++) labels.push({ label: String(h), angleDeg: (h%12)*30 });
-        }
-        return labels;
-      }
+      
+      function buildHourRings(){
+  // Outer: classic 1..12
+  const outer = [];
+  for(let h=1; h<=12; h++){
+    const angleDeg = (h % 12) * 30; // 12 at 0°
+    outer.push({ label: String(h), angleDeg });
+  }
+
+  // Inner: 13..23 + 0 (only in 24h)
+  const inner = [];
+  if(timeFormat.value === '24'){
+    for(let h=13; h<=23; h++){
+      const angleDeg = (h - 12) * 30; // 13 at 1 o'clock etc
+      inner.push({ label: String(h), angleDeg });
+    }
+    inner.push({ label: '0', angleDeg: 0 });
+  }
+
+  return { outer, inner };
+}
+
+function rebuildNumbers(){
+  numbersEl.innerHTML = '';
+  if(!showAnalog.checked) return;
+
+  const rect = analogClock.getBoundingClientRect();
+  const size = Math.min(rect.width, rect.height);
+  const half = size / 2;
+
+  const padOuter = Math.max(18, Math.round(size * 0.085));
+
+  const hourOuterFont = Math.max(13, Math.round(size * 0.060));
+  const hourInnerFont = Math.max(11, Math.round(size * 0.048));
+  const minFont      = Math.max(8,  Math.round(size * 0.032));
+
+  const rMin   = half - padOuter - minFont - 2;
+  const rOuter = half - padOuter - hourOuterFont - 10;
+  const rInner = half - padOuter - hourOuterFont - hourInnerFont - 22;
+
+  const { outer, inner } = buildHourRings();
+
+  function addLabel(cls, fontPx, angleDeg, r, text){
+    const div = document.createElement('div');
+    div.className = 'num ' + cls;
+    div.style.fontSize = fontPx + 'px';
+    const {x,y} = polarToXY(angleDeg, r);
+    div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    div.textContent = text;
+    numbersEl.appendChild(div);
+  }
+
+  if(showHourNums.checked){
+    for(const it of outer) addLabel('hourOuter', hourOuterFont, it.angleDeg, rOuter, it.label);
+    for(const it of inner) addLabel('hourInner', hourInnerFont, it.angleDeg, rInner, it.label);
+  }
+
+  if(showMinNums.checked){
+    for(let m=0; m<60; m+=5){
+      if(m % 15 === 0) continue; // 0/15/30/45 collide with hour axes
+      addLabel('minNum', minFont, m*6, rMin, String(m));
+    }
+  }
+}
       function rebuildNumbers(){
         numbersEl.innerHTML = '';
         if(!showAnalog.checked) return;
