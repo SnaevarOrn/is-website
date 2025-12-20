@@ -92,7 +92,7 @@
       margin: 0 auto;
       padding: 14px 16px;
       display:grid;
-      grid-template-columns: 44px 1fr 44px;
+      grid-template-columns: 44px 1fr auto;
       align-items:center;
       gap: 10px;
     }
@@ -128,9 +128,11 @@
       position:relative;
       display:flex;
       justify-content:flex-end;
+      gap: 10px;
+      align-items:center;
     }
 
-    .menu-btn{
+    .icon-btn{
       width:44px; height:44px;
       border:1px solid var(--line);
       background: rgba(255,255,255,.06);
@@ -138,9 +140,27 @@
       display:flex; align-items:center; justify-content:center;
       cursor:pointer;
       color: var(--text);
+      user-select:none;
     }
-    html[data-theme="dark"] .menu-btn{ background: rgba(255,255,255,.04); }
-    .menu-btn:active{ transform: translateY(1px); }
+    html[data-theme="dark"] .icon-btn{ background: rgba(255,255,255,.04); }
+    .icon-btn:active{ transform: translateY(1px); }
+
+    .lang-flag{
+      font-size: 20px;
+      line-height: 1;
+    }
+    .lang-pill{
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .4px;
+      opacity: .9;
+    }
+    .lang-btn{
+      gap: 6px;
+      padding: 0 10px;
+      width: auto;
+      min-width: 44px;
+    }
 
     .burger{ width:18px; height:12px; position:relative; }
     .burger span{
@@ -165,6 +185,7 @@
       box-shadow: var(--shadow2);
       display:none;
       overflow:hidden;
+      z-index: 40;
     }
     .menu-pop.show{ display:block; }
     .menu-item{
@@ -182,7 +203,14 @@
     }
     .menu-item:hover{ background: var(--panel2); }
     .menu-item + .menu-item{ border-top:1px solid var(--line); }
-    .menu-item .hint{ color: var(--muted); font-weight: 600; }
+
+    /* BIGGER ICONS IN MENU */
+    .menu-item .hint{
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 18px;
+      line-height: 1;
+    }
 
     /* Layout */
     main{
@@ -379,6 +407,9 @@
       width: 18px; height: 18px;
       accent-color: #7aa7ff;
     }
+
+    /* Better spacing for multiple about lines */
+    .about-block span{ display:block; margin-top: 8px; line-height: 1.35; }
   </style>
 </head>
 
@@ -393,7 +424,14 @@
       <div class="brand-title">ís.is</div>
 
       <div class="menu-wrap">
-        <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
+        <!-- LANGUAGE TOGGLE -->
+        <button class="icon-btn lang-btn" id="langBtn" aria-label="Tungumál">
+          <span class="lang-flag" id="langFlag">🇮🇸</span>
+          <span class="lang-pill" id="langPill">IS</span>
+        </button>
+
+        <!-- BURGER -->
+        <button class="icon-btn" id="menuBtn" aria-label="Valmynd">
           <div class="burger" aria-hidden="true">
             <span></span><span></span><span></span>
           </div>
@@ -401,13 +439,13 @@
 
         <div class="menu-pop" id="menuPop" role="menu" aria-hidden="true">
           <button class="menu-item" id="menuSettings" role="menuitem">
-            <span>Stillingar</span><span class="hint">⚙︎</span>
+            <span data-i18n="menu.settings">Stillingar</span><span class="hint">⚙︎</span>
           </button>
           <button class="menu-item" id="menuAbout" role="menuitem">
-            <span>Um vefinn</span><span class="hint">ℹ︎</span>
+            <span data-i18n="menu.about">Um vefinn</span><span class="hint">ℹ︎</span>
           </button>
           <button class="menu-item" id="menuContact" role="menuitem">
-            <span>Hafa samband</span><span class="hint">✉︎</span>
+            <span data-i18n="menu.contact">Hafa samband</span><span class="hint">✉︎</span>
           </button>
         </div>
       </div>
@@ -418,51 +456,53 @@
     <div class="wrap">
       <div class="card">
         <div class="btns">
-          <button class="btn" onclick="location.href='/spil/'">Jöklar 🧊</button>
-          <button class="btn" onclick="location.href='/borg/'">Bæir 🏘️</button>
+          <button class="btn" onclick="location.href='/spil/'" data-i18n="btn.glaciers">Jöklar 🧊</button>
+          <button class="btn" onclick="location.href='/borg/'" data-i18n="btn.towns">Bæir 🏘️</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-title">Verkfæri</div>
+        <div class="section-title" data-i18n="tools.title">Verkfæri</div>
         <div class="btns">
-          <button class="btn" onclick="location.href='/dagatal/'">Dagatal 🗓️</button>
-          <button class="btn" onclick="location.href='/klukka/'">Klukka 🕒</button>
+          <button class="btn" onclick="location.href='/dagatal/'" data-i18n="btn.calendar">Dagatal 🗓️</button>
+          <button class="btn" onclick="location.href='/klukka/'" data-i18n="btn.clock">Klukka 🕒</button>
+          <button class="btn" onclick="location.href='/WOD/'" data-i18n="btn.timer">Tímatalning ⏱️</button>
+          <button class="btn" onclick="location.href='/frettir/'" data-i18n="btn.news">Fréttir 📰</button>
         </div>
       </div>
     </div>
   </main>
 
   <div class="banner">
-    <div class="pill">Vefur stofnaður 2025. Engar vafrakökur – bara ís.</div>
+    <div class="pill" data-i18n="footer.pill">Vefur stofnaður 2025. Engar vafrakökur – bara ís.</div>
   </div>
 
   <!-- CONTACT MODAL -->
   <div class="overlay" id="contactOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
     <div class="modal">
       <div class="modal-h">
-        <b id="contactTitle">Hafa samband</b>
+        <b id="contactTitle" data-i18n="contact.title">Hafa samband</b>
         <button class="close" id="contactClose" aria-label="Loka">✕</button>
       </div>
 
       <form id="contactForm" autocomplete="on">
         <div class="row">
           <div>
-            <label for="name">Nafn</label>
-            <input id="name" name="name" required placeholder="Nafn" />
+            <label for="name" data-i18n="contact.nameLabel">Nafn</label>
+            <input id="name" name="name" required placeholder="Nafn" data-i18n-placeholder="contact.namePh" />
           </div>
           <div>
-            <label for="email">Tölvupóstur</label>
-            <input id="email" name="email" type="email" required placeholder="nafn@dæmi.is" />
+            <label for="email" data-i18n="contact.emailLabel">Tölvupóstur</label>
+            <input id="email" name="email" type="email" required placeholder="nafn@dæmi.is" data-i18n-placeholder="contact.emailPh" />
           </div>
         </div>
 
         <div>
-          <label for="message">Erindi</label>
-          <textarea id="message" name="message" required placeholder="Skrifaðu erindið hér..."></textarea>
+          <label for="message" data-i18n="contact.msgLabel">Erindi</label>
+          <textarea id="message" name="message" required placeholder="Skrifaðu erindið hér..." data-i18n-placeholder="contact.msgPh"></textarea>
         </div>
 
-        <button class="send" type="submit">Senda</button>
+        <button class="send" type="submit" data-i18n="contact.send">Senda</button>
         <div class="status" id="status"></div>
       </form>
     </div>
@@ -472,15 +512,15 @@
   <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
     <div class="modal">
       <div class="modal-h">
-        <b id="settingsTitle">Stillingar</b>
+        <b id="settingsTitle" data-i18n="settings.title">Stillingar</b>
         <button class="close" id="settingsClose" aria-label="Loka">✕</button>
       </div>
 
       <div class="settings-body">
         <div class="toggle-row">
           <div>
-            <b>Þema</b><br/>
-            <span>Light / Dark</span>
+            <b data-i18n="settings.themeTitle">Þema</b><br/>
+            <span data-i18n="settings.themeHint">Light / Dark</span>
           </div>
           <label class="switch">
             <span style="opacity:.8">🌙</span>
@@ -495,18 +535,18 @@
   <div class="overlay" id="aboutOverlay" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
     <div class="modal">
       <div class="modal-h">
-        <b id="aboutTitle">Um vefinn</b>
+        <b id="aboutTitle" data-i18n="about.title">Um vefinn</b>
         <button class="close" id="aboutClose" aria-label="Loka">✕</button>
       </div>
 
       <div class="settings-body">
-        <div class="toggle-row" style="display:block">
+        <div class="toggle-row about-block" style="display:block">
           <b>ís.is</b><br/>
-          <span>Vefur stofnaður 2025 og er sjálfstætt verkefni unnið af einstaklingi, án auglýsinga, rekstrarfélaga eða gagnasöfnunar.</span>
-          <span>Markmið vefsins er að miðla þekkingu um Ísland á einfaldan, gagnvirkan og aðgengilegan hátt – í þágu almennings.</span>
-          <span>Vefurinn er opinn og ókeypis.</span>
-          <span>Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald.</span>
-          <span>Engar auglýsingar. Engar vafrakökur. Bara Ísland.</span>
+          <span data-i18n="about.p1">Vefur stofnaður 2025 og er sjálfstætt verkefni unnið af einstaklingi, án auglýsinga, rekstrarfélaga eða gagnasöfnunar.</span>
+          <span data-i18n="about.p2">Markmið vefsins er að miðla þekkingu um Ísland á einfaldan, gagnvirkan og aðgengilegan hátt – í þágu almennings.</span>
+          <span data-i18n="about.p3">Vefurinn er opinn og ókeypis.</span>
+          <span data-i18n="about.p4">Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald.</span>
+          <span data-i18n="about.p5">Engar auglýsingar. Engar vafrakökur. Bara Ísland.</span>
         </div>
       </div>
     </div>
@@ -514,7 +554,6 @@
 
   <script>
     // ---------- THEME (shared across pages) ----------
-    // NOTE: we use the SAME key as the clock: localStorage.theme
     const META = document.getElementById("metaThemeColor");
 
     function setMetaThemeColor(theme){
@@ -531,25 +570,145 @@
       const toggle = document.getElementById("themeToggle");
       if(toggle) toggle.checked = (t === "dark");
     }
+
     // ---------- THEME SYNC (between tabs/pages) ----------
     window.addEventListener('storage', (e) => {
-    if (e.key !== 'theme') return;
-    const t = (e.newValue === 'dark' || e.newValue === 'light') ? e.newValue : 'light';
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('theme', t); // normalize
-    setMetaThemeColor(t);
+      if (e.key !== 'theme') return;
+      const t = (e.newValue === 'dark' || e.newValue === 'light') ? e.newValue : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      setMetaThemeColor(t);
 
-    const toggle = document.getElementById('themeToggle');
-    if (toggle) toggle.checked = (t === 'dark');
+      const toggle = document.getElementById('themeToggle');
+      if (toggle) toggle.checked = (t === 'dark');
     });
-    // init from whatever head-script set (or storage)
+
     (function syncToggleOnLoad(){
       const t = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
       const toggle = document.getElementById("themeToggle");
       if(toggle) toggle.checked = (t === "dark");
       setMetaThemeColor(t);
-      localStorage.setItem("theme", t); // normalize key
+      localStorage.setItem("theme", t);
     })();
+
+    // ---------- LANGUAGE (simple i18n) ----------
+    const I18N = {
+      is: {
+        "menu.settings": "Stillingar",
+        "menu.about": "Um vefinn",
+        "menu.contact": "Hafa samband",
+
+        "btn.glaciers": "Jöklar 🧊",
+        "btn.towns": "Bæir 🏘️",
+        "tools.title": "Verkfæri",
+        "btn.calendar": "Dagatal 🗓️",
+        "btn.clock": "Klukka 🕒",
+        "btn.timer": "Tímatalning ⏱️",
+        "btn.news": "Fréttir 📰",
+
+        "footer.pill": "Vefur stofnaður 2025. Engar vafrakökur – bara ís.",
+
+        "contact.title": "Hafa samband",
+        "contact.nameLabel": "Nafn",
+        "contact.emailLabel": "Tölvupóstur",
+        "contact.msgLabel": "Erindi",
+        "contact.send": "Senda",
+        "contact.namePh": "Nafn",
+        "contact.emailPh": "nafn@dæmi.is",
+        "contact.msgPh": "Skrifaðu erindið hér...",
+
+        "settings.title": "Stillingar",
+        "settings.themeTitle": "Þema",
+        "settings.themeHint": "Light / Dark",
+
+        "about.title": "Um vefinn",
+        "about.p1": "Vefur stofnaður 2025 og er sjálfstætt verkefni unnið af einstaklingi, án auglýsinga, rekstrarfélaga eða gagnasöfnunar.",
+        "about.p2": "Markmið vefsins er að miðla þekkingu um Ísland á einfaldan, gagnvirkan og aðgengilegan hátt – í þágu almennings.",
+        "about.p3": "Vefurinn er opinn og ókeypis.",
+        "about.p4": "Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald.",
+        "about.p5": "Engar auglýsingar. Engar vafrakökur. Bara Ísland."
+      },
+      en: {
+        "menu.settings": "Settings",
+        "menu.about": "About",
+        "menu.contact": "Contact",
+
+        "btn.glaciers": "Glaciers 🧊",
+        "btn.towns": "Towns 🏘️",
+        "tools.title": "Tools",
+        "btn.calendar": "Calendar 🗓️",
+        "btn.clock": "Clock 🕒",
+        "btn.timer": "Timer ⏱️",
+        "btn.news": "News 📰",
+
+        "footer.pill": "Site created 2025. No cookies — just ice.",
+
+        "contact.title": "Contact",
+        "contact.nameLabel": "Name",
+        "contact.emailLabel": "Email",
+        "contact.msgLabel": "Message",
+        "contact.send": "Send",
+        "contact.namePh": "Name",
+        "contact.emailPh": "name@example.com",
+        "contact.msgPh": "Write your message here...",
+
+        "settings.title": "Settings",
+        "settings.themeTitle": "Theme",
+        "settings.themeHint": "Light / Dark",
+
+        "about.title": "About",
+        "about.p1": "Created in 2025 as an independent, personal project — with no ads, no companies behind it, and no tracking.",
+        "about.p2": "The goal is to share knowledge about Iceland in a simple, interactive, and accessible way — for the public.",
+        "about.p3": "Free and open to use.",
+        "about.p4": "If you want to support further development, feedback or a voluntary contribution helps keep the site improving.",
+        "about.p5": "No ads. No cookies. Just Iceland."
+      }
+    };
+
+    function getInitialLang(){
+      const saved = localStorage.getItem('lang');
+      if (saved === 'is' || saved === 'en') return saved;
+      const nav = (navigator.language || '').toLowerCase();
+      return nav.startsWith('is') ? 'is' : 'en';
+    }
+
+    function applyLang(lang){
+      const L = (lang === 'en') ? 'en' : 'is';
+      localStorage.setItem('lang', L);
+      document.documentElement.setAttribute('lang', L);
+
+      // Update button visuals
+      const flag = document.getElementById('langFlag');
+      const pill = document.getElementById('langPill');
+      if (flag && pill){
+        if (L === 'is'){ flag.textContent = '🇮🇸'; pill.textContent = 'IS'; }
+        else { flag.textContent = '🇬🇧'; pill.textContent = 'EN'; }
+      }
+
+      // Replace all text nodes
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const val = I18N[L][key];
+        if (typeof val === 'string') el.textContent = val;
+      });
+
+      // Replace placeholders
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        const val = I18N[L][key];
+        if (typeof val === 'string') el.setAttribute('placeholder', val);
+      });
+    }
+
+    const langBtn = document.getElementById('langBtn');
+    langBtn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const current = localStorage.getItem('lang') === 'en' ? 'en' : 'is';
+      applyLang(current === 'is' ? 'en' : 'is');
+    });
+
+    // Init language on load
+    applyLang(getInitialLang());
 
     // ---------- MENU ----------
     const menuBtn = document.getElementById("menuBtn");
@@ -643,7 +802,7 @@
     // ---------- CONTACT SUBMIT ----------
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      statusEl.textContent = "Sendi...";
+      statusEl.textContent = (localStorage.getItem('lang') === 'en') ? "Sending..." : "Sendi...";
 
       const payload = {
         name: form.name.value.trim(),
@@ -660,14 +819,16 @@
 
         if (!res.ok){
           const txt = await res.text().catch(() => "");
-          throw new Error(txt || "Villa við sendingu.");
+          throw new Error(txt || "Error.");
         }
 
-        statusEl.textContent = "Sent. Takk!";
+        statusEl.textContent = (localStorage.getItem('lang') === 'en') ? "Sent. Thanks!" : "Sent. Takk!";
         form.reset();
         setTimeout(closeContact, 700);
       }catch(err){
-        statusEl.textContent = "Tókst ekki að senda. Reyndu aftur eftir smá.";
+        statusEl.textContent = (localStorage.getItem('lang') === 'en')
+          ? "Failed to send. Try again shortly."
+          : "Tókst ekki að senda. Reyndu aftur eftir smá.";
       }
     });
 
