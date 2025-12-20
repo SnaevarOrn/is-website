@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — WOD</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- APPLY THEME ASAP (shared across pages via localStorage.theme) -->
+  <script>
+    (function(){
+      const saved = localStorage.getItem('theme'); // 'dark' | 'light'
+      const t = (saved === 'dark' || saved === 'light')
+        ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+      document.documentElement.setAttribute('data-theme', t);
+
+      const meta = document.getElementById('metaThemeColor');
+      if(meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#ffffff');
+    })();
+  </script>
+
+  <style>
+    :root{
+      /* Light */
+      --bg: #ffffff;
+      --text: rgba(0,0,0,.92);
+      --muted: rgba(0,0,0,.60);
+      --line: rgba(0,0,0,.12);
+
+      --card: #ffffff;
+      --btnBg: #0b0c0f;
+      --btnText: #ffffff;
+
+      --shadow: 0 18px 60px rgba(0,0,0,.14);
+    }
+    html[data-theme="dark"]{
+      --bg: #000000;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --line: rgba(255,255,255,.14);
+
+      --card: rgba(12,12,14,.92);
+      --btnBg: rgba(255,255,255,.92);
+      --btnText: #07080a;
+
+      --shadow: 0 24px 90px rgba(0,0,0,.70);
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{
+      min-height:100vh;
+      background: var(--bg);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
+    }
+
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .hdr{
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      display:grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items:center;
+      gap: 10px;
+    }
+
+    .back{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: transparent;
+      border-radius: 14px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      color: var(--text);
+      text-decoration:none;
+      font-weight: 900;
+      user-select:none;
+    }
+    .back:active{ transform: translateY(1px); }
+
+    .title{
+      text-align:center;
+      font-weight: 850;
+      letter-spacing:.2px;
+      user-select:none;
+    }
+
+    .theme-btn{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: transparent;
+      border-radius: 14px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      color: var(--text);
+      user-select:none;
+      font-weight: 900;
+    }
+    .theme-btn:active{ transform: translateY(1px); }
+
+    main{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px 16px 22px;
+    }
+
+    .card{
+      width: min(560px, 100%);
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px 16px 16px;
+    }
+
+    .card h1{
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      text-align:center;
+      margin-bottom: 12px;
+    }
+
+    .sub{
+      text-align:center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: -6px;
+      margin-bottom: 14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .btn{
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 16px 18px;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      background: var(--btnBg);
+      color: var(--btnText);
+      text-align:center;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .hint{
+      text-align:center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="hdr">
+      <a class="back" href="/" aria-label="Til baka">←</a>
+      <div class="title">WOD</div>
+      <button class="theme-btn" id="themeBtn" aria-label="Skipta um þema">◐</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="card" role="region" aria-label="WOD timers">
+      <h1>Veldu tímastillingu</h1>
+      <div class="sub">Einfalt. Stórt. Lesanlegt.</div>
+
+      <div class="grid">
+        <button class="btn" onclick="location.href='./skeidklukka/'">Skeiðklukka</button>
+        <button class="btn" onclick="location.href='./nidurtalning/'">Niðurtalning</button>
+        <button class="btn" onclick="location.href='./amrap/'">AMRAP</button>
+        <button class="btn" onclick="location.href='./emom/'">EMOM</button>
+      </div>
+
+      <div class="hint">Þema fylgir milli síðna.</div>
+    </div>
+  </main>
+
+  <script>
+    // --- Theme helpers (shared key: localStorage.theme) ---
+    const meta = document.getElementById('metaThemeColor');
+
+    function setMetaThemeColor(t){
+      if(meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#ffffff');
+    }
+
+    function applyTheme(t){
+      const theme = (t === 'dark') ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      setMetaThemeColor(theme);
+    }
+
+    // normalize on load (in case some older page used other key earlier)
+    (function(){
+      const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      localStorage.setItem('theme', t);
+      setMetaThemeColor(t);
+    })();
+
+    // toggle button
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(cur === 'dark' ? 'light' : 'dark');
+    });
+
+    // sync between tabs/pages
+    window.addEventListener('storage', (e) => {
+      if (e.key !== 'theme') return;
+      const t = (e.newValue === 'dark' || e.newValue === 'light') ? e.newValue : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      setMetaThemeColor(t);
+    });
+  </script>
+</body>
+</html>
