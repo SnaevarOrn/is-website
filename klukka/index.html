@@ -30,6 +30,9 @@
       --shadow: 0 18px 60px rgba(0,0,0,.45);
       --btn:#f2f2f2;
       --btnText:#0b0c0f;
+
+      --digitColor: rgba(255,255,255,.92);
+      --digitGlow: rgba(180, 230, 255, 0.25);
     }
     html[data-theme="light"]{
       --bg:#f6f7f9;
@@ -41,6 +44,9 @@
       --shadow: 0 18px 60px rgba(0,0,0,.10);
       --btn:#111318;
       --btnText:#ffffff;
+
+      --digitColor: rgba(0,0,0,.88);
+      --digitGlow: rgba(10, 20, 40, 0.18);
     }
 
     *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
@@ -61,7 +67,7 @@
     .hdr{
       max-width: 760px;
       margin: 0 auto;
-      padding: 12px 14px;
+      padding: 10px 14px;
       display:grid;
       grid-template-columns: 44px 1fr 44px;
       align-items:center;
@@ -80,18 +86,30 @@
       user-select:none;
     }
     .back:active{ transform: translateY(1px); }
-    .hdr-date{
+
+    /* NEW header center: date on top, weekday below */
+    .hdr-center{
       text-align:center;
-      font-weight: 850;
-      letter-spacing:.2px;
-      font-size: 15px;
       user-select:none;
       white-space: nowrap;
       overflow:hidden;
       text-overflow: ellipsis;
+      line-height: 1.15;
+      padding: 2px 0;
+    }
+    .hdr-date-top{
+      font-weight: 900;
+      letter-spacing: .2px;
+      font-size: 15px;
+    }
+    .hdr-weekday-bottom{
+      margin-top: 2px;
+      font-weight: 850;
+      font-size: 13px;
+      color: var(--muted);
     }
 
-    /* Hamburger (like front page) */
+    /* Hamburger */
     .menu-wrap{ position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
     .menu-btn{
       width:44px; height:44px;
@@ -116,7 +134,7 @@
       position:absolute;
       top: 50px;
       right: 0;
-      width: 250px;
+      width: 290px;
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 14px;
@@ -169,6 +187,79 @@
     }
     .drop-btn:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
 
+    .drop-sub{
+      margin-top: 6px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: color-mix(in srgb, var(--panel2) 65%, transparent);
+      display:none;
+      gap: 10px;
+      flex-direction:column;
+    }
+    .drop-sub.open{ display:flex; }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .row .hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.25;
+    }
+
+    /* Switch / checkbox styling */
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      justify-content:space-between;
+    }
+    .toggle label{
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .toggle input[type="checkbox"]{
+      appearance:none;
+      width: 44px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: transparent;
+      position:relative;
+      cursor:pointer;
+      outline:none;
+      flex: 0 0 auto;
+    }
+    .toggle input[type="checkbox"]::after{
+      content:"";
+      position:absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--text) 85%, transparent);
+      opacity:.92;
+      transition: transform .18s ease;
+    }
+    .toggle input[type="checkbox"]:checked{
+      background: color-mix(in srgb, var(--text) 10%, transparent);
+    }
+    .toggle input[type="checkbox"]:checked::after{
+      transform: translateX(18px);
+    }
+
+    input[type="color"]{
+      width: 44px;
+      height: 30px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 0;
+    }
+
     main{
       flex:1;
       display:flex;
@@ -195,6 +286,7 @@
       gap: 12px;
     }
 
+    .digitalWrap{ width: 100%; display:flex; justify-content:center; }
     .digitalTime{
       font-variant-numeric: tabular-nums;
       letter-spacing: .9px;
@@ -207,8 +299,30 @@
       box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--text) 3%, transparent);
       text-align:center;
       min-width: 270px;
+      color: var(--digitColor);
+    }
+    .digitalTime.seven{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: 2.2px;
+      text-shadow:
+        0 0 0.6px var(--digitColor),
+        0 0 14px var(--digitGlow);
+      box-shadow:
+        inset 0 0 0 6px color-mix(in srgb, var(--digitColor) 8%, transparent),
+        0 0 20px color-mix(in srgb, var(--digitGlow) 75%, transparent);
+    }
+    .ampm{
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      color: var(--muted);
+      margin-left: 10px;
+      vertical-align: middle;
+      display:inline-block;
+      transform: translateY(-6px);
     }
 
+    .analogWrap{ width:100%; display:flex; justify-content:center; }
     .analog{
       width: 270px;
       height: 270px;
@@ -218,7 +332,9 @@
       box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--text) 3%, transparent);
       position: relative;
       margin: 2px 0;
+      overflow: hidden;
     }
+
     .center-dot{
       position:absolute;
       left:50%; top:50%;
@@ -256,6 +372,25 @@
       background: color-mix(in srgb, var(--text) 28%, transparent);
     }
 
+    /* Analog numbers */
+    .numbers{
+      position:absolute;
+      inset: 0;
+      pointer-events:none;
+    }
+    .num{
+      position:absolute;
+      left:50%; top:50%;
+      transform: translate(-50%,-50%);
+      font-variant-numeric: tabular-nums;
+      font-weight: 900;
+      color: color-mix(in srgb, var(--text) 70%, transparent);
+      text-shadow: 0 1px 0 color-mix(in srgb, var(--bg) 40%, transparent);
+      user-select:none;
+    }
+    .num.hourNum{ font-size: 14px; }
+    .num.minNum{ font-size: 11px; opacity:.85; color: color-mix(in srgb, var(--text) 55%, transparent); }
+
     .pill-row{
       width:100%;
       display:flex;
@@ -282,6 +417,19 @@
     .dot.ok{ background:#2ecc71; }
     .dot.warn{ background:#f1c40f; }
     .dot.bad{ background:#e74c3c; }
+
+    /* Spinner for warn/bad */
+    .spinner{
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--text) 20%, transparent);
+      border-top-color: color-mix(in srgb, var(--text) 70%, transparent);
+      animation: spin 0.9s linear infinite;
+      display:none;
+    }
+    .spinner.on{ display:inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .info-btn{
       width:36px; height:36px;
@@ -316,7 +464,7 @@
     @media (max-width:420px){
       .analog{ width: 240px; height: 240px; }
       .digitalTime{ font-size: 40px; min-width: 250px; }
-      .dropdown{ width: 240px; }
+      .dropdown{ width: 270px; }
     }
   </style>
 </head>
@@ -325,7 +473,11 @@
   <header>
     <div class="hdr">
       <a class="back" href="/" aria-label="Til baka">←</a>
-      <div class="hdr-date" id="hdrDate">—</div>
+
+      <div class="hdr-center" aria-label="Dagsetning">
+        <div class="hdr-date-top" id="hdrDateTop">—</div>
+        <div class="hdr-weekday-bottom" id="hdrWeekday">—</div>
+      </div>
 
       <div class="menu-wrap">
         <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
@@ -338,6 +490,93 @@
           <div class="drop-row">
             <div class="drop-label">Tímabelti</div>
             <select id="tzSelect" aria-label="Velja tímabelti"></select>
+          </div>
+
+          <div class="drop-sep"></div>
+
+          <div class="drop-row">
+            <div class="toggle">
+              <label for="themeToggle">Dark / Light</label>
+              <input id="themeToggle" type="checkbox" aria-label="Skipta um þema">
+            </div>
+          </div>
+
+          <div class="drop-sep"></div>
+
+          <div class="drop-row">
+            <button class="drop-btn" id="setupBtn" type="button">
+              Uppsetning <span id="setupChevron">▾</span>
+            </button>
+
+            <div class="drop-sub" id="setupPanel">
+              <div class="row">
+                <div>
+                  <div style="font-weight:900;">Tímasnið</div>
+                  <div class="hint">24h er sjálfgefið</div>
+                </div>
+                <select id="timeFormat" aria-label="Tímasnið">
+                  <option value="24">24h</option>
+                  <option value="12">12h (AM/PM)</option>
+                </select>
+              </div>
+
+              <div class="drop-sep" style="margin:2px 0;"></div>
+
+              <div class="toggle">
+                <label for="showAnalog">Sýna analog</label>
+                <input id="showAnalog" type="checkbox">
+              </div>
+              <div class="toggle">
+                <label for="showDigital">Sýna digital</label>
+                <input id="showDigital" type="checkbox">
+              </div>
+
+              <div class="drop-sep" style="margin:2px 0;"></div>
+
+              <button class="drop-btn" id="analogBtn" type="button">
+                Analog stillingar <span id="analogChevron">▾</span>
+              </button>
+              <div class="drop-sub" id="analogPanel">
+                <div class="row">
+                  <div>
+                    <div style="font-weight:900;">Hreyfing vísa</div>
+                    <div class="hint">Smooth er sjálfgefið</div>
+                  </div>
+                  <select id="handMode" aria-label="Hreyfing vísa">
+                    <option value="smooth">Smooth</option>
+                    <option value="tick">Tick</option>
+                  </select>
+                </div>
+
+                <div class="toggle">
+                  <label for="showHourNums">Tölur (3/6/9/12)</label>
+                  <input id="showHourNums" type="checkbox">
+                </div>
+
+                <div class="toggle">
+                  <label for="showMinNums">Mínútur (0..55)</label>
+                  <input id="showMinNums" type="checkbox">
+                </div>
+              </div>
+
+              <button class="drop-btn" id="digitalBtn" type="button">
+                Digital stillingar <span id="digitalChevron">▾</span>
+              </button>
+              <div class="drop-sub" id="digitalPanel">
+                <div class="toggle">
+                  <label for="sevenSeg">Seven-segment</label>
+                  <input id="sevenSeg" type="checkbox">
+                </div>
+
+                <div class="row">
+                  <div>
+                    <div style="font-weight:900;">Litur</div>
+                    <div class="hint">Gildir bara fyrir digital</div>
+                  </div>
+                  <input type="color" id="digitColor" aria-label="Velja lit">
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="drop-sep"></div>
@@ -356,19 +595,26 @@
   <main>
     <div class="wrap">
       <div class="card">
-        <div class="digitalTime" id="digitalTime">--:--:--</div>
 
-        <div class="analog" aria-label="Analog klukka">
-          <div class="ticks" id="ticks"></div>
-          <div class="hand hour" id="hHand"></div>
-          <div class="hand min" id="mHand"></div>
-          <div class="hand sec" id="sHand"></div>
-          <div class="center-dot"></div>
+        <div class="digitalWrap" id="digitalWrap">
+          <div class="digitalTime" id="digitalTime">--:--:--</div>
+        </div>
+
+        <div class="analogWrap" id="analogWrap">
+          <div class="analog" aria-label="Analog klukka">
+            <div class="ticks" id="ticks"></div>
+            <div class="numbers" id="numbers"></div>
+            <div class="hand hour" id="hHand"></div>
+            <div class="hand min" id="mHand"></div>
+            <div class="hand sec" id="sHand"></div>
+            <div class="center-dot"></div>
+          </div>
         </div>
 
         <div class="pill-row">
           <div class="pill">
             <span class="dot" id="syncDot"></span>
+            <span class="spinner" id="syncSpin" aria-hidden="true"></span>
             <span id="syncText">Tími: net</span>
           </div>
           <button class="info-btn" id="infoBtn" aria-label="Upplýsingar">ⓘ</button>
@@ -382,14 +628,36 @@
           <div class="kv"><b>Offset live</b><span id="nOff">—</span></div>
           <div class="kv"><b>Drift</b><span id="nPpm">—</span></div>
           <div class="kv"><b>Scale</b><span id="nScale">—</span></div>
+          <div class="kv"><b>Source</b><span id="nSrc">—</span></div>
         </div>
+
       </div>
     </div>
   </main>
 
   <script>
     // ---------------------------
-    // TZ list (minimal but nerd-approved)
+    // Persisted settings
+    // ---------------------------
+    const SETTINGS_KEY = 'clockSettings.v1';
+    const defaultSettings = {
+      theme: (localStorage.getItem('theme') === 'light') ? 'light' : 'dark',
+      timeFormat: localStorage.getItem('timeFormat') || '24', // '24' | '12'
+      showAnalog: localStorage.getItem('showAnalog') !== 'false',
+      showDigital: localStorage.getItem('showDigital') !== 'false',
+      handMode: localStorage.getItem('handMode') || 'smooth', // smooth | tick
+      showHourNums: localStorage.getItem('showHourNums') === 'true',
+      showMinNums: localStorage.getItem('showMinNums') === 'true',
+      sevenSeg: localStorage.getItem('sevenSeg') === 'true',
+      digitColor: localStorage.getItem('digitColor') || (document.documentElement.getAttribute('data-theme') === 'light' ? '#111111' : '#eaf6ff'),
+    };
+
+    function saveSetting(k, v){
+      localStorage.setItem(k, String(v));
+    }
+
+    // ---------------------------
+    // TZ list
     // ---------------------------
     const TZ_PRESETS = [
       { tz: 'Atlantic/Reykjavik', label: 'Reykjavík' },
@@ -436,7 +704,7 @@
     document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDropdown(); });
 
     // ---------------------------
-    // Fullscreen (exit on any click/tap anywhere)
+    // Fullscreen
     // ---------------------------
     const fsBtn = document.getElementById('fsBtn');
 
@@ -463,13 +731,129 @@
       else await enterFullscreen();
     });
 
-    // exit fullscreen if user taps/clicks anywhere
     document.addEventListener('pointerdown', async () => {
       if(inFullscreen()) await exitFullscreen();
     }, { passive: true });
 
     // ---------------------------
-    // Nerd info toggle (hidden unless ⓘ)
+    // Settings UI
+    // ---------------------------
+    const themeToggle = document.getElementById('themeToggle');
+    const setupBtn = document.getElementById('setupBtn');
+    const setupPanel = document.getElementById('setupPanel');
+    const setupChevron = document.getElementById('setupChevron');
+
+    const timeFormat = document.getElementById('timeFormat');
+    const showAnalog = document.getElementById('showAnalog');
+    const showDigital = document.getElementById('showDigital');
+
+    const analogBtn = document.getElementById('analogBtn');
+    const analogPanel = document.getElementById('analogPanel');
+    const analogChevron = document.getElementById('analogChevron');
+    const handMode = document.getElementById('handMode');
+    const showHourNums = document.getElementById('showHourNums');
+    const showMinNums = document.getElementById('showMinNums');
+
+    const digitalBtn = document.getElementById('digitalBtn');
+    const digitalPanel = document.getElementById('digitalPanel');
+    const digitalChevron = document.getElementById('digitalChevron');
+    const sevenSeg = document.getElementById('sevenSeg');
+    const digitColor = document.getElementById('digitColor');
+
+    const analogWrap = document.getElementById('analogWrap');
+    const digitalWrap = document.getElementById('digitalWrap');
+    const digitalTimeEl = document.getElementById('digitalTime');
+
+    function setTheme(t){
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      themeToggle.checked = (t === 'light');
+      // nudge defaults for digit color if user never touched it
+      document.documentElement.style.setProperty('--digitColor', hexToRgba(digitColor.value, 0.95));
+    }
+
+    function togglePanel(btn, panel, chev){
+      const open = panel.classList.toggle('open');
+      if(chev) chev.textContent = open ? '▴' : '▾';
+    }
+
+    setupBtn.addEventListener('click', () => togglePanel(setupBtn, setupPanel, setupChevron));
+    analogBtn.addEventListener('click', () => togglePanel(analogBtn, analogPanel, analogChevron));
+    digitalBtn.addEventListener('click', () => togglePanel(digitalBtn, digitalPanel, digitalChevron));
+
+    themeToggle.addEventListener('change', () => {
+      setTheme(themeToggle.checked ? 'light' : 'dark');
+    });
+
+    function applyVisibility(){
+      analogWrap.style.display = showAnalog.checked ? 'flex' : 'none';
+      digitalWrap.style.display = showDigital.checked ? 'flex' : 'none';
+      // ef notandi slekkur á báðu: þá kveikjum við a.m.k. á digital aftur (til að forðast tómt UI)
+      if(!showAnalog.checked && !showDigital.checked){
+        showDigital.checked = true;
+        digitalWrap.style.display = 'flex';
+      }
+    }
+
+    showAnalog.addEventListener('change', () => {
+      saveSetting('showAnalog', showAnalog.checked);
+      applyVisibility();
+      rebuildNumbers(); // because clock face might reappear
+    });
+    showDigital.addEventListener('change', () => {
+      saveSetting('showDigital', showDigital.checked);
+      applyVisibility();
+    });
+
+    timeFormat.addEventListener('change', () => {
+      saveSetting('timeFormat', timeFormat.value);
+      buildFormatters();
+      rebuildNumbers();
+    });
+
+    handMode.addEventListener('change', () => saveSetting('handMode', handMode.value));
+    showHourNums.addEventListener('change', () => { saveSetting('showHourNums', showHourNums.checked); rebuildNumbers(); });
+    showMinNums.addEventListener('change', () => { saveSetting('showMinNums', showMinNums.checked); rebuildNumbers(); });
+
+    function hexToRgba(hex, a){
+      const h = hex.replace('#','').trim();
+      if(h.length !== 6) return `rgba(255,255,255,${a})`;
+      const r = parseInt(h.slice(0,2),16);
+      const g = parseInt(h.slice(2,4),16);
+      const b = parseInt(h.slice(4,6),16);
+      return `rgba(${r},${g},${b},${a})`;
+    }
+
+    function applyDigitalLook(){
+      digitalTimeEl.classList.toggle('seven', sevenSeg.checked);
+      document.documentElement.style.setProperty('--digitColor', hexToRgba(digitColor.value, 0.95));
+      // glow follows current theme + chosen color
+      document.documentElement.style.setProperty('--digitGlow', hexToRgba(digitColor.value, 0.22));
+      saveSetting('sevenSeg', sevenSeg.checked);
+      saveSetting('digitColor', digitColor.value);
+    }
+
+    sevenSeg.addEventListener('change', applyDigitalLook);
+    digitColor.addEventListener('input', applyDigitalLook);
+
+    // init settings UI state
+    (function initSettingsUI(){
+      themeToggle.checked = (localStorage.getItem('theme') === 'light');
+      timeFormat.value = defaultSettings.timeFormat;
+      showAnalog.checked = defaultSettings.showAnalog;
+      showDigital.checked = defaultSettings.showDigital;
+      handMode.value = defaultSettings.handMode;
+      showHourNums.checked = defaultSettings.showHourNums;
+      showMinNums.checked = defaultSettings.showMinNums;
+      sevenSeg.checked = defaultSettings.sevenSeg;
+      digitColor.value = defaultSettings.digitColor;
+
+      applyVisibility();
+      applyDigitalLook();
+    })();
+
+    // ---------------------------
+    // Nerd info toggle
     // ---------------------------
     const infoBtn = document.getElementById('infoBtn');
     const nerdBox = document.getElementById('nerdBox');
@@ -478,40 +862,42 @@
     });
 
     // ---------------------------
-    // Net-sync + smooth drift correction (PLL-ish)
+    // Net-sync + drift correction
     // ---------------------------
     const syncDot  = document.getElementById('syncDot');
     const syncText = document.getElementById('syncText');
+    const syncSpin = document.getElementById('syncSpin');
 
     function setStatus(kind, txt){
       syncDot.classList.remove('ok','warn','bad');
       syncDot.classList.add(kind);
       syncText.textContent = txt;
+
+      // spinner on warn/bad
+      syncSpin.classList.toggle('on', kind !== 'ok');
     }
 
     function isFiniteNum(x){ return Number.isFinite(x) && !Number.isNaN(x); }
 
     // Model state
     let basePerf = performance.now();
-    let baseNet  = Date.now();   // anchor to "network time" at basePerf
-    let scale    = 1.0;          // live rate correction
-    let targetScale = 1.0;       // filtered target
-    let offsetMs = 0;            // slewed extra offset
+    let baseNet  = Date.now();
+    let scale    = 1.0;
+    let targetScale = 1.0;
+    let offsetMs = 0;
     let targetOffsetMs = 0;
 
-    // Sync bookkeeping
     let lastGoodSyncPerf = null;
     let lastGoodOffset = null;
     let lastRttMs = null;
     let consecutiveFails = 0;
 
-    // Slew limits
-    const MAX_OFFSET_SLEW_MS_PER_S = 8;     // smooth: max 8ms/s
-    const SCALE_SLEW_PER_S = 2e-6;          // ~2 ppm per second
+    const MAX_OFFSET_SLEW_MS_PER_S = 8;
+    const SCALE_SLEW_PER_S = 2e-6;
 
     function correctedNowMs(){
       const p = performance.now();
-      const elapsed = p - basePerf; // ms
+      const elapsed = p - basePerf;
       return baseNet + elapsed * scale + offsetMs;
     }
 
@@ -534,7 +920,7 @@
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      const serverMs = new Date(data.datetime).getTime(); // absolute UTC ms
+      const serverMs = new Date(data.datetime).getTime();
       if(!isFiniteNum(serverMs)) throw new Error('bad datetime');
 
       const midWall = (t0w + t1w) / 2;
@@ -554,7 +940,7 @@
         const dt = (tMidPerf - lastGoodSyncPerf) / 1000;
         if(dt > 0.5){
           const dOffset = (offsetSample - lastGoodOffset);
-          const drift = (dOffset / (dt * 1000)); // dimensionless
+          const drift = (dOffset / (dt * 1000));
           const newTargetScale = 1 + drift;
           if(isFiniteNum(newTargetScale)){
             targetScale = targetScale + (newTargetScale - targetScale) * (0.25 * w);
@@ -564,7 +950,6 @@
 
       targetOffsetMs = targetOffsetMs + (offsetSample - targetOffsetMs) * (0.6 * w);
 
-      // Re-anchor at midpoint
       const midWallNowApprox = Date.now() + (tMidPerf - performance.now());
       const serverAtMid = midWallNowApprox + offsetSample;
 
@@ -606,21 +991,30 @@
     }
 
     // ---------------------------
-    // Timezone-safe rendering (Intl parts)
+    // Intl formatters (switchable 24/12)
     // ---------------------------
-    function makePartsFormatter(tz){
+    let partsFmt = null;
+
+    function makePartsFormatter(tz, hour12){
       return new Intl.DateTimeFormat('is-IS', {
         timeZone: tz,
         hour: '2-digit',
         minute:'2-digit',
         second:'2-digit',
+        hour12,
         weekday:'long',
         year:'numeric',
         month:'long',
         day:'numeric'
       });
     }
-    let partsFmt = makePartsFormatter(currentTz);
+
+    function buildFormatters(){
+      const hour12 = (timeFormat.value === '12');
+      partsFmt = makePartsFormatter(currentTz, hour12);
+      localStorage.setItem('timeFormat', timeFormat.value);
+    }
+    buildFormatters();
 
     function getTimeParts(ms){
       const d = new Date(ms);
@@ -629,12 +1023,14 @@
       for(const p of parts){
         if(p.type !== 'literal') map[p.type] = p.value;
       }
-      // hour/minute/second are strings with leading zeros in is-IS
+      // map: hour, minute, second, day, month, year, weekday (+ possibly dayPeriod)
       return {
         hour: map.hour,
         minute: map.minute,
         second: map.second,
-        headerDate: `${map.weekday} • ${map.day}. ${map.month} ${map.year}`
+        dayPeriod: map.dayPeriod || '',
+        weekday: map.weekday,
+        dateTop: `${map.day}. ${map.month} ${map.year}`
       };
     }
 
@@ -644,8 +1040,8 @@
     const hHand = document.getElementById('hHand');
     const mHand = document.getElementById('mHand');
     const sHand = document.getElementById('sHand');
-    const digitalTime = document.getElementById('digitalTime');
-    const hdrDate = document.getElementById('hdrDate');
+    const hdrDateTop = document.getElementById('hdrDateTop');
+    const hdrWeekday = document.getElementById('hdrWeekday');
 
     // Nerd fields
     const nTz   = document.getElementById('nTz');
@@ -655,6 +1051,7 @@
     const nOff  = document.getElementById('nOff');
     const nPpm  = document.getElementById('nPpm');
     const nScale= document.getElementById('nScale');
+    const nSrc  = document.getElementById('nSrc');
 
     // ticks
     (function buildTicks(){
@@ -667,8 +1064,96 @@
       }
     })();
 
+    // numbers
+    const numbersEl = document.getElementById('numbers');
+    const HOUR_POS = [
+      { key:'3',  angleDeg: 90,  r: 102 },
+      { key:'6',  angleDeg: 180, r: 102 },
+      { key:'9',  angleDeg: 270, r: 102 },
+      { key:'12', angleDeg: 0,   r: 102 },
+    ];
+    const MINUTE_KEYS = Array.from({length:12}, (_,i)=> i*5); // 0..55
+
+    let builtNums = false;
+    let lastHourLabelMode = ''; // 'std' or '24pm'
+
+    function polarToXY(angleDeg, r){
+      const a = (angleDeg - 90) * Math.PI/180;
+      const x = Math.cos(a) * r;
+      const y = Math.sin(a) * r;
+      return { x, y };
+    }
+
+    function clearNumbers(){
+      numbersEl.innerHTML = '';
+      builtNums = false;
+      lastHourLabelMode = '';
+    }
+
+    function rebuildNumbers(){
+      clearNumbers();
+      if(!showAnalog.checked) return;
+      // build hour numbers placeholders
+      if(showHourNums.checked){
+        for(const p of HOUR_POS){
+          const div = document.createElement('div');
+          div.className = 'num hourNum';
+          div.dataset.kind = 'hour';
+          div.dataset.key = p.key;
+          const {x,y} = polarToXY(p.angleDeg, p.r);
+          div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+          div.textContent = p.key;
+          numbersEl.appendChild(div);
+        }
+      }
+      // build minute numbers
+      if(showMinNums.checked){
+        for(const m of MINUTE_KEYS){
+          const angle = m*6; // 6° per minute
+          const div = document.createElement('div');
+          div.className = 'num minNum';
+          div.dataset.kind = 'min';
+          div.dataset.key = String(m);
+          const {x,y} = polarToXY(angle, 122);
+          div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+          div.textContent = String(m);
+          numbersEl.appendChild(div);
+        }
+      }
+      builtNums = true;
+    }
+
+    // determine hour label set:
+    // If 24h AND time > 12:00 AND time < 24:00 -> use 15/18/21/0 on the 3/6/9/12 marks
+    function hourLabelMode(H, M){
+      if(timeFormat.value !== '24') return 'std';
+      const afterNoon = (H > 12 && H < 24); // 13..23
+      // (You asked: more than noon and less than midnight)
+      return afterNoon ? '24pm' : 'std';
+    }
+
+    function updateHourLabels(H, M){
+      if(!builtNums || !showHourNums.checked) return;
+
+      const mode = hourLabelMode(H, M);
+      if(mode === lastHourLabelMode) return;
+      lastHourLabelMode = mode;
+
+      const map = (mode === '24pm')
+        ? { '3':'15', '6':'18', '9':'21', '12':'0' }
+        : { '3':'3',  '6':'6',  '9':'9',  '12':'12' };
+
+      for(const el of numbersEl.querySelectorAll('[data-kind="hour"]')){
+        el.textContent = map[el.dataset.key] || el.dataset.key;
+      }
+    }
+
+    rebuildNumbers();
+
     let lastPerf = performance.now();
-    let lastHeader = '';
+    let lastTop = '';
+    let lastWeekday = '';
+    let lastDigital = '';
 
     function render(){
       const nowPerf = performance.now();
@@ -677,56 +1162,91 @@
       if(dt > 0 && dt < 0.5) tickSlews(dt);
 
       const ms = correctedNowMs();
-      const frac = (ms % 1000) / 1000;
 
       const tp = getTimeParts(ms);
-      digitalTime.textContent = `${tp.hour}:${tp.minute}:${tp.second}`;
 
-      if(tp.headerDate !== lastHeader){
-        lastHeader = tp.headerDate;
-        hdrDate.textContent = tp.headerDate;
+      // header: date top + weekday bottom
+      if(tp.dateTop !== lastTop){
+        lastTop = tp.dateTop;
+        hdrDateTop.textContent = tp.dateTop;
+      }
+      if(tp.weekday !== lastWeekday){
+        lastWeekday = tp.weekday;
+        hdrWeekday.textContent = tp.weekday;
       }
 
-      // Analog based on TZ hours/min/sec
-      const H = parseInt(tp.hour, 10);
+      // digital
+      const dp = (timeFormat.value === '12' && tp.dayPeriod) ? ` <span class="ampm">${tp.dayPeriod}</span>` : '';
+      const digitalStr = `${tp.hour}:${tp.minute}:${tp.second}`;
+      if(digitalStr !== lastDigital || timeFormat.value === '12'){
+        // use innerHTML to attach am/pm
+        digitalTimeEl.innerHTML = digitalStr + dp;
+        lastDigital = digitalStr;
+      }
+
+      // analog
+      const H = parseInt(tp.hour, 10);    // note: in 12h mode this is 01..12 => ok for face
       const M = parseInt(tp.minute, 10);
       const S = parseInt(tp.second, 10);
 
+      // tick vs smooth
+      const mode = handMode.value; // 'smooth' | 'tick'
+      const frac = (mode === 'smooth') ? ((ms % 1000) / 1000) : 0;
+
+      // second: smooth => S+frac, tick => S
       const sec = (S + frac);
-      const min = (M + sec/60);
+
+      // minute/hour behavior:
+      // smooth => minute includes seconds; tick => minute only (clean ticks)
+      const min = (mode === 'smooth') ? (M + sec/60) : M;
       const hr  = ((H % 12) + min/60);
 
       sHand.style.transform = `translate(-50%,-100%) rotate(${sec*6}deg)`;
       mHand.style.transform = `translate(-50%,-100%) rotate(${min*6}deg)`;
       hHand.style.transform = `translate(-50%,-100%) rotate(${hr*30}deg)`;
 
-      // Nerd panel (cheap updates)
-      nTz.textContent = `${tzLabel(currentTz)} (${currentTz})`;
+      // update hour labels rule (needs real 24h hour -> we derive from parts in 24-mode by using a 24h formatter)
+      // For label rule, we need true 0..23 in 24h mode.
+      // We'll compute H24 separately using a lightweight formatter when needed.
+      if(showAnalog.checked && showHourNums.checked){
+        if(timeFormat.value === '24'){
+          // compute H24 from an hour12:false formatter
+          const f24 = new Intl.DateTimeFormat('is-IS', { timeZone: currentTz, hour:'2-digit', hour12:false, minute:'2-digit' });
+          const parts = f24.formatToParts(new Date(ms));
+          let H24 = 0, M24 = 0;
+          for(const p of parts){
+            if(p.type === 'hour') H24 = parseInt(p.value,10);
+            if(p.type === 'minute') M24 = parseInt(p.value,10);
+          }
+          updateHourLabels(H24, M24);
+        }else{
+          // in 12h mode we keep std labels
+          updateHourLabels(10, 0);
+        }
+      }
 
+      // Nerd panel
+      nTz.textContent = `${tzLabel(currentTz)} (${currentTz})`;
       if(lastGoodSyncPerf !== null){
         const ageMs = performance.now() - lastGoodSyncPerf;
         nAge.textContent = `${Math.round(ageMs/1000)}s`;
-      }else{
-        nAge.textContent = '—';
-      }
+      }else nAge.textContent = '—';
 
       nRtt.textContent = lastRttMs != null ? `${Math.round(lastRttMs)} ms` : '—';
       nOffT.textContent = `${targetOffsetMs.toFixed(1)} ms`;
       nOff.textContent  = `${offsetMs.toFixed(1)} ms`;
-
       const ppm = (scale - 1) * 1e6;
       nPpm.textContent = `${ppm.toFixed(2)} ppm`;
       nScale.textContent = scale.toFixed(9);
+      nSrc.textContent = 'worldtimeapi.org';
 
       requestAnimationFrame(render);
     }
 
     // TZ change handling
     function hardResetSyncModel(){
-      // keep it smooth: re-anchor and let PLL converge
       basePerf = performance.now();
       baseNet  = Date.now();
-      // keep current scale/offset but nudge target toward 0 for a clean settle
       targetOffsetMs = offsetMs;
       targetScale = scale;
       lastGoodSyncPerf = null;
@@ -738,16 +1258,32 @@
     tzSelect.addEventListener('change', () => {
       currentTz = tzSelect.value;
       localStorage.setItem('tz', currentTz);
-      partsFmt = makePartsFormatter(currentTz);
+      buildFormatters();
       setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
       closeDropdown();
       hardResetSyncModel();
-      // kick immediate sync
       syncLoop();
     });
 
+    // ---------------------------
     // Start
+    // ---------------------------
     (function init(){
+      // set theme toggle UI properly
+      themeToggle.checked = (document.documentElement.getAttribute('data-theme') === 'light');
+
+      // persist initial values (so user doesn’t lose defaults on first load)
+      saveSetting('showAnalog', showAnalog.checked);
+      saveSetting('showDigital', showDigital.checked);
+      saveSetting('handMode', handMode.value);
+      saveSetting('showHourNums', showHourNums.checked);
+      saveSetting('showMinNums', showMinNums.checked);
+      saveSetting('sevenSeg', sevenSeg.checked);
+      saveSetting('digitColor', digitColor.value);
+      saveSetting('timeFormat', timeFormat.value);
+
+      rebuildNumbers();
+
       setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
       syncLoop();
       requestAnimationFrame(render);
