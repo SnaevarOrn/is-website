@@ -198,8 +198,21 @@
       user-select:none;
       white-space: nowrap;
     }
-    .num.hourNum{ font-size: 12px; }
-    .num.minNum{ font-size: 10px; opacity:.85; color: color-mix(in srgb, var(--text) 55%, transparent); }
+    .num.hourOuter{
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+}
+.num.hourInner{
+  font-weight: 850;
+  opacity: .85;
+  color: color-mix(in srgb, var(--text) 62%, transparent);
+}
+.num.minNum{
+  font-weight: 800;
+  opacity: .65;
+  color: color-mix(in srgb, var(--text) 48%, transparent);
+}
 
     .center-dot{
       position:absolute; left:50%; top:50%;
