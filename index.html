@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="is">
+<html lang="is" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +11,21 @@
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <meta name="theme-color" content="#050607" id="metaThemeColor">
+  <meta name="theme-color" content="#f5f6f8" id="metaThemeColor">
+
+  <!-- APPLY THEME ASAP (shared across pages via localStorage.theme) -->
+  <script>
+    (function(){
+      const saved = localStorage.getItem('theme'); // 'dark' | 'light'
+      const t = (saved === 'dark' || saved === 'light')
+        ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+      document.documentElement.setAttribute('data-theme', t);
+      const meta = document.getElementById('metaThemeColor');
+      if(meta) meta.setAttribute('content', t === 'dark' ? '#050607' : '#f5f6f8');
+    })();
+  </script>
 
   <style>
     :root{
@@ -128,9 +142,7 @@
     html[data-theme="dark"] .menu-btn{ background: rgba(255,255,255,.04); }
     .menu-btn:active{ transform: translateY(1px); }
 
-    .burger{
-      width:18px; height:12px; position:relative;
-    }
+    .burger{ width:18px; height:12px; position:relative; }
     .burger span{
       position:absolute; left:0; right:0;
       height:2px; border-radius:2px;
@@ -373,7 +385,6 @@
 <body>
   <header>
     <div class="hdr">
-      <!-- Logo LEFT (favicon) -->
       <button class="brand-left" id="logoBtn" aria-label="Heim">
         <img id="logoImg" src="/favicon.svg" alt="ís.is"
              onerror="this.onerror=null; this.src='/favicon.png';">
@@ -381,7 +392,6 @@
 
       <div class="brand-title">ís.is</div>
 
-      <!-- Hamburger RIGHT -->
       <div class="menu-wrap">
         <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
           <div class="burger" aria-hidden="true">
@@ -391,18 +401,13 @@
 
         <div class="menu-pop" id="menuPop" role="menu" aria-hidden="true">
           <button class="menu-item" id="menuSettings" role="menuitem">
-            <span>Stillingar</span>
-            <span class="hint">⚙︎</span>
+            <span>Stillingar</span><span class="hint">⚙︎</span>
           </button>
-
           <button class="menu-item" id="menuAbout" role="menuitem">
-            <span>Um vefinn</span>
-            <span class="hint">ℹ︎</span>
+            <span>Um vefinn</span><span class="hint">ℹ︎</span>
           </button>
-
           <button class="menu-item" id="menuContact" role="menuitem">
-            <span>Hafa samband</span>
-            <span class="hint">✉︎</span>
+            <span>Hafa samband</span><span class="hint">✉︎</span>
           </button>
         </div>
       </div>
@@ -500,7 +505,8 @@
           <span>Vefur stofnaður 2025 og er sjálfstætt verkefni unnið af einstaklingi, án auglýsinga, rekstrarfélaga eða gagnasöfnunar.</span>
           <span>Markmið vefsins er að miðla þekkingu um Ísland á einfaldan, gagnvirkan og aðgengilegan hátt – í þágu almennings.</span>
           <span>Vefurinn er opinn og ókeypis.</span>
-          <span>Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald. </span>   <span>Engar auglýsingar. Engar vafrakökur. Bara Ísland.</span>
+          <span>Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald.</span>
+          <span>Engar auglýsingar. Engar vafrakökur. Bara Ísland.</span>
         </div>
       </div>
     </div>
@@ -508,27 +514,41 @@
 
   <script>
     // ---------- THEME (shared across pages) ----------
-    const THEME_KEY = "is_theme";
+    // NOTE: we use the SAME key as the clock: localStorage.theme
+    const META = document.getElementById("metaThemeColor");
 
     function setMetaThemeColor(theme){
-      const meta = document.getElementById("metaThemeColor");
-      meta.setAttribute("content", theme === "dark" ? "#050607" : "#f5f6f8");
+      if(!META) return;
+      META.setAttribute("content", theme === "dark" ? "#050607" : "#f5f6f8");
     }
 
     function applyTheme(theme){
       const t = (theme === "dark") ? "dark" : "light";
       document.documentElement.setAttribute("data-theme", t);
-      localStorage.setItem(THEME_KEY, t);
+      localStorage.setItem("theme", t);
       setMetaThemeColor(t);
-      const toggle = document.getElementById("themeToggle");
-      if (toggle) toggle.checked = (t === "dark");
-    }
 
-    (function initTheme(){
-      const saved = localStorage.getItem(THEME_KEY);
-      if (saved === "dark" || saved === "light") return applyTheme(saved);
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      applyTheme(prefersDark ? "dark" : "light");
+      const toggle = document.getElementById("themeToggle");
+      if(toggle) toggle.checked = (t === "dark");
+    }
+    // ---------- THEME SYNC (between tabs/pages) ----------
+    window.addEventListener('storage', (e) => {
+    if (e.key !== 'theme') return;
+    const t = (e.newValue === 'dark' || e.newValue === 'light') ? e.newValue : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t); // normalize
+    setMetaThemeColor(t);
+
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) toggle.checked = (t === 'dark');
+    });
+    // init from whatever head-script set (or storage)
+    (function syncToggleOnLoad(){
+      const t = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const toggle = document.getElementById("themeToggle");
+      if(toggle) toggle.checked = (t === "dark");
+      setMetaThemeColor(t);
+      localStorage.setItem("theme", t); // normalize key
     })();
 
     // ---------- MENU ----------
@@ -547,9 +567,7 @@
       e.stopPropagation();
       toggleMenu();
     });
-
     menuPop.addEventListener("click", (e) => e.stopPropagation());
-
     document.addEventListener("click", (e) => {
       if (!menuPop.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
     });
@@ -595,26 +613,24 @@
     aboutClose.addEventListener("click", closeAbout);
     aboutOverlay.addEventListener("click", (e) => { if (e.target === aboutOverlay) closeAbout(); });
 
-    // Menu actions (open modal in next frame for iOS/Safari)
+    // Menu actions
     menuSettings.addEventListener("click", (e) => {
       e.preventDefault(); e.stopPropagation();
       closeMenu();
       requestAnimationFrame(openSettings);
     });
-
     menuAbout.addEventListener("click", (e) => {
       e.preventDefault(); e.stopPropagation();
       closeMenu();
       requestAnimationFrame(openAbout);
     });
-
     menuContact.addEventListener("click", (e) => {
       e.preventDefault(); e.stopPropagation();
       closeMenu();
       requestAnimationFrame(openContact);
     });
 
-    // ESC closes any open modal
+    // ESC closes
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape"){
         closeMenu();
@@ -624,7 +640,7 @@
       }
     });
 
-    // ---------- CONTACT SUBMIT (Resend backend via CF function) ----------
+    // ---------- CONTACT SUBMIT ----------
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       statusEl.textContent = "Sendi...";
