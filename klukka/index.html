@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is — Klukka</title>
 
+  <!-- Favicons -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.png" sizes="32x32">
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+  <!-- Apply theme ASAP (shared across site) -->
   <script>
     (function(){
       const t = localStorage.getItem('theme');
@@ -63,10 +65,15 @@
     }
     .back:active{ transform: translateY(1px); }
 
-    .hdr-center{ text-align:center; user-select:none; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; line-height: 1.15; padding: 2px 0; }
+    .hdr-center{
+      text-align:center; user-select:none;
+      white-space: nowrap; overflow:hidden; text-overflow: ellipsis;
+      line-height: 1.15; padding: 2px 0;
+    }
     .hdr-date-top{ font-weight: 900; letter-spacing: .2px; font-size: 15px; }
     .hdr-weekday-bottom{ margin-top: 2px; font-weight: 850; font-size: 13px; color: var(--muted); }
 
+    /* Hamburger */
     .menu-wrap{ position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
     .menu-btn{
       width:44px; height:44px; border:1px solid var(--line); background: transparent; border-radius: 12px;
@@ -193,26 +200,25 @@
       transform: translate(-50%,-50%);
       font-variant-numeric: tabular-nums;
       font-weight: 900;
-      color: color-mix(in srgb, var(--text) 72%, transparent);
       text-shadow: 0 1px 0 color-mix(in srgb, var(--bg) 35%, transparent);
       user-select:none;
       white-space: nowrap;
     }
     .num.hourOuter{
-  font-weight: 900;
-  letter-spacing: .2px;
-  color: color-mix(in srgb, var(--text) 82%, transparent);
-}
-.num.hourInner{
-  font-weight: 850;
-  opacity: .85;
-  color: color-mix(in srgb, var(--text) 62%, transparent);
-}
-.num.minNum{
-  font-weight: 800;
-  opacity: .65;
-  color: color-mix(in srgb, var(--text) 48%, transparent);
-}
+      font-weight: 900;
+      letter-spacing: .2px;
+      color: color-mix(in srgb, var(--text) 82%, transparent);
+    }
+    .num.hourInner{
+      font-weight: 850;
+      opacity: .85;
+      color: color-mix(in srgb, var(--text) 62%, transparent);
+    }
+    .num.minNum{
+      font-weight: 800;
+      opacity: .65;
+      color: color-mix(in srgb, var(--text) 48%, transparent);
+    }
 
     .center-dot{
       position:absolute; left:50%; top:50%;
@@ -564,17 +570,19 @@
 
       function setTheme(t){
         document.documentElement.setAttribute('data-theme', t);
-        localStorage.setItem('theme', t);
+        localStorage.setItem('theme', t); // shared across entire site
         themeToggle.checked = (t === 'light');
       }
+
       function hexToRgba(hex, a){
-        const h = hex.replace('#','').trim();
+        const h = (hex || '').replace('#','').trim();
         if(h.length !== 6) return `rgba(255,255,255,${a})`;
         const r = parseInt(h.slice(0,2),16);
         const g = parseInt(h.slice(2,4),16);
         const b = parseInt(h.slice(4,6),16);
         return `rgba(${r},${g},${b},${a})`;
       }
+
       function applyDigitalLook(){
         digitalTimeEl.classList.toggle('seven', sevenSeg.checked);
         document.documentElement.style.setProperty('--digitColor', hexToRgba(digitColor.value, 0.95));
@@ -582,12 +590,14 @@
         localStorage.setItem('sevenSeg', sevenSeg.checked ? 'true' : 'false');
         localStorage.setItem('digitColor', digitColor.value);
       }
+
       function applyVisibility(){
         analogWrap.style.display = showAnalog.checked ? 'flex' : 'none';
         digitalWrap.style.display = showDigital.checked ? 'flex' : 'none';
         if(!showAnalog.checked && !showDigital.checked){
           showDigital.checked = true;
           digitalWrap.style.display = 'flex';
+          localStorage.setItem('showDigital', 'true');
         }
         rebuildNumbers();
       }
@@ -607,76 +617,33 @@
       })();
 
       // ---------------------------
-      // Numbers (responsive)
+      // Numbers (responsive) — FIXED: 12 outer, 24 inner, minutes non-colliding
       // ---------------------------
       function polarToXY(angleDeg, r){
         const a = (angleDeg - 90) * Math.PI/180;
         return { x: Math.cos(a) * r, y: Math.sin(a) * r };
       }
-      
+
       function buildHourRings(){
-  // Outer: classic 1..12
-  const outer = [];
-  for(let h=1; h<=12; h++){
-    const angleDeg = (h % 12) * 30; // 12 at 0°
-    outer.push({ label: String(h), angleDeg });
-  }
+        // Outer: 1..12
+        const outer = [];
+        for(let h=1; h<=12; h++){
+          const angleDeg = (h % 12) * 30; // 12 at top (0deg)
+          outer.push({ label: String(h), angleDeg });
+        }
 
-  // Inner: 13..23 + 0 (only in 24h)
-  const inner = [];
-  if(timeFormat.value === '24'){
-    for(let h=13; h<=23; h++){
-      const angleDeg = (h - 12) * 30; // 13 at 1 o'clock etc
-      inner.push({ label: String(h), angleDeg });
-    }
-    inner.push({ label: '0', angleDeg: 0 });
-  }
+        // Inner: 13..23 + 0 (only if 24h)
+        const inner = [];
+        if(timeFormat.value === '24'){
+          for(let h=13; h<=23; h++){
+            const angleDeg = (h - 12) * 30; // 13 aligns with 1 o'clock, etc
+            inner.push({ label: String(h), angleDeg });
+          }
+          inner.push({ label: '0', angleDeg: 0 });
+        }
+        return { outer, inner };
+      }
 
-  return { outer, inner };
-}
-
-function rebuildNumbers(){
-  numbersEl.innerHTML = '';
-  if(!showAnalog.checked) return;
-
-  const rect = analogClock.getBoundingClientRect();
-  const size = Math.min(rect.width, rect.height);
-  const half = size / 2;
-
-  const padOuter = Math.max(18, Math.round(size * 0.085));
-
-  const hourOuterFont = Math.max(13, Math.round(size * 0.060));
-  const hourInnerFont = Math.max(11, Math.round(size * 0.048));
-  const minFont      = Math.max(8,  Math.round(size * 0.032));
-
-  const rMin   = half - padOuter - minFont - 2;
-  const rOuter = half - padOuter - hourOuterFont - 10;
-  const rInner = half - padOuter - hourOuterFont - hourInnerFont - 22;
-
-  const { outer, inner } = buildHourRings();
-
-  function addLabel(cls, fontPx, angleDeg, r, text){
-    const div = document.createElement('div');
-    div.className = 'num ' + cls;
-    div.style.fontSize = fontPx + 'px';
-    const {x,y} = polarToXY(angleDeg, r);
-    div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-    div.textContent = text;
-    numbersEl.appendChild(div);
-  }
-
-  if(showHourNums.checked){
-    for(const it of outer) addLabel('hourOuter', hourOuterFont, it.angleDeg, rOuter, it.label);
-    for(const it of inner) addLabel('hourInner', hourInnerFont, it.angleDeg, rInner, it.label);
-  }
-
-  if(showMinNums.checked){
-    for(let m=0; m<60; m+=5){
-      if(m % 15 === 0) continue; // 0/15/30/45 collide with hour axes
-      addLabel('minNum', minFont, m*6, rMin, String(m));
-    }
-  }
-}
       function rebuildNumbers(){
         numbersEl.innerHTML = '';
         if(!showAnalog.checked) return;
@@ -685,36 +652,38 @@ function rebuildNumbers(){
         const size = Math.min(rect.width, rect.height);
         const half = size / 2;
 
+        // tuned to avoid portrait clipping on 240px
         const padOuter = Math.max(18, Math.round(size * 0.085));
-        const hourFont = Math.max(10, Math.round(size * 0.045));
-        const minFont  = Math.max(9,  Math.round(size * 0.038));
 
-        const rHour = half - padOuter - hourFont;
-        const rMin  = half - padOuter - minFont - 6;
+        const hourOuterFont = Math.max(13, Math.round(size * 0.060));
+        const hourInnerFont = Math.max(11, Math.round(size * 0.048));
+        const minFont      = Math.max(8,  Math.round(size * 0.032));
 
-        const hours = buildHourLabels();
+        const rMin   = half - padOuter - minFont - 2;                 // near rim
+        const rOuter = half - padOuter - hourOuterFont - 10;          // outer hours
+        const rInner = half - padOuter - hourOuterFont - hourInnerFont - 22; // inner hours
+
+        const { outer, inner } = buildHourRings();
+
+        function addLabel(cls, fontPx, angleDeg, r, text){
+          const div = document.createElement('div');
+          div.className = 'num ' + cls;
+          div.style.fontSize = fontPx + 'px';
+          const {x,y} = polarToXY(angleDeg, r);
+          div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+          div.textContent = text;
+          numbersEl.appendChild(div);
+        }
 
         if(showHourNums.checked){
-          for(const it of hours){
-            const div = document.createElement('div');
-            div.className = 'num hourNum';
-            div.style.fontSize = hourFont + 'px';
-            const {x,y} = polarToXY(it.angleDeg, rHour);
-            div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-            div.textContent = it.label;
-            numbersEl.appendChild(div);
-          }
+          for(const it of outer) addLabel('hourOuter', hourOuterFont, it.angleDeg, rOuter, it.label);
+          for(const it of inner) addLabel('hourInner', hourInnerFont, it.angleDeg, rInner, it.label);
         }
 
         if(showMinNums.checked){
           for(let m=0; m<60; m+=5){
-            const div = document.createElement('div');
-            div.className = 'num minNum';
-            div.style.fontSize = minFont + 'px';
-            const {x,y} = polarToXY(m*6, rMin);
-            div.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-            div.textContent = String(m);
-            numbersEl.appendChild(div);
+            if(m % 15 === 0) continue; // skip 0/15/30/45 so they don't stack on hour axes
+            addLabel('minNum', minFont, m*6, rMin, String(m));
           }
         }
       }
@@ -813,7 +782,6 @@ function rebuildNumbers(){
 
       async function sampleNetTime(){
         const url = worldTimeUrlForTz(currentTz);
-
         const t0p = performance.now();
         const t0w = Date.now();
 
@@ -955,12 +923,12 @@ function rebuildNumbers(){
 
         timeFormat.value = localStorage.getItem('timeFormat') || '24';
 
-        showAnalog.checked = (localStorage.getItem('showAnalog') !== 'false');
+        showAnalog.checked  = (localStorage.getItem('showAnalog') !== 'false');
         showDigital.checked = (localStorage.getItem('showDigital') !== 'false');
 
         handMode.value = localStorage.getItem('handMode') || 'smooth';
-        showHourNums.checked = (localStorage.getItem('showHourNums') === 'true');
-        showMinNums.checked = (localStorage.getItem('showMinNums') === 'true');
+        showHourNums.checked = (localStorage.getItem('showHourNums') !== 'false'); // default ON
+        showMinNums.checked  = (localStorage.getItem('showMinNums') === 'true');  // default OFF
 
         sevenSeg.checked = (localStorage.getItem('sevenSeg') === 'true');
         digitColor.value = localStorage.getItem('digitColor') || (document.documentElement.getAttribute('data-theme') === 'light' ? '#111111' : '#eaf6ff');
@@ -1060,7 +1028,7 @@ function rebuildNumbers(){
           nScale.textContent = scale.toFixed(9);
           nSrc.textContent = 'worldtimeapi.org';
         }catch(_){
-          // fallback: show device time so page never "dies"
+          // fallback: device time (so it never goes blank)
           const d = new Date();
           const h = String(d.getHours()).padStart(2,'0');
           const m = String(d.getMinutes()).padStart(2,'0');
@@ -1071,7 +1039,7 @@ function rebuildNumbers(){
         requestAnimationFrame(renderFrame);
       }
 
-      // start
+      // Start
       setStatus('warn', `Tími: net (${tzLabel(currentTz)}) — samstilli...`);
       syncLoop();
       requestAnimationFrame(renderFrame);
