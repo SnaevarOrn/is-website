@@ -573,7 +573,21 @@
         localStorage.setItem('theme', t); // shared across entire site
         themeToggle.checked = (t === 'light');
       }
+      // ---------- THEME SYNC (shared across pages & tabs) ----------
+      window.addEventListener('storage', (e) => {
+      if (e.key !== 'theme') return;
 
+      const t = (e.newValue === 'light' || e.newValue === 'dark')
+      ? e.newValue
+      : 'dark';
+
+      document.documentElement.setAttribute('data-theme', t);
+
+    // sync toggle if present
+      if (typeof themeToggle !== 'undefined' && themeToggle) {
+      themeToggle.checked = (t === 'light');
+      }
+    });
       function hexToRgba(hex, a){
         const h = (hex || '').replace('#','').trim();
         if(h.length !== 6) return `rgba(255,255,255,${a})`;
