@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="is" data-theme="light">
 <head>
-  <link rel="stylesheet" href="/assets/css/base.css">
-  <script src="/assets/js/prefs.js"></script>
-  <script>
-  // Apply theme ASAP (prevents flash)
-  prefs.applyThemeFromStorage();
-  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is</title>
@@ -19,383 +13,17 @@
 
   <meta name="theme-color" content="#f5f6f8" id="metaThemeColor">
 
-  <!-- Theme bootstrap (prefs.js uses is.pref.theme) -->
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+
+  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
+  <script src="/assets/js/prefs.js"></script>
   <script>
-    (function(){
-      try{
-        const raw = localStorage.getItem('is.pref.theme');
-        const t = raw ? JSON.parse(raw) : 'light';   // default
-        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
-      }catch(e){
-        document.documentElement.setAttribute('data-theme','light');
-      }
-    })();
+    prefs.applyThemeFromStorage();
   </script>
 
-  <style>
-    :root{
-      /* Light */
-      --bg: #f5f6f8;
-      --bg2:#eef1f5;
-      --panel:#ffffff;
-      --panel2:#f7f8fb;
-      --line: rgba(10,20,30,.10);
-      --text: rgba(10,20,30,.92);
-      --muted: rgba(10,20,30,.62);
-
-      --btnBg: #ffffff;
-      --btnLine: rgba(10,20,30,.12);
-      --btnText: rgba(10,20,30,.92);
-
-      --shadow: 0 18px 60px rgba(0,0,0,.10);
-      --shadow2: 0 10px 30px rgba(0,0,0,.08);
-    }
-
-    html[data-theme="dark"]{
-      /* True dark */
-      --bg: #050607;
-      --bg2:#0b0c0e;
-      --panel:#0d0f12;
-      --panel2:#0b0d10;
-      --line: rgba(255,255,255,.10);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.68);
-
-      --btnBg: rgba(255,255,255,.92);
-      --btnLine: rgba(255,255,255,.14);
-      --btnText: #07080a;
-
-      --shadow: 0 24px 90px rgba(0,0,0,.65);
-      --shadow2: 0 14px 50px rgba(0,0,0,.50);
-    }
-
-    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-    body{
-      min-height:100vh;
-      background: radial-gradient(1200px 800px at 50% 0%, rgba(120,160,255,.10), transparent 55%),
-                  linear-gradient(180deg, var(--bg), var(--bg2));
-      color: var(--text);
-      display:flex;
-      flex-direction:column;
-    }
-
-    /* Header */
-    header{
-      position:sticky;
-      top:0;
-      z-index:20;
-      background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,0));
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(12px);
-    }
-    html[data-theme="dark"] header{
-      background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.18));
-    }
-
-    .hdr{
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 14px 16px;
-      display:grid;
-      grid-template-columns: 44px 1fr auto;
-      align-items:center;
-      gap: 10px;
-    }
-
-    .brand-left{
-      width:44px; height:44px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      border-radius: 14px;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-    }
-    html[data-theme="dark"] .brand-left{
-      background: rgba(255,255,255,.04);
-    }
-
-    .brand-left img{
-      width:26px; height:26px;
-      display:block;
-      opacity:.95;
-      filter:none;
-    }
-
-    .brand-title{
-      text-align:center;
-      font-weight:750;
-      letter-spacing:.3px;
-      font-size: 20px;
-      user-select:none;
-    }
-
-    .menu-wrap{
-      position:relative;
-      display:flex;
-      justify-content:flex-end;
-      gap: 10px;
-      align-items:center;
-    }
-
-    .icon-btn{
-      width:44px; height:44px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      border-radius: 14px;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-      color: var(--text);
-      user-select:none;
-    }
-    html[data-theme="dark"] .icon-btn{ background: rgba(255,255,255,.04); }
-    .icon-btn:active{ transform: translateY(1px); }
-
-    .lang-flag{ font-size: 20px; line-height: 1; }
-    .lang-pill{ font-size: 12px; font-weight: 800; letter-spacing: .4px; opacity: .9; }
-    .lang-btn{ gap: 6px; padding: 0 10px; width: auto; min-width: 44px; }
-
-    .burger{ width:18px; height:12px; position:relative; }
-    .burger span{
-      position:absolute; left:0; right:0;
-      height:2px; border-radius:2px;
-      background: currentColor;
-      opacity:.92;
-    }
-    .burger span:nth-child(1){ top:0; }
-    .burger span:nth-child(2){ top:5px; opacity:.80; }
-    .burger span:nth-child(3){ bottom:0; opacity:.70; }
-
-    /* Dropdown */
-    .menu-pop{
-      position:absolute;
-      top: 52px;
-      right: 0;
-      width: min(260px, 86vw);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: var(--shadow2);
-      display:none;
-      overflow:hidden;
-      z-index: 40;
-    }
-    .menu-pop.show{ display:block; }
-    .menu-item{
-      width:100%;
-      border:0;
-      background: transparent;
-      color: var(--text);
-      padding: 14px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
-      font-weight: 650;
-    }
-    .menu-item:hover{ background: var(--panel2); }
-    .menu-item + .menu-item{ border-top:1px solid var(--line); }
-    .menu-item .hint{
-      color: var(--muted);
-      font-weight: 800;
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    /* Layout */
-    main{
-      flex:1;
-      display:flex;
-      justify-content:center;
-      padding: 22px 16px 18px;
-    }
-    .wrap{
-      width: min(760px, 100%);
-      display:flex;
-      flex-direction:column;
-      gap: 14px;
-      align-items:center;
-      padding-top: 10px;
-    }
-
-    .card{
-      width: min(520px, 100%);
-      background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.35));
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 16px 14px 14px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-    }
-    html[data-theme="dark"] .card{
-      background: radial-gradient(120% 120% at 50% 0%, rgba(120,160,255,.10), transparent 55%),
-                  rgba(10,12,14,.80);
-    }
-
-    .section-title{
-      color: var(--muted);
-      font-weight: 800;
-      letter-spacing:.2px;
-      margin: 4px 8px 12px;
-    }
-
-    .btns{
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-      padding: 0 8px 8px;
-    }
-    .btn{
-      width: 100%;
-      border: 1px solid var(--btnLine);
-      border-radius: 999px;
-      padding: 16px 18px;
-      font-size: 18px;
-      font-weight: 750;
-      cursor:pointer;
-      background: var(--btnBg);
-      color: var(--btnText);
-      box-shadow: 0 0 0 1px rgba(0,0,0,.02), 0 14px 40px rgba(0,0,0,.18);
-    }
-    .btn:active{ transform: translateY(1px); }
-
-    /* Footer banner */
-    .banner{
-      max-width: 760px;
-      margin: 0 auto 18px;
-      padding: 0 16px;
-      width: 100%;
-    }
-    .pill{
-      background: rgba(255,255,255,.55);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 10px 14px;
-      text-align:center;
-      font-size: 14px;
-      backdrop-filter: blur(12px);
-    }
-    html[data-theme="dark"] .pill{
-      background: rgba(255,255,255,.04);
-      color: rgba(255,255,255,.70);
-    }
-
-    /* Overlays */
-    .overlay{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.45);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
-      z-index:50;
-    }
-    .overlay.open{ display:flex; }
-
-    .modal{
-      width: min(560px, 100%);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .modal-h{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 14px 14px 12px;
-      border-bottom: 1px solid var(--line);
-      background: var(--panel2);
-    }
-    .modal-h b{ font-size: 16px; letter-spacing:.2px; }
-    .close{
-      border:1px solid var(--line);
-      background: transparent;
-      color: var(--text);
-      border-radius: 12px;
-      padding: 8px 10px;
-      cursor:pointer;
-    }
-
-    form{
-      padding: 14px;
-      display:grid;
-      gap: 10px;
-    }
-    label{ font-size: 13px; color: var(--muted); margin-left: 6px; }
-    input, textarea{
-      width:100%;
-      background: rgba(255,255,255,.65);
-      border: 1px solid var(--line);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 12px 12px;
-      outline:none;
-      font-size: 15px;
-    }
-    html[data-theme="dark"] input,
-    html[data-theme="dark"] textarea{
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-    }
-    textarea{ min-height: 110px; resize: vertical; }
-
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    @media (max-width:520px){
-      .row{ grid-template-columns: 1fr; }
-    }
-
-    .send{
-      margin-top: 2px;
-      border:1px solid var(--btnLine);
-      border-radius: 14px;
-      padding: 13px 14px;
-      font-weight: 800;
-      cursor:pointer;
-      background: var(--btnBg);
-      color: var(--btnText);
-    }
-    .status{
-      margin-top: 4px;
-      font-size: 13px;
-      color: var(--muted);
-      padding: 0 2px 6px;
-      min-height: 18px;
-    }
-
-    .settings-body{
-      padding: 14px;
-      display:grid;
-      gap: 12px;
-    }
-    .toggle-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: var(--panel2);
-    }
-    .toggle-row b{ font-size: 14px; }
-    .toggle-row span{ color: var(--muted); font-size: 13px; }
-    .switch{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      user-select:none;
-    }
-    .switch input{ width: 18px; height: 18px; accent-color: #7aa7ff; }
-
-    .about-block span{ display:block; margin-top: 8px; line-height: 1.35; }
-  </style>
+  <!-- Shared UI wiring (menu, overlays, ESC, click-outside, logo) -->
+  <script defer src="/assets/js/site.js"></script>
 </head>
 
 <body>
@@ -633,7 +261,7 @@
     }
 
     // init language
-    if (!prefs.get('lang', null)) prefs.setLang('is'); // default Icelandic
+    if (!prefs.get('lang', null)) prefs.setLang('is');
     applyLangToUI();
 
     // toggle language
@@ -643,52 +271,8 @@
       applyLangToUI();
     });
 
-    // ---------- MENU ----------
-    const menuBtn = document.getElementById("menuBtn");
-    const menuPop = document.getElementById("menuPop");
-    const menuSettings = document.getElementById("menuSettings");
-    const menuAbout = document.getElementById("menuAbout");
-    const menuContact = document.getElementById("menuContact");
-
-    function openMenu(){ menuPop.classList.add("show"); menuPop.setAttribute("aria-hidden","false"); }
-    function closeMenu(){ menuPop.classList.remove("show"); menuPop.setAttribute("aria-hidden","true"); }
-    function toggleMenu(){ menuPop.classList.contains("show") ? closeMenu() : openMenu(); }
-
-    menuBtn.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
-      toggleMenu();
-    });
-    menuPop.addEventListener("click", (e) => e.stopPropagation());
-    document.addEventListener("click", (e) => {
-      if (!menuPop.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
-    });
-
-    // ---------- CONTACT MODAL ----------
-    const contactOverlay = document.getElementById("contactOverlay");
-    const contactClose = document.getElementById("contactClose");
-    const form = document.getElementById("contactForm");
-    const statusEl = document.getElementById("status");
-
-    function openContact(){
-      contactOverlay.classList.add("open");
-      statusEl.textContent = "";
-      requestAnimationFrame(() => document.getElementById("name").focus());
-    }
-    function closeContact(){ contactOverlay.classList.remove("open"); }
-
-    contactClose.addEventListener("click", closeContact);
-    contactOverlay.addEventListener("click", (e) => { if (e.target === contactOverlay) closeContact(); });
-
-    // ---------- SETTINGS MODAL ----------
-    const settingsOverlay = document.getElementById("settingsOverlay");
-    const settingsClose = document.getElementById("settingsClose");
+    // ---------- THEME TOGGLE (settings modal) ----------
     const themeToggle = document.getElementById("themeToggle");
-
-    function openSettings(){ settingsOverlay.classList.add("open"); }
-    function closeSettings(){ settingsOverlay.classList.remove("open"); }
-
-    settingsClose.addEventListener("click", closeSettings);
-    settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeSettings(); });
 
     function syncThemeToggle(){
       const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -701,51 +285,17 @@
       syncThemeToggle();
     });
 
-    // Keep toggle in sync if theme changes elsewhere
+    // keep toggle + lang UI in sync across tabs
     window.addEventListener('storage', (e) => {
       if (!e.key) return;
       if (e.key === 'is.pref.theme') syncThemeToggle();
       if (e.key === 'is.pref.lang') applyLangToUI();
     });
 
-    // ---------- ABOUT MODAL ----------
-    const aboutOverlay = document.getElementById("aboutOverlay");
-    const aboutClose = document.getElementById("aboutClose");
-
-    function openAbout(){ aboutOverlay.classList.add("open"); }
-    function closeAbout(){ aboutOverlay.classList.remove("open"); }
-
-    aboutClose.addEventListener("click", closeAbout);
-    aboutOverlay.addEventListener("click", (e) => { if (e.target === aboutOverlay) closeAbout(); });
-
-    // Menu actions
-    menuSettings.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
-      closeMenu();
-      requestAnimationFrame(openSettings);
-    });
-    menuAbout.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
-      closeMenu();
-      requestAnimationFrame(openAbout);
-    });
-    menuContact.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
-      closeMenu();
-      requestAnimationFrame(openContact);
-    });
-
-    // ESC closes
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape"){
-        closeMenu();
-        closeContact();
-        closeSettings();
-        closeAbout();
-      }
-    });
-
     // ---------- CONTACT SUBMIT ----------
+    const form = document.getElementById("contactForm");
+    const statusEl = document.getElementById("status");
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const L = prefs.get('lang', 'is') === 'en' ? 'en' : 'is';
@@ -771,17 +321,18 @@
 
         statusEl.textContent = (L === 'en') ? "Sent. Thanks!" : "Sent. Takk!";
         form.reset();
-        setTimeout(closeContact, 700);
+
+        // close overlay (site.js provides helpers)
+        setTimeout(() => {
+          if (window.site?.closeOverlayById) window.site.closeOverlayById("contactOverlay");
+          else document.getElementById("contactOverlay")?.classList.remove("open");
+        }, 700);
+
       }catch(err){
         statusEl.textContent = (L === 'en')
           ? "Failed to send. Try again shortly."
           : "Tókst ekki að senda. Reyndu aftur eftir smá.";
       }
-    });
-
-    // ---------- LOGO BUTTON ----------
-    document.getElementById("logoBtn").addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   </script>
 </body>
