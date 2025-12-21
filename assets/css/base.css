@@ -1,0 +1,214 @@
+/* =========================
+   ís.is — base.css
+   Black/White theme tokens + sane defaults
+   ========================= */
+
+/* Theme tokens */
+:root{
+  --bg:#000;
+  --text:#fff;
+  --muted: rgba(255,255,255,.72);
+  --line: rgba(255,255,255,.14);
+
+  --panel: rgba(255,255,255,.04);
+  --panel2: rgba(255,255,255,.06);
+
+  --radius: 16px;
+  --radius2: 12px;
+
+  --shadow: 0 10px 40px rgba(0,0,0,.55);
+
+  --focus: 0 0 0 3px rgba(255,255,255,.25);
+}
+
+[data-theme="light"]{
+  --bg:#fff;
+  --text:#000;
+  --muted: rgba(0,0,0,.72);
+  --line: rgba(0,0,0,.14);
+
+  --panel: rgba(0,0,0,.04);
+  --panel2: rgba(0,0,0,.06);
+
+  --shadow: 0 10px 40px rgba(0,0,0,.14);
+
+  --focus: 0 0 0 3px rgba(0,0,0,.18);
+}
+
+/* Reset */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,svg,video{ max-width:100%; display:block; }
+a{ color: inherit; text-decoration:none; }
+button,input,select,textarea{ font: inherit; color: inherit; }
+
+/* Focus */
+:focus-visible{
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: 10px;
+}
+
+/* Layout helpers */
+.container{
+  width: min(1050px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.panel{
+  border: 1px solid var(--line);
+  background: transparent; /* hard b/w default */
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 18px 18px 0 18px;
+}
+
+.brand{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.brand h1{
+  margin:0;
+  font-size: 22px;
+  letter-spacing:.2px;
+}
+.brand p{
+  margin:0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height:1.35;
+  max-width: 70ch;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.content{
+  padding: 18px;
+  display:grid;
+  gap: 14px;
+}
+
+.footer{
+  padding: 0 18px 18px 18px;
+  color: var(--muted);
+  font-size: 12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* Buttons (same feel everywhere) */
+.btn{
+  border: 1px solid var(--line);
+  background: transparent;           /* hard b/w default */
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: var(--radius2);
+  cursor:pointer;
+  text-decoration:none;
+  font-weight: 650;
+  font-size: 14px;
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+  white-space:nowrap;
+}
+.btn.small{ padding: 8px 10px; font-size: 13px; }
+.btn:active{ transform: translateY(1px); }
+.btn[disabled]{ opacity:.5; cursor:not-allowed; }
+
+.btn.fill{
+  background: var(--panel2);
+}
+
+/* Cards / grid */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 980px){ .grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px){
+  .header{ padding: 16px 14px 0 14px; }
+  .content{ padding: 14px; }
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.card{
+  border: 1px solid var(--line);
+  background: transparent; /* hard b/w */
+  border-radius: 14px;
+  padding: 14px;
+  display:grid;
+  gap: 10px;
+  min-height: 160px;
+}
+.card h2{
+  margin:0;
+  font-size: 16px;
+  letter-spacing:.2px;
+}
+.card p{
+  margin:0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.card .row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:auto;
+  flex-wrap:wrap;
+}
+
+.tag{
+  border: 1px solid var(--line);
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing:.15px;
+}
+
+.hint{
+  border: 1px solid var(--line);
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* Disabled helpers */
+.is-disabled{ opacity:.55; pointer-events:none; }
