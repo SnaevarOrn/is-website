@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — EMOM</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- APPLY THEME ASAP (shared across pages via localStorage.theme) -->
+  <script>
+    (function(){
+      const saved = localStorage.getItem('theme');
+      const t = (saved === 'dark' || saved === 'light')
+        ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+      const meta = document.getElementById('metaThemeColor');
+      if(meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#ffffff');
+    })();
+  </script>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:rgba(0,0,0,.92);
+      --muted:rgba(0,0,0,.62);
+      --line:rgba(0,0,0,.12);
+
+      --card:#ffffff;
+      --panel:rgba(0,0,0,.03);
+
+      --btnBg:#0b0c0f;
+      --btnText:#ffffff;
+
+      --ghostBg:transparent;
+      --ghostText:rgba(0,0,0,.92);
+
+      --shadow: 0 18px 60px rgba(0,0,0,.14);
+      --shadow2: 0 10px 30px rgba(0,0,0,.10);
+    }
+    html[data-theme="dark"]{
+      --bg:#000000;
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --line:rgba(255,255,255,.14);
+
+      --card:rgba(12,12,14,.92);
+      --panel:rgba(255,255,255,.06);
+
+      --btnBg:rgba(255,255,255,.92);
+      --btnText:#07080a;
+
+      --ghostBg:transparent;
+      --ghostText:rgba(255,255,255,.92);
+
+      --shadow: 0 24px 90px rgba(0,0,0,.70);
+      --shadow2: 0 14px 50px rgba(0,0,0,.50);
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{
+      min-height:100vh;
+      background: var(--bg);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
+    }
+
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+    .hdr{
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      display:grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items:center;
+      gap: 10px;
+    }
+    .back, .theme-btn{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: transparent;
+      border-radius: 14px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      color: var(--text);
+      text-decoration:none;
+      font-weight: 900;
+      user-select:none;
+    }
+    .back:active, .theme-btn:active{ transform: translateY(1px); }
+    .title{
+      text-align:center;
+      font-weight: 900;
+      letter-spacing:.2px;
+      user-select:none;
+    }
+
+    main{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px 16px 92px; /* leave room for bottom controls */
+    }
+
+    .card{
+      width: min(560px, 100%);
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px 16px 16px;
+    }
+
+    .mode-title{
+      text-align:center;
+      font-weight: 900;
+      letter-spacing:.2px;
+      margin-bottom: 6px;
+    }
+    .sub{
+      text-align:center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .timer{
+      border:1px solid var(--line);
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 14px 14px;
+      text-align:center;
+      margin-bottom: 14px;
+    }
+    .big{
+      font-variant-numeric: tabular-nums;
+      font-size: 56px;
+      font-weight: 950;
+      letter-spacing: 1px;
+      line-height: 1.05;
+    }
+    .meta{
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      display:flex;
+      justify-content:center;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      border:1px solid var(--line);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 6px 10px;
+      box-shadow: var(--shadow2);
+    }
+
+    .form{
+      display:grid;
+      gap: 10px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width:520px){
+      .row{ grid-template-columns: 1fr; }
+    }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 6px;
+      display:block;
+      margin-bottom: 6px;
+    }
+    input{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 15px;
+      background: rgba(0,0,0,.03);
+      color: var(--text);
+      outline:none;
+    }
+    html[data-theme="dark"] input{ background: rgba(255,255,255,.06); }
+    .hint{
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+      margin-top: 2px;
+    }
+
+    /* Bottom controls */
+    .controls{
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 12px 12px 18px;
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+      z-index: 30;
+    }
+    .controls-inner{
+      max-width: 560px;
+      margin: 0 auto;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .btn{
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 14px 14px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor:pointer;
+      text-align:center;
+      user-select:none;
+    }
+    .btn.primary{
+      background: var(--btnBg);
+      color: var(--btnText);
+      border-color: transparent;
+    }
+    .btn.ghost{
+      background: var(--ghostBg);
+      color: var(--ghostText);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    /* Small status */
+    .status{
+      text-align:center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="hdr">
+      <a class="back" href="/WOD/" aria-label="Til baka">←</a>
+      <div class="title">EMOM</div>
+      <button class="theme-btn" id="themeBtn" aria-label="Skipta um þema">◐</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="card" role="region" aria-label="EMOM timer">
+      <div class="mode-title">Every Minute on the Minute</div>
+      <div class="sub">Stilla → Starta → Pása / Halda áfram</div>
+
+      <div class="timer" aria-live="polite">
+        <div class="big" id="timeBig">00:10</div>
+        <div class="meta">
+          <span class="pill" id="phasePill">Undirbúningur</span>
+          <span class="pill" id="roundPill">Lotur: 0 / 0</span>
+          <span class="pill" id="minutePill">Mínúta: 00 / 00</span>
+        </div>
+      </div>
+
+      <div class="form" id="setupForm">
+        <div class="row">
+          <div>
+            <label for="prep">Start countdown (sek)</label>
+            <input id="prep" type="number" min="0" max="60" step="1" value="10" inputmode="numeric">
+          </div>
+          <div>
+            <label for="rounds">Fjöldi lota</label>
+            <input id="rounds" type="number" min="1" max="999" step="1" value="10" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="minuteLen">Lengd mínútu (sek)</label>
+            <input id="minuteLen" type="number" min="10" max="600" step="1" value="60" inputmode="numeric">
+          </div>
+          <div>
+            <label for="beep">Hljóð</label>
+            <input id="beep" type="number" min="0" max="100" step="1" value="40" inputmode="numeric" aria-label="Hljóðstyrkur (0-100)">
+          </div>
+        </div>
+
+        <div class="hint">Á EMOM byrjar ný lota á upphafi hverrar mínútu.</div>
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="controls" role="region" aria-label="Controls">
+    <div class="controls-inner">
+      <button class="btn ghost" id="resetBtn">Endurstilla</button>
+      <button class="btn primary" id="playBtn">▶︎ Start</button>
+      <button class="btn ghost" id="pauseBtn" disabled>⏸︎ Pása</button>
+    </div>
+  </div>
+
+  <script>
+    // ---------- THEME (shared) ----------
+    const meta = document.getElementById('metaThemeColor');
+
+    function setMetaThemeColor(t){
+      if(meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#ffffff');
+    }
+    function applyTheme(t){
+      const theme = (t === 'dark') ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      setMetaThemeColor(theme);
+    }
+    (function(){
+      const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      localStorage.setItem('theme', t);
+      setMetaThemeColor(t);
+    })();
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(cur === 'dark' ? 'light' : 'dark');
+    });
+    window.addEventListener('storage', (e) => {
+      if (e.key !== 'theme') return;
+      const t = (e.newValue === 'dark' || e.newValue === 'light') ? e.newValue : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      setMetaThemeColor(t);
+    });
+
+    // ---------- EMOM TIMER ----------
+    const elTime = document.getElementById('timeBig');
+    const elPhase = document.getElementById('phasePill');
+    const elRound = document.getElementById('roundPill');
+    const elMinute = document.getElementById('minutePill');
+    const elStatus = document.getElementById('status');
+
+    const inpPrep = document.getElementById('prep');
+    const inpRounds = document.getElementById('rounds');
+    const inpMinuteLen = document.getElementById('minuteLen');
+    const inpBeep = document.getElementById('beep');
+
+    const btnPlay = document.getElementById('playBtn');
+    const btnPause = document.getElementById('pauseBtn');
+    const btnReset = document.getElementById('resetBtn');
+
+    let state = "setup"; // setup | prep | running | paused | done
+    let timerId = null;
+    let lastTick = 0;
+
+    // Config
+    let prepTotal = 10;
+    let roundsTotal = 10;
+    let minuteLen = 60;
+    let beepVol = 0.40;
+
+    // Runtime
+    let prepLeft = 10;
+    let roundIdx = 0;      // 1..roundsTotal
+    let secIntoMinute = 0; // 0..minuteLen-1
+    let secLeft = 0;       // countdown display
+
+    // Audio (simple beep)
+    let audioCtx = null;
+    function beep(freq=880, ms=120, gain=0.05){
+      try{
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.value = freq;
+        g.gain.value = gain;
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); }, ms);
+      }catch(_){}
+    }
+
+    function clampInt(v, min, max, fallback){
+      const n = Number(v);
+      if(!Number.isFinite(n)) return fallback;
+      return Math.max(min, Math.min(max, Math.round(n)));
+    }
+
+    function fmtMMSS(seconds){
+      const s = Math.max(0, seconds|0);
+      const mm = String(Math.floor(s/60)).padStart(2,'0');
+      const ss = String(s%60).padStart(2,'0');
+      return `${mm}:${ss}`;
+    }
+    function fmt2(n){ return String(n).padStart(2,'0'); }
+
+    function readConfig(){
+      prepTotal = clampInt(inpPrep.value, 0, 60, 10);
+      roundsTotal = clampInt(inpRounds.value, 1, 999, 10);
+      minuteLen  = clampInt(inpMinuteLen.value, 10, 600, 60);
+      beepVol    = clampInt(inpBeep.value, 0, 100, 40) / 100;
+
+      inpPrep.value = prepTotal;
+      inpRounds.value = roundsTotal;
+      inpMinuteLen.value = minuteLen;
+      inpBeep.value = Math.round(beepVol * 100);
+    }
+
+    function setUI(){
+      // time display
+      elTime.textContent = fmtMMSS(secLeft);
+
+      // pills
+      elPhase.textContent =
+        state === "setup" ? "Undirbúningur"
+        : state === "prep" ? "Startar…"
+        : state === "running" ? "Í gangi"
+        : state === "paused" ? "Pása"
+        : "Lokið";
+
+      elRound.textContent = `Lotur: ${roundIdx} / ${roundsTotal}`;
+
+      const totalMins = roundsTotal;
+      const curMin = Math.min(roundIdx, totalMins);
+      elMinute.textContent = `Mínúta: ${fmt2(curMin)} / ${fmt2(totalMins)}`;
+
+      // buttons
+      btnPause.disabled = !(state === "running" || state === "paused");
+      btnPause.textContent = (state === "paused") ? "▶︎ Halda áfram" : "⏸︎ Pása";
+      btnPlay.disabled = !(state === "setup" || state === "done");
+      btnPlay.textContent = (state === "done") ? "▶︎ Byrja aftur" : "▶︎ Start";
+
+      // form enabled/disabled
+      const disableForm = (state === "prep" || state === "running" || state === "paused");
+      [inpPrep, inpRounds, inpMinuteLen, inpBeep].forEach(i => i.disabled = disableForm);
+
+      if(state === "setup"){
+        elStatus.textContent = "Stilltu og ýttu á Start.";
+      }else if(state === "prep"){
+        elStatus.textContent = "Undirbúningur…";
+      }else if(state === "running"){
+        elStatus.textContent = "Ný lota byrjar á núlli hverrar mínútu.";
+      }else if(state === "paused"){
+        elStatus.textContent = "Pása. Ýttu á Halda áfram.";
+      }else{
+        elStatus.textContent = "Lokið. Vel gert.";
+      }
+    }
+
+    function hardReset(){
+      clearInterval(timerId); timerId = null;
+      state = "setup";
+      readConfig();
+
+      prepLeft = prepTotal;
+      roundIdx = 0;
+      secIntoMinute = 0;
+
+      secLeft = prepTotal; // show prep by default
+      setUI();
+    }
+
+    function start(){
+      readConfig();
+      clearInterval(timerId);
+
+      prepLeft = prepTotal;
+      roundIdx = 0;
+      secIntoMinute = 0;
+
+      if(prepTotal > 0){
+        state = "prep";
+        secLeft = prepLeft;
+      }else{
+        state = "running";
+        roundIdx = 1;
+        secIntoMinute = 0;
+        secLeft = minuteLen - secIntoMinute;
+        // start-of-round beep
+        if(beepVol > 0) beep(880, 120, 0.12 * beepVol);
+      }
+
+      lastTick = Date.now();
+      timerId = setInterval(tick, 200);
+      setUI();
+    }
+
+    function finish(){
+      clearInterval(timerId); timerId = null;
+      state = "done";
+      secLeft = 0;
+      setUI();
+      // end beep
+      if(beepVol > 0){
+        beep(660, 160, 0.14 * beepVol);
+        setTimeout(() => beep(660, 160, 0.14 * beepVol), 180);
+      }
+    }
+
+    function tick(){
+      const now = Date.now();
+      const deltaMs = now - lastTick;
+
+      if(state !== "prep" && state !== "running") {
+        lastTick = now;
+        return;
+      }
+
+      // advance by whole seconds
+      const steps = Math.floor(deltaMs / 1000);
+      if(steps <= 0) return;
+
+      lastTick += steps * 1000;
+
+      for(let i=0;i<steps;i++){
+        if(state === "prep"){
+          prepLeft -= 1;
+          secLeft = prepLeft;
+
+          // countdown beeps: last 3 sec
+          if(beepVol > 0 && prepLeft > 0 && prepLeft <= 3) beep(988, 80, 0.10 * beepVol);
+
+          if(prepLeft <= 0){
+            state = "running";
+            roundIdx = 1;
+            secIntoMinute = 0;
+            secLeft = minuteLen - secIntoMinute;
+            if(beepVol > 0) beep(880, 120, 0.12 * beepVol);
+          }
+        }else if(state === "running"){
+          secIntoMinute += 1;
+
+          if(secIntoMinute >= minuteLen){
+            // minute boundary -> next round
+            secIntoMinute = 0;
+            roundIdx += 1;
+
+            if(roundIdx > roundsTotal){
+              finish();
+              return;
+            }else{
+              // start-of-round beep
+              if(beepVol > 0) beep(880, 120, 0.12 * beepVol);
+            }
+          }
+
+          secLeft = minuteLen - secIntoMinute;
+
+          // optional: small warning beep at last 3 sec of minute
+          if(beepVol > 0 && secLeft > 0 && secLeft <= 3) beep(740, 60, 0.07 * beepVol);
+        }
+      }
+
+      setUI();
+    }
+
+    function togglePause(){
+      if(state === "running" || state === "prep"){
+        state = "paused";
+        clearInterval(timerId); timerId = null;
+        setUI();
+        return;
+      }
+      if(state === "paused"){
+        // resume
+        state = (roundIdx === 0 && prepLeft > 0) ? "prep" : "running";
+        lastTick = Date.now();
+        timerId = setInterval(tick, 200);
+        setUI();
+      }
+    }
+
+    // Buttons
+    btnPlay.addEventListener('click', () => {
+      if(state === "setup" || state === "done") start();
+    });
+    btnPause.addEventListener('click', () => togglePause());
+    btnReset.addEventListener('click', () => hardReset());
+
+    // Space toggles pause/play when active
+    document.addEventListener('keydown', (e) => {
+      if(e.code === 'Space'){
+        e.preventDefault();
+        if(state === "setup" || state === "done") start();
+        else togglePause();
+      }
+      if(e.key === 'Escape') hardReset();
+    });
+
+    // init
+    hardReset();
+  </script>
+</body>
+</html>
