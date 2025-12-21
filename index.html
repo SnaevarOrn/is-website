@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="is" data-theme="light">
 <head>
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <script src="/assets/js/prefs.js"></script>
+  <script>
+  // Apply theme ASAP (prevents flash)
+  prefs.applyThemeFromStorage();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is</title>
@@ -24,18 +30,6 @@
         document.documentElement.setAttribute('data-theme','light');
       }
     })();
-  </script>
-
-  <!-- Shared base styles -->
-  <link rel="stylesheet" href="/assets/css/base.css">
-
-  <!-- Shared prefs (theme/lang/etc) -->
-  <script defer src="/assets/js/prefs.js"></script>
-  <script>
-    // Apply theme + metaThemeColor after prefs.js is available
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.prefs?.applyThemeFromStorage) prefs.applyThemeFromStorage();
-    });
   </script>
 
   <style>
