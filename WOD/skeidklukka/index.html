@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — Skeiðklukka</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- Shared prefs (theme/lang/sound/etc) -->
+  <script src="/assets/prefs.js"></script>
+  <script>
+    // Apply theme ASAP (prevents flash)
+    if (window.prefs) prefs.applyThemeFromStorage();
+  </script>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:rgba(0,0,0,.92);
+      --muted:rgba(0,0,0,.62);
+      --line:rgba(0,0,0,.12);
+
+      --card:#ffffff;
+      --panel:rgba(0,0,0,.03);
+
+      --btnBg:#0b0c0f;
+      --btnText:#ffffff;
+
+      --ghostBg:transparent;
+      --ghostText:rgba(0,0,0,.92);
+
+      --shadow: 0 18px 60px rgba(0,0,0,.14);
+      --shadow2: 0 10px 30px rgba(0,0,0,.10);
+    }
+    html[data-theme="dark"]{
+      --bg:#000000;
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --line:rgba(255,255,255,.14);
+
+      --card:rgba(12,12,14,.92);
+      --panel:rgba(255,255,255,.06);
+
+      --btnBg:rgba(255,255,255,.92);
+      --btnText:#07080a;
+
+      --ghostBg:transparent;
+      --ghostText:rgba(255,255,255,.92);
+
+      --shadow: 0 24px 90px rgba(0,0,0,.70);
+      --shadow2: 0 14px 50px rgba(0,0,0,.50);
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{
+      min-height:100vh;
+      background: var(--bg);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
+    }
+
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+    .hdr{
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      display:grid;
+      grid-template-columns: 44px 1fr auto;
+      align-items:center;
+      gap: 10px;
+    }
+    .back, .icon-btn{
+      width:44px; height:44px;
+      border:1px solid var(--line);
+      background: transparent;
+      border-radius: 14px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      color: var(--text);
+      text-decoration:none;
+      font-weight: 900;
+      user-select:none;
+    }
+    .back:active, .icon-btn:active{ transform: translateY(1px); }
+    .title{
+      text-align:center;
+      font-weight: 900;
+      letter-spacing:.2px;
+      user-select:none;
+    }
+    .hdr-right{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    main{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px 16px 92px;
+    }
+
+    .card{
+      width: min(560px, 100%);
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px 16px 16px;
+    }
+
+    .timer{
+      border:1px solid var(--line);
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 16px 14px;
+      text-align:center;
+      margin-bottom: 12px;
+    }
+
+    .big{
+      font-variant-numeric: tabular-nums;
+      font-size: 64px;
+      font-weight: 950;
+      letter-spacing: 1px;
+      line-height: 1.05;
+    }
+    .big.small-ms{ font-size: 60px; }
+
+    .meta{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      display:flex;
+      justify-content:center;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      border:1px solid var(--line);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 6px 10px;
+      box-shadow: var(--shadow2);
+    }
+
+    .laps{
+      border:1px solid var(--line);
+      border-radius: 18px;
+      overflow:hidden;
+      background: var(--card);
+    }
+    .laps-h{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 12px;
+      background: color-mix(in srgb, var(--panel) 90%, transparent);
+      border-bottom: 1px solid var(--line);
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+    .laps-h span{
+      font-weight: 800;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .laps-list{
+      max-height: 320px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .lap{
+      display:grid;
+      grid-template-columns: 54px 1fr 1fr;
+      gap: 10px;
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
+      align-items:center;
+      font-variant-numeric: tabular-nums;
+    }
+    .lap:last-child{ border-bottom:0; }
+    .lap b{ font-weight: 950; }
+    .lap .muted{ color: var(--muted); text-align:right; }
+    .empty{
+      padding: 14px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align:center;
+    }
+
+    /* Bottom controls */
+    .controls{
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 12px 12px 18px;
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+      z-index: 30;
+    }
+    .controls-inner{
+      max-width: 560px;
+      margin: 0 auto;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .btn{
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 14px 14px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor:pointer;
+      text-align:center;
+      user-select:none;
+    }
+    .btn.primary{
+      background: var(--btnBg);
+      color: var(--btnText);
+      border-color: transparent;
+    }
+    .btn.ghost{
+      background: var(--ghostBg);
+      color: var(--ghostText);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    /* Settings modal */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index:50;
+    }
+    .overlay.open{ display:flex; }
+
+    .modal{
+      width: min(560px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal-h{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+    }
+    .modal-h b{ font-size: 16px; letter-spacing:.2px; font-weight: 950; }
+    .close{
+      border:1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      font-weight: 900;
+    }
+
+    .settings-body{
+      padding: 14px;
+      display:grid;
+      gap: 12px;
+    }
+    .toggle-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+    }
+    .toggle-row b{ font-size: 14px; font-weight: 950; }
+    .toggle-row span{ color: var(--muted); font-size: 13px; }
+    .switch{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
+    }
+    .switch input{ width: 18px; height: 18px; accent-color: #7aa7ff; }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width:520px){
+      .row{ grid-template-columns: 1fr; }
+      .big{ font-size: 56px; }
+    }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 6px;
+      display:block;
+      margin-bottom: 6px;
+    }
+    input[type="number"]{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 15px;
+      background: rgba(0,0,0,.03);
+      color: var(--text);
+      outline:none;
+    }
+    html[data-theme="dark"] input[type="number"]{ background: rgba(255,255,255,.06); }
+
+    .status{
+      text-align:center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="hdr">
+      <a class="back" href="/WOD/" aria-label="Til baka">←</a>
+      <div class="title">Skeiðklukka</div>
+      <div class="hdr-right">
+        <button class="icon-btn" id="settingsBtn" aria-label="Stillingar">⚙︎</button>
+        <button class="icon-btn" id="themeBtn" aria-label="Skipta um þema">◐</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="card" role="region" aria-label="Skeiðklukka">
+      <div class="timer" aria-live="polite">
+        <div class="big" id="timeBig">00:00</div>
+        <div class="meta">
+          <span class="pill" id="statePill">Tilbúið</span>
+          <span class="pill" id="lapsPill">Splitt: 0</span>
+          <span class="pill" id="bestPill">Best: —</span>
+        </div>
+      </div>
+
+      <div class="laps" aria-label="Splitt">
+        <div class="laps-h">
+          <div>Splitt</div>
+          <span id="lapModeLabel">Sýnir: Split</span>
+        </div>
+        <div class="laps-list" id="lapsList">
+          <div class="empty">Ýttu á “Start” — og svo “Splitt”.</div>
+        </div>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+  </main>
+
+  <div class="controls" role="region" aria-label="Controls">
+    <div class="controls-inner">
+      <button class="btn ghost" id="resetBtn">Endurstilla</button>
+      <button class="btn primary" id="startBtn">▶︎ Start</button>
+      <button class="btn ghost" id="lapBtn" disabled>⦿ Splitt</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal">
+      <div class="modal-h">
+        <b id="settingsTitle">Stillingar</b>
+        <button class="close" id="settingsClose" aria-label="Loka">✕</button>
+      </div>
+
+      <div class="settings-body">
+        <div class="toggle-row">
+          <div>
+            <b>Sýna millisekúndur</b><br/>
+            <span>00:00.00 vs 00:00</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="showMs">
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <b>Splitt hamur</b><br/>
+            <span id="lapModeHint">Split = heildartími</span>
+          </div>
+          <label class="switch">
+            <span style="opacity:.8;font-weight:900">Lap</span>
+            <input type="checkbox" id="lapMode">
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <b>Hljóð á mínútu</b><br/>
+            <span>Smá “beep” á hverri heilli mínútu</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="beepMinute">
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <b>Titringur</b><br/>
+            <span>Ef tækið styður</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="haptics">
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <b>Halda skjá vakandi</b><br/>
+            <span>Wake Lock (ef styður)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="keepAwake">
+          </label>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="vol">Hljóðstyrkur (0–100)</label>
+            <input id="vol" type="number" min="0" max="100" step="1" inputmode="numeric">
+          </div>
+          <div>
+            <label for="maxLaps">Hámark splitta</label>
+            <input id="maxLaps" type="number" min="10" max="500" step="10" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="status" style="text-align:left;color:var(--muted)">
+          Tips: Space = Start/Pása • L = Splitt • Esc = Endurstilla
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       Skeiðklukka — simple UI, lots of options
+       ========================================================= */
+
+    // --- Shortcuts ---
+    const $ = (id) => document.getElementById(id);
+
+    // Header buttons
+    $('themeBtn').addEventListener('click', () => (window.prefs ? prefs.toggleTheme() : null));
+
+    // Settings modal
+    const settingsOverlay = $('settingsOverlay');
+    $('settingsBtn').addEventListener('click', () => settingsOverlay.classList.add('open'));
+    $('settingsClose').addEventListener('click', () => settingsOverlay.classList.remove('open'));
+    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('open'); });
+
+    // UI elements
+    const timeBig = $('timeBig');
+    const statePill = $('statePill');
+    const lapsPill = $('lapsPill');
+    const bestPill = $('bestPill');
+    const lapsList = $('lapsList');
+    const statusEl = $('status');
+    const lapModeLabel = $('lapModeLabel');
+
+    // Buttons
+    const startBtn = $('startBtn');
+    const lapBtn = $('lapBtn');
+    const resetBtn = $('resetBtn');
+
+    // Settings inputs
+    const showMsEl = $('showMs');
+    const lapModeEl = $('lapMode'); // false=Split, true=Lap
+    const beepMinuteEl = $('beepMinute');
+    const hapticsEl = $('haptics');
+    const keepAwakeEl = $('keepAwake');
+    const volEl = $('vol');
+    const maxLapsEl = $('maxLaps');
+    const lapModeHint = $('lapModeHint');
+
+    // Pref keys (namespaced)
+    const P = {
+      showMs: 'sw.showMs',
+      lapMode: 'sw.lapMode',
+      beepMinute: 'sw.beepMinute',
+      haptics: 'sw.haptics',
+      keepAwake: 'sw.keepAwake',
+      volume: 'soundVolume',
+      soundEnabled: 'soundEnabled',
+      maxLaps: 'sw.maxLaps'
+    };
+
+    function prefGet(key, fallback){
+      return window.prefs ? prefs.get(key, fallback) : fallback;
+    }
+    function prefSet(key, val){
+      if(window.prefs) prefs.set(key, val);
+    }
+
+    // Defaults
+    const defaults = {
+      showMs: false,
+      lapMode: false, // false=Split, true=Lap
+      beepMinute: false,
+      haptics: false,
+      keepAwake: false,
+      volume: 40,
+      soundEnabled: true,
+      maxLaps: 200
+    };
+
+    // Runtime state
+    let running = false;
+    let rafId = null;
+    let startPerf = 0;      // performance.now at start/resume
+    let elapsedMs = 0;      // accumulated when paused
+    let lastMinuteMark = -1;
+
+    let laps = [];          // { n, splitMs, lapMs }
+    let lastLapAt = 0;      // ms at last lap
+
+    // Wake Lock
+    let wakeLock = null;
+    async function tryWakeLock(){
+      if(!keepAwakeEl.checked) return;
+      if(!('wakeLock' in navigator)) return;
+      try{
+        wakeLock = await navigator.wakeLock.request('screen');
+      }catch(_){}
+    }
+    async function releaseWakeLock(){
+      try{ if(wakeLock){ await wakeLock.release(); } }catch(_){}
+      wakeLock = null;
+    }
+    document.addEventListener('visibilitychange', () => {
+      // if hidden, release; when visible and running, re-acquire
+      if(document.visibilityState === 'hidden') releaseWakeLock();
+      else if(running) tryWakeLock();
+    });
+
+    // Audio (minute beep + click feedback)
+    let audioCtx = null;
+    function beep(freq=880, ms=90, gain=0.05){
+      const soundEnabled = !!prefGet(P.soundEnabled, defaults.soundEnabled);
+      const vol = Math.max(0, Math.min(100, Number(prefGet(P.volume, defaults.volume)))) / 100;
+      if(!soundEnabled || vol <= 0) return;
+
+      try{
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.value = freq;
+        g.gain.value = gain * vol;
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); }, ms);
+      }catch(_){}
+    }
+
+    function vibrate(ms=25){
+      if(!hapticsEl.checked) return;
+      if(navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    // Formatting
+    function fmt(ms, showMs){
+      ms = Math.max(0, Math.floor(ms));
+      const totalSec = Math.floor(ms / 1000);
+      const mm = Math.floor(totalSec / 60);
+      const ss = totalSec % 60;
+      const cs = Math.floor((ms % 1000) / 10); // centiseconds
+      if(showMs){
+        return `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+      }
+      return `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+    }
+
+    function currentMs(){
+      return running ? (elapsedMs + (performance.now() - startPerf)) : elapsedMs;
+    }
+
+    function setStatus(){
+      if(running){
+        statePill.textContent = "Í gangi";
+        statusEl.textContent = "Pása: Start • Splitt: Splitt • Endurstilla: Endurstilla";
+      }else{
+        statePill.textContent = (elapsedMs > 0) ? "Pása" : "Tilbúið";
+        statusEl.textContent = (elapsedMs > 0) ? "Ýttu á Start til að halda áfram." : "Ýttu á Start til að byrja.";
+      }
+      lapsPill.textContent = `Splitt: ${laps.length}`;
+    }
+
+    function updateBest(){
+      if(laps.length === 0){
+        bestPill.textContent = "Best: —";
+        return;
+      }
+      const modeLap = !!lapModeEl.checked;
+      const best = laps.reduce((acc, l) => Math.min(acc, modeLap ? l.lapMs : l.splitMs), Infinity);
+      bestPill.textContent = `Best: ${fmt(best, !!showMsEl.checked)}`;
+    }
+
+    function renderLaps(){
+      if(laps.length === 0){
+        lapsList.innerHTML = `<div class="empty">Ýttu á “Start” — og svo “Splitt”.</div>`;
+        updateBest();
+        return;
+      }
+
+      // newest on top
+      const modeLap = !!lapModeEl.checked;
+      const showMs = !!showMsEl.checked;
+
+      let html = '';
+      for(let i=laps.length-1;i>=0;i--){
+        const l = laps[i];
+        html += `
+          <div class="lap">
+            <b>#${l.n}</b>
+            <div>${modeLap ? fmt(l.lapMs, showMs) : fmt(l.splitMs, showMs)}</div>
+            <div class="muted">${modeLap ? fmt(l.splitMs, showMs) : fmt(l.lapMs, showMs)}</div>
+          </div>
+        `;
+      }
+      lapsList.innerHTML = html;
+
+      updateBest();
+    }
+
+    function syncLapLabels(){
+      const modeLap = !!lapModeEl.checked;
+      lapModeLabel.textContent = `Sýnir: ${modeLap ? 'Lap' : 'Split'}`;
+      lapModeHint.textContent = modeLap ? "Lap = tímabil milli splitta" : "Split = heildartími";
+    }
+
+    function applySettingsToUI(){
+      const showMs = !!showMsEl.checked;
+      timeBig.classList.toggle('small-ms', showMs);
+      syncLapLabels();
+      renderLaps();
+      timeBig.textContent = fmt(currentMs(), showMs);
+      setStatus();
+    }
+
+    // Tick loop
+    function tick(){
+      if(!running) return;
+
+      const ms = currentMs();
+      timeBig.textContent = fmt(ms, !!showMsEl.checked);
+
+      // minute beep
+      if(beepMinuteEl.checked){
+        const m = Math.floor(ms / 60000);
+        if(m !== lastMinuteMark){
+          if(lastMinuteMark !== -1) { beep(740, 80, 0.06); vibrate(15); }
+          lastMinuteMark = m;
+        }
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    async function start(){
+      if(running) return;
+      running = true;
+      startPerf = performance.now();
+      startBtn.textContent = "⏸︎ Pása";
+      startBtn.classList.remove('primary');
+      startBtn.classList.add('ghost');
+      lapBtn.disabled = false;
+
+      // Re-acquire wake lock if enabled
+      await tryWakeLock();
+
+      // Click feedback
+      beep(880, 70, 0.06);
+      vibrate(20);
+
+      setStatus();
+      lastMinuteMark = Math.floor(currentMs()/60000);
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    async function pause(){
+      if(!running) return;
+      running = false;
+
+      // accumulate elapsed
+      elapsedMs = currentMs();
+
+      if(rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+
+      startBtn.textContent = "▶︎ Start";
+      startBtn.classList.add('primary');
+      startBtn.classList.remove('ghost');
+
+      // keep lap enabled if there is time? (still useful) -> yes
+      lapBtn.disabled = (elapsedMs <= 0);
+
+      await releaseWakeLock();
+
+      beep(520, 70, 0.05);
+      vibrate(15);
+
+      setStatus();
+    }
+
+    function toggleStartPause(){
+      if(running) pause();
+      else start();
+    }
+
+    function addLap(){
+      const maxLaps = Math.max(10, Math.min(500, Number(prefGet(P.maxLaps, defaults.maxLaps)) || defaults.maxLaps));
+      if(laps.length >= maxLaps){
+        // drop oldest to keep UI fast
+        laps.shift();
+      }
+
+      const splitMs = currentMs();
+      const lapMs = Math.max(0, splitMs - lastLapAt);
+      lastLapAt = splitMs;
+
+      laps.push({ n: (laps.length ? laps[laps.length-1].n + 1 : 1), splitMs, lapMs });
+
+      beep(988, 60, 0.05);
+      vibrate(10);
+
+      renderLaps();
+      setStatus();
+    }
+
+    async function reset(){
+      running = false;
+      if(rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+
+      elapsedMs = 0;
+      startPerf = 0;
+      lastMinuteMark = -1;
+
+      laps = [];
+      lastLapAt = 0;
+
+      timeBig.textContent = fmt(0, !!showMsEl.checked);
+      startBtn.textContent = "▶︎ Start";
+      startBtn.classList.add('primary');
+      startBtn.classList.remove('ghost');
+      lapBtn.disabled = true;
+
+      await releaseWakeLock();
+
+      renderLaps();
+      setStatus();
+    }
+
+    // Controls
+    startBtn.addEventListener('click', toggleStartPause);
+    lapBtn.addEventListener('click', () => { if(elapsedMs > 0 || running) addLap(); });
+    resetBtn.addEventListener('click', reset);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if(e.key === "Escape"){ reset(); return; }
+      if(e.code === "Space"){
+        e.preventDefault();
+        toggleStartPause();
+        return;
+      }
+      if(e.key.toLowerCase() === "l"){
+        if(!lapBtn.disabled) addLap();
+      }
+    });
+
+    // Settings persistence
+    function loadPrefs(){
+      showMsEl.checked = !!prefGet(P.showMs, defaults.showMs);
+      lapModeEl.checked = !!prefGet(P.lapMode, defaults.lapMode);
+      beepMinuteEl.checked = !!prefGet(P.beepMinute, defaults.beepMinute);
+      hapticsEl.checked = !!prefGet(P.haptics, defaults.haptics);
+      keepAwakeEl.checked = !!prefGet(P.keepAwake, defaults.keepAwake);
+
+      const vol = Number(prefGet(P.volume, defaults.volume));
+      volEl.value = Number.isFinite(vol) ? Math.max(0, Math.min(100, Math.round(vol))) : defaults.volume;
+
+      const maxL = Number(prefGet(P.maxLaps, defaults.maxLaps));
+      maxLapsEl.value = Number.isFinite(maxL) ? Math.max(10, Math.min(500, Math.round(maxL))) : defaults.maxLaps;
+
+      applySettingsToUI();
+    }
+
+    function savePrefs(){
+      prefSet(P.showMs, !!showMsEl.checked);
+      prefSet(P.lapMode, !!lapModeEl.checked);
+      prefSet(P.beepMinute, !!beepMinuteEl.checked);
+      prefSet(P.haptics, !!hapticsEl.checked);
+      prefSet(P.keepAwake, !!keepAwakeEl.checked);
+
+      const vol = Math.max(0, Math.min(100, Number(volEl.value) || defaults.volume));
+      prefSet(P.volume, Math.round(vol));
+
+      const maxL = Math.max(10, Math.min(500, Number(maxLapsEl.value) || defaults.maxLaps));
+      prefSet(P.maxLaps, Math.round(maxL));
+
+      applySettingsToUI();
+    }
+
+    [showMsEl, lapModeEl, beepMinuteEl, hapticsEl, keepAwakeEl].forEach(el => el.addEventListener('change', savePrefs));
+    [volEl, maxLapsEl].forEach(el => el.addEventListener('change', savePrefs));
+
+    // Update labels (Split/Lap)
+    lapModeEl.addEventListener('change', () => {
+      syncLapLabels();
+      renderLaps();
+    });
+
+    // If theme changes in another tab, prefs.js already syncs it; we just keep UI consistent.
+    window.addEventListener('storage', (e) => {
+      if(!e.key) return;
+      // If volume/sound toggles sees changes, we don't need to do anything immediate here.
+      // (kept minimal)
+    });
+
+    // Init
+    loadPrefs();
+    renderLaps();
+    setStatus();
+  </script>
+</body>
+</html>
