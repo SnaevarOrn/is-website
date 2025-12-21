@@ -13,18 +13,11 @@
 
   <meta name="theme-color" content="#f5f6f8" id="metaThemeColor">
 
-  <!-- APPLY THEME ASAP (shared across pages via localStorage.theme) -->
+  <!-- Shared prefs (theme/lang/etc) -->
+  <script src="/assets/prefs.js"></script>
   <script>
-    (function(){
-      const saved = localStorage.getItem('theme'); // 'dark' | 'light'
-      const t = (saved === 'dark' || saved === 'light')
-        ? saved
-        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-      document.documentElement.setAttribute('data-theme', t);
-      const meta = document.getElementById('metaThemeColor');
-      if(meta) meta.setAttribute('content', t === 'dark' ? '#050607' : '#f5f6f8');
-    })();
+    // Apply theme ASAP (prevents flash)
+    prefs.applyThemeFromStorage();
   </script>
 
   <style>
@@ -145,22 +138,9 @@
     html[data-theme="dark"] .icon-btn{ background: rgba(255,255,255,.04); }
     .icon-btn:active{ transform: translateY(1px); }
 
-    .lang-flag{
-      font-size: 20px;
-      line-height: 1;
-    }
-    .lang-pill{
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .4px;
-      opacity: .9;
-    }
-    .lang-btn{
-      gap: 6px;
-      padding: 0 10px;
-      width: auto;
-      min-width: 44px;
-    }
+    .lang-flag{ font-size: 20px; line-height: 1; }
+    .lang-pill{ font-size: 12px; font-weight: 800; letter-spacing: .4px; opacity: .9; }
+    .lang-btn{ gap: 6px; padding: 0 10px; width: auto; min-width: 44px; }
 
     .burger{ width:18px; height:12px; position:relative; }
     .burger span{
@@ -203,8 +183,6 @@
     }
     .menu-item:hover{ background: var(--panel2); }
     .menu-item + .menu-item{ border-top:1px solid var(--line); }
-
-    /* BIGGER ICONS IN MENU */
     .menu-item .hint{
       color: var(--muted);
       font-weight: 800;
@@ -379,7 +357,6 @@
       min-height: 18px;
     }
 
-    /* Settings/About body blocks */
     .settings-body{
       padding: 14px;
       display:grid;
@@ -403,12 +380,8 @@
       gap:10px;
       user-select:none;
     }
-    .switch input{
-      width: 18px; height: 18px;
-      accent-color: #7aa7ff;
-    }
+    .switch input{ width: 18px; height: 18px; accent-color: #7aa7ff; }
 
-    /* Better spacing for multiple about lines */
     .about-block span{ display:block; margin-top: 8px; line-height: 1.35; }
   </style>
 </head>
@@ -455,6 +428,7 @@
   <main>
     <div class="wrap">
       <div class="card">
+        <div class="section-title" data-i18n="iceland.title">Ísland</div>
         <div class="btns">
           <button class="btn" onclick="location.href='/spil/'" data-i18n="btn.glaciers">Jöklar 🧊</button>
           <button class="btn" onclick="location.href='/borg/'" data-i18n="btn.towns">Bæir 🏘️</button>
@@ -466,6 +440,7 @@
         <div class="btns">
           <button class="btn" onclick="location.href='/dagatal/'" data-i18n="btn.calendar">Dagatal 🗓️</button>
           <button class="btn" onclick="location.href='/klukka/'" data-i18n="btn.clock">Klukka 🕒</button>
+          <button class="btn" onclick="location.href='/slemb/'" data-i18n="btn.random">Slembiúrtak 🎲</button>
           <button class="btn" onclick="location.href='/WOD/'" data-i18n="btn.timer">Tímatalning ⏱️</button>
           <button class="btn" onclick="location.href='/frettir/'" data-i18n="btn.news">Fréttir 📰</button>
         </div>
@@ -553,53 +528,18 @@
   </div>
 
   <script>
-    // ---------- THEME (shared across pages) ----------
-    const META = document.getElementById("metaThemeColor");
-
-    function setMetaThemeColor(theme){
-      if(!META) return;
-      META.setAttribute("content", theme === "dark" ? "#050607" : "#f5f6f8");
-    }
-
-    function applyTheme(theme){
-      const t = (theme === "dark") ? "dark" : "light";
-      document.documentElement.setAttribute("data-theme", t);
-      localStorage.setItem("theme", t);
-      setMetaThemeColor(t);
-
-      const toggle = document.getElementById("themeToggle");
-      if(toggle) toggle.checked = (t === "dark");
-    }
-
-    // ---------- THEME SYNC (between tabs/pages) ----------
-    window.addEventListener('storage', (e) => {
-      if (e.key !== 'theme') return;
-      const t = (e.newValue === 'dark' || e.newValue === 'light') ? e.newValue : 'light';
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
-      setMetaThemeColor(t);
-
-      const toggle = document.getElementById('themeToggle');
-      if (toggle) toggle.checked = (t === 'dark');
-    });
-
-    (function syncToggleOnLoad(){
-      const t = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-      const toggle = document.getElementById("themeToggle");
-      if(toggle) toggle.checked = (t === "dark");
-      setMetaThemeColor(t);
-      localStorage.setItem("theme", t);
-    })();
-
-    // ---------- LANGUAGE (simple i18n) ----------
+    // ---------- i18n ----------
     const I18N = {
       is: {
         "menu.settings": "Stillingar",
         "menu.about": "Um vefinn",
         "menu.contact": "Hafa samband",
 
+        "iceland.title": "Ísland",
         "btn.glaciers": "Jöklar 🧊",
         "btn.towns": "Bæir 🏘️",
+        "btn.random": "Slembiúrtak 🎲",
+
         "tools.title": "Verkfæri",
         "btn.calendar": "Dagatal 🗓️",
         "btn.clock": "Klukka 🕒",
@@ -633,8 +573,11 @@
         "menu.about": "About",
         "menu.contact": "Contact",
 
+        "iceland.title": "Iceland",
         "btn.glaciers": "Glaciers 🧊",
         "btn.towns": "Towns 🏘️",
+        "btn.random": "Random pick 🎲",
+
         "tools.title": "Tools",
         "btn.calendar": "Calendar 🗓️",
         "btn.clock": "Clock 🕒",
@@ -665,51 +608,28 @@
       }
     };
 
-    function getInitialLang(){
-  const saved = localStorage.getItem('lang');
-  if (saved === 'is' || saved === 'en') return saved;
+    function applyLangToUI(){
+      prefs.applyLang(I18N);
 
-  // DEFAULT: Icelandic
-  return 'is';
-}
-
-    function applyLang(lang){
-      const L = (lang === 'en') ? 'en' : 'is';
-      localStorage.setItem('lang', L);
-      document.documentElement.setAttribute('lang', L);
-
-      // Update button visuals
+      const L = prefs.get('lang', 'is') === 'en' ? 'en' : 'is';
       const flag = document.getElementById('langFlag');
       const pill = document.getElementById('langPill');
-      if (flag && pill){
+      if(flag && pill){
         if (L === 'is'){ flag.textContent = '🇮🇸'; pill.textContent = 'IS'; }
         else { flag.textContent = '🇬🇧'; pill.textContent = 'EN'; }
       }
-
-      // Replace all text nodes
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        const val = I18N[L][key];
-        if (typeof val === 'string') el.textContent = val;
-      });
-
-      // Replace placeholders
-      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        const val = I18N[L][key];
-        if (typeof val === 'string') el.setAttribute('placeholder', val);
-      });
     }
 
-    const langBtn = document.getElementById('langBtn');
-    langBtn.addEventListener('click', (e) => {
-      e.preventDefault(); e.stopPropagation();
-      const current = localStorage.getItem('lang') === 'en' ? 'en' : 'is';
-      applyLang(current === 'is' ? 'en' : 'is');
-    });
+    // init language
+    if (!prefs.get('lang', null)) prefs.setLang('is'); // default Icelandic
+    applyLangToUI();
 
-    // Init language on load
-    applyLang(getInitialLang());
+    // toggle language
+    document.getElementById('langBtn').addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      prefs.toggleLang();
+      applyLangToUI();
+    });
 
     // ---------- MENU ----------
     const menuBtn = document.getElementById("menuBtn");
@@ -723,8 +643,7 @@
     function toggleMenu(){ menuPop.classList.contains("show") ? closeMenu() : openMenu(); }
 
     menuBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       toggleMenu();
     });
     menuPop.addEventListener("click", (e) => e.stopPropagation());
@@ -759,8 +678,22 @@
     settingsClose.addEventListener("click", closeSettings);
     settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeSettings(); });
 
+    function syncThemeToggle(){
+      const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      if(themeToggle) themeToggle.checked = (t === 'dark');
+    }
+    syncThemeToggle();
+
     themeToggle.addEventListener("change", (e) => {
-      applyTheme(e.target.checked ? "dark" : "light");
+      prefs.applyTheme(e.target.checked ? "dark" : "light");
+      syncThemeToggle();
+    });
+
+    // Keep toggle in sync if theme changes elsewhere
+    window.addEventListener('storage', (e) => {
+      if (!e.key) return;
+      if (e.key === 'is.pref.theme') syncThemeToggle();
+      if (e.key === 'is.pref.lang') applyLangToUI();
     });
 
     // ---------- ABOUT MODAL ----------
@@ -803,7 +736,8 @@
     // ---------- CONTACT SUBMIT ----------
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      statusEl.textContent = (localStorage.getItem('lang') === 'en') ? "Sending..." : "Sendi...";
+      const L = prefs.get('lang', 'is') === 'en' ? 'en' : 'is';
+      statusEl.textContent = (L === 'en') ? "Sending..." : "Sendi...";
 
       const payload = {
         name: form.name.value.trim(),
@@ -823,11 +757,11 @@
           throw new Error(txt || "Error.");
         }
 
-        statusEl.textContent = (localStorage.getItem('lang') === 'en') ? "Sent. Thanks!" : "Sent. Takk!";
+        statusEl.textContent = (L === 'en') ? "Sent. Thanks!" : "Sent. Takk!";
         form.reset();
         setTimeout(closeContact, 700);
       }catch(err){
-        statusEl.textContent = (localStorage.getItem('lang') === 'en')
+        statusEl.textContent = (L === 'en')
           ? "Failed to send. Try again shortly."
           : "Tókst ekki að senda. Reyndu aftur eftir smá.";
       }
