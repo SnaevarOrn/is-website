@@ -1,18 +1,17 @@
 /* =========================================================
    ís.is — i18n.js
-   Shared i18n + language toggle (depends on prefs.js)
-   - Exposes: window.I18N, window.i18n.apply(), window.i18n.toggle()
+   Language handling + UI translation + flag/pill update
+   Depends on: prefs.js (window.prefs)
+   Safe on pages without i18n elements.
    ========================================================= */
 
 (function () {
   "use strict";
 
-  if (!window.prefs) {
-    console.warn("i18n.js: prefs.js not loaded");
-    return;
-  }
+  if (!window.prefs) return;
 
-  // ---------- Dictionary ----------
+  // --- Add languages here (fallback: en -> is) ---
+  // NOTE: You can start with partial translations; it falls back safely.
   const I18N = {
     is: {
       "menu.settings": "Stillingar",
@@ -20,13 +19,13 @@
       "menu.contact": "Hafa samband",
 
       "iceland.title": "Ísland",
+      "tools.title": "Verkfæri",
+
       "btn.glaciers": "Jöklar 🧊",
       "btn.towns": "Bæir 🏘️",
-      "btn.random": "Slembiúrtak 🎲",
-
-      "tools.title": "Verkfæri",
       "btn.calendar": "Dagatal 🗓️",
       "btn.clock": "Klukka 🕒",
+      "btn.random": "Slembiúrtak 🎲",
       "btn.timer": "Tímatalning ⏱️",
       "btn.news": "Fréttir 📰",
 
@@ -52,19 +51,20 @@
       "about.p4": "Þeir sem vilja geta stutt við áframhaldandi þróun með frjálsu framlagi eða endurgjöf. Slíkur stuðningur nýtist beint í uppbyggingu og viðhald.",
       "about.p5": "Engar auglýsingar. Engar vafrakökur. Bara Ísland."
     },
+
     en: {
       "menu.settings": "Settings",
       "menu.about": "About",
       "menu.contact": "Contact",
 
       "iceland.title": "Iceland",
+      "tools.title": "Tools",
+
       "btn.glaciers": "Glaciers 🧊",
       "btn.towns": "Towns 🏘️",
-      "btn.random": "Random pick 🎲",
-
-      "tools.title": "Tools",
       "btn.calendar": "Calendar 🗓️",
       "btn.clock": "Clock 🕒",
+      "btn.random": "Random pick 🎲",
       "btn.timer": "Timer ⏱️",
       "btn.news": "News 📰",
 
@@ -89,59 +89,110 @@
       "about.p3": "Free and open to use.",
       "about.p4": "If you want to support further development, feedback or a voluntary contribution helps keep the site improving.",
       "about.p5": "No ads. No cookies. Just Iceland."
-    }
+    },
+
+    // --- New languages: start with English fallback strings (you can translate later) ---
+    de: {},  // German
+    da: {},  // Danish
+    fr: {},  // French
+    es: {},  // Spanish
+    it: {},  // Italian
+    sv: {},  // Swedish
+    fi: {}   // Finnish
   };
 
-  function normLang(lang) {
-    return (lang === "en") ? "en" : "is";
+  const LANGS = [
+    { code: "is", pill: "IS", flag: "🇮🇸" },
+    { code: "en", pill: "EN", flag: "🇬🇧" },
+    { code: "de", pill: "DE", flag: "🇩🇪" },
+    { code: "da", pill: "DK", flag: "🇩🇰" },
+    { code: "fr", pill: "FR", flag: "🇫🇷" },
+    { code: "es", pill: "ES", flag: "🇪🇸" },
+    { code: "it", pill: "IT", flag: "🇮🇹" },
+    { code: "sv", pill: "SE", flag: "🇸🇪" },
+    { code: "fi", pill: "FI", flag: "🇫🇮" }
+  ];
+
+  const $ = (id) => document.getElementById(id);
+
+  function normalizeLang(l) {
+    const code = (typeof l === "string" ? l : "").toLowerCase();
+    return LANGS.some(x => x.code === code) ? code : "is";
   }
 
-  function applyToUI() {
-    // Ensure default exists
-    if (prefs.get("lang", null) == null) prefs.setLang("is");
+  function getDict(lang) {
+    // fallbacks: requested -> en -> is -> {}
+    return I18N[lang] || I18N.en || I18N.is || {};
+  }
 
-    // Apply translations via prefs.js helper
-    prefs.applyLang(I18N);
+  function t(lang, key) {
+    const dict = getDict(lang);
+    if (dict && typeof dict[key] === "string") return dict[key];
 
-    // Update flag/pill if present
-    const L = normLang(prefs.get("lang", "is"));
-    const flag = document.getElementById("langFlag");
-    const pill = document.getElementById("langPill");
+    // fallback to English then Icelandic
+    if (I18N.en && typeof I18N.en[key] === "string") return I18N.en[key];
+    if (I18N.is && typeof I18N.is[key] === "string") return I18N.is[key];
 
-    if (flag && pill) {
-      if (L === "is") { flag.textContent = "🇮🇸"; pill.textContent = "IS"; }
-      else { flag.textContent = "🇬🇧"; pill.textContent = "EN"; }
+    return null;
+  }
+
+  function applyLangToDom(lang) {
+    const L = normalizeLang(lang);
+
+    document.documentElement.setAttribute("lang", L);
+    window.prefs.setLang(L);
+
+    // text nodes
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      const val = t(L, key);
+      if (typeof val === "string") el.textContent = val;
+    });
+
+    // placeholders
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+      const key = el.getAttribute("data-i18n-placeholder");
+      const val = t(L, key);
+      if (typeof val === "string") el.setAttribute("placeholder", val);
+    });
+
+    // flag + pill
+    const meta = LANGS.find(x => x.code === L) || LANGS[0];
+    const flagEl = $("langFlag");
+    const pillEl = $("langPill");
+    if (flagEl) flagEl.textContent = meta.flag;
+    if (pillEl) pillEl.textContent = meta.pill;
+  }
+
+  function cycleLang() {
+    const cur = normalizeLang(window.prefs.get("lang", "is"));
+    const idx = LANGS.findIndex(x => x.code === cur);
+    const next = LANGS[(idx + 1 + LANGS.length) % LANGS.length].code;
+    applyLangToDom(next);
+  }
+
+  function init() {
+    // default if missing
+    if (!window.prefs.get("lang", null)) window.prefs.setLang("is");
+
+    // apply current on load
+    applyLangToDom(window.prefs.get("lang", "is"));
+
+    // button click
+    const btn = $("langBtn");
+    if (btn) {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // IMPORTANT: prevents click-outside handlers killing it
+        cycleLang();
+      });
     }
-  }
 
-  function bindToggleButton() {
-    const btn = document.getElementById("langBtn");
-    if (!btn) return;
-
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      prefs.toggleLang();
-      applyToUI();
+    // keep in sync across tabs
+    window.addEventListener("storage", (e) => {
+      if (e.key === "is.pref.lang") applyLangToDom(window.prefs.get("lang", "is"));
     });
   }
 
-  // Sync across tabs (storage event)
-  window.addEventListener("storage", (e) => {
-    if (!e.key) return;
-    if (e.key === "is.pref.lang") applyToUI();
-  });
-
-  // Public API
-  window.I18N = I18N;
-  window.i18n = {
-    apply: applyToUI,
-    toggle: () => { prefs.toggleLang(); applyToUI(); }
-  };
-
-  document.addEventListener("DOMContentLoaded", () => {
-    applyToUI();
-    bindToggleButton();
-  });
-
+  document.addEventListener("DOMContentLoaded", init);
 })();
