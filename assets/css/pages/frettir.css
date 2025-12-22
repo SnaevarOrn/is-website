@@ -326,3 +326,11 @@
   gap: 10px;
   margin-top: 12px;
 }
+
+/* --- Click-safety: lokaður panel má ALDREI blokka smelli --- */
+.menu-panel { pointer-events: none; }
+.menu-panel.open { pointer-events: auto; }
+
+/* tryggja að header hnappar séu alltaf efst */
+.page-header { position: sticky; z-index: 9999; }
+.icon-btn { position: relative; z-index: 10000; }
