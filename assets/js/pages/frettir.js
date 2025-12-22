@@ -1,29 +1,26 @@
 // /assets/js/pages/frettir.js
-
 console.log("[frettir] script loaded");
 window.addEventListener("error", (e) => console.error("[frettir] window error", e.error || e.message));
 window.addEventListener("unhandledrejection", (e) => console.error("[frettir] promise error", e.reason));
 
 (() => {
   const SOURCES = [
-    { id: "ruv",  label: "RÚV",  domain: "ruv.is" },
-    { id: "mbl",  label: "mbl.is", domain: "mbl.is" },
-    { id: "visir",label: "Vísir", domain: "visir.is" },
-    { id: "dv",   label: "DV",   domain: "dv.is" },
+    { id: "ruv",   label: "RÚV",    domain: "ruv.is" },
+    { id: "mbl",   label: "mbl.is", domain: "mbl.is" },
+    { id: "visir", label: "Vísir",  domain: "visir.is" },
+    { id: "dv",    label: "DV",     domain: "dv.is" },
   ];
 
-  // Flokkar: þetta er “grunnurinn” – seinna mapparðu þetta við RSS flokka eða merkjakerfi í bakenda.
   const CATEGORIES = [
-    { id: "innlent",  label: "Innlent" },
-    { id: "erlent",   label: "Erlent" },
-    { id: "ithrottir",label: "Íþróttir" },
-    { id: "vidskipti",label: "Viðskipti" },
-    { id: "menning",  label: "Menning" },
-    { id: "skoðun",   label: "Skoðun" },
+    { id: "innlent",   label: "Innlent" },
+    { id: "erlent",    label: "Erlent" },
+    { id: "ithrottir", label: "Íþróttir" },
+    { id: "vidskipti", label: "Viðskipti" },
+    { id: "menning",   label: "Menning" },
+    { id: "skodun",    label: "Skoðun" },
   ];
 
   const STORAGE_KEY = "is_news_prefs_v1";
-
   const $ = (sel) => document.querySelector(sel);
 
   const els = {
@@ -35,7 +32,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     btnRefresh: $("#btnRefresh"),
 
     settingsDialog: $("#settingsDialog"),
-    settingsForm: $("#settingsForm"),
     sourcesList: $("#sourcesList"),
     catsList: $("#catsList"),
     btnSourcesAll: $("#btnSourcesAll"),
@@ -69,8 +65,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
       if (!raw) return defaultPrefs();
       const parsed = JSON.parse(raw);
       const d = defaultPrefs();
-
-      // merge (forwards-compat)
       return {
         sources: { ...d.sources, ...(parsed.sources || {}) },
         categories: { ...d.categories, ...(parsed.categories || {}) },
@@ -85,17 +79,14 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
   }
 
   function getTheme() {
-    // Prefer your shared prefs/theme helpers if present.
     if (window.prefs && typeof prefs.getTheme === "function") return prefs.getTheme();
     return (localStorage.getItem("theme") || "light");
   }
 
   function setTheme(next) {
-    if (window.prefs && typeof prefs.setTheme === "function") {
-      prefs.setTheme(next);
-    } else {
-      localStorage.setItem("theme", next);
-    }
+    if (window.prefs && typeof prefs.setTheme === "function") prefs.setTheme(next);
+    else localStorage.setItem("theme", next);
+
     document.documentElement.setAttribute("data-theme", next === "dark" ? "dark" : "light");
     const meta = document.getElementById("metaThemeColor");
     if (meta) meta.setAttribute("content", next === "dark" ? "#0b0f14" : "#ffffff");
@@ -109,7 +100,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
   function openMenu() {
     els.menuPanel.classList.add("open");
     els.menuPanel.setAttribute("aria-hidden", "false");
-    // click outside to close
     setTimeout(() => window.addEventListener("pointerdown", onOutsideMenu, { once: true }), 0);
   }
 
@@ -134,6 +124,15 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     else els.settingsDialog.removeAttribute("open");
   }
 
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
   function humanAgeFromISO(iso) {
     const t = Date.parse(iso);
     if (!Number.isFinite(t)) return "óþekkt";
@@ -142,7 +141,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     const min = Math.floor(sec / 60);
     const hr = Math.floor(min / 60);
     const day = Math.floor(hr / 24);
-
     if (sec < 60) return `${sec}s`;
     if (min < 60) return `${min} mín`;
     if (hr < 24) return `${hr} klst`;
@@ -154,23 +152,10 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     const chosenCats = CATEGORIES.filter(c => prefs.categories[c.id]).map(c => c.label);
 
     const chips = [];
-
-    if (chosenSources.length === SOURCES.length) chips.push({ text: "Miðlar: Allt" });
-    else chips.push({ text: `Miðlar: ${chosenSources.join(", ") || "Ekkert"}` });
-
-    if (chosenCats.length === CATEGORIES.length) chips.push({ text: "Sía: Allt" });
-    else chips.push({ text: `Sía: ${chosenCats.join(", ") || "Ekkert"}` });
+    chips.push({ text: chosenSources.length === SOURCES.length ? "Miðlar: Allt" : `Miðlar: ${chosenSources.join(", ") || "Ekkert"}` });
+    chips.push({ text: chosenCats.length === CATEGORIES.length ? "Sía: Allt" : `Sía: ${chosenCats.join(", ") || "Ekkert"}` });
 
     els.activeChips.innerHTML = chips.map(c => `<span class="chip">${escapeHtml(c.text)}</span>`).join("");
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
   }
 
   function renderSettings(prefs) {
@@ -196,7 +181,7 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
   }
 
   function readSettingsIntoPrefs(prefs) {
-    const next = structuredClone(prefs);
+    const next = JSON.parse(JSON.stringify(prefs)); // safe clone everywhere
 
     els.settingsDialog.querySelectorAll('input[type="checkbox"][data-kind="source"]').forEach(cb => {
       const id = cb.getAttribute("data-id");
@@ -219,9 +204,7 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     els.settingsDialog.querySelectorAll(selector).forEach(cb => cb.checked = value);
   }
 
-  function setStatus(msg) {
-    els.statusText.textContent = msg;
-  }
+  function setStatus(msg) { els.statusText.textContent = msg; }
 
   function setLastUpdated() {
     const d = new Date();
@@ -230,9 +213,7 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     els.lastUpdated.textContent = `Uppfært ${hh}:${mm}`;
   }
 
-  function showEmpty(show) {
-    els.emptyState.hidden = !show;
-  }
+  function showEmpty(show) { els.emptyState.hidden = !show; }
 
   function showError(show, msg) {
     els.errorState.hidden = !show;
@@ -244,6 +225,7 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
       const sourceBadge = it.sourceLabel ? `<span class="badge">${escapeHtml(it.sourceLabel)}</span>` : "";
       const catBadge = it.category ? `<span class="badge">${escapeHtml(it.category)}</span>` : "";
       const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "—";
+
       return `
         <article class="item">
           <div class="item-top">
@@ -263,28 +245,15 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
   }
 
   function selectedIds(mapObj) {
-    return Object.entries(mapObj).filter(([,v]) => !!v).map(([k]) => k);
+    return Object.entries(mapObj).filter(([, v]) => !!v).map(([k]) => k);
   }
 
-  /**
-   * IMPORTANT:
-   * Frontend getur EKKI beint “fiskað” dv.is / visir.is / mbl.is með fetch út af CORS.
-   * Lausn: Cloudflare Functions/Worker endpoint sem:
-   *  - Sækir RSS eða HTML server-side
-   *  - Normaliserar í JSON {items:[{title,url,publishedAt,sourceId,category}...]}
-   *
-   * Hér er aðeins “grunn-kallið”.
-   */
   async function fetchNewsFromBackend(prefs) {
     const sources = selectedIds(prefs.sources);
     const cats = selectedIds(prefs.categories);
 
-    // Ef ekkert er valið, skila tómu strax
     if (sources.length === 0 || cats.length === 0) return { items: [] };
 
-    // Þú setur þetta upp síðar:
-    // - Cloudflare Pages Functions: /functions/api/news.js => /api/news
-    // - eða Worker route: /api/news
     const qs = new URLSearchParams();
     qs.set("sources", sources.join(","));
     qs.set("cats", cats.join(","));
@@ -297,27 +266,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     return res.json();
   }
 
-  // Fyrsta útgáfa: sýnum demo-items ef enginn bakendi er til staðar
-  function demoItems() {
-    const now = Date.now();
-    return [
-      {
-        title: "Demo: Hér birtast fyrirsagnir þegar /api/news er komið",
-        url: "https://www.is.is/",
-        publishedAt: new Date(now - 12 * 60 * 1000).toISOString(),
-        sourceLabel: "ís.is",
-        category: "Innlent"
-      },
-      {
-        title: "Demo: Stillingar -> velja miðla og síur",
-        url: "https://see.is/",
-        publishedAt: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
-        sourceLabel: "ís.is",
-        category: "Viðskipti"
-      },
-    ];
-  }
-
   async function refresh() {
     const prefs = loadPrefs();
     renderChips(prefs);
@@ -327,18 +275,10 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     setStatus("Sæki fréttir…");
 
     try {
-      // Prófum bakenda — ef hann er ekki til staðar, dettum í demo.
-      let data;
-      try {
-        data = await fetchNewsFromBackend(prefs);
-        console.log("[frettir] api payload", data);
-        if (!data || !Array.isArray(data.items)) throw new Error("Invalid payload");
-      } catch (e) {
-        // Fallback: demo (grunnur virkar strax í UI)
-        data = { items: demoItems() };
-      }
+      const data = await fetchNewsFromBackend(prefs);
+      console.log("[frettir] api payload", data);
 
-      const items = data.items || [];
+      const items = Array.isArray(data?.items) ? data.items : [];
       renderNews(items);
       setLastUpdated();
 
@@ -349,4 +289,64 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
         setStatus(`Sýni ${items.length} fréttir.`);
       }
     } catch (err) {
-      showError(true
+      console.error("[frettir] refresh error", err);
+      showError(true, "Gat ekki sótt fréttir.");
+      setStatus("Villa.");
+    }
+  }
+
+  function wire() {
+    els.btnBack?.addEventListener("click", () => {
+      if (history.length > 1) history.back();
+      else window.location.href = "/";
+    });
+
+    els.btnMenu?.addEventListener("click", () => {
+      if (els.menuPanel.classList.contains("open")) closeMenu();
+      else openMenu();
+    });
+
+    els.btnThemeToggle?.addEventListener("click", toggleTheme);
+    els.btnOpenSettings?.addEventListener("click", openSettings);
+    els.btnRefresh?.addEventListener("click", () => { closeMenu(); refresh(); });
+
+    els.btnEmptyOpenSettings?.addEventListener("click", openSettings);
+    els.btnRetry?.addEventListener("click", refresh);
+
+    els.btnSourcesAll?.addEventListener("click", () => setAll("source", true));
+    els.btnSourcesNone?.addEventListener("click", () => setAll("source", false));
+    els.btnCatsAll?.addEventListener("click", () => setAll("cat", true));
+    els.btnCatsNone?.addEventListener("click", () => setAll("cat", false));
+
+    els.btnResetSettings?.addEventListener("click", () => {
+      const d = defaultPrefs();
+      savePrefs(d);
+      renderSettings(d);
+      renderChips(d);
+    });
+
+    els.btnSaveSettings?.addEventListener("click", () => {
+      const current = loadPrefs();
+      const next = readSettingsIntoPrefs(current);
+      savePrefs(next);
+      renderChips(next);
+      closeSettings();
+      refresh();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
+  }
+
+  function init() {
+    setTheme(getTheme());
+    const prefs = loadPrefs();
+    renderSettings(prefs);
+    renderChips(prefs);
+    wire();
+    refresh();
+  }
+
+  init();
+})();
