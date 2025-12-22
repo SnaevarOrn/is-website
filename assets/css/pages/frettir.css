@@ -288,7 +288,7 @@ html[data-theme="dark"] .check{
 /* === Two-column checklist inside Settings === */
 .settings-section .checklist{
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
 }
 
