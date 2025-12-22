@@ -1,0 +1,312 @@
+/* dagatal/ui.js — state + wiring + build/init */
+(() => {
+  const NS = (window.dagatal = window.dagatal || {});
+  const D = NS.date;
+  const R = NS.render;
+
+  const $ = (sel) => document.querySelector(sel);
+
+  const calendarEl = $("#calendar");
+  const yearLabel = $("#yearLabel");
+  const monthLabel = $("#monthLabel");
+  const subMeta = $("#subMeta");
+  const dowBar = $("#dowBar");
+
+  const state = {
+    year: 2025,
+    showHolidays: false,
+    showSpecial: true,
+    showMoon: false,
+    layout: "months",   // "months" | "weeks"
+    view: "calendar",   // "calendar" | "holidays"
+    holidayMap: new Map(),
+    specialMap: new Map(),
+    moonMarkers: new Map(),
+    monthObserver: null,
+  };
+
+  function setHeaderContext() {
+    if (state.view === "holidays") {
+      monthLabel.textContent = "Frídagar";
+      subMeta.textContent = String(state.year);
+      dowBar.classList.add("is-hidden");
+      return;
+    }
+    dowBar.classList.remove("is-hidden");
+
+    if (state.layout === "weeks") {
+      monthLabel.textContent = "Vikur";
+      subMeta.textContent = String(state.year);
+      return;
+    }
+    subMeta.textContent = String(state.year);
+  }
+
+  function disconnectMonthObserver() {
+    if (state.monthObserver) {
+      state.monthObserver.disconnect();
+      state.monthObserver = null;
+    }
+  }
+
+  function setupMonthObserver() {
+    disconnectMonthObserver();
+    if (state.view !== "calendar" || state.layout !== "months") return;
+
+    const monthSections = Array.from(document.querySelectorAll(".month[data-month]"));
+    if (!monthSections.length) return;
+
+    const firstM = parseInt(monthSections[0].dataset.month, 10);
+    if (Number.isFinite(firstM)) monthLabel.textContent = R.MONTHS_LONG[firstM];
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting);
+        if (!visible.length) return;
+        visible.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        const m = parseInt(visible[0].target.dataset.month, 10);
+        if (Number.isFinite(m)) monthLabel.textContent = R.MONTHS_LONG[m];
+      },
+      {
+        root: null,
+        rootMargin: "-45% 0px -50% 0px",
+        threshold: [0.01, 0.1, 0.25, 0.5],
+      }
+    );
+
+    monthSections.forEach((sec) => obs.observe(sec));
+    state.monthObserver = obs;
+  }
+
+  function build() {
+    yearLabel.textContent = state.year;
+    $("#yearInput").value = state.year;
+
+    $("#toggleHolidays").checked = state.showHolidays;
+    $("#toggleSpecial").checked = state.showSpecial;
+    $("#toggleMoon").checked = state.showMoon;
+
+    state.holidayMap = D.getIcelandHolidayMap(state.year);
+    state.specialMap = D.getIcelandSpecialDays(state.year);
+    state.moonMarkers = D.computeMoonMarkersForYear(state.year);
+
+    calendarEl.innerHTML = "";
+    disconnectMonthObserver();
+    setHeaderContext();
+
+    if (state.view === "holidays") {
+      R.renderHolidayList(state, calendarEl);
+      return;
+    }
+    if (state.layout === "weeks") {
+      R.renderWeeks(state, calendarEl);
+      return;
+    }
+
+    R.renderMonths(state, calendarEl);
+    setupMonthObserver();
+  }
+
+  function jumpToToday() {
+    const now = new Date();
+    state.year = now.getFullYear();
+    state.view = "calendar";
+    build();
+
+    const iso = D.isoDate(now);
+    const el = document.querySelector(`[data-iso="${iso}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  /* YEAR DROPDOWN */
+  const pop = $("#yearPop");
+  const titleWrap = $("#titleWrap");
+
+  function togglePop(force) {
+    const show = typeof force === "boolean" ? force : !pop.classList.contains("show");
+    pop.classList.toggle("show", show);
+    pop.setAttribute("aria-hidden", String(!show));
+    if (show) $("#yearInput").focus();
+  }
+
+  function setYear(y) {
+    if (!Number.isFinite(y)) return;
+    state.year = y;
+    build();
+    togglePop(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (pop.classList.contains("show") && !titleWrap.contains(e.target)) togglePop(false);
+  });
+  yearLabel.addEventListener("click", () => togglePop());
+
+  $("#goYearBtn").addEventListener("click", () => setYear(parseInt($("#yearInput").value, 10)));
+  $("#yearInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") $("#goYearBtn").click();
+    if (e.key === "Escape") togglePop(false);
+  });
+  pop.querySelectorAll("[data-jump]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const j = parseInt(btn.getAttribute("data-jump"), 10);
+      setYear(state.year + j);
+    });
+  });
+
+  /* SETTINGS SHEET */
+  const overlay = $("#overlay");
+  const sheet = $("#sheet");
+
+  function openSheet() {
+    overlay.classList.add("show");
+    sheet.classList.add("show");
+  }
+  function closeSheet() {
+    overlay.classList.remove("show");
+    sheet.classList.remove("show");
+  }
+
+  $("#closeSheet").addEventListener("click", closeSheet);
+  overlay.addEventListener("click", closeSheet);
+
+  $("#layoutSeg")
+    .querySelectorAll("button")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        $("#layoutSeg").querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.layout = btn.dataset.layout;
+        state.view = "calendar";
+        build();
+      });
+    });
+
+  $("#toggleHolidays").addEventListener("change", (e) => {
+    state.showHolidays = e.target.checked;
+    build();
+  });
+  $("#toggleSpecial").addEventListener("change", (e) => {
+    state.showSpecial = e.target.checked;
+    build();
+  });
+  $("#toggleMoon").addEventListener("change", (e) => {
+    state.showMoon = e.target.checked;
+    build();
+  });
+
+  $("#showHolidaysBtn").addEventListener("click", () => {
+    state.view = "holidays";
+    build();
+    closeSheet();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  $("#todayBtn").addEventListener("click", () => {
+    closeSheet();
+    jumpToToday();
+  });
+
+  $("#backBtn").addEventListener("click", () => history.back());
+
+  function bumpYear(delta) {
+    state.year += delta;
+    build();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  $("#prevYear").addEventListener("click", () => bumpYear(-1));
+  $("#nextYear").addEventListener("click", () => bumpYear(1));
+
+  /* HAMBURGER MENU */
+  const menuBtn = $("#menuBtn");
+  const menuPop = $("#menuPop");
+
+  function toggleMenu() {
+    menuPop.classList.toggle("show");
+  }
+  function closeMenu() {
+    menuPop.classList.remove("show");
+  }
+
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleMenu();
+  });
+  menuPop.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", () => closeMenu());
+
+  $("#menuSettings").addEventListener("click", () => {
+    closeMenu();
+    openSheet();
+  });
+
+  /* CONTACT MODAL */
+  const cOverlay = $("#cOverlay");
+  const cCloseBtn = $("#cCloseBtn");
+  const cForm = $("#contactForm");
+  const cStatus = $("#cStatus");
+
+  function openContact() {
+    cOverlay.classList.add("open");
+    cStatus.textContent = "";
+    setTimeout(() => $("#cName").focus(), 50);
+  }
+  function closeContact() {
+    cOverlay.classList.remove("open");
+  }
+
+  $("#menuContact").addEventListener("click", () => {
+    closeMenu();
+    openContact();
+  });
+
+  cCloseBtn.addEventListener("click", closeContact);
+  cOverlay.addEventListener("click", (e) => {
+    if (e.target === cOverlay) closeContact();
+  });
+
+  cForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    cStatus.textContent = "Sendi...";
+
+    const payload = {
+      name: cForm.name.value.trim(),
+      email: cForm.email.value.trim(),
+      message: cForm.message.value.trim(),
+    };
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(txt || "Villa við sendingu.");
+      }
+
+      cStatus.textContent = "Sent. Takk!";
+      cForm.reset();
+      setTimeout(closeContact, 700);
+    } catch (_err) {
+      cStatus.textContent = "Tókst ekki að senda. Reyndu aftur eftir smá.";
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      togglePop(false);
+      closeSheet();
+      closeMenu();
+      closeContact();
+    }
+  });
+
+  /* INIT */
+  build();
+
+  // Optional tiny debug handle (safe)
+  NS._state = state;
+})();
