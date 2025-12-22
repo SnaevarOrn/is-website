@@ -1,7 +1,7 @@
 /* =========================================================
    ís.is — i18n.js
-   Lightweight i18n + language switcher (depends on prefs.js if present)
-   Supports: IS/EN/DE/DA/FR/ES/IT/SV/FI
+   Lightweight i18n + language switcher (IS/EN only)
+   Depends on prefs.js if present (optional).
    ========================================================= */
 
 (function () {
@@ -9,14 +9,7 @@
 
   const SUPPORTED = [
     { code: "is", pill: "IS", flag: "🇮🇸" },
-    { code: "en", pill: "EN", flag: "🇬🇧" },
-    { code: "de", pill: "DE", flag: "🇩🇪" },
-    { code: "da", pill: "DA", flag: "🇩🇰" },
-    { code: "fr", pill: "FR", flag: "🇫🇷" },
-    { code: "es", pill: "ES", flag: "🇪🇸" },
-    { code: "it", pill: "IT", flag: "🇮🇹" },
-    { code: "sv", pill: "SV", flag: "🇸🇪" },
-    { code: "fi", pill: "FI", flag: "🇫🇮" },
+    { code: "en", pill: "EN", flag: "🇬🇧" }
   ];
 
   const DICT = {
@@ -96,218 +89,47 @@
       "about.p3": "Free and open to use.",
       "about.p4": "Feedback or a voluntary contribution helps further development and maintenance.",
       "about.p5": "No ads. No cookies. Just Iceland."
-    },
-
-    // Minimal-but-useful translations for the extra languages
-    de: {
-      "menu.settings": "Einstellungen",
-      "menu.about": "Über",
-      "menu.contact": "Kontakt",
-      "iceland.title": "Island",
-      "tools.title": "Werkzeuge",
-      "btn.glaciers": "Gletscher 🧊",
-      "btn.towns": "Orte 🏘️",
-      "btn.calendar": "Kalender 🗓️",
-      "btn.clock": "Uhr 🕒",
-      "btn.random": "Zufall 🎲",
-      "btn.timer": "Timer ⏱️",
-      "btn.news": "Nachrichten 📰",
-      "footer.pill": "Seite erstellt 2025. Keine Cookies — nur Eis.",
-      "contact.title": "Kontakt",
-      "contact.nameLabel": "Name",
-      "contact.emailLabel": "E-Mail",
-      "contact.msgLabel": "Nachricht",
-      "contact.send": "Senden",
-      "contact.namePh": "Name",
-      "contact.emailPh": "name@beispiel.de",
-      "contact.msgPh": "Schreibe hier…",
-      "settings.title": "Einstellungen",
-      "settings.themeTitle": "Design",
-      "settings.themeHint": "Hell / Dunkel",
-      "about.title": "Über"
-    },
-    da: {
-      "menu.settings": "Indstillinger",
-      "menu.about": "Om",
-      "menu.contact": "Kontakt",
-      "iceland.title": "Island",
-      "tools.title": "Værktøjer",
-      "btn.glaciers": "Gletsjere 🧊",
-      "btn.towns": "Byer 🏘️",
-      "btn.calendar": "Kalender 🗓️",
-      "btn.clock": "Ur 🕒",
-      "btn.random": "Tilfældig 🎲",
-      "btn.timer": "Timer ⏱️",
-      "btn.news": "Nyheder 📰",
-      "footer.pill": "Siden oprettet 2025. Ingen cookies — bare is.",
-      "contact.title": "Kontakt",
-      "contact.nameLabel": "Navn",
-      "contact.emailLabel": "Email",
-      "contact.msgLabel": "Besked",
-      "contact.send": "Send",
-      "settings.title": "Indstillinger",
-      "settings.themeTitle": "Tema",
-      "settings.themeHint": "Lys / Mørk",
-      "about.title": "Om"
-    },
-    fr: {
-      "menu.settings": "Paramètres",
-      "menu.about": "À propos",
-      "menu.contact": "Contact",
-      "iceland.title": "Islande",
-      "tools.title": "Outils",
-      "btn.glaciers": "Glaciers 🧊",
-      "btn.towns": "Villes 🏘️",
-      "btn.calendar": "Calendrier 🗓️",
-      "btn.clock": "Horloge 🕒",
-      "btn.random": "Aléatoire 🎲",
-      "btn.timer": "Minuterie ⏱️",
-      "btn.news": "Actualités 📰",
-      "footer.pill": "Site créé en 2025. Pas de cookies — juste de la glace.",
-      "contact.title": "Contact",
-      "contact.nameLabel": "Nom",
-      "contact.emailLabel": "Email",
-      "contact.msgLabel": "Message",
-      "contact.send": "Envoyer",
-      "settings.title": "Paramètres",
-      "settings.themeTitle": "Thème",
-      "settings.themeHint": "Clair / Sombre",
-      "about.title": "À propos"
-    },
-    es: {
-      "menu.settings": "Ajustes",
-      "menu.about": "Acerca de",
-      "menu.contact": "Contacto",
-      "iceland.title": "Islandia",
-      "tools.title": "Herramientas",
-      "btn.glaciers": "Glaciares 🧊",
-      "btn.towns": "Pueblos 🏘️",
-      "btn.calendar": "Calendario 🗓️",
-      "btn.clock": "Reloj 🕒",
-      "btn.random": "Aleatorio 🎲",
-      "btn.timer": "Temporizador ⏱️",
-      "btn.news": "Noticias 📰",
-      "footer.pill": "Sitio creado en 2025. Sin cookies — solo hielo.",
-      "contact.title": "Contacto",
-      "contact.nameLabel": "Nombre",
-      "contact.emailLabel": "Email",
-      "contact.msgLabel": "Mensaje",
-      "contact.send": "Enviar",
-      "settings.title": "Ajustes",
-      "settings.themeTitle": "Tema",
-      "settings.themeHint": "Claro / Oscuro",
-      "about.title": "Acerca de"
-    },
-    it: {
-      "menu.settings": "Impostazioni",
-      "menu.about": "Info",
-      "menu.contact": "Contatto",
-      "iceland.title": "Islanda",
-      "tools.title": "Strumenti",
-      "btn.glaciers": "Ghiacciai 🧊",
-      "btn.towns": "Città 🏘️",
-      "btn.calendar": "Calendario 🗓️",
-      "btn.clock": "Orologio 🕒",
-      "btn.random": "Casuale 🎲",
-      "btn.timer": "Timer ⏱️",
-      "btn.news": "Notizie 📰",
-      "footer.pill": "Sito creato nel 2025. Niente cookie — solo ghiaccio.",
-      "contact.title": "Contatto",
-      "contact.nameLabel": "Nome",
-      "contact.emailLabel": "Email",
-      "contact.msgLabel": "Messaggio",
-      "contact.send": "Invia",
-      "settings.title": "Impostazioni",
-      "settings.themeTitle": "Tema",
-      "settings.themeHint": "Chiaro / Scuro",
-      "about.title": "Info"
-    },
-    sv: {
-      "menu.settings": "Inställningar",
-      "menu.about": "Om",
-      "menu.contact": "Kontakt",
-      "iceland.title": "Island",
-      "tools.title": "Verktyg",
-      "btn.glaciers": "Glaciärer 🧊",
-      "btn.towns": "Städer 🏘️",
-      "btn.calendar": "Kalender 🗓️",
-      "btn.clock": "Klocka 🕒",
-      "btn.random": "Slump 🎲",
-      "btn.timer": "Timer ⏱️",
-      "btn.news": "Nyheter 📰",
-      "footer.pill": "Sajt skapad 2025. Inga cookies — bara is.",
-      "contact.title": "Kontakt",
-      "contact.nameLabel": "Namn",
-      "contact.emailLabel": "E-post",
-      "contact.msgLabel": "Meddelande",
-      "contact.send": "Skicka",
-      "settings.title": "Inställningar",
-      "settings.themeTitle": "Tema",
-      "settings.themeHint": "Ljust / Mörkt",
-      "about.title": "Om"
-    },
-    fi: {
-      "menu.settings": "Asetukset",
-      "menu.about": "Tietoa",
-      "menu.contact": "Yhteys",
-      "iceland.title": "Islanti",
-      "tools.title": "Työkalut",
-      "btn.glaciers": "Jäätiköt 🧊",
-      "btn.towns": "Kaupungit 🏘️",
-      "btn.calendar": "Kalenteri 🗓️",
-      "btn.clock": "Kello 🕒",
-      "btn.random": "Satunnainen 🎲",
-      "btn.timer": "Ajastin ⏱️",
-      "btn.news": "Uutiset 📰",
-      "footer.pill": "Sivusto luotu 2025. Ei evästeitä — vain jäätä.",
-      "contact.title": "Yhteys",
-      "contact.nameLabel": "Nimi",
-      "contact.emailLabel": "Sähköposti",
-      "contact.msgLabel": "Viesti",
-      "contact.send": "Lähetä",
-      "settings.title": "Asetukset",
-      "settings.themeTitle": "Teema",
-      "settings.themeHint": "Vaalea / Tumma",
-      "about.title": "Tietoa"
     }
   };
 
   const KEY = "is.pref.lang";
 
+  const $ = (sel, root = document) => root.querySelector(sel);
+
+  function normalize(code) {
+    const c = (code || "is").toLowerCase();
+    return (c === "en") ? "en" : "is";
+  }
+
   function getLang() {
-    // prefs.js path
     if (window.prefs && typeof prefs.get === "function") {
-      const v = prefs.get("lang", "is");
-      return normalize(v);
+      return normalize(prefs.get("lang", "is"));
     }
-    // fallback
     try {
       const raw = localStorage.getItem(KEY);
-      const v = raw ? JSON.parse(raw) : "is";
-      return normalize(v);
+      return normalize(raw ? JSON.parse(raw) : "is");
     } catch {
       return "is";
     }
   }
 
   function setLang(code) {
-    code = normalize(code);
+    const c = normalize(code);
+
     if (window.prefs) {
-      // support either setLang or set('lang', ...)
-      if (typeof prefs.setLang === "function") prefs.setLang(code);
-      else if (typeof prefs.set === "function") prefs.set("lang", code);
-      else localStorage.setItem(KEY, JSON.stringify(code));
+      if (typeof prefs.setLang === "function") prefs.setLang(c);
+      else if (typeof prefs.set === "function") prefs.set("lang", c);
+      else localStorage.setItem(KEY, JSON.stringify(c));
     } else {
-      localStorage.setItem(KEY, JSON.stringify(code));
+      localStorage.setItem(KEY, JSON.stringify(c));
     }
-    applyToUI(code);
-    // let other scripts react
-    window.dispatchEvent(new CustomEvent("is:langchange", { detail: { lang: code } }));
+
+    applyToUI(c);
+    window.dispatchEvent(new CustomEvent("is:langchange", { detail: { lang: c } }));
   }
 
-  function normalize(code) {
-    const c = (code || "is").toLowerCase();
-    return SUPPORTED.some(x => x.code === c) ? c : "is";
+  function nextLang(cur) {
+    return (normalize(cur) === "is") ? "en" : "is";
   }
 
   function applyText(root, code) {
@@ -327,43 +149,45 @@
   }
 
   function applyToUI(code) {
-    document.documentElement.lang = code;
+    const c = normalize(code);
+    document.documentElement.lang = c;
 
-    applyText(document, code);
+    applyText(document, c);
 
-    const meta = document.getElementById("metaThemeColor");
-    if (meta) {
-      // leave theme.js to manage this if you want – harmless default:
-      meta.setAttribute("content", document.documentElement.getAttribute("data-theme") === "dark" ? "#000000" : "#ffffff");
-    }
-
-    const flagEl = document.getElementById("langFlag");
-    const pillEl = document.getElementById("langPill");
-    const info = SUPPORTED.find(x => x.code === code) || SUPPORTED[0];
+    const flagEl = $("#langFlag");
+    const pillEl = $("#langPill");
+    const info = SUPPORTED.find(x => x.code === c) || SUPPORTED[0];
     if (flagEl) flagEl.textContent = info.flag;
     if (pillEl) pillEl.textContent = info.pill;
   }
 
-  function nextLang(cur) {
-    const i = SUPPORTED.findIndex(x => x.code === cur);
-    return SUPPORTED[(i + 1 + SUPPORTED.length) % SUPPORTED.length].code;
-  }
-
   function init() {
-    // Ensure default exists
+    // default Icelandic if nothing set
     const cur = getLang();
     applyToUI(cur);
 
-    const btn = document.getElementById("langBtn");
+    const btn = $("#langBtn");
     if (btn) {
-      btn.addEventListener("click", (e) => {
+      // iOS/Safari: prevent double-fire
+      let last = 0;
+
+      const flip = (e) => {
+        const now = Date.now();
+        if (now - last < 350) return;
+        last = now;
+
         e.preventDefault();
         e.stopPropagation();
         setLang(nextLang(getLang()));
+      };
+
+      btn.addEventListener("pointerup", flip, { passive: false });
+      btn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") flip(e);
       });
     }
 
-    // Sync across tabs + from prefs changes
+    // sync across tabs
     window.addEventListener("storage", (e) => {
       if (!e.key) return;
       if (e.key === KEY || e.key === "is.pref.lang") applyToUI(getLang());
@@ -372,7 +196,7 @@
 
   document.addEventListener("DOMContentLoaded", init);
 
-  // expose minimal API
+  // minimal API
   window.i18n = window.i18n || {};
   window.i18n.getLang = getLang;
   window.i18n.setLang = setLang;
