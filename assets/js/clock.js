@@ -232,9 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if(showMinNums.checked){
-      for(let m=0; m<60; m+=5){
-        if(m % 15 === 0) continue; // avoid stacking
-        addLabel('minNum', minFont, m*6, rMin, String(m));
+  for(let m=5; m<60; m+=5){
+    if(m === 15 || m === 30 || m === 45) continue;
+    addLabel('minNum', minFont, m*6, rMin, String(m).padStart(2,'0'));
       }
     }
   }
