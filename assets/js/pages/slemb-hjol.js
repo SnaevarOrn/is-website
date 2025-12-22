@@ -222,19 +222,20 @@
   }
 
   function pickIndexAtPointer() {
-    const n = state.items.length;
-    if (!n) return -1;
+  const n = state.items.length;
+  if (!n) return -1;
 
-    // Pointer is at "up". Our base shift was -90deg, so pointer corresponds to angle = state.angle.
-    // Convert wheel angle into index.
-    const a = wrapAngle(state.angle); // 0..2pi
-    const step = (Math.PI * 2) / n;
+  const step = (Math.PI * 2) / n;
 
-    // When angle is 0, slice 0 is aligned with pointer at top after our drawing shift.
-    // To map: the pointer sees the slice whose center spans [0..step), etc.
-    const idx = Math.floor((a / step)) % n;
-    return idx;
-  }
+  // Pointer is at -90deg in canvas space, wheel slices start at "base".
+  // base = state.angle - PI/2  => pointer relative angle becomes -state.angle.
+  const rel = wrapAngle(-state.angle);
+
+  // +step/2 makes it pick the slice whose CENTER is under the pointer,
+  // avoiding fencepost errors at boundaries.
+  const idx = Math.floor((rel + step / 2) / step) % n;
+  return idx;
+}
 
   // --- Spin animation ---
   function spin() {
@@ -254,10 +255,20 @@
     // Random spin: add several full rotations + random offset.
     const n = state.items.length;
     const baseTurns = 4 + secureInt(0, 3); // 4..7 turns
-    const randomOffset = secureFloat01() * Math.PI * 2;
+    const two = Math.PI * 2;
+const step = two / n;
 
-    const start = state.angle;
-    const target = start + baseTurns * Math.PI * 2 + randomOffset;
+// Veljum sigurvegara fyrirfram
+const desiredIndex = secureInt(0, n - 1);
+
+// Snúum þannig að Miðja geira lendi undir pílu (kl.12)
+const finalAngle = wrapAngle(two - (desiredIndex + 0.5) * step);
+
+const start = state.angle;
+const startWrapped = wrapAngle(start);
+const delta = wrapAngle(finalAngle - startWrapped);
+
+const target = start + baseTurns * two + delta;
 
     // Duration: 2.2s .. 3.4s
     const duration = 2200 + secureInt(0, 1200);
