@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="is" data-theme="dark">
+<html lang="is" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,608 +10,135 @@
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <!-- prefs.js (ALWAYS) -->
-  <script defer src="/assets/js/prefs.js"></script>
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
 
-  <style>
-    :root{
-      --bg: #070a0c;
-      --panel: rgba(255,255,255,.06);
-      --panel2: rgba(255,255,255,.08);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --line: rgba(255,255,255,.12);
-      --glow: rgba(180,230,255,.55);
-      --ice: #bfe9ff;
-      --deep: #0b2a3d;
-      --ok: rgba(120, 255, 200, .18);
-      --bad: rgba(255, 120, 120, .18);
-      --shadow: 0 10px 40px rgba(0,0,0,.45);
-      --radius: 16px;
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/slemb-urdrattur.css">
+
+  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
+  <script src="/assets/js/prefs.js"></script>
+  <script>
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
     }
+  </script>
 
-    [data-theme="light"]{
-      --bg: #f7fbff;
-      --panel: rgba(10,20,30,.06);
-      --panel2: rgba(10,20,30,.08);
-      --text: rgba(10,20,30,.92);
-      --muted: rgba(10,20,30,.72);
-      --line: rgba(10,20,30,.12);
-      --glow: rgba(30,120,200,.25);
-      --ice: #0b5f8a;
-      --deep: #0b2a3d;
-      --shadow: 0 10px 40px rgba(0,0,0,.18);
-    }
+  <!-- Shared JS -->
+  <script defer src="/assets/js/utils.js"></script>
+  <script defer src="/assets/js/site.js"></script>
+  <script defer src="/assets/js/i18n.js"></script>
+  <script defer src="/assets/js/theme.js"></script>
 
-    *{ box-sizing:border-box; margin:0; padding:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body{
-      background: radial-gradient(1200px 700px at 15% 10%, rgba(180,230,255,.10), transparent 55%),
-                  radial-gradient(900px 600px at 80% 20%, rgba(180,230,255,.08), transparent 60%),
-                  var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 24px;
-    }
-
-    .wrap{
-      width: min(980px, 100%);
-      display:grid;
-      gap: 16px;
-    }
-
-    header{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 12px;
-      padding: 18px 18px 0 18px;
-    }
-
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap: 6px;
-    }
-
-    .brand h1{
-      font-size: 22px;
-      letter-spacing: .2px;
-    }
-
-    .brand p{
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.35;
-      max-width: 62ch;
-    }
-
-    .top-actions{
-      display:flex;
-      gap: 10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    .btn{
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, var(--panel2), var(--panel));
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 12px;
-      cursor:pointer;
-      box-shadow: var(--shadow);
-      text-decoration:none;
-      font-weight: 600;
-      font-size: 14px;
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .btn:active{ transform: translateY(1px); }
-    .btn.secondary{ box-shadow:none; background: transparent; }
-    .btn.small{ padding: 8px 10px; font-weight: 650; font-size: 13px; }
-
-    .panel{
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
-      border-radius: var(--radius);
-      overflow:hidden;
-      box-shadow: var(--shadow);
-    }
-
-    .content{
-      padding: 18px;
-      display:grid;
-      gap: 14px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    @media (max-width: 820px){
-      header{ padding: 16px 14px 0 14px; }
-      .content{ padding: 14px; }
-      .grid{ grid-template-columns: 1fr; }
-    }
-
-    .card{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      border-radius: 14px;
-      padding: 14px;
-      display:grid;
-      gap: 10px;
-    }
-
-    .card h2{
-      font-size: 16px;
-      letter-spacing:.2px;
-    }
-
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    @media (max-width: 520px){
-      .row{ grid-template-columns: 1fr; }
-    }
-
-    label{
-      display:grid;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    input, select, textarea{
-      width: 100%;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.10);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 15px;
-      outline: none;
-    }
-
-    [data-theme="light"] input,
-    [data-theme="light"] select,
-    [data-theme="light"] textarea{
-      background: rgba(255,255,255,.55);
-    }
-
-    .toggles{
-      display:flex;
-      flex-wrap:wrap;
-      gap: 10px;
-      margin-top: 2px;
-    }
-
-    .chip{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      padding: 8px 10px;
-      border-radius: 999px;
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      user-select:none;
-    }
-
-    .chip input{ width:auto; }
-
-    .actions{
-      display:flex;
-      gap: 10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .result{
-      border-top: 1px solid var(--line);
-      padding: 14px 18px 16px 18px;
-      display:grid;
-      gap: 10px;
-      background: rgba(255,255,255,.03);
-    }
-
-    .result h3{
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 700;
-      letter-spacing: .2px;
-    }
-
-    .numbers{
-      display:flex;
-      flex-wrap:wrap;
-      gap: 8px;
-      align-items:center;
-    }
-
-    .pill{
-      border: 1px solid rgba(180,230,255,.28);
-      background: rgba(180,230,255,.10);
-      color: var(--text);
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      letter-spacing:.2px;
-    }
-
-    .meta{
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-      display:flex;
-      gap: 10px;
-      flex-wrap:wrap;
-    }
-
-    .hint{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      padding: 10px 12px;
-      border-radius: 12px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-
-    .warn{
-      border: 1px solid rgba(255,120,120,.35);
-      background: var(--bad);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 13px;
-      line-height: 1.35;
-      display:none;
-    }
-
-    footer{
-      padding: 0 18px 18px 18px;
-      color: var(--muted);
-      font-size: 12px;
-      display:flex;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
-    }
-
-    a{ color: inherit; }
-  </style>
+  <!-- Page JS -->
+  <script defer src="/assets/js/pages/slemb-urdrattur.js"></script>
 </head>
 
-<body>
-  <div class="wrap">
-    <div class="panel">
-      <header>
-        <div class="brand">
-          <h1>slemb</h1>
-          <p>Útdráttur úr talnasviði. Veldu <b>min–max</b>, fjölda talna, og hvort má endurtaka sig. Niðurstaðan er hreint “random”, ekki spádómur. (Því miður.)</p>
-        </div>
-
-        <div class="top-actions">
-          <a class="btn secondary small" href="/">← forsíða</a>
-          <button class="btn small" id="copyBtn" type="button">Afrita niðurstöðu</button>
-        </div>
-      </header>
-
-      <div class="content">
-        <div class="grid">
-          <div class="card">
-            <h2>Talnasvið / úrdráttur</h2>
-
-            <div class="row">
-              <label>
-                Lægsta tala (min)
-                <input id="min" type="number" inputmode="numeric" value="1" />
-              </label>
-
-              <label>
-                Hæsta tala (max)
-                <input id="max" type="number" inputmode="numeric" value="100" />
-              </label>
-            </div>
-
-            <div class="row">
-              <label>
-                Fjöldi talna (N)
-                <input id="count" type="number" inputmode="numeric" value="1" min="1" />
-              </label>
-
-              <label>
-                Röðun niðurstöðu
-                <select id="order">
-                  <option value="none">Engin (eins og dregið)</option>
-                  <option value="asc">Stigvaxandi</option>
-                  <option value="desc">Stiglækkandi</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="toggles">
-              <label class="chip" title="Ef slökkt: engin endurtekning (sample without replacement)">
-                <input id="allowRepeat" type="checkbox" checked />
-                Leyfa endurtekningu
-              </label>
-
-              <label class="chip" title="Gerir úrdráttinn flottari fyrir forritara (og tortryggna)">
-                <input id="showSeed" type="checkbox" />
-                Sýna “seed” (til endurtekningar)
-              </label>
-            </div>
-
-            <div class="actions">
-              <button class="btn" id="drawBtn" type="button">Draga</button>
-              <button class="btn secondary" id="resetBtn" type="button">Endurstilla</button>
-            </div>
-
-            <div class="warn" id="warn"></div>
-
-            <div class="hint">
-              <b>Tips:</b> Slökktu á “Leyfa endurtekningu” ef þú vilt hreinan “úrdrátt” (t.d. bingó-stíl). Ef N er stærra en fjöldi talna í bilinu, þá kvarta ég.
-            </div>
-          </div>
-
-          <div class="card">
-            <h2>Saga (síðustu 10)</h2>
-            <div class="hint" id="historyEmpty">Engin saga enn. Draga fyrst.</div>
-            <div id="history" style="display:grid; gap:10px;"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="result">
-        <h3>Niðurstaða</h3>
-        <div class="numbers" id="numbers"></div>
-        <div class="meta" id="meta"></div>
-      </div>
-
-      <footer>
-        <div>ís.is — slemb</div>
-        <div style="opacity:.9;">Fyrsta mót: útdráttur. Næst: vægið, Secret Santa, hjól, bingó, stokkur, teningar, tími.</div>
-      </footer>
+<body class="slemb-urdrattur-page">
+  <header class="su-header">
+    <div class="su-hdr">
+      <a class="su-back" href="/slemb/" aria-label="Til baka">←</a>
+      <div class="su-title">Útdráttur</div>
+      <button class="icon-btn" id="themeBtn" aria-label="Skipta um þema" aria-pressed="false">◐</button>
     </div>
-  </div>
+  </header>
 
-  <script>
-    // --- Helpers ---
-    const $ = (id) => document.getElementById(id);
+  <main class="su-main">
+    <div class="su-wrap">
+      <section class="su-panel" aria-label="Útdráttur úr talnasviði">
+        <div class="su-top">
+          <h1>Talnasvið / úrdráttur</h1>
+          <p>
+            Veldu <b>min–max</b>, fjölda talna, og hvort má endurtaka sig.
+            Niðurstaðan er hreint “random”, ekki spádómur. (Því miður.)
+          </p>
+        </div>
 
-    function secureRandomInt(min, max){
-      // inclusive min/max
-      const range = max - min + 1;
-      if (range <= 0) throw new Error("Ólöglegt bil.");
+        <div class="su-actions">
+          <button class="btn pill" id="copyBtn" type="button">Afrita niðurstöðu</button>
+        </div>
 
-      // crypto.getRandomValues -> bias-free-ish via rejection sampling
-      const maxUint = 0xFFFFFFFF;
-      const bucketSize = Math.floor((maxUint + 1) / range) * range;
-      const u32 = new Uint32Array(1);
-      let x;
-      do {
-        crypto.getRandomValues(u32);
-        x = u32[0];
-      } while (x >= bucketSize);
-      return min + (x % range);
-    }
+        <div class="su-content">
+          <div class="su-grid">
+            <div class="su-card">
+              <h2>Stillingar</h2>
 
-    function makeSeed(){
-      // Simple visible seed: time + random
-      const u32 = new Uint32Array(2);
-      crypto.getRandomValues(u32);
-      return `${Date.now().toString(36)}-${u32[0].toString(36)}${u32[1].toString(36)}`;
-    }
+              <div class="su-row">
+                <label class="su-label">
+                  Lægsta tala (min)
+                  <input class="su-input" id="min" type="number" inputmode="numeric" value="1" />
+                </label>
 
-    function clampInt(v, fallback){
-      const n = Number(v);
-      if (!Number.isFinite(n)) return fallback;
-      return Math.trunc(n);
-    }
+                <label class="su-label">
+                  Hæsta tala (max)
+                  <input class="su-input" id="max" type="number" inputmode="numeric" value="100" />
+                </label>
+              </div>
 
-    function setWarn(msg){
-      const w = $("warn");
-      if (!msg){
-        w.style.display = "none";
-        w.textContent = "";
-      } else {
-        w.style.display = "block";
-        w.textContent = msg;
-      }
-    }
+              <div class="su-row">
+                <label class="su-label">
+                  Fjöldi talna (N)
+                  <input class="su-input" id="count" type="number" inputmode="numeric" value="1" min="1" />
+                </label>
 
-    function renderNumbers(nums){
-      const box = $("numbers");
-      box.innerHTML = "";
-      nums.forEach(n => {
-        const span = document.createElement("span");
-        span.className = "pill";
-        span.textContent = String(n);
-        box.appendChild(span);
-      });
-    }
+                <label class="su-label">
+                  Röðun niðurstöðu
+                  <select class="su-select" id="order">
+                    <option value="none">Engin (eins og dregið)</option>
+                    <option value="asc">Stigvaxandi</option>
+                    <option value="desc">Stiglækkandi</option>
+                  </select>
+                </label>
+              </div>
 
-    function renderMeta({min, max, count, allowRepeat, order, seed}){
-      const parts = [
-        `Bil: ${min}–${max}`,
-        `N: ${count}`,
-        allowRepeat ? "með endurtekningu" : "án endurtekningar",
-        order === "none" ? "ó-röðað" : (order === "asc" ? "stigvaxandi" : "stiglækkandi")
-      ];
-      if (seed) parts.push(`seed: ${seed}`);
-      $("meta").textContent = parts.join(" • ");
-    }
+              <div class="su-toggles">
+                <label class="su-chip" title="Ef slökkt: engin endurtekning (sample without replacement)">
+                  <input id="allowRepeat" type="checkbox" checked />
+                  Leyfa endurtekningu
+                </label>
 
-    function pushHistory(item){
-      const key = "slemb_utdrattur_history_v1";
-      const hist = JSON.parse(localStorage.getItem(key) || "[]");
-      hist.unshift(item);
-      hist.splice(10);
-      localStorage.setItem(key, JSON.stringify(hist));
-      renderHistory();
-    }
+                <label class="su-chip" title="Gerir úrdráttinn flottari fyrir forritara (og tortryggna)">
+                  <input id="showSeed" type="checkbox" />
+                  Sýna “seed” (til endurtekningar)
+                </label>
+              </div>
 
-    function renderHistory(){
-      const key = "slemb_utdrattur_history_v1";
-      const hist = JSON.parse(localStorage.getItem(key) || "[]");
-      const empty = $("historyEmpty");
-      const box = $("history");
+              <div class="su-buttons">
+                <button class="btn pill" id="drawBtn" type="button">Draga</button>
+                <button class="btn pill ghost" id="resetBtn" type="button">Endurstilla</button>
+              </div>
 
-      if (!hist.length){
-        empty.style.display = "block";
-        box.innerHTML = "";
-        return;
-      }
+              <div class="su-warn" id="warn"></div>
 
-      empty.style.display = "none";
-      box.innerHTML = "";
+              <div class="su-hint">
+                <b>Tips:</b> Slökktu á “Leyfa endurtekningu” ef þú vilt hreinan “úrdrátt” (t.d. bingó-stíl).
+                Ef N er stærra en fjöldi talna í bilinu, þá kvarta ég.
+              </div>
+            </div>
 
-      hist.forEach(h => {
-        const div = document.createElement("div");
-        div.className = "hint";
-        div.style.display = "grid";
-        div.style.gap = "6px";
+            <div class="su-card">
+              <h2>Saga (síðustu 10)</h2>
+              <div class="su-hint" id="historyEmpty">Engin saga enn. Draga fyrst.</div>
+              <div class="su-history" id="history"></div>
+            </div>
+          </div>
+        </div>
 
-        const top = document.createElement("div");
-        top.style.fontWeight = "800";
-        top.textContent = h.nums.join(", ");
+        <div class="su-result">
+          <h3>Niðurstaða</h3>
+          <div class="su-numbers" id="numbers"></div>
+          <div class="su-meta" id="meta"></div>
+        </div>
 
-        const meta = document.createElement("div");
-        meta.style.fontSize = "12px";
-        meta.style.opacity = ".9";
-        meta.textContent = `${h.when} • ${h.min}–${h.max} • N=${h.count} • ${h.allowRepeat ? "með endurtekningu" : "án endurtekningar"}`;
-
-        div.appendChild(top);
-        div.appendChild(meta);
-        box.appendChild(div);
-      });
-    }
-
-    function formatWhen(){
-      // Local time display
-      const d = new Date();
-      return d.toLocaleString("is-IS", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" });
-    }
-
-    function draw(){
-      setWarn("");
-
-      let min = clampInt($("min").value, 1);
-      let max = clampInt($("max").value, 100);
-      let count = clampInt($("count").value, 1);
-      const allowRepeat = $("allowRepeat").checked;
-      const order = $("order").value;
-      const showSeed = $("showSeed").checked;
-
-      if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(count)){
-        setWarn("Vantar löglegar tölur í reitina.");
-        return;
-      }
-
-      if (count < 1) count = 1;
-
-      // swap if reversed
-      if (min > max){
-        const t = min; min = max; max = t;
-      }
-
-      const range = max - min + 1;
-
-      if (!allowRepeat && count > range){
-        setWarn(`Ekki hægt: N=${count} er stærra en fjöldi talna í bilinu (${range}) þegar endurtekning er óleyfð.`);
-        return;
-      }
-
-      if (range > 5_000_000){
-        setWarn("Þetta bil er rosalega stórt. Ég get, en síminn þinn gæti bölvað mér. Minnkaðu bilið aðeins.");
-        // samt leyfum
-      }
-
-      const seed = showSeed ? makeSeed() : "";
-
-      const nums = [];
-      if (allowRepeat){
-        for (let i = 0; i < count; i++){
-          nums.push(secureRandomInt(min, max));
-        }
-      } else {
-        // sample without replacement (efficient enough for typical sizes)
-        const seen = new Set();
-        while (nums.length < count){
-          const n = secureRandomInt(min, max);
-          if (!seen.has(n)){
-            seen.add(n);
-            nums.push(n);
-          }
-        }
-      }
-
-      if (order === "asc") nums.sort((a,b)=>a-b);
-      if (order === "desc") nums.sort((a,b)=>b-a);
-
-      renderNumbers(nums);
-      renderMeta({min, max, count, allowRepeat, order, seed});
-
-      pushHistory({
-        nums,
-        min, max, count, allowRepeat,
-        when: formatWhen()
-      });
-    }
-
-    function resetAll(){
-      setWarn("");
-      $("min").value = 1;
-      $("max").value = 100;
-      $("count").value = 1;
-      $("allowRepeat").checked = true;
-      $("order").value = "none";
-      $("showSeed").checked = false;
-      $("numbers").innerHTML = "";
-      $("meta").textContent = "";
-    }
-
-    async function copyResult(){
-      const pills = Array.from(document.querySelectorAll("#numbers .pill"));
-      const nums = pills.map(p => p.textContent.trim()).filter(Boolean);
-      const text = nums.length ? nums.join(", ") : "";
-      if (!text){
-        setWarn("Ekkert til að afrita ennþá. Ýttu á “Draga” fyrst.");
-        return;
-      }
-      try{
-        await navigator.clipboard.writeText(text);
-        setWarn(""); // silent success
-      } catch(e){
-        setWarn("Gat ekki afritað (iOS getur verið þrjóskur). Prófaðu að velja og afrita handvirkt.");
-      }
-    }
-
-    // --- Init ---
-    $("drawBtn").addEventListener("click", draw);
-    $("resetBtn").addEventListener("click", resetAll);
-    $("copyBtn").addEventListener("click", copyResult);
-
-    // Enter-to-draw
-    ["min","max","count"].forEach(id => {
-      $(id).addEventListener("keydown", (e) => {
-        if (e.key === "Enter") draw();
-      });
-    });
-
-    renderHistory();
-  </script>
+        <footer class="su-footer">
+          <div>ís.is — slemb</div>
+          <div style="opacity:.9;">Fyrsta mót: útdráttur. Næst: vægið, Secret Santa, hjól, bingó, stokkur, teningar, tími.</div>
+        </footer>
+      </section>
+    </div>
+  </main>
 </body>
 </html>
