@@ -39,6 +39,12 @@
       <button class="icon-btn" id="btnMenu" aria-label="Valmynd" title="Valmynd">☰</button>
     </div>
 
+      <div class="ph-meta" aria-live="polite">
+        <span id="statusText">Tilbúið.</span>
+        <span class="ph-dot">•</span>
+        <span id="lastUpdated"></span>
+      </div>
+
     <div class="menu-panel" id="menuPanel" aria-hidden="true">
       <div class="menu-card">
         <button class="menu-action" id="btnThemeToggle" type="button">
@@ -105,14 +111,6 @@
       </div>
     </form>
   </dialog>
-
-  <main class="news">
-    <section class="news-top">
-      <div class="status-row">
-        <div class="status" id="statusText">Tilbúið.</div>
-        <span class="tiny" id="lastUpdated"></span>
-      </div>
-    </section>
 
     <section class="news-list" id="newsList" aria-label="Fréttalisti"></section>
 
