@@ -1,8 +1,4 @@
 // /assets/js/pages/frettir.js
-console.log("[frettir] script loaded");
-window.addEventListener("error", (e) => console.error("[frettir] window error", e.error || e.message));
-window.addEventListener("unhandledrejection", (e) => console.error("[frettir] promise error", e.reason));
-
 (() => {
   const SOURCES = [
     { id: "ruv",   label: "RÚV",    domain: "ruv.is" },
@@ -44,7 +40,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     newsList: $("#newsList"),
     statusText: $("#statusText"),
     lastUpdated: $("#lastUpdated"),
-    activeChips: $("#activeChips"),
 
     emptyState: $("#emptyState"),
     btnEmptyOpenSettings: $("#btnEmptyOpenSettings"),
@@ -135,7 +130,7 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
 
   function humanAgeFromISO(iso) {
     const t = Date.parse(iso);
-    if (!Number.isFinite(t)) return "óþekkt";
+    if (!Number.isFinite(t)) return "—";
     const diffMs = Date.now() - t;
     const sec = Math.max(0, Math.floor(diffMs / 1000));
     const min = Math.floor(sec / 60);
@@ -147,24 +142,13 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     return `${day} d`;
   }
 
-  function renderChips(prefs) {
-    const chosenSources = SOURCES.filter(s => prefs.sources[s.id]).map(s => s.label);
-    const chosenCats = CATEGORIES.filter(c => prefs.categories[c.id]).map(c => c.label);
-
-    const chips = [];
-    chips.push({ text: chosenSources.length === SOURCES.length ? "Miðlar: Allt" : `Miðlar: ${chosenSources.join(", ") || "Ekkert"}` });
-    chips.push({ text: chosenCats.length === CATEGORIES.length ? "Sía: Allt" : `Sía: ${chosenCats.join(", ") || "Ekkert"}` });
-
-    els.activeChips.innerHTML = chips.map(c => `<span class="chip">${escapeHtml(c.text)}</span>`).join("");
-  }
-
   function renderSettings(prefs) {
     els.sourcesList.innerHTML = SOURCES.map(s => {
       const checked = prefs.sources[s.id] ? "checked" : "";
       return `
         <label class="check">
           <input type="checkbox" data-kind="source" data-id="${s.id}" ${checked} />
-          <span><strong>${escapeHtml(s.label)}</strong> <span class="muted">— ${escapeHtml(s.domain)}</span></span>
+          <span><strong>${escapeHtml(s.label)}</strong> <span class="muted">${escapeHtml(s.domain)}</span></span>
         </label>
       `;
     }).join("");
@@ -181,16 +165,13 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
   }
 
   function readSettingsIntoPrefs(prefs) {
-    const next = JSON.parse(JSON.stringify(prefs)); // safe clone everywhere
+    const next = JSON.parse(JSON.stringify(prefs));
 
     els.settingsDialog.querySelectorAll('input[type="checkbox"][data-kind="source"]').forEach(cb => {
-      const id = cb.getAttribute("data-id");
-      next.sources[id] = cb.checked;
+      next.sources[cb.getAttribute("data-id")] = cb.checked;
     });
-
     els.settingsDialog.querySelectorAll('input[type="checkbox"][data-kind="cat"]').forEach(cb => {
-      const id = cb.getAttribute("data-id");
-      next.categories[id] = cb.checked;
+      next.categories[cb.getAttribute("data-id")] = cb.checked;
     });
 
     return next;
@@ -200,7 +181,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     const selector = kind === "source"
       ? 'input[type="checkbox"][data-kind="source"]'
       : 'input[type="checkbox"][data-kind="cat"]';
-
     els.settingsDialog.querySelectorAll(selector).forEach(cb => cb.checked = value);
   }
 
@@ -225,7 +205,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
       const sourceBadge = it.sourceLabel ? `<span class="badge">${escapeHtml(it.sourceLabel)}</span>` : "";
       const catBadge = it.category ? `<span class="badge">${escapeHtml(it.category)}</span>` : "";
       const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "—";
-
       return `
         <article class="item">
           <div class="item-top">
@@ -251,7 +230,6 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
   async function fetchNewsFromBackend(prefs) {
     const sources = selectedIds(prefs.sources);
     const cats = selectedIds(prefs.categories);
-
     if (sources.length === 0 || cats.length === 0) return { items: [] };
 
     const qs = new URLSearchParams();
@@ -259,25 +237,23 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     qs.set("cats", cats.join(","));
     qs.set("limit", "60");
 
-    const url = `/api/news?${qs.toString()}`;
-
-    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    const res = await fetch(`/api/news?${qs.toString()}`, { headers: { "Accept": "application/json" } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }
 
+  let isRefreshing = false;
   async function refresh() {
-    const prefs = loadPrefs();
-    renderChips(prefs);
+    if (isRefreshing) return;
+    isRefreshing = true;
 
+    const prefs = loadPrefs();
     showError(false);
     showEmpty(false);
     setStatus("Sæki fréttir…");
 
     try {
       const data = await fetchNewsFromBackend(prefs);
-      console.log("[frettir] api payload", data);
-
       const items = Array.isArray(data?.items) ? data.items : [];
       renderNews(items);
       setLastUpdated();
@@ -292,7 +268,150 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
       console.error("[frettir] refresh error", err);
       showError(true, "Gat ekki sótt fréttir.");
       setStatus("Villa.");
+    } finally {
+      isRefreshing = false;
+      ptrDone();
     }
+  }
+
+  /* -----------------------
+     Pull-to-refresh (native-ish)
+     ----------------------- */
+  let ptrEl = null;
+  let ptrStartY = 0;
+  let ptrPull = 0;
+  let ptrArmed = false;
+  const PTR_MAX = 90;
+  const PTR_ARM = 62;
+
+  function ensurePtr() {
+    if (ptrEl) return;
+    ptrEl = document.createElement("div");
+    ptrEl.id = "ptr";
+    ptrEl.style.position = "fixed";
+    ptrEl.style.left = "50%";
+    ptrEl.style.top = "10px";
+    ptrEl.style.transform = "translate(-50%, -120px)";
+    ptrEl.style.transition = "transform 180ms ease";
+    ptrEl.style.zIndex = "99999";
+    ptrEl.style.pointerEvents = "none";
+    ptrEl.innerHTML = `
+      <div style="
+        padding:8px 12px;
+        border-radius:999px;
+        border:1px solid rgba(15,23,42,.16);
+        background: rgba(255,255,255,.92);
+        color:#0b1220;
+        font-size:12px;
+        box-shadow: 0 10px 30px rgba(2,6,23,.12);
+        backdrop-filter: blur(8px);
+      ">
+        <span id="ptrTxt">Dragðu niður til að endurhlaða</span>
+      </div>
+    `;
+    // Dark-mode tweak
+    const setPtrTheme = () => {
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      const box = ptrEl.firstElementChild;
+      if (!box) return;
+      box.style.borderColor = dark ? "rgba(255,255,255,.16)" : "rgba(15,23,42,.16)";
+      box.style.background = dark ? "rgba(15,23,32,.86)" : "rgba(255,255,255,.92)";
+      box.style.color = dark ? "#eaf4ff" : "#0b1220";
+      box.style.boxShadow = dark ? "0 10px 30px rgba(0,0,0,.45)" : "0 10px 30px rgba(2,6,23,.12)";
+    };
+    setPtrTheme();
+    // update on theme changes (we toggle data-theme)
+    const obs = new MutationObserver(setPtrTheme);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+    document.body.appendChild(ptrEl);
+  }
+
+  function ptrSetText(s) {
+    const t = document.getElementById("ptrTxt");
+    if (t) t.textContent = s;
+  }
+
+  function ptrShow(y) {
+    ensurePtr();
+    const t = Math.min(PTR_MAX, Math.max(0, y));
+    ptrEl.style.transform = `translate(-50%, ${-120 + t}px)`;
+  }
+
+  function ptrHide() {
+    if (!ptrEl) return;
+    ptrEl.style.transform = "translate(-50%, -120px)";
+  }
+
+  function ptrDone() {
+    ptrArmed = false;
+    ptrPull = 0;
+    ptrHide();
+  }
+
+  function onPtrStart(e) {
+    if (isRefreshing) return;
+    if (els.settingsDialog?.open) return;
+    if (els.menuPanel?.classList.contains("open")) return;
+    if (window.scrollY > 0) return;
+
+    const p = e.touches ? e.touches[0] : e;
+    ptrStartY = p.clientY;
+    ptrPull = 0;
+    ptrArmed = false;
+
+    // only if starting near top
+    if (ptrStartY < 120) {
+      ensurePtr();
+      ptrSetText("Dragðu niður til að endurhlaða");
+    }
+  }
+
+  function onPtrMove(e) {
+    if (isRefreshing) return;
+    if (els.settingsDialog?.open) return;
+    if (els.menuPanel?.classList.contains("open")) return;
+    if (window.scrollY > 0) return;
+
+    const p = e.touches ? e.touches[0] : e;
+    const dy = p.clientY - ptrStartY;
+    if (dy <= 0) return;
+
+    // take over only if pulling enough (avoid fighting normal scroll)
+    if (dy > 6) {
+      ptrPull = dy;
+      ptrShow(dy);
+
+      if (dy >= PTR_ARM && !ptrArmed) {
+        ptrArmed = true;
+        ptrSetText("Slepptu til að endurhlaða");
+        if (navigator.vibrate) navigator.vibrate(10);
+      } else if (dy < PTR_ARM && ptrArmed) {
+        ptrArmed = false;
+        ptrSetText("Dragðu niður til að endurhlaða");
+      }
+
+      // prevent iOS rubber-band from doing weird stuff once we’ve “taken over”
+      if (e.cancelable) e.preventDefault();
+    }
+  }
+
+  function onPtrEnd() {
+    if (!ptrEl) return;
+    if (ptrArmed) {
+      ptrSetText("Endurhleð…");
+      refresh();
+    } else {
+      ptrDone();
+    }
+  }
+
+  function wirePullToRefresh() {
+    // Use touch events with passive:false so we can preventDefault when armed
+    window.addEventListener("touchstart", onPtrStart, { passive: true });
+    window.addEventListener("touchmove", onPtrMove, { passive: false });
+    window.addEventListener("touchend", onPtrEnd, { passive: true });
+    window.addEventListener("touchcancel", onPtrEnd, { passive: true });
   }
 
   function wire() {
@@ -306,7 +425,7 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
       else openMenu();
     });
 
-    els.btnThemeToggle?.addEventListener("click", toggleTheme);
+    els.btnThemeToggle?.addEventListener("click", () => { toggleTheme(); closeMenu(); });
     els.btnOpenSettings?.addEventListener("click", openSettings);
     els.btnRefresh?.addEventListener("click", () => { closeMenu(); refresh(); });
 
@@ -322,14 +441,12 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
       const d = defaultPrefs();
       savePrefs(d);
       renderSettings(d);
-      renderChips(d);
     });
 
     els.btnSaveSettings?.addEventListener("click", () => {
       const current = loadPrefs();
       const next = readSettingsIntoPrefs(current);
       savePrefs(next);
-      renderChips(next);
       closeSettings();
       refresh();
     });
@@ -343,8 +460,8 @@ window.addEventListener("unhandledrejection", (e) => console.error("[frettir] pr
     setTheme(getTheme());
     const prefs = loadPrefs();
     renderSettings(prefs);
-    renderChips(prefs);
     wire();
+    wirePullToRefresh();
     refresh();
   }
 
