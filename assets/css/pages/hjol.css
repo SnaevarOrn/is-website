@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — slemb (lukkuhjól)</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/hjol.css">
+
+  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
+  <script src="/assets/js/prefs.js"></script>
+  <script>
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
+    }
+  </script>
+
+  <!-- Shared JS -->
+  <script defer src="/assets/js/utils.js"></script>
+  <script defer src="/assets/js/site.js"></script>
+  <script defer src="/assets/js/i18n.js"></script>
+  <script defer src="/assets/js/theme.js"></script>
+
+  <!-- Page JS -->
+  <script defer src="/assets/js/pages/hjol.js"></script>
+</head>
+
+<body class="hjol-page">
+  <header class="hjol-header">
+    <div class="hjol-hdr">
+      <a class="hjol-back" href="/slemb/" aria-label="Til baka">←</a>
+      <div class="hjol-title">Lukkuhjól</div>
+      <button class="icon-btn" id="themeBtn" aria-label="Skipta um þema" aria-pressed="false">◐</button>
+    </div>
+  </header>
+
+  <main class="hjol-main">
+    <div class="hjol-wrap">
+
+      <section class="hjol-panel">
+        <div class="hjol-head">
+          <h1>Rúlletta</h1>
+          <p>Settu valkosti (einn per línu) og ýttu á <b>Snúa</b>. Hjólið velur einn. Svo einfalt að það er næstum grunsamlegt.</p>
+        </div>
+
+        <div class="hjol-grid">
+          <div class="hjol-card">
+            <h2>Valkostir</h2>
+
+            <label class="hjol-label" for="items">
+              Listi (einn per línu)
+              <textarea id="items" rows="10" spellcheck="false"></textarea>
+            </label>
+
+            <div class="hjol-row">
+              <label class="hjol-check">
+                <input type="checkbox" id="noRepeat" />
+                Fjarlægja valinn (án endurtekningar)
+              </label>
+
+              <button class="hjol-btn secondary" id="fillDemo" type="button">Dæmi</button>
+            </div>
+
+            <div class="hjol-row">
+              <button class="hjol-btn" id="spinBtn" type="button">Snúa</button>
+              <button class="hjol-btn secondary" id="resetBtn" type="button">Endurstilla</button>
+            </div>
+
+            <div class="hjol-warn" id="warn" role="status" aria-live="polite"></div>
+          </div>
+
+          <div class="hjol-card">
+            <h2>Hjól</h2>
+
+            <div class="wheel-wrap" aria-label="Lukkuhjól">
+              <div class="pointer" aria-hidden="true"></div>
+              <canvas id="wheel" width="520" height="520"></canvas>
+              <div class="wheel-center" aria-hidden="true"></div>
+            </div>
+
+            <div class="result">
+              <div class="result-title">Niðurstaða</div>
+              <div class="result-value" id="result">—</div>
+              <div class="result-meta" id="meta">Settu inn valkosti til að byrja.</div>
+            </div>
+
+            <div class="hjol-row">
+              <button class="hjol-btn secondary" id="copyBtn" type="button">Afrita</button>
+              <button class="hjol-btn secondary" id="historyBtn" type="button">Saga</button>
+            </div>
+
+            <div class="history" id="history" aria-live="polite" hidden>
+              <div class="history-h">Saga (síðustu 10)</div>
+              <div class="history-list" id="historyList"></div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="hjol-footer">
+          <div>ís.is — slemb</div>
+          <div style="opacity:.9;">Pro tip: Ef þú þarft hjól til að velja kvöldmat… þá ert þú að lifa rétt.</div>
+        </footer>
+      </section>
+
+    </div>
+  </main>
+</body>
+</html>
