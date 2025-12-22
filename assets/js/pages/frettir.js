@@ -1,4 +1,9 @@
 // /assets/js/pages/frettir.js
+
+console.log("[frettir] script loaded");
+window.addEventListener("error", (e) => console.error("[frettir] window error", e.error || e.message));
+window.addEventListener("unhandledrejection", (e) => console.error("[frettir] promise error", e.reason));
+
 (() => {
   const SOURCES = [
     { id: "ruv",  label: "RÚV",  domain: "ruv.is" },
@@ -326,6 +331,7 @@
       let data;
       try {
         data = await fetchNewsFromBackend(prefs);
+        console.log("[frettir] api payload", data);
         if (!data || !Array.isArray(data.items)) throw new Error("Invalid payload");
       } catch (e) {
         // Fallback: demo (grunnur virkar strax í UI)
