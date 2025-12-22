@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — slemb (útdráttur)</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/slemb-urdrattur.css">
+
+  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
+  <script src="/assets/js/prefs.js"></script>
+  <script>
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
+    }
+  </script>
+
+  <!-- Shared JS -->
+  <script defer src="/assets/js/utils.js"></script>
+  <script defer src="/assets/js/site.js"></script>
+  <script defer src="/assets/js/i18n.js"></script>
+  <script defer src="/assets/js/theme.js"></script>
+
+  <!-- Page JS -->
+  <script defer src="/assets/js/pages/slemb-urdrattur.js"></script>
+</head>
+
+<body class="slemb-urdrattur-page">
+  <header class="su-header">
+    <div class="su-hdr">
+      <a class="su-back" href="/slemb/" aria-label="Til baka">←</a>
+      <div class="su-title">Útdráttur</div>
+      <button class="icon-btn" id="themeBtn" aria-label="Skipta um þema" aria-pressed="false">◐</button>
+    </div>
+  </header>
+
+  <main class="su-main">
+    <div class="su-wrap">
+      <section class="su-panel" aria-label="Útdráttur úr talnasviði">
+        <div class="su-top">
+          <h1>Talnasvið / úrdráttur</h1>
+          <p>
+            Veldu <b>min–max</b>, fjölda talna, og hvort má endurtaka sig.
+            Niðurstaðan er hreint “random”, ekki spádómur. (Því miður.)
+          </p>
+        </div>
+
+        <div class="su-actions">
+          <button class="btn pill" id="copyBtn" type="button">Afrita niðurstöðu</button>
+        </div>
+
+        <div class="su-content">
+          <div class="su-grid">
+            <div class="su-card">
+              <h2>Stillingar</h2>
+
+              <div class="su-row">
+                <label class="su-label">
+                  Lægsta tala (min)
+                  <input class="su-input" id="min" type="number" inputmode="numeric" value="1" />
+                </label>
+
+                <label class="su-label">
+                  Hæsta tala (max)
+                  <input class="su-input" id="max" type="number" inputmode="numeric" value="100" />
+                </label>
+              </div>
+
+              <div class="su-row">
+                <label class="su-label">
+                  Fjöldi talna (N)
+                  <input class="su-input" id="count" type="number" inputmode="numeric" value="1" min="1" />
+                </label>
+
+                <label class="su-label">
+                  Röðun niðurstöðu
+                  <select class="su-select" id="order">
+                    <option value="none">Engin (eins og dregið)</option>
+                    <option value="asc">Stigvaxandi</option>
+                    <option value="desc">Stiglækkandi</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="su-toggles">
+                <label class="su-chip" title="Ef slökkt: engin endurtekning (sample without replacement)">
+                  <input id="allowRepeat" type="checkbox" checked />
+                  Leyfa endurtekningu
+                </label>
+
+                <label class="su-chip" title="Gerir úrdráttinn flottari fyrir forritara (og tortryggna)">
+                  <input id="showSeed" type="checkbox" />
+                  Sýna “seed” (til endurtekningar)
+                </label>
+              </div>
+
+              <div class="su-buttons">
+                <button class="btn pill" id="drawBtn" type="button">Draga</button>
+                <button class="btn pill ghost" id="resetBtn" type="button">Endurstilla</button>
+              </div>
+
+              <div class="su-warn" id="warn"></div>
+
+              <div class="su-hint">
+                <b>Tips:</b> Slökktu á “Leyfa endurtekningu” ef þú vilt hreinan “úrdrátt” (t.d. bingó-stíl).
+                Ef N er stærra en fjöldi talna í bilinu, þá kvarta ég.
+              </div>
+            </div>
+
+            <div class="su-card">
+              <h2>Saga (síðustu 10)</h2>
+              <div class="su-hint" id="historyEmpty">Engin saga enn. Draga fyrst.</div>
+              <div class="su-history" id="history"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="su-result">
+          <h3>Niðurstaða</h3>
+          <div class="su-numbers" id="numbers"></div>
+          <div class="su-meta" id="meta"></div>
+        </div>
+
+        <footer class="su-footer">
+          <div>ís.is — slemb</div>
+          <div style="opacity:.9;">Fyrsta mót: útdráttur. Næst: vægið, Secret Santa, hjól, bingó, stokkur, teningar, tími.</div>
+        </footer>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
