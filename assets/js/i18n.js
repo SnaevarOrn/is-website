@@ -1,18 +1,25 @@
 /* =========================================================
    ís.is — i18n.js
-   Language handling + UI translation + flag/pill update
-   Depends on: prefs.js (window.prefs)
-   Safe on pages without i18n elements.
+   Lightweight i18n + language switcher (depends on prefs.js if present)
+   Supports: IS/EN/DE/DA/FR/ES/IT/SV/FI
    ========================================================= */
 
 (function () {
   "use strict";
 
-  if (!window.prefs) return;
+  const SUPPORTED = [
+    { code: "is", pill: "IS", flag: "🇮🇸" },
+    { code: "en", pill: "EN", flag: "🇬🇧" },
+    { code: "de", pill: "DE", flag: "🇩🇪" },
+    { code: "da", pill: "DA", flag: "🇩🇰" },
+    { code: "fr", pill: "FR", flag: "🇫🇷" },
+    { code: "es", pill: "ES", flag: "🇪🇸" },
+    { code: "it", pill: "IT", flag: "🇮🇹" },
+    { code: "sv", pill: "SV", flag: "🇸🇪" },
+    { code: "fi", pill: "FI", flag: "🇫🇮" },
+  ];
 
-  // --- Add languages here (fallback: en -> is) ---
-  // NOTE: You can start with partial translations; it falls back safely.
-  const I18N = {
+  const DICT = {
     is: {
       "menu.settings": "Stillingar",
       "menu.about": "Um vefinn",
@@ -84,115 +91,290 @@
       "settings.themeHint": "Light / Dark",
 
       "about.title": "About",
-      "about.p1": "Created in 2025 as an independent, personal project — with no ads, no companies behind it, and no tracking.",
-      "about.p2": "The goal is to share knowledge about Iceland in a simple, interactive, and accessible way — for the public.",
+      "about.p1": "Created in 2025 as an independent personal project — no ads, no tracking.",
+      "about.p2": "The goal is to share knowledge about Iceland in a simple, interactive and accessible way.",
       "about.p3": "Free and open to use.",
-      "about.p4": "If you want to support further development, feedback or a voluntary contribution helps keep the site improving.",
+      "about.p4": "Feedback or a voluntary contribution helps further development and maintenance.",
       "about.p5": "No ads. No cookies. Just Iceland."
     },
 
-    // --- New languages: start with English fallback strings (you can translate later) ---
-    de: {},  // German
-    da: {},  // Danish
-    fr: {},  // French
-    es: {},  // Spanish
-    it: {},  // Italian
-    sv: {},  // Swedish
-    fi: {}   // Finnish
+    // Minimal-but-useful translations for the extra languages
+    de: {
+      "menu.settings": "Einstellungen",
+      "menu.about": "Über",
+      "menu.contact": "Kontakt",
+      "iceland.title": "Island",
+      "tools.title": "Werkzeuge",
+      "btn.glaciers": "Gletscher 🧊",
+      "btn.towns": "Orte 🏘️",
+      "btn.calendar": "Kalender 🗓️",
+      "btn.clock": "Uhr 🕒",
+      "btn.random": "Zufall 🎲",
+      "btn.timer": "Timer ⏱️",
+      "btn.news": "Nachrichten 📰",
+      "footer.pill": "Seite erstellt 2025. Keine Cookies — nur Eis.",
+      "contact.title": "Kontakt",
+      "contact.nameLabel": "Name",
+      "contact.emailLabel": "E-Mail",
+      "contact.msgLabel": "Nachricht",
+      "contact.send": "Senden",
+      "contact.namePh": "Name",
+      "contact.emailPh": "name@beispiel.de",
+      "contact.msgPh": "Schreibe hier…",
+      "settings.title": "Einstellungen",
+      "settings.themeTitle": "Design",
+      "settings.themeHint": "Hell / Dunkel",
+      "about.title": "Über"
+    },
+    da: {
+      "menu.settings": "Indstillinger",
+      "menu.about": "Om",
+      "menu.contact": "Kontakt",
+      "iceland.title": "Island",
+      "tools.title": "Værktøjer",
+      "btn.glaciers": "Gletsjere 🧊",
+      "btn.towns": "Byer 🏘️",
+      "btn.calendar": "Kalender 🗓️",
+      "btn.clock": "Ur 🕒",
+      "btn.random": "Tilfældig 🎲",
+      "btn.timer": "Timer ⏱️",
+      "btn.news": "Nyheder 📰",
+      "footer.pill": "Siden oprettet 2025. Ingen cookies — bare is.",
+      "contact.title": "Kontakt",
+      "contact.nameLabel": "Navn",
+      "contact.emailLabel": "Email",
+      "contact.msgLabel": "Besked",
+      "contact.send": "Send",
+      "settings.title": "Indstillinger",
+      "settings.themeTitle": "Tema",
+      "settings.themeHint": "Lys / Mørk",
+      "about.title": "Om"
+    },
+    fr: {
+      "menu.settings": "Paramètres",
+      "menu.about": "À propos",
+      "menu.contact": "Contact",
+      "iceland.title": "Islande",
+      "tools.title": "Outils",
+      "btn.glaciers": "Glaciers 🧊",
+      "btn.towns": "Villes 🏘️",
+      "btn.calendar": "Calendrier 🗓️",
+      "btn.clock": "Horloge 🕒",
+      "btn.random": "Aléatoire 🎲",
+      "btn.timer": "Minuterie ⏱️",
+      "btn.news": "Actualités 📰",
+      "footer.pill": "Site créé en 2025. Pas de cookies — juste de la glace.",
+      "contact.title": "Contact",
+      "contact.nameLabel": "Nom",
+      "contact.emailLabel": "Email",
+      "contact.msgLabel": "Message",
+      "contact.send": "Envoyer",
+      "settings.title": "Paramètres",
+      "settings.themeTitle": "Thème",
+      "settings.themeHint": "Clair / Sombre",
+      "about.title": "À propos"
+    },
+    es: {
+      "menu.settings": "Ajustes",
+      "menu.about": "Acerca de",
+      "menu.contact": "Contacto",
+      "iceland.title": "Islandia",
+      "tools.title": "Herramientas",
+      "btn.glaciers": "Glaciares 🧊",
+      "btn.towns": "Pueblos 🏘️",
+      "btn.calendar": "Calendario 🗓️",
+      "btn.clock": "Reloj 🕒",
+      "btn.random": "Aleatorio 🎲",
+      "btn.timer": "Temporizador ⏱️",
+      "btn.news": "Noticias 📰",
+      "footer.pill": "Sitio creado en 2025. Sin cookies — solo hielo.",
+      "contact.title": "Contacto",
+      "contact.nameLabel": "Nombre",
+      "contact.emailLabel": "Email",
+      "contact.msgLabel": "Mensaje",
+      "contact.send": "Enviar",
+      "settings.title": "Ajustes",
+      "settings.themeTitle": "Tema",
+      "settings.themeHint": "Claro / Oscuro",
+      "about.title": "Acerca de"
+    },
+    it: {
+      "menu.settings": "Impostazioni",
+      "menu.about": "Info",
+      "menu.contact": "Contatto",
+      "iceland.title": "Islanda",
+      "tools.title": "Strumenti",
+      "btn.glaciers": "Ghiacciai 🧊",
+      "btn.towns": "Città 🏘️",
+      "btn.calendar": "Calendario 🗓️",
+      "btn.clock": "Orologio 🕒",
+      "btn.random": "Casuale 🎲",
+      "btn.timer": "Timer ⏱️",
+      "btn.news": "Notizie 📰",
+      "footer.pill": "Sito creato nel 2025. Niente cookie — solo ghiaccio.",
+      "contact.title": "Contatto",
+      "contact.nameLabel": "Nome",
+      "contact.emailLabel": "Email",
+      "contact.msgLabel": "Messaggio",
+      "contact.send": "Invia",
+      "settings.title": "Impostazioni",
+      "settings.themeTitle": "Tema",
+      "settings.themeHint": "Chiaro / Scuro",
+      "about.title": "Info"
+    },
+    sv: {
+      "menu.settings": "Inställningar",
+      "menu.about": "Om",
+      "menu.contact": "Kontakt",
+      "iceland.title": "Island",
+      "tools.title": "Verktyg",
+      "btn.glaciers": "Glaciärer 🧊",
+      "btn.towns": "Städer 🏘️",
+      "btn.calendar": "Kalender 🗓️",
+      "btn.clock": "Klocka 🕒",
+      "btn.random": "Slump 🎲",
+      "btn.timer": "Timer ⏱️",
+      "btn.news": "Nyheter 📰",
+      "footer.pill": "Sajt skapad 2025. Inga cookies — bara is.",
+      "contact.title": "Kontakt",
+      "contact.nameLabel": "Namn",
+      "contact.emailLabel": "E-post",
+      "contact.msgLabel": "Meddelande",
+      "contact.send": "Skicka",
+      "settings.title": "Inställningar",
+      "settings.themeTitle": "Tema",
+      "settings.themeHint": "Ljust / Mörkt",
+      "about.title": "Om"
+    },
+    fi: {
+      "menu.settings": "Asetukset",
+      "menu.about": "Tietoa",
+      "menu.contact": "Yhteys",
+      "iceland.title": "Islanti",
+      "tools.title": "Työkalut",
+      "btn.glaciers": "Jäätiköt 🧊",
+      "btn.towns": "Kaupungit 🏘️",
+      "btn.calendar": "Kalenteri 🗓️",
+      "btn.clock": "Kello 🕒",
+      "btn.random": "Satunnainen 🎲",
+      "btn.timer": "Ajastin ⏱️",
+      "btn.news": "Uutiset 📰",
+      "footer.pill": "Sivusto luotu 2025. Ei evästeitä — vain jäätä.",
+      "contact.title": "Yhteys",
+      "contact.nameLabel": "Nimi",
+      "contact.emailLabel": "Sähköposti",
+      "contact.msgLabel": "Viesti",
+      "contact.send": "Lähetä",
+      "settings.title": "Asetukset",
+      "settings.themeTitle": "Teema",
+      "settings.themeHint": "Vaalea / Tumma",
+      "about.title": "Tietoa"
+    }
   };
 
-  const LANGS = [
-    { code: "is", pill: "IS", flag: "🇮🇸" },
-    { code: "en", pill: "EN", flag: "🇬🇧" },
-    { code: "de", pill: "DE", flag: "🇩🇪" },
-    { code: "da", pill: "DK", flag: "🇩🇰" },
-    { code: "fr", pill: "FR", flag: "🇫🇷" },
-    { code: "es", pill: "ES", flag: "🇪🇸" },
-    { code: "it", pill: "IT", flag: "🇮🇹" },
-    { code: "sv", pill: "SE", flag: "🇸🇪" },
-    { code: "fi", pill: "FI", flag: "🇫🇮" }
-  ];
+  const KEY = "is.pref.lang";
 
-  const $ = (id) => document.getElementById(id);
-
-  function normalizeLang(l) {
-    const code = (typeof l === "string" ? l : "").toLowerCase();
-    return LANGS.some(x => x.code === code) ? code : "is";
+  function getLang() {
+    // prefs.js path
+    if (window.prefs && typeof prefs.get === "function") {
+      const v = prefs.get("lang", "is");
+      return normalize(v);
+    }
+    // fallback
+    try {
+      const raw = localStorage.getItem(KEY);
+      const v = raw ? JSON.parse(raw) : "is";
+      return normalize(v);
+    } catch {
+      return "is";
+    }
   }
 
-  function getDict(lang) {
-    // fallbacks: requested -> en -> is -> {}
-    return I18N[lang] || I18N.en || I18N.is || {};
+  function setLang(code) {
+    code = normalize(code);
+    if (window.prefs) {
+      // support either setLang or set('lang', ...)
+      if (typeof prefs.setLang === "function") prefs.setLang(code);
+      else if (typeof prefs.set === "function") prefs.set("lang", code);
+      else localStorage.setItem(KEY, JSON.stringify(code));
+    } else {
+      localStorage.setItem(KEY, JSON.stringify(code));
+    }
+    applyToUI(code);
+    // let other scripts react
+    window.dispatchEvent(new CustomEvent("is:langchange", { detail: { lang: code } }));
   }
 
-  function t(lang, key) {
-    const dict = getDict(lang);
-    if (dict && typeof dict[key] === "string") return dict[key];
-
-    // fallback to English then Icelandic
-    if (I18N.en && typeof I18N.en[key] === "string") return I18N.en[key];
-    if (I18N.is && typeof I18N.is[key] === "string") return I18N.is[key];
-
-    return null;
+  function normalize(code) {
+    const c = (code || "is").toLowerCase();
+    return SUPPORTED.some(x => x.code === c) ? c : "is";
   }
 
-  function applyLangToDom(lang) {
-    const L = normalizeLang(lang);
+  function applyText(root, code) {
+    const dict = DICT[code] || DICT.is;
 
-    document.documentElement.setAttribute("lang", L);
-    window.prefs.setLang(L);
-
-    // text nodes
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-      const key = el.getAttribute("data-i18n");
-      const val = t(L, key);
-      if (typeof val === "string") el.textContent = val;
+    root.querySelectorAll("[data-i18n]").forEach((el) => {
+      const k = el.getAttribute("data-i18n");
+      const v = dict[k] ?? DICT.is[k];
+      if (typeof v === "string") el.textContent = v;
     });
 
-    // placeholders
-    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-      const key = el.getAttribute("data-i18n-placeholder");
-      const val = t(L, key);
-      if (typeof val === "string") el.setAttribute("placeholder", val);
+    root.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+      const k = el.getAttribute("data-i18n-placeholder");
+      const v = dict[k] ?? DICT.is[k];
+      if (typeof v === "string") el.setAttribute("placeholder", v);
     });
-
-    // flag + pill
-    const meta = LANGS.find(x => x.code === L) || LANGS[0];
-    const flagEl = $("langFlag");
-    const pillEl = $("langPill");
-    if (flagEl) flagEl.textContent = meta.flag;
-    if (pillEl) pillEl.textContent = meta.pill;
   }
 
-  function cycleLang() {
-    const cur = normalizeLang(window.prefs.get("lang", "is"));
-    const idx = LANGS.findIndex(x => x.code === cur);
-    const next = LANGS[(idx + 1 + LANGS.length) % LANGS.length].code;
-    applyLangToDom(next);
+  function applyToUI(code) {
+    document.documentElement.lang = code;
+
+    applyText(document, code);
+
+    const meta = document.getElementById("metaThemeColor");
+    if (meta) {
+      // leave theme.js to manage this if you want – harmless default:
+      meta.setAttribute("content", document.documentElement.getAttribute("data-theme") === "dark" ? "#000000" : "#ffffff");
+    }
+
+    const flagEl = document.getElementById("langFlag");
+    const pillEl = document.getElementById("langPill");
+    const info = SUPPORTED.find(x => x.code === code) || SUPPORTED[0];
+    if (flagEl) flagEl.textContent = info.flag;
+    if (pillEl) pillEl.textContent = info.pill;
+  }
+
+  function nextLang(cur) {
+    const i = SUPPORTED.findIndex(x => x.code === cur);
+    return SUPPORTED[(i + 1 + SUPPORTED.length) % SUPPORTED.length].code;
   }
 
   function init() {
-    // default if missing
-    if (!window.prefs.get("lang", null)) window.prefs.setLang("is");
+    // Ensure default exists
+    const cur = getLang();
+    applyToUI(cur);
 
-    // apply current on load
-    applyLangToDom(window.prefs.get("lang", "is"));
-
-    // button click
-    const btn = $("langBtn");
+    const btn = document.getElementById("langBtn");
     if (btn) {
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        e.stopPropagation(); // IMPORTANT: prevents click-outside handlers killing it
-        cycleLang();
+        e.stopPropagation();
+        setLang(nextLang(getLang()));
       });
     }
 
-    // keep in sync across tabs
+    // Sync across tabs + from prefs changes
     window.addEventListener("storage", (e) => {
-      if (e.key === "is.pref.lang") applyLangToDom(window.prefs.get("lang", "is"));
+      if (!e.key) return;
+      if (e.key === KEY || e.key === "is.pref.lang") applyToUI(getLang());
     });
   }
 
   document.addEventListener("DOMContentLoaded", init);
+
+  // expose minimal API
+  window.i18n = window.i18n || {};
+  window.i18n.getLang = getLang;
+  window.i18n.setLang = setLang;
+
 })();
