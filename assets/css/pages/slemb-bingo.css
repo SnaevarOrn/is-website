@@ -1,139 +1,241 @@
-<!DOCTYPE html>
-<html lang="is" data-theme="light">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ís.is — slemb (bingó)</title>
+/* =========================================================
+   ís.is — bingo.css (slemb / bingó)
+   ========================================================= */
 
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/favicon.png" sizes="32x32">
-  <link rel="icon" href="/favicon.png" sizes="16x16">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+.bingo-page{
+  min-height:100vh;
+  background: radial-gradient(1200px 700px at 15% 10%, rgba(180,230,255,.10), transparent 55%),
+              radial-gradient(900px 600px at 80% 20%, rgba(180,230,255,.08), transparent 60%),
+              var(--bg);
+  color: var(--text);
+}
 
-  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+.bingo-header{
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+.bingo-hdr{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  display:grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items:center;
+  gap: 10px;
+}
+.bingo-back{
+  width:44px; height:44px;
+  border:1px solid var(--line);
+  background: transparent;
+  border-radius: 14px;
+  display:flex; align-items:center; justify-content:center;
+  color: var(--text);
+  text-decoration:none;
+  font-weight: 900;
+  user-select:none;
+}
+.bingo-back:active{ transform: translateY(1px); }
+.bingo-title{
+  text-align:center;
+  font-weight: 850;
+  letter-spacing:.2px;
+  user-select:none;
+}
 
-  <!-- Shared CSS -->
-  <link rel="stylesheet" href="/assets/css/base.css">
-  <link rel="stylesheet" href="/assets/css/components.css">
+.bingo-main{ padding: 18px 14px 26px; }
+.bingo-wrap{ max-width:1100px; margin:0 auto; }
 
-  <!-- Page CSS -->
-  <link rel="stylesheet" href="/assets/css/pages/bingo.css">
+.bingo-panel{
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  border-radius: 22px;
+  overflow:hidden;
+  box-shadow: 0 18px 70px rgba(0,0,0,.18);
+}
 
-  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
-  <script src="/assets/js/prefs.js"></script>
-  <script>
-    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
-      prefs.applyThemeFromStorage();
-    }
-  </script>
+.bingo-head{
+  padding: 18px 16px 8px;
+  text-align:center;
+}
+.bingo-head h1{
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+.bingo-head p{
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
 
-  <!-- Shared JS -->
-  <script defer src="/assets/js/utils.js"></script>
-  <script defer src="/assets/js/site.js"></script>
-  <script defer src="/assets/js/i18n.js"></script>
-  <script defer src="/assets/js/theme.js"></script>
+.bingo-grid{
+  padding: 14px 14px 6px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px){
+  .bingo-grid{ grid-template-columns: 1fr; }
+}
 
-  <!-- Page JS -->
-  <script defer src="/assets/js/pages/bingo.js"></script>
-</head>
+.bingo-card{
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  border-radius: 18px;
+  padding: 14px;
+  display:grid;
+  gap: 10px;
+}
+.bingo-card h2{
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing:.2px;
+}
 
-<body class="bingo-page">
-  <header class="bingo-header">
-    <div class="bingo-hdr">
-      <a class="bingo-back" href="/slemb/" aria-label="Til baka">←</a>
-      <div class="bingo-title">Bingó</div>
-      <button class="icon-btn" id="themeBtn" aria-label="Skipta um þema" aria-pressed="false">◐</button>
-    </div>
-  </header>
+.row{
+  display:flex;
+  gap: 10px;
+  flex-wrap:wrap;
+  align-items:flex-end;
+}
 
-  <main class="bingo-main">
-    <div class="bingo-wrap">
-      <section class="bingo-panel">
+label{
+  display:grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  flex: 1;
+  min-width: 160px;
+}
 
-        <div class="bingo-head">
-          <h1>Bingó-stjórnandi</h1>
-          <p>Dregur tölur án endurtekningar. Veldu <b>1–75</b> eða <b>1–90</b>. Sýnir síðustu dregnu og hvað er eftir.</p>
-        </div>
+select{
+  width:100%;
+  border:1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 12px 12px;
+  outline:none;
+  font-size: 14px;
+}
 
-        <div class="bingo-grid">
-          <div class="bingo-card">
-            <h2>Stillingar</h2>
+.bbtn{
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--text) 92%, transparent);
+  color: color-mix(in srgb, var(--bg) 92%, transparent);
+  padding: 12px 14px;
+  border-radius: 999px;
+  cursor:pointer;
+  font-weight: 900;
+  letter-spacing:.2px;
+  user-select:none;
+  min-width: 120px;
+  text-align:center;
+}
+html[data-theme="light"] .bbtn{
+  background: #111318;
+  color: #fff;
+}
+.bbtn:active{ transform: translateY(1px); }
 
-            <div class="row">
-              <label>
-                Svið
-                <select id="range">
-                  <option value="75">1–75</option>
-                  <option value="90">1–90</option>
-                </select>
-              </label>
+.bbtn.secondary{
+  background: transparent;
+  color: var(--text);
+}
+.bbtn.secondary:hover{
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
 
-              <label>
-                Draga í einu
-                <select id="drawN">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="5">5</option>
-                </select>
-              </label>
-            </div>
+.warn{
+  min-height: 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.warn.bad{ color: #ff7b7b; }
+.warn.ok{ color: #7dffcc; }
 
-            <div class="row">
-              <button class="bbtn" id="drawBtn" type="button">Draga</button>
-              <button class="bbtn secondary" id="undoBtn" type="button">Afturkalla</button>
-              <button class="bbtn secondary" id="resetBtn" type="button">Ný umferð</button>
-            </div>
+.hint{
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
 
-            <div class="warn" id="warn" role="status" aria-live="polite"></div>
+.big{
+  border: 1px solid var(--line);
+  background: radial-gradient(900px 600px at 30% 20%, rgba(180,230,255,.10), transparent 60%),
+              color-mix(in srgb, var(--bg) 86%, transparent);
+  border-radius: 22px;
+  padding: 18px 16px;
+  text-align:center;
+  font-weight: 950;
+  letter-spacing: .6px;
+  font-size: 42px;
+  line-height: 1;
+  user-select:none;
+}
 
-            <div class="hint">
-              <b>Tips:</b> “Afturkalla” tekur síðustu dráttarlotu til baka (allt N í þeirri lotu).
-            </div>
-          </div>
+.meta{
+  display:grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.meta b{ color: var(--text); opacity:.92; }
 
-          <div class="bingo-card">
-            <h2>Niðurstaða</h2>
+.lists{
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display:grid;
+  gap: 10px;
+}
 
-            <div class="big" id="big">—</div>
+.listBox{
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border-radius: 18px;
+  padding: 10px 12px;
+}
+.lh{
+  font-weight: 900;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing:.25px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
 
-            <div class="meta">
-              <div><b>Dregið:</b> <span id="drawnCount">0</span></div>
-              <div><b>Eftir:</b> <span id="leftCount">—</span></div>
-              <div><b>Síðast:</b> <span id="lastTime">—</span></div>
-            </div>
+.chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 8px;
+}
+.chip{
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 900;
+  font-size: 13px;
+}
 
-            <div class="row">
-              <button class="bbtn secondary" id="copyBtn" type="button">Afrita síðustu</button>
-              <button class="bbtn secondary" id="toggleListBtn" type="button">Listar</button>
-            </div>
-
-            <div class="lists" id="lists" hidden>
-              <div class="listBox">
-                <div class="lh">Síðustu 12</div>
-                <div class="chips" id="last12"></div>
-              </div>
-
-              <div class="listBox">
-                <div class="lh">Allt dregið</div>
-                <div class="chips" id="allDrawn"></div>
-              </div>
-
-              <div class="listBox">
-                <div class="lh">Eftir</div>
-                <div class="chips" id="left"></div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <footer class="bingo-footer">
-          <div>ís.is — slemb</div>
-          <div style="opacity:.9;">Bingó er bara stochastic rómantík: þú finnur aldrei það sem þú vilt, en stundum færðu samt “B!”.</div>
-        </footer>
-      </section>
-    </div>
-  </main>
-</body>
-</html>
+.bingo-footer{
+  padding: 10px 14px 16px;
+  color: var(--muted);
+  font-size: 12px;
+  display:flex;
+  justify-content:space-between;
+  gap: 10px;
+  flex-wrap:wrap;
+  border-top: 1px solid var(--line);
+}
