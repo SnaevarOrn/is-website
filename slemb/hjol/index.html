@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — slemb (nafnalisti)</title>
+
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#000000" id="metaThemeColor">
+
+  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
+  <script src="/assets/js/prefs.js"></script>
+  <script>
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
+    }
+  </script>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/slemb-nafnalisti.css">
+</head>
+
+<body class="slemb-page">
+  <header class="slemb-topbar" role="banner">
+    <div class="slemb-topbar-inner">
+      <a class="slemb-iconbtn" href="/slemb/" aria-label="Til baka">←</a>
+
+      <div class="slemb-title" aria-label="Titill">
+        <div class="slemb-title-main">nafnalisti</div>
+        <div class="slemb-title-sub">slembival, útdráttur, blöndun</div>
+      </div>
+
+      <button class="slemb-iconbtn" id="themeBtn" type="button" aria-label="Skipta um þema">◐</button>
+    </div>
+  </header>
+
+  <main class="slemb-wrap">
+    <section class="slemb-card">
+      <div class="slemb-card-h">
+        <h1>Nafnalisti</h1>
+        <p>Settu inn nöfn (eitt í línu). Svo geturðu dregið 1 eða N nöfn — með/án endurtekningar.</p>
+      </div>
+
+      <div class="slemb-grid">
+        <div class="slemb-panel">
+          <h2>Listi</h2>
+
+          <label class="slemb-label" for="names">Nöfn (eitt í línu)</label>
+          <textarea id="names" class="slemb-textarea" placeholder="t.d.
+Snævar
+Anna
+Björg
+Jón"></textarea>
+
+          <div class="slemb-row">
+            <div class="slemb-field">
+              <label class="slemb-label" for="count">Fjöldi (N)</label>
+              <input id="count" class="slemb-input" type="number" inputmode="numeric" min="1" value="1">
+            </div>
+
+            <div class="slemb-field">
+              <label class="slemb-label" for="mode">Útdráttur</label>
+              <select id="mode" class="slemb-select">
+                <option value="unique" selected>Án endurtekningar</option>
+                <option value="repeat">Með endurtekningu</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="slemb-actions">
+            <button class="slemb-btn" id="drawBtn" type="button">Draga</button>
+            <button class="slemb-btn secondary" id="shuffleBtn" type="button">Blanda lista</button>
+            <button class="slemb-btn secondary" id="clearBtn" type="button">Hreinsa</button>
+          </div>
+
+          <div class="slemb-warn" id="warn" aria-live="polite"></div>
+
+          <div class="slemb-hint">
+            <b>Tips:</b> Ef þú vilt “draga úr hatti” velurðu <b>án endurtekningar</b>. Ef N er stærra en fjöldi nafna, þá kvarta ég (eins og heilbrigð skynsemi).
+          </div>
+        </div>
+
+        <div class="slemb-panel">
+          <div class="slemb-panel-top">
+            <h2>Niðurstaða</h2>
+            <button class="slemb-btn small secondary" id="copyBtn" type="button">Afrita</button>
+          </div>
+
+          <div class="slemb-result" id="result"></div>
+          <div class="slemb-meta" id="meta"></div>
+
+          <div class="slemb-sep"></div>
+
+          <h2>Saga (síðustu 10)</h2>
+          <div class="slemb-hint" id="historyEmpty">Engin saga enn. Draga fyrst.</div>
+          <div id="history" class="slemb-history"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="slemb-footer">
+      <div>ís.is — slemb</div>
+      <div style="opacity:.9;">Nafnalisti: einfalt, snappy, samræmt þema.</div>
+    </footer>
+  </main>
+
+  <!-- Shared JS -->
+  <script defer src="/assets/js/theme.js"></script>
+
+  <!-- Page JS -->
+  <script defer src="/assets/js/pages/slemb-nafnalisti.js"></script>
+</body>
+</html>
