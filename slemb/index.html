@@ -91,32 +91,32 @@
           </div>
 
           <!-- 4 -->
-          <div class="slemb-card is-disabled">
+          <div class="slemb-card">
             <h2>Lukkuhjól / rúlletta</h2>
             <p>Snúðu hjóli með sneiðum. Hentar fyrir “hver byrjar?” og “hvað næst?”.</p>
             <div class="slemb-row">
-              <span class="slemb-tag">Kemur fljótlega</span>
-              <a class="slemb-go" href="/slemb/hjol/">Opna →</a>
+              <span class="slemb-tag">Tilbúið</span>
+              <a class="slemb-go" href="/slemb/hjol/" tabindex="-1" aria-disabled="true">Opna →</a>
             </div>
           </div>
 
           <!-- 5 -->
-          <div class="slemb-card is-disabled">
+          <div class="slemb-card">
             <h2>Bingó-stjórnandi</h2>
             <p>Kallar út tölur (1–75 eða 1–90) án endurtekningar, sýnir dregið og næst.</p>
             <div class="slemb-row">
-              <span class="slemb-tag">Kemur fljótlega</span>
+              <span class="slemb-tag">Tilbúið</span>
               <a class="slemb-go" href="/slemb/bingo/">Opna →</a>
             </div>
           </div>
 
           <!-- 6 -->
-          <div class="slemb-card is-disabled">
+          <div class="slemb-card is-disabled" aria-disabled="true">
             <h2>Spilastokkur</h2>
             <p>Stokka 52 spil, draga 1–N, sýna notað/eftir. Einnig custom stokkar.</p>
             <div class="slemb-row">
               <span class="slemb-tag">Kemur fljótlega</span>
-              <a class="slemb-go" href="/slemb/stokkur/">Opna →</a>
+              <a class="slemb-go" href="/slemb/stokkur/" tabindex="-1" aria-disabled="true">Opna →</a>
             </div>
           </div>
 
@@ -131,22 +131,22 @@
           </div>
 
           <!-- 8 -->
-          <div class="slemb-card is-disabled">
+          <div class="slemb-card is-disabled" aria-disabled="true">
             <h2>Tilviljunarkenndur tími/dagsetning</h2>
             <p>Veldu tímabil og fáðu random dag/tíma. Hentar fyrir “hvenær?” án endalausra chat-þráða.</p>
             <div class="slemb-row">
               <span class="slemb-tag">Kemur fljótlega</span>
-              <a class="slemb-go" href="/slemb/timi/">Opna →</a>
+              <a class="slemb-go" href="/slemb/timi/" tabindex="-1" aria-disabled="true">Opna →</a>
             </div>
           </div>
 
           <!-- 9 -->
-          <div class="slemb-card is-disabled">
+          <div class="slemb-card is-disabled" aria-disabled="true">
             <h2>Meira</h2>
             <p>Seinna: random litapalletta, “pick one” með filterum, o.s.frv.</p>
             <div class="slemb-row">
               <span class="slemb-tag">Seinna</span>
-              <a class="slemb-go" href="/slemb/meira/">Opna →</a>
+              <a class="slemb-go" href="/slemb/meira/" tabindex="-1" aria-disabled="true">Opna →</a>
             </div>
           </div>
         </div>
@@ -154,12 +154,22 @@
         <footer class="slemb-footer">
           <div>ís.is — slemb</div>
           <div style="opacity:.9;">
-            Byrjað á 4/8. Næst: <b>hjól</b> (skemmtilegt) eða <b>bingó</b> (ultra fljótt).
+            Byrjað á 5/8. Næst: <b>hjól</b> (skemmtilegt) eða <b>stokkur</b> (snyrtilegt).
           </div>
         </footer>
       </section>
 
     </div>
   </main>
+
+  <script>
+    // Make disabled cards truly non-clickable (also if someone taps the card area)
+    document.querySelectorAll(".slemb-card.is-disabled").forEach(card => {
+      card.addEventListener("click", (e) => e.preventDefault());
+    });
+    document.querySelectorAll(".slemb-card.is-disabled .slemb-go").forEach(a => {
+      a.addEventListener("click", (e) => e.preventDefault());
+    });
+  </script>
 </body>
 </html>
