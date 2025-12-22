@@ -15,15 +15,19 @@
 
   <!-- Shared CSS -->
   <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
 
   <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
   <script src="/assets/js/prefs.js"></script>
   <script>
     // Apply theme ASAP (prevents flash)
-    prefs.applyThemeFromStorage();
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
+    }
   </script>
 
   <!-- Shared JS (deferred) -->
+  <script defer src="/assets/js/utils.js"></script>
   <script defer src="/assets/js/site.js"></script>
   <script defer src="/assets/js/i18n.js"></script>
   <script defer src="/assets/js/theme.js"></script>
