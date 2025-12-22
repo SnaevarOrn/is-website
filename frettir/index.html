@@ -12,14 +12,10 @@
 
   <meta name="theme-color" content="#ffffff" id="metaThemeColor">
 
-  <!-- Shared CSS -->
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/components.css">
-
-  <!-- Page CSS -->
   <link rel="stylesheet" href="/assets/css/pages/frettir.css">
 
-  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
   <script src="/assets/js/prefs.js"></script>
   <script>
     (function () {
@@ -30,12 +26,9 @@
 </head>
 
 <body>
-  <!-- Header -->
   <header class="page-header">
     <div class="ph-left">
-      <button class="icon-btn" id="btnBack" aria-label="Til baka" title="Til baka">
-        ←
-      </button>
+      <button class="icon-btn" id="btnBack" aria-label="Til baka" title="Til baka">←</button>
       <div class="ph-title">
         <div class="ph-kicker">ís.is</div>
         <h1>Fréttir</h1>
@@ -43,48 +36,35 @@
     </div>
 
     <div class="ph-right">
-      <button class="icon-btn" id="btnMenu" aria-label="Valmynd" title="Valmynd">
-        ☰
-      </button>
+      <button class="icon-btn" id="btnMenu" aria-label="Valmynd" title="Valmynd">☰</button>
     </div>
 
-    <!-- Menu panel -->
     <div class="menu-panel" id="menuPanel" aria-hidden="true">
       <div class="menu-card">
-        <div class="menu-row">
-          <div class="menu-label">
-            <div class="menu-title">Þema</div>
-            <div class="menu-sub">Dark / Light</div>
-          </div>
-          <button class="pill-btn" id="btnThemeToggle" type="button">Skipta</button>
-        </div>
+        <button class="menu-action" id="btnThemeToggle" type="button">
+          <span class="ma-title">Þema</span>
+          <span class="ma-sub">Light / Dark</span>
+        </button>
 
-        <div class="menu-row">
-          <div class="menu-label">
-            <div class="menu-title">Stillingar</div>
-            <div class="menu-sub">Velja miðla + síur</div>
-          </div>
-          <button class="pill-btn" id="btnOpenSettings" type="button">Opna</button>
-        </div>
+        <button class="menu-action" id="btnOpenSettings" type="button">
+          <span class="ma-title">Stillingar</span>
+          <span class="ma-sub">Miðlar + síur</span>
+        </button>
 
-        <div class="menu-row">
-          <div class="menu-label">
-            <div class="menu-title">Endurhlaða</div>
-            <div class="menu-sub">Sækja nýjustu fyrirsagnir</div>
-          </div>
-          <button class="pill-btn" id="btnRefresh" type="button">Sækja</button>
-        </div>
+        <button class="menu-action" id="btnRefresh" type="button">
+          <span class="ma-title">Endurhlaða</span>
+          <span class="ma-sub">Sækja nýjustu</span>
+        </button>
 
-        <div class="menu-row menu-row-last">
-          <a class="menu-link" href="/" aria-label="Fara á forsíðu">Forsíða</a>
+        <div class="menu-row-last">
+          <a class="menu-link" href="/">Forsíða</a>
           <span class="menu-dot">•</span>
-          <a class="menu-link" href="/spil/" aria-label="Fara í spil">Spil</a>
+          <a class="menu-link" href="/spil/">Spil</a>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Settings modal -->
   <dialog class="settings" id="settingsDialog" aria-label="Stillingar">
     <form method="dialog" class="settings-card" id="settingsForm">
       <div class="settings-head">
@@ -97,79 +77,60 @@
 
       <div class="settings-grid">
         <section class="settings-section">
-          <h3>Fjölmiðlar</h3>
-          <p class="muted">Sjálfgefið er allt valið.</p>
-
-          <div class="checklist" id="sourcesList">
-            <!-- injected by JS -->
+          <div class="sec-head">
+            <h3>Fjölmiðlar</h3>
+            <div class="sec-actions">
+              <button type="button" class="seg-btn" id="btnSourcesAll">Allt</button>
+              <button type="button" class="seg-btn" id="btnSourcesNone">Ekkert</button>
+            </div>
           </div>
-
-          <div class="settings-actions">
-            <button type="button" class="ghost-btn" id="btnSourcesAll">Velja allt</button>
-            <button type="button" class="ghost-btn" id="btnSourcesNone">Hreinsa</button>
-          </div>
+          <div class="checklist" id="sourcesList"></div>
         </section>
 
         <section class="settings-section">
-          <h3>Sía</h3>
-          <p class="muted">Þú getur valið einn eða fleiri flokka.</p>
-
-          <div class="checklist" id="catsList">
-            <!-- injected by JS -->
+          <div class="sec-head">
+            <h3>Sía</h3>
+            <div class="sec-actions">
+              <button type="button" class="seg-btn" id="btnCatsAll">Allt</button>
+              <button type="button" class="seg-btn" id="btnCatsNone">Ekkert</button>
+            </div>
           </div>
-
-          <div class="settings-actions">
-            <button type="button" class="ghost-btn" id="btnCatsAll">Velja allt</button>
-            <button type="button" class="ghost-btn" id="btnCatsNone">Hreinsa</button>
-          </div>
+          <div class="checklist" id="catsList"></div>
         </section>
       </div>
 
       <div class="settings-footer">
-        <button type="button" class="pill-btn" id="btnSaveSettings">Vista</button>
-        <button type="button" class="ghost-btn" id="btnResetSettings">Endurstilla</button>
+        <button type="button" class="pill-btn primary" id="btnSaveSettings">Vista</button>
+        <button type="button" class="pill-btn" id="btnResetSettings">Endurstilla</button>
       </div>
     </form>
   </dialog>
 
-  <!-- Main -->
   <main class="news">
     <section class="news-top">
-      <div class="chips" id="activeChips" aria-label="Virkar síur">
-        <!-- injected by JS -->
-      </div>
-
       <div class="status-row">
         <div class="status" id="statusText">Tilbúið.</div>
-        <div class="status-right">
-          <span class="tiny" id="lastUpdated"></span>
-        </div>
+        <span class="tiny" id="lastUpdated"></span>
       </div>
     </section>
 
-    <section class="news-list" id="newsList" aria-label="Fréttalisti">
-      <!-- injected by JS -->
-    </section>
+    <section class="news-list" id="newsList" aria-label="Fréttalisti"></section>
 
     <section class="empty" id="emptyState" hidden>
       <h2>Ekkert fannst</h2>
-      <p class="muted">Prófaðu að velja fleiri miðla eða slaka á síunum.</p>
-      <button class="pill-btn" id="btnEmptyOpenSettings" type="button">Opna stillingar</button>
+      <p class="muted">Veldu fleiri miðla eða slakaðu á síum.</p>
+      <button class="pill-btn primary" id="btnEmptyOpenSettings" type="button">Stillingar</button>
     </section>
 
     <section class="error" id="errorState" hidden>
       <h2>Villa</h2>
       <p class="muted" id="errorMsg">Gat ekki sótt fréttir.</p>
-      <button class="pill-btn" id="btnRetry" type="button">Reyna aftur</button>
+      <button class="pill-btn primary" id="btnRetry" type="button">Reyna aftur</button>
     </section>
-
   </main>
 
-  <!-- Shared JS -->
   <script src="/assets/js/utils.js"></script>
   <script src="/assets/js/theme.js"></script>
-
-  <!-- Page JS -->
   <script src="/assets/js/pages/frettir.js" defer></script>
 </body>
 </html>
