@@ -285,3 +285,23 @@ html[data-theme="dark"] .check{
 /* Tap safety: closed panel never blocks */
 .menu-panel{ pointer-events:none; }
 .menu-panel.open{ pointer-events:auto; }
+/* === Two-column checklist inside Settings === */
+.settings-section .checklist{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* tryggir að box fylli dálkinn rétt */
+.settings-section .check{
+  width: 100%;
+  min-width: 0;
+}
+
+/* fallback: ef skjár er mjög mjór (gamall iPhone SE o.fl.) */
+@media (max-width: 340px){
+  .settings-section .checklist{
+    grid-template-columns: 1fr;
+  }
+}
+
