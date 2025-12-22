@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — slemb (bingó)</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/bingo.css">
+
+  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
+  <script src="/assets/js/prefs.js"></script>
+  <script>
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
+    }
+  </script>
+
+  <!-- Shared JS -->
+  <script defer src="/assets/js/utils.js"></script>
+  <script defer src="/assets/js/site.js"></script>
+  <script defer src="/assets/js/i18n.js"></script>
+  <script defer src="/assets/js/theme.js"></script>
+
+  <!-- Page JS -->
+  <script defer src="/assets/js/pages/bingo.js"></script>
+</head>
+
+<body class="bingo-page">
+  <header class="bingo-header">
+    <div class="bingo-hdr">
+      <a class="bingo-back" href="/slemb/" aria-label="Til baka">←</a>
+      <div class="bingo-title">Bingó</div>
+      <button class="icon-btn" id="themeBtn" aria-label="Skipta um þema" aria-pressed="false">◐</button>
+    </div>
+  </header>
+
+  <main class="bingo-main">
+    <div class="bingo-wrap">
+      <section class="bingo-panel">
+
+        <div class="bingo-head">
+          <h1>Bingó-stjórnandi</h1>
+          <p>Dregur tölur án endurtekningar. Veldu <b>1–75</b> eða <b>1–90</b>. Sýnir síðustu dregnu og hvað er eftir.</p>
+        </div>
+
+        <div class="bingo-grid">
+          <div class="bingo-card">
+            <h2>Stillingar</h2>
+
+            <div class="row">
+              <label>
+                Svið
+                <select id="range">
+                  <option value="75">1–75</option>
+                  <option value="90">1–90</option>
+                </select>
+              </label>
+
+              <label>
+                Draga í einu
+                <select id="drawN">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="5">5</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="row">
+              <button class="bbtn" id="drawBtn" type="button">Draga</button>
+              <button class="bbtn secondary" id="undoBtn" type="button">Afturkalla</button>
+              <button class="bbtn secondary" id="resetBtn" type="button">Ný umferð</button>
+            </div>
+
+            <div class="warn" id="warn" role="status" aria-live="polite"></div>
+
+            <div class="hint">
+              <b>Tips:</b> “Afturkalla” tekur síðustu dráttarlotu til baka (allt N í þeirri lotu).
+            </div>
+          </div>
+
+          <div class="bingo-card">
+            <h2>Niðurstaða</h2>
+
+            <div class="big" id="big">—</div>
+
+            <div class="meta">
+              <div><b>Dregið:</b> <span id="drawnCount">0</span></div>
+              <div><b>Eftir:</b> <span id="leftCount">—</span></div>
+              <div><b>Síðast:</b> <span id="lastTime">—</span></div>
+            </div>
+
+            <div class="row">
+              <button class="bbtn secondary" id="copyBtn" type="button">Afrita síðustu</button>
+              <button class="bbtn secondary" id="toggleListBtn" type="button">Listar</button>
+            </div>
+
+            <div class="lists" id="lists" hidden>
+              <div class="listBox">
+                <div class="lh">Síðustu 12</div>
+                <div class="chips" id="last12"></div>
+              </div>
+
+              <div class="listBox">
+                <div class="lh">Allt dregið</div>
+                <div class="chips" id="allDrawn"></div>
+              </div>
+
+              <div class="listBox">
+                <div class="lh">Eftir</div>
+                <div class="chips" id="left"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <footer class="bingo-footer">
+          <div>ís.is — slemb</div>
+          <div style="opacity:.9;">Bingó er bara stochastic rómantík: þú finnur aldrei það sem þú vilt, en stundum færðu samt “B!”.</div>
+        </footer>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
