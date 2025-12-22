@@ -222,7 +222,25 @@ html[data-theme="dark"] .settings-section{ background:color-mix(in srgb, var(--c
 .seg-btn:active{ background:color-mix(in srgb, var(--card) 88%, transparent); }
 
 /* Checklist: compact + iOS-safe */
-.checklist{ display:grid; gap:8px; }
+/* Checklist: 1 dálkur á mjóum skjám, 2 dálkar þegar pláss er */
+.checklist{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 420px){
+  .checklist{
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}
+
+/* tryggir að hver "check" fylli dálkinn */
+.check{
+  width: 100%;
+  min-width: 0;
+}
 
 .check{
   display:flex;
