@@ -11,13 +11,22 @@
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <!-- Theme ASAP (no flash) -->
   <script>
-    (function(){
-      const t = localStorage.getItem('theme');
-      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
-    })();
-  </script>
+  (function () {
+    const raw = localStorage.getItem('is.pref.theme'); // JSON string: "dark" | "light"
+    let t = null;
+    try { t = raw ? JSON.parse(raw) : null; } catch { t = null; }
+
+    // fallback: system preference
+    if (t !== 'dark' && t !== 'light') {
+      const systemLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      t = systemLight ? 'light' : 'dark';
+    }
+
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+
 
   <!-- Global -->
   <link rel="stylesheet" href="/assets/css/base.css">
@@ -184,7 +193,9 @@
     </div>
   </main>
 
-  <script src="/assets/js/theme.js" defer></script>
-  <script src="/assets/js/clock.js" defer></script>
+  <script src="/assets/js/prefs.js" defer></script>
+<script src="/assets/js/theme.js" defer></script>
+<script src="/assets/js/clock.js" defer></script>
+
 </body>
 </html>
