@@ -5,8 +5,8 @@
     { id: "mbl",       label: "mbl.is",          domain: "mbl.is" },
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
-    { id: "stundin",   label: "Stundin",         domain: "stundin.is" },
-    { id: "heimildin", label: "Heimildin",       domain: "heimildin.is" },
+    { id: "stundin",   label: "Heimildin",       domain: "stundin.is" },
+    { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
     { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
     { id: "vb",        label: "Viðskiptablaðið", domain: "vb.is" },
   ];
