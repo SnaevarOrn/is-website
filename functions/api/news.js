@@ -152,14 +152,19 @@ function parseFeedItems(xml) {
 /* -------- XML helpers (whitespace-safe) -------- */
 
 function extract(xml, tag) {
-  // Handles whitespace/newlines after <tag> and before CDATA/text
-  const re = new RegExp(`<${escapeRe(tag)}\\b[^>]*>\\s*(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?\\s*<\\/${escapeRe(tag)}>`, "i");
+  const re = new RegExp(
+    `<${escapeRe(tag)}\\b[^>]*>\\s*(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?\\s*<\\/${escapeRe(tag)}\\s*>`,
+    "i"
+  );
   const m = xml.match(re);
   return m ? (m[2] || "").trim() : null;
 }
 
 function extractAll(xml, tag) {
-  const re = new RegExp(`<${escapeRe(tag)}\\b[^>]*>\\s*(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?\\s*<\\/${escapeRe(tag)}>`, "ig");
+  const re = new RegExp(
+    `<${escapeRe(tag)}\\b[^>]*>\\s*(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?\\s*<\\/${escapeRe(tag)}\\s*>`,
+    "ig"
+  );
   const out = [];
   let m;
   while ((m = re.exec(xml)) !== null) out.push((m[2] || "").trim());
