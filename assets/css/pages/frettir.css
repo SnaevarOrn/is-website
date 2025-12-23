@@ -266,4 +266,4 @@ html[data-theme="dark"] .check{
 
 /* Tap safety: closed panel never blocks */
 .menu-panel{ pointer-events:none; }
-.menu-panel.open{ pointer-events:auto; }.menu-panel.open{ pointer-events:auto; }
+.menu-panel.open{ pointer-events:auto; }
