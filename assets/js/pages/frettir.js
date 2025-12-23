@@ -206,44 +206,53 @@
   }
 
   /* -----------------------
-     Icon proxy (edge cached) + micro-cache in browser
+     Icon proxy: stable per source (host-based) + micro-cache
      ----------------------- */
-  const _iconMemo = new Map();
+  const _iconMemo = new Map(); // domain -> /api/icon?host=domain
 
-  function iconProxyUrl(item) {
-    // Build a stable memo key first
-    const key =
-      item?.url ? `u:${item.url}` :
-      item?.host ? `h:${item.host}` :
-      item?.domain ? `h:${item.domain}` :
-      item?.sourceId ? `s:${item.sourceId}` :
-      item?.source ? `s:${item.source}` : "";
+  function normalizeHost(h) {
+    return String(h || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+  }
 
-    if (!key) return "";
-    if (_iconMemo.has(key)) return _iconMemo.get(key);
+  function domainForItem(it) {
+    // Prefer explicit domain/host from backend
+    let domain = it?.domain || it?.host || "";
 
-    let out = "";
-
-    // Prefer full article URL (best)
-    if (item?.url) {
-      out = `/api/icon?u=${encodeURIComponent(item.url)}`;
-    } else if (item?.host) {
-      out = `/api/icon?host=${encodeURIComponent(item.host)}`;
-    } else if (item?.domain) {
-      out = `/api/icon?host=${encodeURIComponent(item.domain)}`;
-    } else {
-      const sid = item?.sourceId || item?.source;
+    // Or map from source id
+    if (!domain) {
+      const sid = it?.sourceId || it?.source || "";
       const s = SOURCES.find(x => x.id === sid);
-      if (s?.domain) out = `/api/icon?host=${encodeURIComponent(s.domain)}`;
+      if (s?.domain) domain = s.domain;
     }
 
-    _iconMemo.set(key, out);
+    // Last resort: parse it.url
+    if (!domain && it?.url) {
+      try { domain = new URL(it.url).hostname; } catch { /* ignore */ }
+    }
+
+    domain = normalizeHost(domain);
+    return domain || "";
+  }
+
+  function iconUrlForItem(it) {
+    // If backend already gave our stable host-proxy, accept it.
+    if (it?.iconUrl && String(it.iconUrl).startsWith("/api/icon?host=")) {
+      return it.iconUrl;
+    }
+
+    const domain = domainForItem(it);
+    if (!domain) return "";
+
+    if (_iconMemo.has(domain)) return _iconMemo.get(domain);
+
+    const out = `/api/icon?host=${encodeURIComponent(domain)}`;
+    _iconMemo.set(domain, out);
     return out;
   }
 
   function renderNews(items) {
     els.newsList.innerHTML = items.map(it => {
-      const iconUrl = it.iconUrl || iconProxyUrl(it);
+      const iconUrl = iconUrlForItem(it);
       const icon = iconUrl
         ? `<img class="src-ico"
             src="${escapeHtml(iconUrl)}"
@@ -271,13 +280,16 @@
         <article class="item">
           <div class="item-top">
             <h3 class="item-title">
-              ${icon}
               <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(it.title)}</a>
             </h3>
             <div class="tiny">${escapeHtml(age)}</div>
           </div>
+
           <div class="item-meta">
-            ${sourceBadge}
+            <span class="src-chip">
+              ${icon}
+              ${sourceBadge}
+            </span>
             ${catBadges}
             ${it.publishedAt ? `<span class="tiny">(${escapeHtml(new Date(it.publishedAt).toLocaleString("is-IS"))})</span>` : ""}
           </div>
@@ -372,7 +384,6 @@
         <span id="ptrTxt">Dragðu niður til að endurhlaða</span>
       </div>
     `;
-    // Dark-mode tweak
     const setPtrTheme = () => {
       const dark = document.documentElement.getAttribute("data-theme") === "dark";
       const box = ptrEl.firstElementChild;
@@ -383,7 +394,6 @@
       box.style.boxShadow = dark ? "0 10px 30px rgba(0,0,0,.45)" : "0 10px 30px rgba(2,6,23,.12)";
     };
     setPtrTheme();
-    // update on theme changes (we toggle data-theme)
     const obs = new MutationObserver(setPtrTheme);
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
@@ -423,7 +433,6 @@
     ptrPull = 0;
     ptrArmed = false;
 
-    // only if starting near top
     if (ptrStartY < 120) {
       ensurePtr();
       ptrSetText("Dragðu niður til að endurhlaða");
@@ -440,7 +449,6 @@
     const dy = p.clientY - ptrStartY;
     if (dy <= 0) return;
 
-    // take over only if pulling enough (avoid fighting normal scroll)
     if (dy > 6) {
       ptrPull = dy;
       ptrShow(dy);
@@ -454,7 +462,6 @@
         ptrSetText("Dragðu niður til að endurhlaða");
       }
 
-      // prevent iOS rubber-band from doing weird stuff once we’ve “taken over”
       if (e.cancelable) e.preventDefault();
     }
   }
@@ -470,7 +477,6 @@
   }
 
   function wirePullToRefresh() {
-    // Use touch events with passive:false so we can preventDefault when armed
     window.addEventListener("touchstart", onPtrStart, { passive: true });
     window.addEventListener("touchmove", onPtrMove, { passive: false });
     window.addEventListener("touchend", onPtrEnd, { passive: true });
