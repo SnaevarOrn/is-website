@@ -52,9 +52,7 @@ export async function onRequestGet({ request }) {
       for (const block of blocks) {
         // RSS fields
         const title = extract(block, "title") || extract(block, "atom:title");
-        const linkRss = extract(block, "link");
-        const linkAtom = extractAtomLink(block) || extract(block, "id");
-        const link = normalizeLink(linkRss) || normalizeLink(linkAtom);
+        const link = extractLinkFromBlock(block);
         const pubDate = extract(block, "pubDate") || extract(block, "updated") || extract(block, "published");
 
         if (!title || !link) continue;
@@ -122,6 +120,24 @@ function clampInt(v, min, max, def) {
   const n = Number(v);
   if (!Number.isFinite(n)) return def;
   return Math.max(min, Math.min(max, Math.trunc(n)));
+}
+function extractLinkFromBlock(block) {
+  // 1. RSS <link>
+  let link =
+    extract(block, "link") ||
+    extract(block, "guid");
+
+  // 2. Atom <link href="...">
+  if (!link) link = extractAtomLink(block);
+
+  if (!link) return null;
+
+  const s = String(link).trim();
+
+  // samþykkjum bæði http og https
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+
+  return null;
 }
 
 function uniq(arr) {
