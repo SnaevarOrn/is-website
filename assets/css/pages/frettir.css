@@ -138,6 +138,21 @@ html[data-theme="dark"] .item{ background:color-mix(in srgb, var(--card) 70%, tr
   border:1px solid color-mix(in srgb, var(--line) 90%, transparent);
 }
 
+/* Icon next to source badge */
+.src-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+.src-ico{
+  width:16px;
+  height:16px;
+  border-radius:4px;
+  object-fit:contain;
+  flex:0 0 16px;
+}
+
 /* Pills */
 .pill-btn{
   min-height:var(--tap);
