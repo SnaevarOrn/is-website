@@ -1,4 +1,4 @@
-//  /functions/api/news.js
+// /functions/api/news.js
 export async function onRequestGet({ request }) {
   const { searchParams } = new URL(request.url);
 
@@ -7,10 +7,19 @@ export async function onRequestGet({ request }) {
   const limit = Number(searchParams.get("limit") || 50);
 
   const feeds = {
-    ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
-    mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
-    visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
-    dv:    { url: "https://www.dv.is/feed/",       label: "DV" },
+    // ✅ ACTIVE
+    vb: { url: "https://www.vb.is/rss", label: "Viðskiptablaðið" },
+
+    // 🔒 COMMENTED OUT — enable one by one when you want
+    // ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
+    // mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
+    // visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
+    // dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
+
+    // stundin:   { url: "https://stundin.is/rss/",     label: "Stundin" },
+    // kjarninn:  { url: "https://kjarninn.is/feed/",   label: "Kjarninn" },
+    // grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
+    // romur:     { url: "https://romur.is/feed/",      label: "Rómur" },
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
@@ -54,7 +63,6 @@ export async function onRequestGet({ request }) {
           title
         });
 
-        // cats filtering (if provided)
         if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
         items.push({
@@ -186,6 +194,16 @@ function mapFromUrl(sourceId, u) {
     if (u.includes("/sport")) return "ithrottir";
     if (u.includes("/vidskipti")) return "vidskipti";
     if (u.includes("/frettir")) return "innlent";
+  }
+
+  // ✅ VB tweaks
+  if (sourceId === "vb") {
+    if (u.includes("/sport")) return "ithrottir";
+    if (u.includes("/vidskipti") || u.includes("/markad")) return "vidskipti";
+    if (u.includes("/menning") || u.includes("/lifid")) return "menning";
+    if (u.includes("/pistill") || u.includes("/skodun")) return "skodun";
+    if (u.includes("/erlent")) return "erlent";
+    if (u.includes("/innlent")) return "innlent";
   }
 
   return null;
