@@ -8,14 +8,13 @@ export async function onRequestGet({ request }) {
 
   const feeds = {
     // ✅ ACTIVE
-    vb: { url: "https://www.vb.is/rss", label: "Viðskiptablaðið" },
-
+    ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
+    mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
+    visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
+    dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
+    vb:    { url: "https://www.vb.is/rss", label: "Viðskiptablaðið" },
+    
     // 🔒 COMMENTED OUT — enable one by one when you want
-    // ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
-    // mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
-    // visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
-    // dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
-
     // stundin:   { url: "https://stundin.is/rss/",     label: "Stundin" },
     // kjarninn:  { url: "https://kjarninn.is/feed/",   label: "Kjarninn" },
     // grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
