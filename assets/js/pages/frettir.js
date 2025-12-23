@@ -1,11 +1,16 @@
 // /assets/js/pages/frettir.js
 (() => {
   const SOURCES = [
-    { id: "ruv",   label: "RÚV",    domain: "ruv.is" },
-    { id: "mbl",   label: "mbl.is", domain: "mbl.is" },
-    { id: "visir", label: "Vísir",  domain: "visir.is" },
-    { id: "dv",    label: "DV",     domain: "dv.is" },
-  ];
+  { id: "ruv",      label: "RÚV",            domain: "ruv.is" },
+  { id: "mbl",      label: "mbl.is",         domain: "mbl.is" },
+  { id: "visir",    label: "Vísir",          domain: "visir.is" },
+  { id: "dv",       label: "DV",             domain: "dv.is" },
+
+  { id: "stundin",  label: "Stundin",        domain: "stundin.is" },
+  { id: "heimildin",label: "Heimildin",      domain: "heimildin.is" },
+  { id: "frettin",  label: "Fréttin",        domain: "frettin.is" },
+  { id: "vb",       label: "Viðskiptablaðið",domain: "vb.is" },
+];
 
   const CATEGORIES = [
     { id: "innlent",   label: "Innlent" },
@@ -201,27 +206,42 @@
   }
 
   function renderNews(items) {
-    els.newsList.innerHTML = items.map(it => {
-      const sourceBadge = it.sourceLabel ? `<span class="badge">${escapeHtml(it.sourceLabel)}</span>` : "";
-      const catBadge = it.category ? `<span class="badge">${escapeHtml(it.category)}</span>` : "";
-      const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "—";
-      return `
-        <article class="item">
-          <div class="item-top">
-            <h3 class="item-title">
-              <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(it.title)}</a>
-            </h3>
-            <div class="tiny">${escapeHtml(age)}</div>
-          </div>
-          <div class="item-meta">
-            ${sourceBadge}
-            ${catBadge}
-            ${it.publishedAt ? `<span class="tiny">(${escapeHtml(new Date(it.publishedAt).toLocaleString("is-IS"))})</span>` : ""}
-          </div>
-        </article>
-      `;
-    }).join("");
-  }
+  els.newsList.innerHTML = items.map(it => {
+    const icon = it.iconUrl
+      ? `<img class="src-ico" src="${escapeHtml(it.iconUrl)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
+      : "";
+
+    const sourceBadge = it.sourceLabel ? `<span class="badge">${escapeHtml(it.sourceLabel)}</span>` : "";
+
+    const cats = Array.isArray(it.categoryLabels) && it.categoryLabels.length
+      ? it.categoryLabels
+      : (it.category ? [it.category] : []);
+
+    const catBadges = cats
+      .slice(0, 2)
+      .map(c => `<span class="badge">${escapeHtml(c)}</span>`)
+      .join("");
+
+    const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "—";
+
+    return `
+      <article class="item">
+        <div class="item-top">
+          <h3 class="item-title">
+            ${icon}
+            <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(it.title)}</a>
+          </h3>
+          <div class="tiny">${escapeHtml(age)}</div>
+        </div>
+        <div class="item-meta">
+          ${sourceBadge}
+          ${catBadges}
+          ${it.publishedAt ? `<span class="tiny">(${escapeHtml(new Date(it.publishedAt).toLocaleString("is-IS"))})</span>` : ""}
+        </div>
+      </article>
+    `;
+  }).join("");
+}
 
   function selectedIds(mapObj) {
     return Object.entries(mapObj).filter(([, v]) => !!v).map(([k]) => k);
