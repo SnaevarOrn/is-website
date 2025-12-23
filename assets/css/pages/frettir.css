@@ -124,7 +124,13 @@ html[data-theme="dark"] .item{ background:color-mix(in srgb, var(--card) 70%, tr
 .item-title{ font-size:15px; margin:0; line-height:1.25; }
 .item-title a{ color:inherit; text-decoration:none; }
 .item-title a:active{ text-decoration:underline; }
-
+/* Age line under headline (minutes/hours/days since) */
+.item-age{
+  margin-top:6px;
+  margin-bottom:6px;
+  opacity:.65;          /* aðeins daufara en badges */
+  line-height:1.1;
+}
 .item-meta{
   display:flex; flex-wrap:wrap;
   gap:8px; align-items:center;
