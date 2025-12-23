@@ -13,13 +13,14 @@
 ];
 
   const CATEGORIES = [
-    { id: "innlent",   label: "Innlent" },
-    { id: "erlent",    label: "Erlent" },
-    { id: "ithrottir", label: "Íþróttir" },
-    { id: "vidskipti", label: "Viðskipti" },
-    { id: "menning",   label: "Menning" },
-    { id: "skodun",    label: "Skoðun" },
-  ];
+  { id: "innlent",   label: "Innlent" },
+  { id: "erlent",    label: "Erlent" },
+  { id: "ithrottir", label: "Íþróttir" },
+  { id: "vidskipti", label: "Viðskipti" },
+  { id: "menning",   label: "Menning" },
+  { id: "skodun",    label: "Skoðun" },
+  { id: "oflokkad",  label: "Óflokkað" }, // <- mikilvægt til að missa ekki allt í síu
+];
 
   const STORAGE_KEY = "is_news_prefs_v1";
   const $ = (sel) => document.querySelector(sel);
