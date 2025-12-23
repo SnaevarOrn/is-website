@@ -1,26 +1,25 @@
 // /assets/js/pages/frettir.js
 (() => {
   const SOURCES = [
-  { id: "ruv",      label: "RÚV",            domain: "ruv.is" },
-  { id: "mbl",      label: "mbl.is",         domain: "mbl.is" },
-  { id: "visir",    label: "Vísir",          domain: "visir.is" },
-  { id: "dv",       label: "DV",             domain: "dv.is" },
-
-  { id: "stundin",  label: "Stundin",        domain: "stundin.is" },
-  { id: "heimildin",label: "Heimildin",      domain: "heimildin.is" },
-  { id: "frettin",  label: "Fréttin",        domain: "frettin.is" },
-  { id: "vb",       label: "Viðskiptablaðið",domain: "vb.is" },
-];
+    { id: "ruv",       label: "RÚV",             domain: "ruv.is" },
+    { id: "mbl",       label: "mbl.is",          domain: "mbl.is" },
+    { id: "visir",     label: "Vísir",           domain: "visir.is" },
+    { id: "dv",        label: "DV",              domain: "dv.is" },
+    { id: "stundin",   label: "Stundin",         domain: "stundin.is" },
+    { id: "heimildin", label: "Heimildin",       domain: "heimildin.is" },
+    { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
+    { id: "vb",        label: "Viðskiptablaðið", domain: "vb.is" },
+  ];
 
   const CATEGORIES = [
-  { id: "innlent",   label: "Innlent" },
-  { id: "erlent",    label: "Erlent" },
-  { id: "ithrottir", label: "Íþróttir" },
-  { id: "vidskipti", label: "Viðskipti" },
-  { id: "menning",   label: "Menning" },
-  { id: "skodun",    label: "Skoðun" },
-  { id: "oflokkad",  label: "Óflokkað" }, // <- mikilvægt til að missa ekki allt í síu
-];
+    { id: "innlent",   label: "Innlent" },
+    { id: "erlent",    label: "Erlent" },
+    { id: "ithrottir", label: "Íþróttir" },
+    { id: "vidskipti", label: "Viðskipti" },
+    { id: "menning",   label: "Menning" },
+    { id: "skodun",    label: "Skoðun" },
+    { id: "oflokkad",  label: "Óflokkað" }, // <- mikilvægt til að missa ekki allt í síu
+  ];
 
   const STORAGE_KEY = "is_news_prefs_v1";
   const $ = (sel) => document.querySelector(sel);
@@ -206,43 +205,86 @@
     if (msg) els.errorMsg.textContent = msg;
   }
 
+  /* -----------------------
+     Icon proxy (edge cached) + micro-cache in browser
+     ----------------------- */
+  const _iconMemo = new Map();
+
+  function iconProxyUrl(item) {
+    // Build a stable memo key first
+    const key =
+      item?.url ? `u:${item.url}` :
+      item?.host ? `h:${item.host}` :
+      item?.domain ? `h:${item.domain}` :
+      item?.sourceId ? `s:${item.sourceId}` :
+      item?.source ? `s:${item.source}` : "";
+
+    if (!key) return "";
+    if (_iconMemo.has(key)) return _iconMemo.get(key);
+
+    let out = "";
+
+    // Prefer full article URL (best)
+    if (item?.url) {
+      out = `/api/icon?u=${encodeURIComponent(item.url)}`;
+    } else if (item?.host) {
+      out = `/api/icon?host=${encodeURIComponent(item.host)}`;
+    } else if (item?.domain) {
+      out = `/api/icon?host=${encodeURIComponent(item.domain)}`;
+    } else {
+      const sid = item?.sourceId || item?.source;
+      const s = SOURCES.find(x => x.id === sid);
+      if (s?.domain) out = `/api/icon?host=${encodeURIComponent(s.domain)}`;
+    }
+
+    _iconMemo.set(key, out);
+    return out;
+  }
+
   function renderNews(items) {
-  els.newsList.innerHTML = items.map(it => {
-    const icon = it.iconUrl
-      ? `<img class="src-ico" src="${escapeHtml(it.iconUrl)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
-      : "";
+    els.newsList.innerHTML = items.map(it => {
+      const iconUrl = it.iconUrl || iconProxyUrl(it);
+      const icon = iconUrl
+        ? `<img class="src-ico"
+            src="${escapeHtml(iconUrl)}"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerpolicy="no-referrer"
+            onerror="this.style.display='none'">`
+        : "";
 
-    const sourceBadge = it.sourceLabel ? `<span class="badge">${escapeHtml(it.sourceLabel)}</span>` : "";
+      const sourceBadge = it.sourceLabel ? `<span class="badge">${escapeHtml(it.sourceLabel)}</span>` : "";
 
-    const cats = Array.isArray(it.categoryLabels) && it.categoryLabels.length
-      ? it.categoryLabels
-      : (it.category ? [it.category] : []);
+      const cats = Array.isArray(it.categoryLabels) && it.categoryLabels.length
+        ? it.categoryLabels
+        : (it.category ? [it.category] : []);
 
-    const catBadges = cats
-      .slice(0, 2)
-      .map(c => `<span class="badge">${escapeHtml(c)}</span>`)
-      .join("");
+      const catBadges = cats
+        .slice(0, 2)
+        .map(c => `<span class="badge">${escapeHtml(c)}</span>`)
+        .join("");
 
-    const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "—";
+      const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "—";
 
-    return `
-      <article class="item">
-        <div class="item-top">
-          <h3 class="item-title">
-            ${icon}
-            <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(it.title)}</a>
-          </h3>
-          <div class="tiny">${escapeHtml(age)}</div>
-        </div>
-        <div class="item-meta">
-          ${sourceBadge}
-          ${catBadges}
-          ${it.publishedAt ? `<span class="tiny">(${escapeHtml(new Date(it.publishedAt).toLocaleString("is-IS"))})</span>` : ""}
-        </div>
-      </article>
-    `;
-  }).join("");
-}
+      return `
+        <article class="item">
+          <div class="item-top">
+            <h3 class="item-title">
+              ${icon}
+              <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(it.title)}</a>
+            </h3>
+            <div class="tiny">${escapeHtml(age)}</div>
+          </div>
+          <div class="item-meta">
+            ${sourceBadge}
+            ${catBadges}
+            ${it.publishedAt ? `<span class="tiny">(${escapeHtml(new Date(it.publishedAt).toLocaleString("is-IS"))})</span>` : ""}
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
 
   function selectedIds(mapObj) {
     return Object.entries(mapObj).filter(([, v]) => !!v).map(([k]) => k);
