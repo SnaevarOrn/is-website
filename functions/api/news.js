@@ -13,12 +13,12 @@ export async function onRequestGet({ request }) {
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
     vb:    { url: "https://www.vb.is/rss",          label: "Viðskiptablaðið" },
-    stundin:   { url: "https://stundin.is/rss/",     label: "Stundin" },
-        
+    stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
+    grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
+    
     // 🔒 COMMENTED OUT — enable one by one when you want
 
-    // kjarninn:  { url: "https://kjarninn.is/feed/",   label: "Kjarninn" },
-    // grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
+    
     // romur:     { url: "https://romur.is/feed/",      label: "Rómur" },
   };
 
