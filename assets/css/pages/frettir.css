@@ -1,4 +1,5 @@
 /* /assets/css/pages/frettir.css */
+/* /assets/css/pages/frettir.css */
 
 /* Theme tokens */
 html[data-theme="light"]{
@@ -222,25 +223,7 @@ html[data-theme="dark"] .settings-section{ background:color-mix(in srgb, var(--c
 .seg-btn:active{ background:color-mix(in srgb, var(--card) 88%, transparent); }
 
 /* Checklist: compact + iOS-safe */
-/* Checklist: 1 dálkur á mjóum skjám, 2 dálkar þegar pláss er */
-.checklist{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-@media (min-width: 420px){
-  .checklist{
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-}
-
-/* tryggir að hver "check" fylli dálkinn */
-.check{
-  width: 100%;
-  min-width: 0;
-}
+.checklist{ display:grid; gap:8px; }
 
 .check{
   display:flex;
@@ -285,30 +268,3 @@ html[data-theme="dark"] .check{
 /* Tap safety: closed panel never blocks */
 .menu-panel{ pointer-events:none; }
 .menu-panel.open{ pointer-events:auto; }
-/* === Two-column checklist inside Settings === */
-.settings-section .checklist{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-}
-
-/* tryggir að box fylli dálkinn rétt */
-.settings-section .check{
-  width: 100%;
-  min-width: 0;
-}
-
-/* fallback: ef skjár er mjög mjór (gamall iPhone SE o.fl.) */
-@media (max-width: 340px){
-  .settings-section .checklist{
-    grid-template-columns: 1fr;
-  }
-}
-.src-ico{
-  width:18px; height:18px;
-  border-radius:5px;
-  margin-right:8px;
-  vertical-align:-3px;
-}
-.item-title{ display:flex; align-items:flex-start; }
-
