@@ -304,4 +304,11 @@ html[data-theme="dark"] .check{
     grid-template-columns: 1fr;
   }
 }
+.src-ico{
+  width:18px; height:18px;
+  border-radius:5px;
+  margin-right:8px;
+  vertical-align:-3px;
+}
+.item-title{ display:flex; align-items:flex-start; }
 
