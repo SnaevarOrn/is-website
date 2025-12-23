@@ -39,11 +39,11 @@
       <button class="icon-btn" id="btnMenu" aria-label="Valmynd" title="Valmynd">☰</button>
     </div>
 
-      <div class="ph-meta" aria-live="polite">
-        <span id="statusText">Tilbúið.</span>
-        <span class="ph-dot">•</span>
-        <span id="lastUpdated"></span>
-      </div>
+    <div class="ph-meta" aria-live="polite">
+      <span id="statusText">Tilbúið.</span>
+      <span class="ph-dot">•</span>
+      <span id="lastUpdated"></span>
+    </div>
 
     <div class="menu-panel" id="menuPanel" aria-hidden="true">
       <div class="menu-card">
@@ -71,46 +71,47 @@
     </div>
   </header>
 
-  <dialog class="settings" id="settingsDialog" aria-label="Stillingar">
-    <form method="dialog" class="settings-card" id="settingsForm">
-      <div class="settings-head">
-        <div>
-          <div class="settings-kicker">Fréttir</div>
-          <h2>Stillingar</h2>
+  <main class="page-main">
+    <dialog class="settings" id="settingsDialog" aria-label="Stillingar">
+      <form method="dialog" class="settings-card" id="settingsForm">
+        <div class="settings-head">
+          <div>
+            <div class="settings-kicker">Fréttir</div>
+            <h2>Stillingar</h2>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Loka" title="Loka">✕</button>
         </div>
-        <button class="icon-btn" value="cancel" aria-label="Loka" title="Loka">✕</button>
-      </div>
 
-      <div class="settings-grid">
-        <section class="settings-section">
-          <div class="sec-head">
-            <h3>Fjölmiðlar</h3>
-            <div class="sec-actions">
-              <button type="button" class="seg-btn" id="btnSourcesAll">Allt</button>
-              <button type="button" class="seg-btn" id="btnSourcesNone">Ekkert</button>
+        <div class="settings-grid">
+          <section class="settings-section">
+            <div class="sec-head">
+              <h3>Fjölmiðlar</h3>
+              <div class="sec-actions">
+                <button type="button" class="seg-btn" id="btnSourcesAll">Allt</button>
+                <button type="button" class="seg-btn" id="btnSourcesNone">Ekkert</button>
+              </div>
             </div>
-          </div>
-          <div class="checklist" id="sourcesList"></div>
-        </section>
+            <div class="checklist" id="sourcesList"></div>
+          </section>
 
-        <section class="settings-section">
-          <div class="sec-head">
-            <h3>Sía</h3>
-            <div class="sec-actions">
-              <button type="button" class="seg-btn" id="btnCatsAll">Allt</button>
-              <button type="button" class="seg-btn" id="btnCatsNone">Ekkert</button>
+          <section class="settings-section">
+            <div class="sec-head">
+              <h3>Sía</h3>
+              <div class="sec-actions">
+                <button type="button" class="seg-btn" id="btnCatsAll">Allt</button>
+                <button type="button" class="seg-btn" id="btnCatsNone">Ekkert</button>
+              </div>
             </div>
-          </div>
-          <div class="checklist" id="catsList"></div>
-        </section>
-      </div>
+            <div class="checklist" id="catsList"></div>
+          </section>
+        </div>
 
-      <div class="settings-footer">
-        <button type="button" class="pill-btn primary" id="btnSaveSettings">Vista</button>
-        <button type="button" class="pill-btn" id="btnResetSettings">Endurstilla</button>
-      </div>
-    </form>
-  </dialog>
+        <div class="settings-footer">
+          <button type="button" class="pill-btn primary" id="btnSaveSettings">Vista</button>
+          <button type="button" class="pill-btn" id="btnResetSettings">Endurstilla</button>
+        </div>
+      </form>
+    </dialog>
 
     <section class="news-list" id="newsList" aria-label="Fréttalisti"></section>
 
