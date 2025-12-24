@@ -4,7 +4,7 @@ export async function onRequestGet({ request }) {
 
   const sources = (searchParams.get("sources") || "").split(",").filter(Boolean);
   const catsParam = (searchParams.get("cats") || "").split(",").filter(Boolean);
-  const limit = Number(searchParams.get("limit") || 50);
+  const limit = clampInt(searchParams.get("limit"), 50, 1, 200);
 
   const feeds = {
     // ✅ ACTIVE
@@ -15,11 +15,6 @@ export async function onRequestGet({ request }) {
     vb:    { url: "https://www.vb.is/rss",          label: "Viðskiptablaðið" },
     stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
-    
-    // 🔒 COMMENTED OUT — enable one by one when you want
-
-    
-    // romur:     { url: "https://romur.is/feed/",      label: "Rómur" },
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
@@ -47,32 +42,40 @@ export async function onRequestGet({ request }) {
       for (const m of matches) {
         const block = m[1];
 
-        const title = extract(block, "title");
-        const link = extract(block, "link");
+        const rawTitle = extract(block, "title");
+        const rawLink = extract(block, "link");
         const pubDate = extract(block, "pubDate");
 
-        if (!title || !link) continue;
+        if (!rawTitle || !rawLink) continue;
 
-        const rssCats = extractAll(block, "category");
-        const rssCatText = (rssCats[0] || "").trim();
+        const title = cleanText(rawTitle);
+        const link = cleanUrl(rawLink);
+
+        const rssCats = extractAll(block, "category").map(cleanText).filter(Boolean);
 
         const { categoryId, categoryLabel } = inferCategory({
           sourceId: id,
           url: link,
-          rssCategoryText: rssCatText,
+          rssCategories: rssCats,
           title
         });
 
         if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
+        const host = safeHostname(link);
+
         items.push({
           title,
           url: link,
-          publishedAt: pubDate ? new Date(pubDate).toISOString() : null,
+          publishedAt: pubDate ? safeISO(pubDate) : null,
           sourceId: id,
           sourceLabel: feed.label,
+          domain: host || undefined,
+
+          // ✅ consistent category fields
           categoryId,
-          category: categoryLabel
+          category: categoryLabel,                // keep for backwards compat with your frontend
+          categoryLabels: [categoryLabel],        // nice for UI (badges)
         });
       }
     } catch (err) {
@@ -98,18 +101,40 @@ export async function onRequestGet({ request }) {
 
 /* -------- Helpers -------- */
 
+function clampInt(x, fallback, min, max) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, Math.floor(n)));
+}
+
+function safeISO(pubDate) {
+  const t = Date.parse(pubDate);
+  return Number.isFinite(t) ? new Date(t).toISOString() : null;
+}
+
+function safeHostname(url) {
+  try { return new URL(url).hostname; } catch { return ""; }
+}
+
+function cleanUrl(u) {
+  // RSS getur stundum innihaldið whitespace/newlines í link
+  return String(u || "").trim();
+}
+
 function extract(xml, tag) {
-  const m = xml.match(new RegExp(`<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>`));
-  return m ? m[2].trim() : null;
+  const m = xml.match(new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`));
+  return m ? (m[2] || "").trim() : null;
 }
 
 function extractAll(xml, tag) {
-  const re = new RegExp(`<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>`, "g");
+  const re = new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`, "g");
   const out = [];
   let m;
   while ((m = re.exec(xml)) !== null) out.push((m[2] || "").trim());
   return out;
 }
+
+/* --- Category model --- */
 
 const CATEGORY_MAP = [
   { id: "innlent",   label: "Innlent" },
@@ -125,36 +150,102 @@ function labelFor(id) {
   return (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
 }
 
-function normalizeText(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replaceAll("í", "i")
-    .replaceAll("ð", "d")
-    .replaceAll("þ", "th")
-    .replaceAll("æ", "ae")
-    .replaceAll("ö", "o");
+/* --- Text cleaning / decoding --- */
+
+function decodeHtmlEntities(s) {
+  // decode numeric: &#8211; and hex: &#x2013;
+  let out = String(s ?? "");
+
+  out = out.replace(/&#(\d+);/g, (_, n) => {
+    const cp = Number(n);
+    return Number.isFinite(cp) ? String.fromCodePoint(cp) : _;
+  });
+
+  out = out.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+    const cp = parseInt(hex, 16);
+    return Number.isFinite(cp) ? String.fromCodePoint(cp) : _;
+  });
+
+  // common named entities (RSS feeds often use these)
+  out = out
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&nbsp;", " ");
+
+  return out;
 }
 
-function inferCategory({ sourceId, url, rssCategoryText, title }) {
-  const u = normalizeText(url);
-  const c = normalizeText(rssCategoryText);
-  const t = normalizeText(title);
+function cleanText(s) {
+  let out = decodeHtmlEntities(s);
 
-  const fromRss = mapFromText(c) || mapFromText(t);
+  // strip tags just in case (some feeds include <em> etc.)
+  out = out.replace(/<[^>]*>/g, "");
+
+  // normalize dash chaos to a simple hyphen
+  out = out.replace(/[\u2012-\u2015]/g, "-");
+
+  // normalize whitespace
+  out = out.replace(/\s+/g, " ").trim();
+
+  return out;
+}
+
+function normKey(s) {
+  // robust “folding” for icelandic + punctuation
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")      // remove diacritics
+    .replace(/[^a-z0-9\/\s-]/g, " ");     // drop odd punctuation
+}
+
+/* --- Category inference --- */
+
+function inferCategory({ sourceId, url, rssCategories, title }) {
+  const u = normKey(url);
+  const cats = Array.isArray(rssCategories) ? rssCategories : [];
+  const catKeys = cats.map(normKey).filter(Boolean);
+
+  // 1) RSS categories (try ALL, not only first)
+  for (const ck of catKeys) {
+    const mapped = mapFromText(ck);
+    if (mapped) return { categoryId: mapped, categoryLabel: labelFor(mapped) };
+  }
+
+  // 2) URL patterns
   const fromUrl = mapFromUrl(sourceId, u);
+  if (fromUrl) return { categoryId: fromUrl, categoryLabel: labelFor(fromUrl) };
 
-  const categoryId = fromRss || fromUrl || "oflokkad";
-  return { categoryId, categoryLabel: labelFor(categoryId) };
+  // 3) title keywords only as last resort (avoid false positives)
+  const t = normKey(title);
+  const fromTitle = mapFromText(t);
+  if (fromTitle) return { categoryId: fromTitle, categoryLabel: labelFor(fromTitle) };
+
+  return { categoryId: "oflokkad", categoryLabel: labelFor("oflokkad") };
 }
 
 function mapFromText(x) {
   if (!x) return null;
+
+  // sports
   if (x.includes("sport") || x.includes("ithrott")) return "ithrottir";
-  if (x.includes("vidskip") || x.includes("business") || x.includes("markad")) return "vidskipti";
-  if (x.includes("menning") || x.includes("lifid") || x.includes("list")) return "menning";
-  if (x.includes("skodun") || x.includes("comment") || x.includes("pistill")) return "skodun";
-  if (x.includes("erlent") || x.includes("foreign")) return "erlent";
+
+  // business
+  if (x.includes("vidskip") || x.includes("business") || x.includes("markad") || x.includes("fjarmal")) return "vidskipti";
+
+  // culture
+  if (x.includes("menning") || x.includes("lifid") || x.includes("list") || x.includes("skemmt")) return "menning";
+
+  // opinion
+  if (x.includes("skodun") || x.includes("comment") || x.includes("pistill") || x.includes("leidari")) return "skodun";
+
+  // foreign/domestic
+  if (x.includes("erlent") || x.includes("foreign") || x.includes("world")) return "erlent";
   if (x.includes("innlent") || x.includes("island")) return "innlent";
+
   return null;
 }
 
@@ -196,7 +287,6 @@ function mapFromUrl(sourceId, u) {
     if (u.includes("/frettir")) return "innlent";
   }
 
-  // ✅ VB tweaks
   if (sourceId === "vb") {
     if (u.includes("/sport")) return "ithrottir";
     if (u.includes("/vidskipti") || u.includes("/markad")) return "vidskipti";
