@@ -133,6 +133,29 @@
       .replaceAll("'", "&#039;");
   }
 
+  // Decode HTML entities like &#8211; / &nbsp; etc.
+  function decodeHtmlEntities(s) {
+    const ta = document.createElement("textarea");
+    ta.innerHTML = String(s ?? "");
+    return ta.value;
+  }
+
+  // Clean text coming from feeds/APIs while keeping output safe (we still escape later).
+  function cleanText(s) {
+    let out = decodeHtmlEntities(s);
+
+    // Strip any tags defensively (feeds sometimes contain <em> etc.)
+    out = out.replace(/<[^>]*>/g, "");
+
+    // Normalize various dash characters to plain hyphen-minus
+    out = out.replace(/[\u2012-\u2015]/g, "-");
+
+    // Normalize whitespace
+    out = out.replace(/\s+/g, " ").trim();
+
+    return out;
+  }
+
   function humanAgeFromISO(iso) {
     const t = Date.parse(iso);
     if (!Number.isFinite(t)) return "—";
@@ -251,54 +274,57 @@
   }
 
   function renderNews(items) {
-  els.newsList.innerHTML = items.map(it => {
-    const iconUrl = iconUrlForItem(it);
-    const icon = iconUrl
-      ? `<img class="src-ico"
-          src="${escapeHtml(iconUrl)}"
-          alt=""
-          loading="lazy"
-          decoding="async"
-          referrerpolicy="no-referrer"
-          onerror="this.style.display='none'">`
-      : "";
+    els.newsList.innerHTML = items.map(it => {
+      const iconUrl = iconUrlForItem(it);
+      const icon = iconUrl
+        ? `<img class="src-ico"
+            src="${escapeHtml(iconUrl)}"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerpolicy="no-referrer"
+            onerror="this.style.display='none'">`
+        : "";
 
-    const sourceBadge = it.sourceLabel
-      ? `<span class="badge">${escapeHtml(it.sourceLabel)}</span>`
-      : "";
+      const sourceLabel = it.sourceLabel ? cleanText(it.sourceLabel) : "";
+      const sourceBadge = sourceLabel
+        ? `<span class="badge">${escapeHtml(sourceLabel)}</span>`
+        : "";
 
-    const cats = Array.isArray(it.categoryLabels) && it.categoryLabels.length
-      ? it.categoryLabels
-      : (it.category ? [it.category] : []);
+      const cats = Array.isArray(it.categoryLabels) && it.categoryLabels.length
+        ? it.categoryLabels
+        : (it.category ? [it.category] : []);
 
-    const catBadges = cats
-      .slice(0, 2)
-      .map(c => `<span class="badge">${escapeHtml(c)}</span>`)
-      .join("");
+      const catBadges = cats
+        .slice(0, 2)
+        .map(c => `<span class="badge">${escapeHtml(cleanText(c))}</span>`)
+        .join("");
 
-    const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "";
-    const ageLine = age ? `${age} síðan` : "";
+      const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "";
+      const ageLine = age ? `${age} síðan` : "";
 
-    return `
-      <article class="item">
-        <h3 class="item-title">
-          <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">
-            ${escapeHtml(it.title)}
-          </a>
-        </h3>
+      const title = cleanText(it.title);
 
-        <div class="item-meta">
-          <span class="src-chip">
-            ${icon}
-            ${sourceBadge}
-          </span>
-          ${catBadges}
-          ${ageLine ? `<span class="item-age tiny">${escapeHtml(ageLine)}</span>` : ""}
-        </div>
-      </article>
-    `;
-  }).join("");
-}
+      return `
+        <article class="item">
+          <h3 class="item-title">
+            <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">
+              ${escapeHtml(title)}
+            </a>
+          </h3>
+
+          <div class="item-meta">
+            <span class="src-chip">
+              ${icon}
+              ${sourceBadge}
+            </span>
+            ${catBadges}
+            ${ageLine ? `<span class="item-age tiny">${escapeHtml(ageLine)}</span>` : ""}
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
 
   function selectedIds(mapObj) {
     return Object.entries(mapObj).filter(([, v]) => !!v).map(([k]) => k);
