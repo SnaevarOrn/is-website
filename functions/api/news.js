@@ -1,4 +1,4 @@
-// /functions/api/news.js
+// /functions/api/news.js 
 export async function onRequestGet({ request }) {
   const { searchParams } = new URL(request.url);
 
