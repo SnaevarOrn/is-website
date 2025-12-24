@@ -132,11 +132,18 @@ html[data-theme="dark"] .item{ background:color-mix(in srgb, var(--card) 70%, tr
   line-height:1.1;
 }
 .item-meta{
-  display:flex; flex-wrap:wrap;
-  gap:8px; align-items:center;
-  margin-top:8px;
-  font-size:12px; opacity:.85;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:6px;
+  font-size:12px;
+  opacity:.85;
+}.item-age{
+  margin-left:auto;
+  opacity:.65;
+  white-space:nowrap;
 }
+
 .badge{
   font-size:11px;
   padding:4px 8px;
