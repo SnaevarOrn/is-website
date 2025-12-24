@@ -276,20 +276,16 @@
       .map(c => `<span class="badge">${escapeHtml(c)}</span>`)
       .join("");
 
-    const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "—";
-    const ageLine = age !== "—" ? `${age} síðan` : "";
+    const age = it.publishedAt ? humanAgeFromISO(it.publishedAt) : "";
+    const ageLine = age ? `${age} síðan` : "";
 
     return `
       <article class="item">
-        <div class="item-top">
-          <h3 class="item-title">
-            <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">
-              ${escapeHtml(it.title)}
-            </a>
-          </h3>
-        </div>
-
-        ${ageLine ? `<div class="item-age tiny">${escapeHtml(ageLine)}</div>` : ""}
+        <h3 class="item-title">
+          <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">
+            ${escapeHtml(it.title)}
+          </a>
+        </h3>
 
         <div class="item-meta">
           <span class="src-chip">
@@ -297,6 +293,7 @@
             ${sourceBadge}
           </span>
           ${catBadges}
+          ${ageLine ? `<span class="item-age tiny">${escapeHtml(ageLine)}</span>` : ""}
         </div>
       </article>
     `;
