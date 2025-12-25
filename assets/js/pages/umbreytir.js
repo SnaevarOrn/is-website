@@ -3,15 +3,12 @@
    - No network
    - Minimal UI
    - LocalStorage remembers last selection
-   - Decimals stepper (Aukastafir) via dpDec/dpInc + dpVal
-   - Added Volume (Rúmmál)
 */
 (() => {
   "use strict";
 
   const $ = (id) => document.getElementById(id);
 
-  // Core UI
   const catEl = $("cat");
   const fromUnitEl = $("fromUnit");
   const toUnitEl = $("toUnit");
@@ -20,20 +17,14 @@
   const swapBtn = $("swapBtn");
   const copyBtn = $("copyBtn");
   const clearBtn = $("clearBtn");
+  const roundEl = $("round");
   const chipsEl = $("chips");
   const explainEl = $("explain");
   const statusHintEl = $("statusHint");
 
-  // Decimals stepper (may be null if markup differs)
-  const dpDecEl = $("dpDec");
-  const dpIncEl = $("dpInc");
-  const dpValEl = $("dpVal");
-
   const KEY = "is_umbreytir_v1";
-  const DP_MIN = 0;
-  const DP_MAX = 6;
-  let dp = 2;
 
+  // Helpers
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 
   function parseNumber(s) {
@@ -44,14 +35,27 @@
     return Number.isFinite(n) ? n : NaN;
   }
 
-  function formatNumberFixed(n, dpCount) {
+  function formatNumber(n, roundMode) {
     if (!Number.isFinite(n)) return "";
-    const s = n.toFixed(clamp(dpCount, 0, 10));
-    return s.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+    if (roundMode === "auto") {
+      // Auto: keep sensible precision without scientific spam
+      const abs = Math.abs(n);
+      if (abs === 0) return "0";
+      if (abs >= 1000) return String(Math.round(n));
+      if (abs >= 100) return String(roundTo(n, 1));
+      if (abs >= 10) return String(roundTo(n, 2));
+      return String(roundTo(n, 4));
+    }
+    const dp = clamp(Number(roundMode), 0, 10);
+    return n.toFixed(dp).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+  }
+
+  function roundTo(n, dp) {
+    const p = 10 ** dp;
+    return Math.round(n * p) / p;
   }
 
   function setOptions(selectEl, options, selectedId) {
-    if (!selectEl) return;
     selectEl.innerHTML = "";
     for (const opt of options) {
       const o = document.createElement("option");
@@ -65,8 +69,8 @@
   }
 
   // Conversion model:
-  // Linear: base = value * factor
-  // Temp: toBase/fromBase (base is °C)
+  // For linear units: base = value * factorToBase
+  // For temperature: toBase/fromBase functions.
   const CATEGORIES = [
     {
       id: "length",
@@ -96,30 +100,25 @@
       explain: "Massi er umbreytt miðað við kílógrömm."
     },
     {
-      id: "volume",
-      label: "Rúmmál",
-      // base is m³
-      units: [
-        { id: "ml",  label: "mL", factor: 1e-6 },
-        { id: "l",   label: "L",  factor: 1e-3 },
-        { id: "m3",  label: "m³", factor: 1 },
-        { id: "tsp", label: "teskeið (tsp)", factor: 4.92892159375e-6 },
-        { id: "tbsp",label: "matskeið (tbsp)", factor: 14.78676478125e-6 },
-        { id: "cup", label: "boll(i) (cup)", factor: 236.5882365e-6 },
-        { id: "pt",  label: "pint (US pt)", factor: 0.473176473e-3 },
-        { id: "gal", label: "gallon (US gal)", factor: 3.785411784e-3 },
-      ],
-      explain: "Rúmmál er umbreytt miðað við m³ (rúmmetra)."
-    },
-    {
       id: "temperature",
       label: "Hitastig",
       units: [
-        { id: "C", label: "°C", toBase: (c) => c, fromBase: (c) => c },
-        { id: "F", label: "°F", toBase: (f) => (f - 32) * (5/9), fromBase: (c) => c * (9/5) + 32 },
-        { id: "K", label: "K",  toBase: (k) => k - 273.15, fromBase: (c) => c + 273.15 }
+        {
+          id: "C", label: "°C",
+          toBase: (c) => c, fromBase: (c) => c
+        },
+        {
+          id: "F", label: "°F",
+          toBase: (f) => (f - 32) * (5/9),
+          fromBase: (c) => c * (9/5) + 32
+        },
+        {
+          id: "K", label: "K",
+          toBase: (k) => k - 273.15,
+          fromBase: (c) => c + 273.15
+        }
       ],
-      explain: "Hitastig er umbreytt með formúlum."
+      explain: "Hitastig er ekki línulegt með 0-punkti eins og lengd/massi. Umbreyting notar formúlur."
     },
     {
       id: "pressure",
@@ -168,8 +167,6 @@
     { cat: "speed", from: "mps", to: "kmh", label: "m/s → km/klst" },
     { cat: "length", from: "km", to: "mi", label: "km → mílur" },
     { cat: "mass", from: "kg", to: "lb", label: "kg → lb" },
-    { cat: "volume", from: "l", to: "gal", label: "L → gal" },
-    { cat: "volume", from: "gal", to: "l", label: "gal → L" },
   ];
 
   function getCat(id) {
@@ -181,6 +178,7 @@
   }
 
   function isTempCat(cat) {
+    // temp units have toBase/fromBase
     return typeof cat.units[0].toBase === "function";
   }
 
@@ -191,8 +189,8 @@
     if (isTempCat(cat)) {
       const fromU = getUnit(cat, fromUnitId);
       const toU = getUnit(cat, toUnitId);
-      const base = fromU.toBase(value);     // base = °C
-      return toU.fromBase(base);
+      const baseC = fromU.toBase(value);
+      return toU.fromBase(baseC);
     } else {
       const fromU = getUnit(cat, fromUnitId);
       const toU = getUnit(cat, toUnitId);
@@ -208,16 +206,12 @@
       if (fromUnitId === "F" && toUnitId === "C") return "Formúla: °C = (°F − 32) × 5/9";
       if (fromUnitId === "C" && toUnitId === "K") return "Formúla: K = °C + 273,15";
       if (fromUnitId === "K" && toUnitId === "C") return "Formúla: °C = K − 273,15";
+      return cat.explain;
     }
     return cat.explain;
   }
 
-  function setStatus(msg) {
-    if (statusHintEl) statusHintEl.textContent = msg || "—";
-  }
-
   function renderChips() {
-    if (!chipsEl) return;
     chipsEl.innerHTML = "";
     for (const q of QUICK) {
       const b = document.createElement("button");
@@ -238,11 +232,11 @@
 
   function saveState() {
     const st = {
-      cat: catEl?.value,
-      fromUnit: fromUnitEl?.value,
-      toUnit: toUnitEl?.value,
-      fromVal: fromValEl?.value,
-      dp
+      cat: catEl.value,
+      fromUnit: fromUnitEl.value,
+      toUnit: toUnitEl.value,
+      fromVal: fromValEl.value,
+      round: roundEl.value,
     };
     try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {}
   }
@@ -266,14 +260,18 @@
     setOptions(fromUnitEl, cat.units, keepUnitsIfPossible ? prevFrom : null);
     setOptions(toUnitEl, cat.units, keepUnitsIfPossible ? prevTo : null);
 
-    // Avoid same unit
+    // Avoid same unit -> prefer next
     if (fromUnitEl.value === toUnitEl.value && cat.units.length > 1) {
       const i = cat.units.findIndex(u => u.id === toUnitEl.value);
       toUnitEl.value = cat.units[(i + 1) % cat.units.length].id;
     }
 
-    if (explainEl) explainEl.textContent = explainText(catEl.value, fromUnitEl.value, toUnitEl.value);
+    explainEl.textContent = explainText(catEl.value, fromUnitEl.value, toUnitEl.value);
     recompute();
+  }
+
+  function setStatus(msg) {
+    statusHintEl.textContent = msg || "—";
   }
 
   function recompute() {
@@ -286,13 +284,15 @@
     }
 
     const out = convertValue(catEl.value, fromUnitEl.value, toUnitEl.value, v);
-    toValEl.value = formatNumberFixed(out, dp);
+    const rounded = formatNumber(out, roundEl.value);
 
-    if (explainEl) explainEl.textContent = explainText(catEl.value, fromUnitEl.value, toUnitEl.value);
+    toValEl.value = rounded;
+    explainEl.textContent = explainText(catEl.value, fromUnitEl.value, toUnitEl.value);
 
+    // Little status line with units
     const fromLabel = fromUnitEl.options[fromUnitEl.selectedIndex]?.textContent || "";
     const toLabel = toUnitEl.options[toUnitEl.selectedIndex]?.textContent || "";
-    setStatus(`${fromLabel} → ${toLabel}`);
+    setStatus(${fromLabel} → ${toLabel});
 
     saveState();
   }
@@ -310,19 +310,14 @@
     try {
       await navigator.clipboard.writeText(txt);
       setStatus("Afritað.");
-      setTimeout(() => {
-        const fromLabel = fromUnitEl.options[fromUnitEl.selectedIndex]?.textContent || "";
-        const toLabel = toUnitEl.options[toUnitEl.selectedIndex]?.textContent || "";
-        setStatus(`${fromLabel} → ${toLabel}`);
-      }, 700);
+      setTimeout(() => setStatus(${fromUnitEl.value} → ${toUnitEl.value}), 700);
     } catch {
-      // Fallback
-      try {
-        toValEl.focus();
-        toValEl.select();
-        document.execCommand("copy");
-        setStatus("Afritað.");
-      } catch {}
+      // Fallback: select text
+      toValEl.focus();
+      toValEl.select();
+      document.execCommand("copy");
+      setStatus("Afritað.");
+      setTimeout(() => setStatus(${fromUnitEl.value} → ${toUnitEl.value}), 700);
     }
   }
 
@@ -334,68 +329,45 @@
     fromValEl.focus();
   }
 
-  function setDp(next) {
-    dp = clamp(next, DP_MIN, DP_MAX);
-    if (dpValEl) dpValEl.textContent = String(dp);
-    recompute();
-  }
-
-  // ---- Init (with crash guard) ----
+  // Init
   (function init() {
-    try {
-      // If essential elements are missing, don't crash silently
-      if (!catEl || !fromUnitEl || !toUnitEl || !fromValEl || !toValEl) {
-        console.error("Umbreytir: vantar nauðsynleg element í DOM.");
-        return;
+    // Categories
+    setOptions(catEl, CATEGORIES.map(c => ({ id: c.id, label: c.label })));
+
+    // Restore state
+    const st = loadState();
+    if (st?.cat && CATEGORIES.some(c => c.id === st.cat)) catEl.value = st.cat;
+    if (st?.round) roundEl.value = st.round;
+
+    onCatChange(false);
+
+    if (st?.fromUnit) fromUnitEl.value = st.fromUnit;
+    if (st?.toUnit) toUnitEl.value = st.toUnit;
+    if (fromUnitEl.value === toUnitEl.value) onCatChange(true);
+
+    if (typeof st?.fromVal === "string") fromValEl.value = st.fromVal;
+
+    renderChips();
+    recompute();
+
+    // Events
+    catEl.addEventListener("change", () => onCatChange(true));
+    fromUnitEl.addEventListener("change", recompute);
+    toUnitEl.addEventListener("change", recompute);
+    fromValEl.addEventListener("input", recompute);
+    roundEl.addEventListener("change", recompute);
+
+    swapBtn.addEventListener("click", swapUnits);
+    copyBtn.addEventListener("click", copyResult);
+    clearBtn.addEventListener("click", clearAll);
+
+    // Enter = swap (nice quick flow), Shift+Enter does nothing special
+    fromValEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        swapUnits();
       }
-
-      // Categories
-      setOptions(catEl, CATEGORIES.map(c => ({ id: c.id, label: c.label })));
-
-      // Restore state
-      const st = loadState();
-      if (st?.cat && CATEGORIES.some(c => c.id === st.cat)) catEl.value = st.cat;
-      if (Number.isInteger(st?.dp)) dp = clamp(st.dp, DP_MIN, DP_MAX);
-      if (dpValEl) dpValEl.textContent = String(dp);
-
-      onCatChange(false);
-
-      if (st?.fromUnit) fromUnitEl.value = st.fromUnit;
-      if (st?.toUnit) toUnitEl.value = st.toUnit;
-
-      // If restored units are same, force different
-      if (fromUnitEl.value === toUnitEl.value) onCatChange(true);
-
-      if (typeof st?.fromVal === "string") fromValEl.value = st.fromVal;
-
-      renderChips();
-      recompute();
-
-      // Events
-      catEl.addEventListener("change", () => onCatChange(true));
-      fromUnitEl.addEventListener("change", recompute);
-      toUnitEl.addEventListener("change", recompute);
-      fromValEl.addEventListener("input", recompute);
-
-      if (swapBtn) swapBtn.addEventListener("click", swapUnits);
-      if (copyBtn) copyBtn.addEventListener("click", copyResult);
-      if (clearBtn) clearBtn.addEventListener("click", clearAll);
-
-      if (dpDecEl) dpDecEl.addEventListener("click", () => setDp(dp - 1));
-      if (dpIncEl) dpIncEl.addEventListener("click", () => setDp(dp + 1));
-
-      // Enter = swap
-      fromValEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          swapUnits();
-        }
-      });
-
-    } catch (err) {
-      console.error("Umbreytir init error:", err);
-      setStatus("Villa. Endurhlaða síðuna.");
-    }
+    });
   })();
 
 })();
