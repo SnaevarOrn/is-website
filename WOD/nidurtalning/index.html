@@ -11,12 +11,20 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <meta name="theme-color" content="#ffffff" id="metaThemeColor">
-
-  <!-- Shared preferences -->
-  <script src="/assets/prefs.js"></script>
+  
+    <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
+  <script src="/assets/js/prefs.js"></script>
   <script>
-    prefs.applyThemeFromStorage();
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
+    }
   </script>
+
+  <!-- Shared JS -->
+  <script defer src="/assets/js/utils.js"></script>
+  <script defer src="/assets/js/site.js"></script>
+  <script defer src="/assets/js/i18n.js"></script>
+  <script defer src="/assets/js/theme.js"></script>
 
   <style>
     :root{
