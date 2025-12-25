@@ -12,7 +12,18 @@
 
   <meta name="theme-color" content="#ffffff" id="metaThemeColor">
 
-  <!-- prefs.js should load early to avoid theme flash -->
+  <!-- Hard-set theme BEFORE CSS to avoid flash / mismatch -->
+  <script>
+    (function () {
+      const t = localStorage.getItem("theme");
+      const theme = (t === "light") ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+      const meta = document.getElementById("metaThemeColor");
+      if (meta) meta.setAttribute("content", theme === "light" ? "#ffffff" : "#0b0f14");
+    })();
+  </script>
+
+  <!-- prefs.js should load early (kept for your global behavior) -->
   <script src="/assets/js/prefs.js"></script>
 
   <!-- Shared CSS -->
@@ -47,34 +58,40 @@
       </div>
 
       <div class="tool-body">
-        <div class="row row-3">
+        <!-- 1) Category alone -->
+        <div class="row row-1">
           <label class="field">
             <span class="label">Flokkur</span>
             <select id="cat" class="control"></select>
+          </label>
+        </div>
+
+        <!-- 2) Value + From unit -->
+        <div class="row row-pair">
+          <label class="field">
+            <span class="label">Gildi</span>
+            <input id="fromVal" class="control mono" inputmode="decimal" autocomplete="off"
+                   spellcheck="false" placeholder="t.d. 12,5" />
+            <span class="hint">Þú mátt nota kommu eða punkt.</span>
           </label>
 
           <label class="field">
             <span class="label">Frá</span>
             <select id="fromUnit" class="control"></select>
           </label>
-
-          <label class="field">
-            <span class="label">Í</span>
-            <select id="toUnit" class="control"></select>
-          </label>
         </div>
 
-        <div class="row row-2">
-          <label class="field">
-            <span class="label">Gildi</span>
-            <input id="fromVal" class="control mono" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="t.d. 12,5" />
-            <span class="hint">Þú mátt nota kommu eða punkt.</span>
-          </label>
-
+        <!-- 3) Result + To unit -->
+        <div class="row row-pair">
           <label class="field">
             <span class="label">Niðurstaða</span>
             <input id="toVal" class="control mono" readonly />
             <span class="hint" id="statusHint">—</span>
+          </label>
+
+          <label class="field">
+            <span class="label">Í</span>
+            <select id="toUnit" class="control"></select>
           </label>
         </div>
 
