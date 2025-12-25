@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — Umbreytir</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- prefs.js should load early to avoid theme flash -->
+  <script src="/assets/js/prefs.js"></script>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/umbreytir.css">
+</head>
+
+<body>
+  <header class="page-header">
+    <div class="brand">
+      <a class="brand-link" href="/" aria-label="Fara á forsíðu">ís.is</a>
+      <span class="brand-sep">·</span>
+      <span class="brand-page">Umbreytir</span>
+    </div>
+
+    <nav class="top-nav" aria-label="Leiðsögn">
+      <a class="nav-link" href="/frettir/">Fréttir</a>
+      <a class="nav-link" href="/klukka/">Klukka</a>
+      <a class="nav-link" href="/dagatal/">Dagatal</a>
+      <a class="nav-link is-active" href="/umbreytir/">Umbreytir</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section class="tool-card" aria-label="Umbreytir">
+      <div class="tool-head">
+        <h1 class="tool-title">Umbreyta einingum</h1>
+        <p class="tool-sub">Einfalt. Staðbundið. Engar auglýsingar.</p>
+      </div>
+
+      <div class="tool-body">
+        <div class="row row-3">
+          <label class="field">
+            <span class="label">Flokkur</span>
+            <select id="cat" class="control"></select>
+          </label>
+
+          <label class="field">
+            <span class="label">Frá</span>
+            <select id="fromUnit" class="control"></select>
+          </label>
+
+          <label class="field">
+            <span class="label">Í</span>
+            <select id="toUnit" class="control"></select>
+          </label>
+        </div>
+
+        <div class="row row-2">
+          <label class="field">
+            <span class="label">Gildi</span>
+            <input id="fromVal" class="control mono" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="t.d. 12,5" />
+            <span class="hint">Þú mátt nota kommu eða punkt.</span>
+          </label>
+
+          <label class="field">
+            <span class="label">Niðurstaða</span>
+            <input id="toVal" class="control mono" readonly />
+            <span class="hint" id="statusHint">—</span>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="swapBtn" class="btn" type="button" title="Skipta um einingar">Skipta</button>
+          <button id="copyBtn" class="btn" type="button" title="Afrita niðurstöðu">Afrita</button>
+          <button id="clearBtn" class="btn" type="button" title="Hreinsa">Hreinsa</button>
+
+          <span class="spacer"></span>
+
+          <label class="field inline">
+            <span class="label">Rúnna</span>
+            <select id="round" class="control small">
+              <option value="auto">Sjálfgefið</option>
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="quick">
+          <div class="quick-title">Flýtival</div>
+          <div class="chips" id="chips"></div>
+        </div>
+
+        <details class="details">
+          <summary>Útskýring</summary>
+          <div class="details-body" id="explain">
+            Veldu flokk, einingar og sláðu inn gildi.
+          </div>
+        </details>
+      </div>
+
+      <div class="tool-foot">
+        <span class="muted">Engin gögn send. Stillist bara í vafranum.</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/js/pages/umbreytir.js"></script>
+</body>
+</html>
