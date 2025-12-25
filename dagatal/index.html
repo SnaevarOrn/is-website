@@ -28,9 +28,8 @@
 
   <!-- Page JS -->
   <script defer src="/assets/js/pages/dagatal/dates.js"></script>
-<script defer src="/assets/js/pages/dagatal/render.js"></script>
-<script defer src="/assets/js/pages/dagatal/ui.js"></script>
-
+  <script defer src="/assets/js/pages/dagatal/render.js"></script>
+  <script defer src="/assets/js/pages/dagatal/ui.js"></script>
 </head>
 
 <body>
@@ -38,24 +37,7 @@
     <div class="topbar-inner">
       <button class="btn" id="backBtn" title="Til baka">← <span style="opacity:.9">Til baka</span></button>
 
-      <div class="title-wrap" id="titleWrap">
-        <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
-        <div class="year" id="yearLabel" title="Velja ár">2025</div>
-        <button class="btn" id="nextYear" title="Næsta ár">›</button>
-
-        <div class="year-pop" id="yearPop" aria-hidden="true">
-          <div class="row">
-            <input id="yearInput" type="number" inputmode="numeric" />
-            <button class="btn" id="goYearBtn">Fara</button>
-          </div>
-          <div class="row" style="justify-content:space-between;">
-            <button class="chip" data-jump="-50">-50</button>
-            <button class="chip" data-jump="-10">-10</button>
-            <button class="chip" data-jump="10">+10</button>
-            <button class="chip" data-jump="50">+50</button>
-          </div>
-        </div>
-      </div>
+      <!-- (ÁR + ÖRVAR FÆRT NEDUR Í SUBBAR) -->
 
       <!-- HAMBURGER MENU -->
       <div class="menu-wrap">
@@ -72,9 +54,35 @@
     <div class="subbar">
       <div class="subbar-inner">
         <div class="subrow">
+
+          <!-- YEAR NAV (moved here) -->
+          <div class="year-nav title-wrap" id="titleWrap">
+            <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
+            <div class="year" id="yearLabel" title="Velja ár">2025</div>
+            <button class="btn" id="nextYear" title="Næsta ár">›</button>
+
+            <div class="year-pop" id="yearPop" aria-hidden="true">
+              <div class="row">
+                <input id="yearInput" type="number" inputmode="numeric" />
+                <button class="btn" id="goYearBtn">Fara</button>
+              </div>
+              <div class="row" style="justify-content:space-between;">
+                <button class="chip" data-jump="-50">-50</button>
+                <button class="chip" data-jump="-10">-10</button>
+                <button class="chip" data-jump="10">+10</button>
+                <button class="chip" data-jump="50">+50</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Month label stays -->
           <div class="sub-title" id="monthLabel">janúar</div>
-          <div class="sub-meta" id="subMeta">2025</div>
+
+          <!-- subMeta removed (year was duplicated) -->
+          <!-- <div class="sub-meta" id="subMeta">2025</div> -->
+
         </div>
+
         <div class="dowbar" id="dowBar">
           <div>mán</div><div>þri</div><div>mið</div><div>fim</div><div>fös</div><div>lau</div><div>sun</div>
         </div>
