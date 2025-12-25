@@ -9,7 +9,6 @@
   const calendarEl = $("#calendar");
   const yearLabel = $("#yearLabel");
   const monthLabel = $("#monthLabel");
-  const subMeta = $("#subMeta");
   const dowBar = $("#dowBar");
 
   const state = {
@@ -28,7 +27,6 @@
   function setHeaderContext() {
     if (state.view === "holidays") {
       monthLabel.textContent = "Frídagar";
-      subMeta.textContent = String(state.year);
       dowBar.classList.add("is-hidden");
       return;
     }
@@ -36,10 +34,9 @@
 
     if (state.layout === "weeks") {
       monthLabel.textContent = "Vikur";
-      subMeta.textContent = String(state.year);
       return;
     }
-    subMeta.textContent = String(state.year);
+    // months view: monthLabel updated by observer
   }
 
   function disconnectMonthObserver() {
@@ -80,11 +77,15 @@
 
   function build() {
     yearLabel.textContent = state.year;
-    $("#yearInput").value = state.year;
+    const yi = $("#yearInput");
+    if (yi) yi.value = state.year;
 
-    $("#toggleHolidays").checked = state.showHolidays;
-    $("#toggleSpecial").checked = state.showSpecial;
-    $("#toggleMoon").checked = state.showMoon;
+    const th = $("#toggleHolidays");
+    const ts = $("#toggleSpecial");
+    const tm = $("#toggleMoon");
+    if (th) th.checked = state.showHolidays;
+    if (ts) ts.checked = state.showSpecial;
+    if (tm) tm.checked = state.showMoon;
 
     state.holidayMap = D.getIcelandHolidayMap(state.year);
     state.specialMap = D.getIcelandSpecialDays(state.year);
@@ -123,10 +124,11 @@
   const titleWrap = $("#titleWrap");
 
   function togglePop(force) {
+    if (!pop) return;
     const show = typeof force === "boolean" ? force : !pop.classList.contains("show");
     pop.classList.toggle("show", show);
     pop.setAttribute("aria-hidden", String(!show));
-    if (show) $("#yearInput").focus();
+    if (show) $("#yearInput")?.focus();
   }
 
   function setYear(y) {
@@ -138,16 +140,16 @@
   }
 
   document.addEventListener("click", (e) => {
-    if (pop.classList.contains("show") && !titleWrap.contains(e.target)) togglePop(false);
+    if (pop && pop.classList.contains("show") && titleWrap && !titleWrap.contains(e.target)) togglePop(false);
   });
   yearLabel.addEventListener("click", () => togglePop());
 
-  $("#goYearBtn").addEventListener("click", () => setYear(parseInt($("#yearInput").value, 10)));
-  $("#yearInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") $("#goYearBtn").click();
+  $("#goYearBtn")?.addEventListener("click", () => setYear(parseInt($("#yearInput")?.value, 10)));
+  $("#yearInput")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") $("#goYearBtn")?.click();
     if (e.key === "Escape") togglePop(false);
   });
-  pop.querySelectorAll("[data-jump]").forEach((btn) => {
+  pop?.querySelectorAll("[data-jump]")?.forEach((btn) => {
     btn.addEventListener("click", () => {
       const j = parseInt(btn.getAttribute("data-jump"), 10);
       setYear(state.year + j);
@@ -159,22 +161,22 @@
   const sheet = $("#sheet");
 
   function openSheet() {
-    overlay.classList.add("show");
-    sheet.classList.add("show");
+    overlay?.classList.add("show");
+    sheet?.classList.add("show");
   }
   function closeSheet() {
-    overlay.classList.remove("show");
-    sheet.classList.remove("show");
+    overlay?.classList.remove("show");
+    sheet?.classList.remove("show");
   }
 
-  $("#closeSheet").addEventListener("click", closeSheet);
-  overlay.addEventListener("click", closeSheet);
+  $("#closeSheet")?.addEventListener("click", closeSheet);
+  overlay?.addEventListener("click", closeSheet);
 
   $("#layoutSeg")
-    .querySelectorAll("button")
-    .forEach((btn) => {
+    ?.querySelectorAll("button")
+    ?.forEach((btn) => {
       btn.addEventListener("click", () => {
-        $("#layoutSeg").querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        $("#layoutSeg")?.querySelectorAll("button")?.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
         state.layout = btn.dataset.layout;
         state.view = "calendar";
@@ -182,60 +184,60 @@
       });
     });
 
-  $("#toggleHolidays").addEventListener("change", (e) => {
+  $("#toggleHolidays")?.addEventListener("change", (e) => {
     state.showHolidays = e.target.checked;
     build();
   });
-  $("#toggleSpecial").addEventListener("change", (e) => {
+  $("#toggleSpecial")?.addEventListener("change", (e) => {
     state.showSpecial = e.target.checked;
     build();
   });
-  $("#toggleMoon").addEventListener("change", (e) => {
+  $("#toggleMoon")?.addEventListener("change", (e) => {
     state.showMoon = e.target.checked;
     build();
   });
 
-  $("#showHolidaysBtn").addEventListener("click", () => {
+  $("#showHolidaysBtn")?.addEventListener("click", () => {
     state.view = "holidays";
     build();
     closeSheet();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  $("#todayBtn").addEventListener("click", () => {
+  $("#todayBtn")?.addEventListener("click", () => {
     closeSheet();
     jumpToToday();
   });
 
-  $("#backBtn").addEventListener("click", () => history.back());
+  $("#backBtn")?.addEventListener("click", () => history.back());
 
   function bumpYear(delta) {
     state.year += delta;
     build();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  $("#prevYear").addEventListener("click", () => bumpYear(-1));
-  $("#nextYear").addEventListener("click", () => bumpYear(1));
+  $("#prevYear")?.addEventListener("click", () => bumpYear(-1));
+  $("#nextYear")?.addEventListener("click", () => bumpYear(1));
 
   /* HAMBURGER MENU */
   const menuBtn = $("#menuBtn");
   const menuPop = $("#menuPop");
 
   function toggleMenu() {
-    menuPop.classList.toggle("show");
+    menuPop?.classList.toggle("show");
   }
   function closeMenu() {
-    menuPop.classList.remove("show");
+    menuPop?.classList.remove("show");
   }
 
-  menuBtn.addEventListener("click", (e) => {
+  menuBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     toggleMenu();
   });
-  menuPop.addEventListener("click", (e) => e.stopPropagation());
+  menuPop?.addEventListener("click", (e) => e.stopPropagation());
   document.addEventListener("click", () => closeMenu());
 
-  $("#menuSettings").addEventListener("click", () => {
+  $("#menuSettings")?.addEventListener("click", () => {
     closeMenu();
     openSheet();
   });
@@ -247,27 +249,27 @@
   const cStatus = $("#cStatus");
 
   function openContact() {
-    cOverlay.classList.add("open");
-    cStatus.textContent = "";
-    setTimeout(() => $("#cName").focus(), 50);
+    cOverlay?.classList.add("open");
+    if (cStatus) cStatus.textContent = "";
+    setTimeout(() => $("#cName")?.focus(), 50);
   }
   function closeContact() {
-    cOverlay.classList.remove("open");
+    cOverlay?.classList.remove("open");
   }
 
-  $("#menuContact").addEventListener("click", () => {
+  $("#menuContact")?.addEventListener("click", () => {
     closeMenu();
     openContact();
   });
 
-  cCloseBtn.addEventListener("click", closeContact);
-  cOverlay.addEventListener("click", (e) => {
+  cCloseBtn?.addEventListener("click", closeContact);
+  cOverlay?.addEventListener("click", (e) => {
     if (e.target === cOverlay) closeContact();
   });
 
-  cForm.addEventListener("submit", async (e) => {
+  cForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    cStatus.textContent = "Sendi...";
+    if (cStatus) cStatus.textContent = "Sendi...";
 
     const payload = {
       name: cForm.name.value.trim(),
@@ -287,11 +289,11 @@
         throw new Error(txt || "Villa við sendingu.");
       }
 
-      cStatus.textContent = "Sent. Takk!";
+      if (cStatus) cStatus.textContent = "Sent. Takk!";
       cForm.reset();
       setTimeout(closeContact, 700);
     } catch (_err) {
-      cStatus.textContent = "Tókst ekki að senda. Reyndu aftur eftir smá.";
+      if (cStatus) cStatus.textContent = "Tókst ekki að senda. Reyndu aftur eftir smá.";
     }
   });
 
@@ -304,18 +306,8 @@
     }
   });
 
-/* INIT */
-(() => {
-  const now = new Date();
-  state.year = now.getFullYear();
+  /* INIT */
   build();
-
-  requestAnimationFrame(() => {
-    const iso = D.isoDate(now);
-    const el = document.querySelector(`[data-iso="${iso}"]`);
-    if (el) el.scrollIntoView({ block: "center" });
-  });
-})();
 
   // Optional tiny debug handle (safe)
   NS._state = state;
