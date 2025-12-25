@@ -6,13 +6,8 @@ export async function onRequestGet({ request }) {
   const catsParam = (searchParams.get("cats") || "").split(",").filter(Boolean);
   const limit = Number(searchParams.get("limit") || 50);
 
-  // Debug: ?debug=1 (or true)
-  const debugOn = ["1", "true", "yes", "on"].includes((searchParams.get("debug") || "").toLowerCase());
-
-  // How many evidence samples to include
-  const EVIDENCE_LIMIT = 40;
-
   const feeds = {
+    // ✅ ACTIVE
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
     mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
@@ -20,6 +15,11 @@ export async function onRequestGet({ request }) {
     vb:    { url: "https://www.vb.is/rss",          label: "Viðskiptablaðið" },
     stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
+    
+    // 🔒 COMMENTED OUT — enable one by one when you want
+
+    
+    // romur:     { url: "https://romur.is/feed/",      label: "Rómur" },
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
@@ -27,59 +27,19 @@ export async function onRequestGet({ request }) {
 
   const items = [];
 
-  // ---------- Debug counters ----------
-  const dbg = debugOn ? {
-    activeSources,
-    activeCats: [...activeCats],
-    totals: {
-      fetchedFeeds: 0,
-      feedHttpErrors: 0,
-      feedParseErrors: 0,
-      itemsParsed: 0,
-      itemsKept: 0,
-      itemsFilteredByCat: 0
-    },
-    bySource: {},          // id -> {ok, httpErr, itemsParsed, kept}
-    byCategory: {},        // catId -> count
-    decision: {            // why did we classify as X
-      fromRss: 0,
-      fromTitle: 0,
-      fromUrl: 0,
-      fallbackOflokkad: 0
-    },
-
-    // Evidence: shows which rule actually triggered (sampled)
-    evidenceSamples: [],   // [{sourceId, categoryId, reason, match, where, url, rssCategoryText, title}]
-
-    // Focused: examples that ended up as "oflokkad"
-    oflokkadExamples: []   // sample rows
-  } : null;
-
-  const bump = (obj, key, n = 1) => { obj[key] = (obj[key] || 0) + n; };
-
   for (const id of activeSources) {
     const feed = feeds[id];
     if (!feed) continue;
-
-    if (dbg) dbg.bySource[id] = dbg.bySource[id] || { ok: 0, httpErr: 0, itemsParsed: 0, kept: 0 };
 
     try {
       const res = await fetch(feed.url, {
         headers: { "User-Agent": "is.is news bot" }
       });
 
-      if (dbg) dbg.totals.fetchedFeeds++;
-
       if (!res.ok) {
         console.error("Feed HTTP error:", id, res.status);
-        if (dbg) {
-          dbg.totals.feedHttpErrors++;
-          dbg.bySource[id].httpErr++;
-        }
         continue;
       }
-
-      if (dbg) dbg.bySource[id].ok++;
 
       const xml = await res.text();
       const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
@@ -93,54 +53,17 @@ export async function onRequestGet({ request }) {
 
         if (!title || !link) continue;
 
-        if (dbg) {
-          dbg.totals.itemsParsed++;
-          dbg.bySource[id].itemsParsed++;
-        }
-
         const rssCats = extractAll(block, "category");
         const rssCatText = (rssCats[0] || "").trim();
 
-        const inferred = inferCategoryDebug({
+        const { categoryId, categoryLabel } = inferCategory({
           sourceId: id,
           url: link,
           rssCategoryText: rssCatText,
           title
         });
 
-        // Debug bookkeeping
-        if (dbg) {
-          bump(dbg.byCategory, inferred.categoryId);
-          bump(dbg.decision, inferred.reasonKey);
-
-          // Evidence sampling (keep small)
-          if (dbg.evidenceSamples.length < EVIDENCE_LIMIT) {
-            dbg.evidenceSamples.push({
-              sourceId: id,
-              categoryId: inferred.categoryId,
-              reason: inferred.reasonKey,
-              where: inferred.evidence?.where || null,      // "rss" | "title" | "url"
-              match: inferred.evidence?.match || null,      // substring/rule id
-              url: link,
-              rssCategoryText: rssCatText || null,
-              title: String(title).slice(0, 140)
-            });
-          }
-
-          if (inferred.categoryId === "oflokkad" && dbg.oflokkadExamples.length < 40) {
-            dbg.oflokkadExamples.push({
-              sourceId: id,
-              title: String(title).slice(0, 140),
-              url: link,
-              rssCategoryText: rssCatText || null
-            });
-          }
-        }
-
-        if (activeCats.size > 0 && !activeCats.has(inferred.categoryId)) {
-          if (dbg) dbg.totals.itemsFilteredByCat++;
-          continue;
-        }
+        if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
         items.push({
           title,
@@ -148,18 +71,12 @@ export async function onRequestGet({ request }) {
           publishedAt: pubDate ? new Date(pubDate).toISOString() : null,
           sourceId: id,
           sourceLabel: feed.label,
-          categoryId: inferred.categoryId,
-          category: inferred.categoryLabel
+          categoryId,
+          category: categoryLabel
         });
-
-        if (dbg) {
-          dbg.totals.itemsKept++;
-          dbg.bySource[id].kept++;
-        }
       }
     } catch (err) {
       console.error("Feed error:", id, err);
-      if (dbg) dbg.totals.feedParseErrors++;
     }
   }
 
@@ -168,27 +85,26 @@ export async function onRequestGet({ request }) {
   const sliced = items.slice(0, limit);
   const availableCategories = [...new Set(sliced.map(x => x.categoryId).filter(Boolean))];
 
-  const payload = debugOn
-    ? { items: sliced, availableCategories, debug: dbg }
-    : { items: sliced, availableCategories };
-
-  return new Response(JSON.stringify(payload), {
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "public, max-age=300"
+  return new Response(
+    JSON.stringify({ items: sliced, availableCategories }),
+    {
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "public, max-age=300"
+      }
     }
-  });
+  );
 }
 
 /* -------- Helpers -------- */
 
 function extract(xml, tag) {
-  const m = xml.match(new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`));
+  const m = xml.match(new RegExp(<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>));
   return m ? m[2].trim() : null;
 }
 
 function extractAll(xml, tag) {
-  const re = new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`, "g");
+  const re = new RegExp(<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>, "g");
   const out = [];
   let m;
   while ((m = re.exec(xml)) !== null) out.push((m[2] || "").trim());
@@ -219,126 +135,75 @@ function normalizeText(s) {
     .replaceAll("ö", "o");
 }
 
-/**
- * Returns {categoryId, categoryLabel, reasonKey, evidence}
- * evidence = { where: "rss"|"title"|"url", match: "<rule/substr>", detail?: string }
- */
-function inferCategoryDebug({ sourceId, url, rssCategoryText, title }) {
+function inferCategory({ sourceId, url, rssCategoryText, title }) {
   const u = normalizeText(url);
   const c = normalizeText(rssCategoryText);
   const t = normalizeText(title);
 
-  const rssHit = mapFromTextWithEvidence(c);
-  const titleHit = rssHit ? null : mapFromTextWithEvidence(t);
-  const urlHit = mapFromUrlWithEvidence(sourceId, u);
+  const fromRss = mapFromText(c) || mapFromText(t);
+  const fromUrl = mapFromUrl(sourceId, u);
 
-  const chosen = (rssHit?.id) || (titleHit?.id) || (urlHit?.id) || "oflokkad";
-
-  let reasonKey = "fallbackOflokkad";
-  let evidence = null;
-
-  if (rssHit?.id) {
-    reasonKey = "fromRss";
-    evidence = { where: "rss", match: rssHit.match };
-  } else if (titleHit?.id) {
-    reasonKey = "fromTitle";
-    evidence = { where: "title", match: titleHit.match };
-  } else if (urlHit?.id) {
-    reasonKey = "fromUrl";
-    evidence = { where: "url", match: urlHit.match };
-  } else {
-    reasonKey = "fallbackOflokkad";
-    evidence = { where: null, match: null };
-  }
-
-  return { categoryId: chosen, categoryLabel: labelFor(chosen), reasonKey, evidence };
+  const categoryId = fromRss || fromUrl || "oflokkad";
+  return { categoryId, categoryLabel: labelFor(categoryId) };
 }
 
-// ---- Evidence helpers ----
-
-function mapFromTextWithEvidence(x) {
+function mapFromText(x) {
   if (!x) return null;
-  // Keep these in a clear order
-  if (x.includes("sport")) return { id: "ithrottir", match: "text:sport" };
-  if (x.includes("ithrott")) return { id: "ithrottir", match: "text:ithrott" };
-
-  if (x.includes("vidskip")) return { id: "vidskipti", match: "text:vidskip" };
-  if (x.includes("business")) return { id: "vidskipti", match: "text:business" };
-  if (x.includes("markad")) return { id: "vidskipti", match: "text:markad" };
-
-  if (x.includes("menning")) return { id: "menning", match: "text:menning" };
-  if (x.includes("lifid")) return { id: "menning", match: "text:lifid" };
-  if (x.includes("list")) return { id: "menning", match: "text:list" };
-
-  if (x.includes("skodun")) return { id: "skodun", match: "text:skodun" };
-  if (x.includes("comment")) return { id: "skodun", match: "text:comment" };
-  if (x.includes("pistill")) return { id: "skodun", match: "text:pistill" };
-
-  if (x.includes("erlent")) return { id: "erlent", match: "text:erlent" };
-  if (x.includes("foreign")) return { id: "erlent", match: "text:foreign" };
-
-  if (x.includes("innlent")) return { id: "innlent", match: "text:innlent" };
-  if (x.includes("island")) return { id: "innlent", match: "text:island" };
-
+  if (x.includes("sport") || x.includes("ithrott")) return "ithrottir";
+  if (x.includes("vidskip") || x.includes("business") || x.includes("markad")) return "vidskipti";
+  if (x.includes("menning") || x.includes("lifid") || x.includes("list")) return "menning";
+  if (x.includes("skodun") || x.includes("comment") || x.includes("pistill")) return "skodun";
+  if (x.includes("erlent") || x.includes("foreign")) return "erlent";
+  if (x.includes("innlent") || x.includes("island")) return "innlent";
   return null;
 }
 
-function mapFromUrlWithEvidence(sourceId, u) {
+function mapFromUrl(sourceId, u) {
   // Generic patterns
-  if (u.includes("/sport")) return { id: "ithrottir", match: "url:/sport" };
-  if (u.includes("/ithrott")) return { id: "ithrottir", match: "url:/ithrott" };
+  if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
+  if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
+  if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list")) return "menning";
+  if (u.includes("/skodun") || u.includes("/pistill") || u.includes("/comment")) return "skodun";
+  if (u.includes("/erlent")) return "erlent";
+  if (u.includes("/innlent")) return "innlent";
 
-  if (u.includes("/vidskip")) return { id: "vidskipti", match: "url:/vidskip" };
-  if (u.includes("/business")) return { id: "vidskipti", match: "url:/business" };
-  if (u.includes("/markad")) return { id: "vidskipti", match: "url:/markad" };
-
-  if (u.includes("/menning")) return { id: "menning", match: "url:/menning" };
-  if (u.includes("/lifid")) return { id: "menning", match: "url:/lifid" };
-  if (u.includes("/list")) return { id: "menning", match: "url:/list" };
-
-  if (u.includes("/skodun")) return { id: "skodun", match: "url:/skodun" };
-  if (u.includes("/pistill")) return { id: "skodun", match: "url:/pistill" };
-  if (u.includes("/comment")) return { id: "skodun", match: "url:/comment" };
-
-  if (u.includes("/erlent")) return { id: "erlent", match: "url:/erlent" };
-  if (u.includes("/innlent")) return { id: "innlent", match: "url:/innlent" };
-
-  // Source-specific tweaks (same logic, just with evidence tags)
+  // Source-specific tweaks
   if (sourceId === "ruv") {
-    if (u.includes("/ithrottir")) return { id: "ithrottir", match: "ruv:/ithrottir" };
-    if (u.includes("/vidskipti")) return { id: "vidskipti", match: "ruv:/vidskipti" };
-    if (u.includes("/menning")) return { id: "menning", match: "ruv:/menning" };
-    if (u.includes("/erlent")) return { id: "erlent", match: "ruv:/erlent" };
-    if (u.includes("/innlent")) return { id: "innlent", match: "ruv:/innlent" };
+    if (u.includes("/ithrottir")) return "ithrottir";
+    if (u.includes("/vidskipti")) return "vidskipti";
+    if (u.includes("/menning")) return "menning";
+    if (u.includes("/erlent")) return "erlent";
+    if (u.includes("/innlent")) return "innlent";
   }
 
   if (sourceId === "mbl") {
-    if (u.includes("/sport")) return { id: "ithrottir", match: "mbl:/sport" };
-    if (u.includes("/vidskipti")) return { id: "vidskipti", match: "mbl:/vidskipti" };
-    if (u.includes("/frettir/innlent")) return { id: "innlent", match: "mbl:/frettir/innlent" };
-    if (u.includes("/frettir/erlent")) return { id: "erlent", match: "mbl:/frettir/erlent" };
+    if (u.includes("/sport")) return "ithrottir";
+    if (u.includes("/vidskipti")) return "vidskipti";
+    if (u.includes("/frettir/innlent")) return "innlent";
+    if (u.includes("/frettir/erlent")) return "erlent";
   }
 
   if (sourceId === "visir") {
-    if (u.includes("/sport")) return { id: "ithrottir", match: "visir:/sport" };
-    if (u.includes("/vidskipti")) return { id: "vidskipti", match: "visir:/vidskipti" };
-    if (u.includes("/frettir/innlent")) return { id: "innlent", match: "visir:/frettir/innlent" };
-    if (u.includes("/frettir/erlent")) return { id: "erlent", match: "visir:/frettir/erlent" };
+    if (u.includes("/sport")) return "ithrottir";
+    if (u.includes("/vidskipti")) return "vidskipti";
+    if (u.includes("/frettir/innlent")) return "innlent";
+    if (u.includes("/frettir/erlent")) return "erlent";
   }
 
   if (sourceId === "dv") {
-    if (u.includes("/sport")) return { id: "ithrottir", match: "dv:/sport" };
-    if (u.includes("/vidskipti")) return { id: "vidskipti", match: "dv:/vidskipti" };
-    if (u.includes("/frettir")) return { id: "innlent", match: "dv:/frettir" };
+    if (u.includes("/sport")) return "ithrottir";
+    if (u.includes("/vidskipti")) return "vidskipti";
+    if (u.includes("/frettir")) return "innlent";
   }
 
+  // ✅ VB tweaks
   if (sourceId === "vb") {
-    if (u.includes("/sport")) return { id: "ithrottir", match: "vb:/sport" };
-    if (u.includes("/vidskipti") || u.includes("/markad")) return { id: "vidskipti", match: u.includes("/vidskipti") ? "vb:/vidskipti" : "vb:/markad" };
-    if (u.includes("/menning") || u.includes("/lifid")) return { id: "menning", match: u.includes("/menning") ? "vb:/menning" : "vb:/lifid" };
-    if (u.includes("/pistill") || u.includes("/skodun")) return { id: "skodun", match: u.includes("/pistill") ? "vb:/pistill" : "vb:/skodun" };
-    if (u.includes("/erlent")) return { id: "erlent", match: "vb:/erlent" };
-    if (u.includes("/innlent")) return { id: "innlent", match: "vb:/innlent" };
+    if (u.includes("/sport")) return "ithrottir";
+    if (u.includes("/vidskipti") || u.includes("/markad")) return "vidskipti";
+    if (u.includes("/menning") || u.includes("/lifid")) return "menning";
+    if (u.includes("/pistill") || u.includes("/skodun")) return "skodun";
+    if (u.includes("/erlent")) return "erlent";
+    if (u.includes("/innlent")) return "innlent";
   }
 
   return null;
