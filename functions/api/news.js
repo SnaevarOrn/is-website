@@ -99,12 +99,12 @@ export async function onRequestGet({ request }) {
 /* -------- Helpers -------- */
 
 function extract(xml, tag) {
-  const m = xml.match(new RegExp(<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>));
+  const m = xml.match(new RegExp(`<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>`));
   return m ? m[2].trim() : null;
 }
 
 function extractAll(xml, tag) {
-  const re = new RegExp(<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>, "g");
+  const re = new RegExp(`<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>`, "g");
   const out = [];
   let m;
   while ((m = re.exec(xml)) !== null) out.push((m[2] || "").trim());
