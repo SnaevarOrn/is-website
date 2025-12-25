@@ -3,6 +3,8 @@
    - No network
    - Minimal UI
    - LocalStorage remembers last selection
+   - Decimals stepper (Aukastafir) via dpDec/dpInc + dpVal
+   - Added Volume (Rúmmál)
 */
 (() => {
   "use strict";
@@ -17,12 +19,20 @@
   const swapBtn = $("swapBtn");
   const copyBtn = $("copyBtn");
   const clearBtn = $("clearBtn");
-  const roundEl = $("round");
   const chipsEl = $("chips");
   const explainEl = $("explain");
   const statusHintEl = $("statusHint");
 
+  // NEW: decimals stepper
+  const dpDecEl = $("dpDec");
+  const dpIncEl = $("dpInc");
+  const dpValEl = $("dpVal");
+
   const KEY = "is_umbreytir_v1";
+
+  let dp = 2;                 // 0–6
+  const DP_MIN = 0;
+  const DP_MAX = 6;
 
   // Helpers
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
@@ -35,24 +45,10 @@
     return Number.isFinite(n) ? n : NaN;
   }
 
-  function formatNumber(n, roundMode) {
+  function formatNumberFixed(n, dpCount) {
     if (!Number.isFinite(n)) return "";
-    if (roundMode === "auto") {
-      // Auto: keep sensible precision without scientific spam
-      const abs = Math.abs(n);
-      if (abs === 0) return "0";
-      if (abs >= 1000) return String(Math.round(n));
-      if (abs >= 100) return String(roundTo(n, 1));
-      if (abs >= 10) return String(roundTo(n, 2));
-      return String(roundTo(n, 4));
-    }
-    const dp = clamp(Number(roundMode), 0, 10);
-    return n.toFixed(dp).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
-  }
-
-  function roundTo(n, dp) {
-    const p = 10 ** dp;
-    return Math.round(n * p) / p;
+    const s = n.toFixed(clamp(dpCount, 0, 10));
+    return s.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
   }
 
   function setOptions(selectEl, options, selectedId) {
@@ -71,6 +67,7 @@
   // Conversion model:
   // For linear units: base = value * factorToBase
   // For temperature: toBase/fromBase functions.
+  // NOTE: For volume base is m³.
   const CATEGORIES = [
     {
       id: "length",
@@ -100,13 +97,25 @@
       explain: "Massi er umbreytt miðað við kílógrömm."
     },
     {
+      id: "volume",
+      label: "Rúmmál",
+      units: [
+        { id: "ml",  label: "mL", factor: 1e-6 },          // 1 mL = 1e-6 m³
+        { id: "l",   label: "L",  factor: 1e-3 },          // 1 L  = 1e-3 m³
+        { id: "m3",  label: "m³", factor: 1 },             // base
+        { id: "tsp", label: "teskeið (tsp)", factor: 4.92892159375e-6 },
+        { id: "tbsp",label: "matskeið (tbsp)", factor: 14.78676478125e-6 },
+        { id: "cup", label: "boll(i) (cup)", factor: 236.5882365e-6 },
+        { id: "pt",  label: "pint (US pt)", factor: 0.473176473e-3 },
+        { id: "gal", label: "gallon (US gal)", factor: 3.785411784e-3 },
+      ],
+      explain: "Rúmmál er umbreytt miðað við m³ (rúmmetra)."
+    },
+    {
       id: "temperature",
       label: "Hitastig",
       units: [
-        {
-          id: "C", label: "°C",
-          toBase: (c) => c, fromBase: (c) => c
-        },
+        { id: "C", label: "°C", toBase: (c) => c, fromBase: (c) => c },
         {
           id: "F", label: "°F",
           toBase: (f) => (f - 32) * (5/9),
@@ -167,6 +176,8 @@
     { cat: "speed", from: "mps", to: "kmh", label: "m/s → km/klst" },
     { cat: "length", from: "km", to: "mi", label: "km → mílur" },
     { cat: "mass", from: "kg", to: "lb", label: "kg → lb" },
+    { cat: "volume", from: "l", to: "gal", label: "L → gal" },
+    { cat: "volume", from: "gal", to: "l", label: "gal → L" },
   ];
 
   function getCat(id) {
@@ -178,7 +189,6 @@
   }
 
   function isTempCat(cat) {
-    // temp units have toBase/fromBase
     return typeof cat.units[0].toBase === "function";
   }
 
@@ -236,7 +246,7 @@
       fromUnit: fromUnitEl.value,
       toUnit: toUnitEl.value,
       fromVal: fromValEl.value,
-      round: roundEl.value,
+      dp,
     };
     try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {}
   }
@@ -284,12 +294,11 @@
     }
 
     const out = convertValue(catEl.value, fromUnitEl.value, toUnitEl.value, v);
-    const rounded = formatNumber(out, roundEl.value);
+    toValEl.value = formatNumberFixed(out, dp);
 
-    toValEl.value = rounded;
     explainEl.textContent = explainText(catEl.value, fromUnitEl.value, toUnitEl.value);
 
-    // Little status line with units
+    // Little status line with units (labels)
     const fromLabel = fromUnitEl.options[fromUnitEl.selectedIndex]?.textContent || "";
     const toLabel = toUnitEl.options[toUnitEl.selectedIndex]?.textContent || "";
     setStatus(`${fromLabel} → ${toLabel}`);
@@ -310,14 +319,22 @@
     try {
       await navigator.clipboard.writeText(txt);
       setStatus("Afritað.");
-      setTimeout(() => setStatus(`${fromUnitEl.value} → ${toUnitEl.value}`), 700);
+      setTimeout(() => {
+        const fromLabel = fromUnitEl.options[fromUnitEl.selectedIndex]?.textContent || "";
+        const toLabel = toUnitEl.options[toUnitEl.selectedIndex]?.textContent || "";
+        setStatus(`${fromLabel} → ${toLabel}`);
+      }, 700);
     } catch {
-      // Fallback: select text
+      // Fallback
       toValEl.focus();
       toValEl.select();
       document.execCommand("copy");
       setStatus("Afritað.");
-      setTimeout(() => setStatus(`${fromUnitEl.value} → ${toUnitEl.value}`), 700);
+      setTimeout(() => {
+        const fromLabel = fromUnitEl.options[fromUnitEl.selectedIndex]?.textContent || "";
+        const toLabel = toUnitEl.options[toUnitEl.selectedIndex]?.textContent || "";
+        setStatus(`${fromLabel} → ${toLabel}`);
+      }, 700);
     }
   }
 
@@ -329,6 +346,12 @@
     fromValEl.focus();
   }
 
+  function setDp(next) {
+    dp = clamp(next, DP_MIN, DP_MAX);
+    if (dpValEl) dpValEl.textContent = String(dp);
+    recompute();
+  }
+
   // Init
   (function init() {
     // Categories
@@ -337,7 +360,9 @@
     // Restore state
     const st = loadState();
     if (st?.cat && CATEGORIES.some(c => c.id === st.cat)) catEl.value = st.cat;
-    if (st?.round) roundEl.value = st.round;
+
+    if (Number.isInteger(st?.dp)) dp = clamp(st.dp, DP_MIN, DP_MAX);
+    if (dpValEl) dpValEl.textContent = String(dp);
 
     onCatChange(false);
 
@@ -355,13 +380,15 @@
     fromUnitEl.addEventListener("change", recompute);
     toUnitEl.addEventListener("change", recompute);
     fromValEl.addEventListener("input", recompute);
-    roundEl.addEventListener("change", recompute);
 
     swapBtn.addEventListener("click", swapUnits);
     copyBtn.addEventListener("click", copyResult);
     clearBtn.addEventListener("click", clearAll);
 
-    // Enter = swap (nice quick flow), Shift+Enter does nothing special
+    if (dpDecEl) dpDecEl.addEventListener("click", () => setDp(dp - 1));
+    if (dpIncEl) dpIncEl.addEventListener("click", () => setDp(dp + 1));
+
+    // Enter = swap (quick flow)
     fromValEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
