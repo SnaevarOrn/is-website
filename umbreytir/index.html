@@ -23,8 +23,19 @@
     })();
   </script>
 
-  <!-- prefs.js should load early (kept for your global behavior) -->
+  <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
   <script src="/assets/js/prefs.js"></script>
+  <script>
+    if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
+      prefs.applyThemeFromStorage();
+    }
+  </script>
+
+  <!-- Shared JS -->
+  <script defer src="/assets/js/utils.js"></script>
+  <script defer src="/assets/js/site.js"></script>
+  <script defer src="/assets/js/i18n.js"></script>
+  <script defer src="/assets/js/theme.js"></script>
 
   <!-- Shared CSS -->
   <link rel="stylesheet" href="/assets/css/base.css">
