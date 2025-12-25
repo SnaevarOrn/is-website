@@ -44,13 +44,21 @@
 
 .tool-body{ display:flex; flex-direction:column; gap: 12px; }
 
+/* Rows */
 .row{ display:grid; gap: 10px; }
-.row-3{ grid-template-columns: 1fr; }
-.row-2{ grid-template-columns: 1fr; }
 
-@media (min-width: 720px){
-  .row-3{ grid-template-columns: 1.2fr 1fr 1fr; }
-  .row-2{ grid-template-columns: 1fr 1fr; }
+/* NEW: compact layout for updated index.html */
+.row-1{ grid-template-columns: 1fr; }
+
+/* NEW: (Gildi + Frá) and (Niðurstaða + Í) */
+.row-pair{
+  grid-template-columns: 1fr 160px;
+  align-items: start;
+}
+
+/* Extra tight on very small phones */
+@media (max-width: 420px){
+  .row-pair{ grid-template-columns: 1fr 130px; }
 }
 
 .field{ display:flex; flex-direction:column; gap:6px; }
