@@ -307,7 +307,17 @@
   });
 
   /* INIT */
+(() => {
+  const now = new Date();
+  state.year = now.getFullYear();
   build();
+
+  requestAnimationFrame(() => {
+    const iso = D.isoDate(now);
+    const el = document.querySelector(`[data-iso="${iso}"]`);
+    if (el) el.scrollIntoView({ block: "center" });
+  });
+})();
 
   // Optional tiny debug handle (safe)
   NS._state = state;
