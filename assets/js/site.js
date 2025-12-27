@@ -50,7 +50,41 @@
       if (!menuPop.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
     });
 
-    return { closeMenu, openMenu, toggleMenu, menuPop };
+    return { closeMenu, openMenu, toggleMenu, menuPop, menuBtn };
+  }
+
+  // ---------- LOGO DROPDOWN (main navigation) ----------
+  function initLogoMenu() {
+    const logoBtn = $("#logoBtn");
+    const logoPop = $("#logoPop");
+    if (!logoBtn || !logoPop) return null;
+
+    function openLogoMenu() {
+      logoPop.classList.add("show");
+      setAriaHidden(logoPop, false);
+    }
+    function closeLogoMenu() {
+      logoPop.classList.remove("show");
+      setAriaHidden(logoPop, true);
+    }
+    function toggleLogoMenu() {
+      logoPop.classList.contains("show") ? closeLogoMenu() : openLogoMenu();
+    }
+
+    on(logoBtn, "click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleLogoMenu();
+    });
+
+    on(logoPop, "click", (e) => e.stopPropagation());
+
+    // click-outside closes
+    on(document, "click", (e) => {
+      if (!logoPop.contains(e.target) && !logoBtn.contains(e.target)) closeLogoMenu();
+    });
+
+    return { closeLogoMenu, openLogoMenu, toggleLogoMenu, logoPop, logoBtn };
   }
 
   // ---------- OVERLAYS / MODALS ----------
@@ -114,13 +148,6 @@
     };
   }
 
-  // ---------- LOGO BUTTON (scroll to top) ----------
-  function initLogoButton() {
-    const logoBtn = $("#logoBtn");
-    if (!logoBtn) return;
-    on(logoBtn, "click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  }
-
   // ---------- LANGUAGE toggle ----------
   function initLang(I18N, applyLangToUI) {
     const langBtn = $("#langBtn");
@@ -160,15 +187,16 @@
   }
 
   // ---------- ESC closes ----------
-  function initEsc(menuApi) {
+  function initEsc(menuApi, logoApi) {
     on(document, "keydown", (e) => {
       if (e.key !== "Escape") return;
 
       // close overlays
       document.querySelectorAll(".overlay.open").forEach((ov) => ov.classList.remove("open"));
 
-      // close menu
+      // close menus
       menuApi?.closeMenu?.();
+      logoApi?.closeLogoMenu?.();
     });
   }
 
@@ -179,8 +207,37 @@
     try { window.prefs && document.documentElement.setAttribute("lang", prefs.get("lang", "is")); } catch {}
 
     const menuApi = initMenu();
+    const logoApi = initLogoMenu();
+
+    // Make them mutually exclusive (open one -> close the other)
+    if (menuApi && logoApi) {
+      const origMenuToggle = menuApi.toggleMenu;
+      menuApi.toggleMenu = () => {
+        logoApi.closeLogoMenu();
+        origMenuToggle();
+      };
+
+      const origLogoToggle = logoApi.toggleLogoMenu;
+      logoApi.toggleLogoMenu = () => {
+        menuApi.closeMenu();
+        origLogoToggle();
+      };
+
+      // Rebind click handlers to use the wrapped toggles (safe)
+      on(menuApi.menuBtn, "click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        menuApi.toggleMenu();
+      }, { capture: true });
+
+      on(logoApi.logoBtn, "click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logoApi.toggleLogoMenu();
+      }, { capture: true });
+    }
+
     initOverlays(menuApi);
-    initLogoButton();
     initThemeToggle();
 
     // NOTE: language toggle depends on your page providing applyLangToUI (recommended).
@@ -188,7 +245,7 @@
     const maybeApplyLang = window.applyLangToUI;
     initLang(window.I18N, maybeApplyLang);
 
-    initEsc(menuApi);
+    initEsc(menuApi, logoApi);
 
     // Keep language UI synced across tabs/pages
     on(window, "storage", (e) => {
