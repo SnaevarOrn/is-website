@@ -37,7 +37,8 @@
 <body class="has-grad">
   <header class="site-header">
     <div class="hdr">
-      <button class="brand-left" id="logoBtn" aria-label="Heim">
+      <!-- BRAND: logo opens main navigation dropdown -->
+      <button class="brand-left" id="logoBtn" aria-label="Valmynd">
         <img id="logoImg" src="/favicon.svg" alt="ís.is"
              onerror="this.onerror=null; this.src='/favicon.png';">
       </button>
@@ -45,19 +46,50 @@
       <div class="brand-title">ís.is</div>
 
       <div class="menu-wrap">
-        <!-- LANGUAGE TOGGLE -->
-        <button class="icon-btn lang-btn" id="langBtn" aria-label="Tungumál">
-          <span class="lang-flag" id="langFlag">🇮🇸</span>
-          <span class="lang-pill" id="langPill">IS</span>
+        <!-- HEADER NAV: Home + key tools -->
+        <button class="icon-btn" id="homeBtn" aria-label="Forsíða" onclick="location.href='/'">
+          <span aria-hidden="true">⌂</span>
         </button>
 
-        <!-- BURGER -->
+        <button class="icon-btn" id="hdrCalendar" aria-label="Dagatal" onclick="location.href='/dagatal/'">
+          <span aria-hidden="true">🗓️</span>
+        </button>
+
+        <button class="icon-btn" id="hdrNews" aria-label="Fréttir" onclick="location.href='/frettir/'">
+          <span aria-hidden="true">📰</span>
+        </button>
+
+        <button class="icon-btn" id="hdrTimer" aria-label="Tímatalning" onclick="location.href='/WOD/'">
+          <span aria-hidden="true">⏱️</span>
+        </button>
+
+        <!-- BURGER: settings/about/contact -->
         <button class="icon-btn" id="menuBtn" aria-label="Valmynd">
           <div class="burger" aria-hidden="true">
             <span></span><span></span><span></span>
           </div>
         </button>
 
+        <!-- LOGO DROPDOWN (everything else from homepage buttons) -->
+        <div class="menu-pop" id="logoPop" role="menu" aria-hidden="true">
+          <button class="menu-item" role="menuitem" onclick="location.href='/spil/'">
+            <span data-i18n="btn.glaciers">Jöklar 🧊</span><span class="hint">›</span>
+          </button>
+          <button class="menu-item" role="menuitem" onclick="location.href='/borg/'">
+            <span data-i18n="btn.towns">Bæir 🏘️</span><span class="hint">›</span>
+          </button>
+          <button class="menu-item" role="menuitem" onclick="location.href='/klukka/'">
+            <span data-i18n="btn.clock">Klukka 🕒</span><span class="hint">›</span>
+          </button>
+          <button class="menu-item" role="menuitem" onclick="location.href='/slemb/'">
+            <span data-i18n="btn.random">Slembiúrtak 🎲</span><span class="hint">›</span>
+          </button>
+          <button class="menu-item" role="menuitem" onclick="location.href='/umbreytir/'">
+            <span data-i18n="btn.umbreytir">Umbreytir ⚖️</span><span class="hint">›</span>
+          </button>
+        </div>
+
+        <!-- BURGER POP -->
         <div class="menu-pop" id="menuPop" role="menu" aria-hidden="true">
           <button class="menu-item" id="menuSettings" role="menuitem">
             <span data-i18n="menu.settings">Stillingar</span><span class="hint">⚙︎</span>
@@ -75,23 +107,11 @@
 
   <main>
     <div class="wrap">
+      <!-- (Homepage buttons removed – now in header + logo dropdown) -->
       <div class="card">
-        <div class="section-title" data-i18n="iceland.title">Ísland</div>
-        <div class="btns">
-          <button class="btn pill" onclick="location.href='/spil/'" data-i18n="btn.glaciers">Jöklar 🧊</button>
-          <button class="btn pill" onclick="location.href='/borg/'" data-i18n="btn.towns">Bæir 🏘️</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-title" data-i18n="tools.title">Verkfæri</div>
-        <div class="btns">
-          <button class="btn pill" onclick="location.href='/dagatal/'" data-i18n="btn.calendar">Dagatal 🗓️</button>
-          <button class="btn pill" onclick="location.href='/frettir/'" data-i18n="btn.news">Fréttir 📰</button>
-          <button class="btn pill" onclick="location.href='/klukka/'" data-i18n="btn.clock">Klukka 🕒</button>
-          <button class="btn pill" onclick="location.href='/slemb/'" data-i18n="btn.random">Slembiúrtak 🎲</button>
-          <button class="btn pill" onclick="location.href='/WOD/'" data-i18n="btn.timer">Tímatalning ⏱️</button>
-          <button class="btn pill" onclick="location.href='/umbreytir/'" data-i18n="btn.umbreytir">Umbreytir ⚖️</button>
+        <div class="section-title">ís.is</div>
+        <div style="opacity:.75; line-height:1.4" data-i18n="iceland.title">
+          Ísland
         </div>
       </div>
     </div>
@@ -151,6 +171,34 @@
             <input type="checkbox" id="themeToggle" data-theme-toggle>
           </label>
         </div>
+
+        <!-- LANGUAGE MOVED HERE (default IS) -->
+        <div class="toggle-row">
+          <div>
+            <b data-i18n="settings.langTitle">Tungumál</b><br/>
+            <span data-i18n="settings.langHint">Íslenska / English</span>
+          </div>
+
+          <button class="icon-btn lang-btn" id="langBtn" aria-label="Tungumál">
+            <span class="lang-flag" id="langFlag">🇮🇸</span>
+            <span class="lang-pill" id="langPill">IS</span>
+          </button>
+        </div>
+
+        <!-- Hard default to Icelandic (safe fallback; i18n.js can override if you have stored prefs) -->
+        <script>
+          (function(){
+            try{
+              document.documentElement.lang = "is";
+              const f = document.getElementById("langFlag");
+              const p = document.getElementById("langPill");
+              if (f) f.textContent = "🇮🇸";
+              if (p) p.textContent = "IS";
+              // If your i18n.js uses localStorage 'lang', force default only if none exists:
+              if (!localStorage.getItem("lang")) localStorage.setItem("lang","is");
+            }catch(e){}
+          })();
+        </script>
       </div>
     </div>
   </div>
