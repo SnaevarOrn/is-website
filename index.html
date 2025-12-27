@@ -17,6 +17,53 @@
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/components.css">
 
+  <!-- Page layout fixes (home only) -->
+  <style>
+    /* Keep footer at bottom + center the main card */
+    body.has-grad{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    main{
+      flex:1;
+      display:flex;
+    }
+    main .wrap{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px 12px;
+    }
+    /* Header text buttons */
+    .hdr-links{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .hdr-link{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: inherit;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      line-height: 1;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html[data-theme="light"] .hdr-link{
+      border-color: rgba(15,23,42,.14);
+      background: rgba(2,6,23,.03);
+    }
+    .hdr-link:active{ transform: translateY(1px); }
+    /* Footer at bottom */
+    .banner{ margin-top:auto; }
+  </style>
+
   <!-- prefs.js must load BEFORE we call prefs.* (avoid flash) -->
   <script src="/assets/js/prefs.js"></script>
   <script>
@@ -43,25 +90,15 @@
              onerror="this.onerror=null; this.src='/favicon.png';">
       </button>
 
-      <div class="brand-title">ís.is</div>
+      <!-- (brand-title removed to free space) -->
 
       <div class="menu-wrap">
-        <!-- HEADER NAV: Home + key tools -->
-        <button class="icon-btn" id="homeBtn" aria-label="Forsíða" onclick="location.href='/'">
-          <span aria-hidden="true">⌂</span>
-        </button>
-
-        <button class="icon-btn" id="hdrCalendar" aria-label="Dagatal" onclick="location.href='/dagatal/'">
-          <span aria-hidden="true">🗓️</span>
-        </button>
-
-        <button class="icon-btn" id="hdrNews" aria-label="Fréttir" onclick="location.href='/frettir/'">
-          <span aria-hidden="true">📰</span>
-        </button>
-
-        <button class="icon-btn" id="hdrTimer" aria-label="Tímatalning" onclick="location.href='/WOD/'">
-          <span aria-hidden="true">⏱️</span>
-        </button>
+        <!-- HEADER NAV: text only -->
+        <div class="hdr-links" aria-label="Flýtihnappar">
+          <button class="hdr-link" id="hdrCalendar" onclick="location.href='/dagatal/'" data-i18n="btn.calendar">Dagatal</button>
+          <button class="hdr-link" id="hdrNews" onclick="location.href='/frettir/'" data-i18n="btn.news">Fréttir</button>
+          <button class="hdr-link" id="hdrTimer" onclick="location.href='/WOD/'" data-i18n="btn.timer">Tími</button>
+        </div>
 
         <!-- BURGER: settings/about/contact -->
         <button class="icon-btn" id="menuBtn" aria-label="Valmynd">
@@ -70,22 +107,22 @@
           </div>
         </button>
 
-        <!-- LOGO DROPDOWN (everything else from homepage buttons) -->
+        <!-- LOGO DROPDOWN (everything else) -->
         <div class="menu-pop" id="logoPop" role="menu" aria-hidden="true">
           <button class="menu-item" role="menuitem" onclick="location.href='/spil/'">
-            <span data-i18n="btn.glaciers">Jöklar 🧊</span><span class="hint">›</span>
+            <span data-i18n="btn.glaciers">Jöklar</span><span class="hint">›</span>
           </button>
           <button class="menu-item" role="menuitem" onclick="location.href='/borg/'">
-            <span data-i18n="btn.towns">Bæir 🏘️</span><span class="hint">›</span>
+            <span data-i18n="btn.towns">Bæir</span><span class="hint">›</span>
           </button>
           <button class="menu-item" role="menuitem" onclick="location.href='/klukka/'">
-            <span data-i18n="btn.clock">Klukka 🕒</span><span class="hint">›</span>
+            <span data-i18n="btn.clock">Klukka</span><span class="hint">›</span>
           </button>
           <button class="menu-item" role="menuitem" onclick="location.href='/slemb/'">
-            <span data-i18n="btn.random">Slembiúrtak 🎲</span><span class="hint">›</span>
+            <span data-i18n="btn.random">Slembiúrtak</span><span class="hint">›</span>
           </button>
           <button class="menu-item" role="menuitem" onclick="location.href='/umbreytir/'">
-            <span data-i18n="btn.umbreytir">Umbreytir ⚖️</span><span class="hint">›</span>
+            <span data-i18n="btn.umbreytir">Umbreytir</span><span class="hint">›</span>
           </button>
         </div>
 
@@ -107,12 +144,9 @@
 
   <main>
     <div class="wrap">
-      <!-- (Homepage buttons removed – now in header + logo dropdown) -->
-      <div class="card">
+      <div class="card" style="text-align:center">
         <div class="section-title">ís.is</div>
-        <div style="opacity:.75; line-height:1.4" data-i18n="iceland.title">
-          Ísland
-        </div>
+        <div style="opacity:.75; line-height:1.4" data-i18n="iceland.title">Ísland</div>
       </div>
     </div>
   </main>
@@ -185,7 +219,6 @@
           </button>
         </div>
 
-        <!-- Hard default to Icelandic (safe fallback; i18n.js can override if you have stored prefs) -->
         <script>
           (function(){
             try{
@@ -194,7 +227,6 @@
               const p = document.getElementById("langPill");
               if (f) f.textContent = "🇮🇸";
               if (p) p.textContent = "IS";
-              // If your i18n.js uses localStorage 'lang', force default only if none exists:
               if (!localStorage.getItem("lang")) localStorage.setItem("lang","is");
             }catch(e){}
           })();
