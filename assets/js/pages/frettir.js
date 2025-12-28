@@ -1,5 +1,7 @@
 // /assets/js/pages/frettir.js
 (() => {
+  "use strict";
+
   const SOURCES = [
     { id: "ruv",       label: "RÚV",             domain: "ruv.is" },
     { id: "mbl",       label: "mbl.is",          domain: "mbl.is" },
@@ -25,15 +27,15 @@
 
   // Read/visited tracking
   const READ_KEY = "is_news_read_v1";
-  function loadReadSet(){
+  function loadReadSet() {
     try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || "[]")); }
     catch { return new Set(); }
   }
-  function saveReadSet(set){
+  function saveReadSet(set) {
     localStorage.setItem(READ_KEY, JSON.stringify([...set].slice(-2000)));
   }
   const readSet = loadReadSet();
-  function markRead(url){
+  function markRead(url) {
     if (!url) return;
     readSet.add(url);
     saveReadSet(readSet);
@@ -116,9 +118,11 @@
     setTheme(t === "dark" ? "light" : "dark");
   }
 
-  function setStatus(msg) { if (els.statusText) els.statusText.textContent = msg; }
+  function setStatus(msg) {
+    if (els.statusText) els.statusText.textContent = msg;
+  }
 
-  function setLoading(on){
+  function setLoading(on) {
     if (!els.statusSpinner) return;
     els.statusSpinner.hidden = !on;
   }
@@ -131,28 +135,31 @@
   }
 
   function openMenu() {
-    els.menuPanel.classList.add("open");
-    els.menuPanel.setAttribute("aria-hidden", "false");
+    els.menuPanel?.classList.add("open");
+    els.menuPanel?.setAttribute("aria-hidden", "false");
     setTimeout(() => window.addEventListener("pointerdown", onOutsideMenu, { once: true }), 0);
   }
 
   function closeMenu() {
-    els.menuPanel.classList.remove("open");
-    els.menuPanel.setAttribute("aria-hidden", "true");
+    els.menuPanel?.classList.remove("open");
+    els.menuPanel?.setAttribute("aria-hidden", "true");
   }
 
   function onOutsideMenu(e) {
+    if (!els.menuPanel) return;
     if (!els.menuPanel.contains(e.target) && e.target !== els.btnMenu) closeMenu();
     else setTimeout(() => window.addEventListener("pointerdown", onOutsideMenu, { once: true }), 0);
   }
 
   function openSettings() {
     closeMenu();
+    if (!els.settingsDialog) return;
     if (typeof els.settingsDialog.showModal === "function") els.settingsDialog.showModal();
     else els.settingsDialog.setAttribute("open", "");
   }
 
   function closeSettings() {
+    if (!els.settingsDialog) return;
     if (typeof els.settingsDialog.close === "function") els.settingsDialog.close();
     else els.settingsDialog.removeAttribute("open");
   }
@@ -195,34 +202,38 @@
   }
 
   function renderSettings(prefs) {
-    els.sourcesList.innerHTML = SOURCES.map(s => {
-      const checked = prefs.sources[s.id] ? "checked" : "";
-      return `
-        <label class="check">
-          <input type="checkbox" data-kind="source" data-id="${s.id}" ${checked} />
-          <span><strong>${escapeHtml(s.label)}</strong> <span class="muted">${escapeHtml(s.domain)}</span></span>
-        </label>
-      `;
-    }).join("");
+    if (els.sourcesList) {
+      els.sourcesList.innerHTML = SOURCES.map(s => {
+        const checked = prefs.sources[s.id] ? "checked" : "";
+        return `
+          <label class="check">
+            <input type="checkbox" data-kind="source" data-id="${s.id}" ${checked} />
+            <span><strong>${escapeHtml(s.label)}</strong> <span class="muted">${escapeHtml(s.domain)}</span></span>
+          </label>
+        `;
+      }).join("");
+    }
 
-    els.catsList.innerHTML = CATEGORIES.map(c => {
-      const checked = prefs.categories[c.id] ? "checked" : "";
-      return `
-        <label class="check">
-          <input type="checkbox" data-kind="cat" data-id="${c.id}" ${checked} />
-          <span><strong>${escapeHtml(c.label)}</strong></span>
-        </label>
-      `;
-    }).join("");
+    if (els.catsList) {
+      els.catsList.innerHTML = CATEGORIES.map(c => {
+        const checked = prefs.categories[c.id] ? "checked" : "";
+        return `
+          <label class="check">
+            <input type="checkbox" data-kind="cat" data-id="${c.id}" ${checked} />
+            <span><strong>${escapeHtml(c.label)}</strong></span>
+          </label>
+        `;
+      }).join("");
+    }
   }
 
   function readSettingsIntoPrefs(prefs) {
     const next = JSON.parse(JSON.stringify(prefs));
 
-    els.settingsDialog.querySelectorAll('input[type="checkbox"][data-kind="source"]').forEach(cb => {
+    els.settingsDialog?.querySelectorAll('input[type="checkbox"][data-kind="source"]').forEach(cb => {
       next.sources[cb.getAttribute("data-id")] = cb.checked;
     });
-    els.settingsDialog.querySelectorAll('input[type="checkbox"][data-kind="cat"]').forEach(cb => {
+    els.settingsDialog?.querySelectorAll('input[type="checkbox"][data-kind="cat"]').forEach(cb => {
       next.categories[cb.getAttribute("data-id")] = cb.checked;
     });
 
@@ -233,10 +244,10 @@
     const selector = kind === "source"
       ? 'input[type="checkbox"][data-kind="source"]'
       : 'input[type="checkbox"][data-kind="cat"]';
-    els.settingsDialog.querySelectorAll(selector).forEach(cb => cb.checked = value);
+    els.settingsDialog?.querySelectorAll(selector).forEach(cb => { cb.checked = value; });
   }
 
-  function applySettingsAndClose(){
+  function applySettingsAndClose() {
     const current = loadPrefs();
     const next = readSettingsIntoPrefs(current);
     savePrefs(next);
@@ -244,11 +255,14 @@
     refresh();
   }
 
-  function showEmpty(show) { els.emptyState.hidden = !show; }
+  function showEmpty(show) {
+    if (els.emptyState) els.emptyState.hidden = !show;
+  }
 
   function showError(show, msg) {
+    if (!els.errorState) return;
     els.errorState.hidden = !show;
-    if (msg) els.errorMsg.textContent = msg;
+    if (msg && els.errorMsg) els.errorMsg.textContent = msg;
   }
 
   /* -----------------------
@@ -257,7 +271,12 @@
   const _iconMemo = new Map();
 
   function normalizeHost(h) {
-    return String(h || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+    return String(h || "")
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .replace(/\/.*$/, "");
   }
 
   function domainForItem(it) {
@@ -293,16 +312,18 @@
   }
 
   function renderNews(items) {
+    if (!els.newsList) return;
+
     els.newsList.innerHTML = items.map(it => {
       const iconUrl = iconUrlForItem(it);
       const icon = iconUrl
         ? `<img class="src-ico"
-            src="${escapeHtml(iconUrl)}"
-            alt=""
-            loading="lazy"
-            decoding="async"
-            referrerpolicy="no-referrer"
-            onerror="this.style.display='none'">`
+              src="${escapeHtml(iconUrl)}"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              referrerpolicy="no-referrer"
+              onerror="this.style.display='none'">`
         : "";
 
       const sourceLabel = it.sourceLabel ? cleanText(it.sourceLabel) : "";
@@ -328,7 +349,10 @@
       return `
         <article class="item ${isRead ? "is-read" : ""}" data-url="${escapeHtml(it.url)}">
           <h3 class="item-title">
-            <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">
+            <a href="${escapeHtml(it.url)}"
+               target="_blank"
+               rel="noopener noreferrer"
+               referrerpolicy="no-referrer">
               ${escapeHtml(title)}
             </a>
           </h3>
@@ -360,7 +384,9 @@
     qs.set("cats", cats.join(","));
     qs.set("limit", "60");
 
-    const res = await fetch(`/api/news?${qs.toString()}`, { headers: { "Accept": "application/json" } });
+    const res = await fetch(`/api/news?${qs.toString()}`, {
+      headers: { "Accept": "application/json" }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }
@@ -527,86 +553,80 @@
   }
 
   function wirePullToRefresh() {
-  window.addEventListener("touchstart", onPtrStart, { passive: true });
-  window.addEventListener("touchmove", onPtrMove, { passive: false });
-  window.addEventListener("touchend", onPtrEnd, { passive: true });
-  window.addEventListener("touchcancel", onPtrEnd, { passive: true });
-}
+    window.addEventListener("touchstart", onPtrStart, { passive: true });
+    window.addEventListener("touchmove", onPtrMove, { passive: false });
+    window.addEventListener("touchend", onPtrEnd, { passive: true });
+    window.addEventListener("touchcancel", onPtrEnd, { passive: true });
+  }
 
-function wire() {
-  els.btnBack?.addEventListener("click", () => {
-    if (history.length > 1) history.back();
-    else window.location.href = "/";
-  });
+  function wire() {
+    els.btnBack?.addEventListener("click", () => {
+      if (history.length > 1) history.back();
+      else window.location.href = "/";
+    });
 
-  els.btnMenu?.addEventListener("click", () => {
-    if (els.menuPanel.classList.contains("open")) closeMenu();
-    else openMenu();
-  });
+    els.btnMenu?.addEventListener("click", () => {
+      if (els.menuPanel?.classList.contains("open")) closeMenu();
+      else openMenu();
+    });
 
-  els.btnThemeToggle?.addEventListener("click", () => {
-    toggleTheme();
-    closeMenu();
-  });
+    els.btnThemeToggle?.addEventListener("click", () => {
+      toggleTheme();
+      closeMenu();
+    });
 
-  els.btnOpenSettings?.addEventListener("click", openSettings);
-  els.btnRefresh?.addEventListener("click", () => {
-    closeMenu();
+    els.btnOpenSettings?.addEventListener("click", openSettings);
+    els.btnRefresh?.addEventListener("click", () => {
+      closeMenu();
+      refresh();
+    });
+
+    els.btnEmptyOpenSettings?.addEventListener("click", openSettings);
+    els.btnRetry?.addEventListener("click", refresh);
+
+    els.btnSourcesAll?.addEventListener("click", () => setAll("source", true));
+    els.btnSourcesNone?.addEventListener("click", () => setAll("source", false));
+    els.btnCatsAll?.addEventListener("click", () => setAll("cat", true));
+    els.btnCatsNone?.addEventListener("click", () => setAll("cat", false));
+
+    els.btnResetSettings?.addEventListener("click", () => {
+      const d = defaultPrefs();
+      savePrefs(d);
+      renderSettings(d);
+    });
+
+    els.btnSaveSettings?.addEventListener("click", applySettingsAndClose);
+    els.btnCloseSettings?.addEventListener("click", applySettingsAndClose);
+
+    // News links: mark read + FORCE open in new tab (incognito-like)
+    els.newsList?.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (!a) return;
+
+      const art = e.target.closest(".item");
+      const url = a.getAttribute("href") || art?.getAttribute("data-url");
+      if (!url) return;
+
+      markRead(url);
+      if (art) art.classList.add("is-read");
+
+      e.preventDefault();
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
+  }
+
+  function init() {
+    setTheme(getTheme());
+    const prefs = loadPrefs();
+    renderSettings(prefs);
+    wire();
+    wirePullToRefresh();
     refresh();
-  });
+  }
 
-  els.btnEmptyOpenSettings?.addEventListener("click", openSettings);
-  els.btnRetry?.addEventListener("click", refresh);
-
-  els.btnSourcesAll?.addEventListener("click", () => setAll("source", true));
-  els.btnSourcesNone?.addEventListener("click", () => setAll("source", false));
-  els.btnCatsAll?.addEventListener("click", () => setAll("cat", true));
-  els.btnCatsNone?.addEventListener("click", () => setAll("cat", false));
-
-  els.btnResetSettings?.addEventListener("click", () => {
-    const d = defaultPrefs();
-    savePrefs(d);
-    renderSettings(d);
-  });
-
-  els.btnSaveSettings?.addEventListener("click", applySettingsAndClose);
-  els.btnCloseSettings?.addEventListener("click", applySettingsAndClose);
-
-  /* --------------------------------------------------
-     News links:
-     - mark as read
-     - FORCE open in new tab (incognito-like behavior)
-     -------------------------------------------------- */
-  els.newsList?.addEventListener("click", (e) => {
-    const a = e.target.closest("a");
-    if (!a) return;
-
-    const art = e.target.closest(".item");
-    const url = a.getAttribute("href") || art?.getAttribute("data-url");
-    if (!url) return;
-
-    // 1) Mark as read
-    markRead(url);
-    if (art) art.classList.add("is-read");
-
-    // 2) Force new tab (keep is.is behind)
-    e.preventDefault();
-    window.open(url, "_blank", "noopener,noreferrer");
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeMenu();
-  });
-}
-
-function init() {
-  setTheme(getTheme());
-  const prefs = loadPrefs();
-  renderSettings(prefs);
-  wire();
-  wirePullToRefresh();
-  refresh();
-}
-
-init();
+  init();
 })();
