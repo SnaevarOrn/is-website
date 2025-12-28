@@ -18,7 +18,7 @@ body{ background:var(--bg); color:var(--text); }
 .page-header{
   position:sticky; top:0; z-index:9999;
   display:flex; align-items:center; justify-content:space-between;
-  flex-wrap: wrap;              /* <-- hér */
+  flex-wrap: wrap;
   gap:12px; padding:10px 12px;
   border-bottom:1px solid var(--line);
   backdrop-filter:blur(10px);
@@ -44,6 +44,22 @@ body{ background:var(--bg); color:var(--text); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Tiny spinner next to status */
+.spinner{
+  width:16px; height:16px;
+  border-radius:50%;
+  border:2px solid rgba(0,0,0,.16);
+  border-top-color: rgba(0,0,0,.55);
+  animation: spin 0.9s linear infinite;
+  flex:0 0 auto;
+}
+html[data-theme="dark"] .spinner{
+  border-color: rgba(255,255,255,.18);
+  border-top-color: rgba(255,255,255,.70);
+}
+.spinner.sm{ width:14px; height:14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .ph-left{ display:flex; align-items:center; gap:10px; }
 .ph-title h1{ font-size:16px; line-height:1.1; margin:0; }
@@ -120,17 +136,15 @@ html[data-theme="dark"] .menu-card{ background:color-mix(in srgb, var(--card) 92
 }
 html[data-theme="dark"] .item{ background:color-mix(in srgb, var(--card) 70%, transparent); }
 
-.item-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .item-title{ font-size:15px; margin:0; line-height:1.25; }
 .item-title a{ color:inherit; text-decoration:none; }
 .item-title a:active{ text-decoration:underline; }
-/* Age line under headline (minutes/hours/days since) */
-.item-age{
-  margin-top:6px;
-  margin-bottom:6px;
-  opacity:.65;          /* aðeins daufara en badges */
-  line-height:1.1;
-}
+
+/* Read titles */
+.item.is-read .item-title{ opacity:.55; }
+.item.is-read .item-title a{ opacity:1; }
+
+/* Meta row */
 .item-meta{
   display:flex;
   align-items:center;
@@ -138,10 +152,14 @@ html[data-theme="dark"] .item{ background:color-mix(in srgb, var(--card) 70%, tr
   margin-top:6px;
   font-size:12px;
   opacity:.85;
-}.item-age{
+}
+
+/* Age aligned right in meta row */
+.item-age{
   margin-left:auto;
   opacity:.65;
   white-space:nowrap;
+  line-height:1.1;
 }
 
 .badge{
@@ -249,8 +267,23 @@ html[data-theme="dark"] .settings-section{ background:color-mix(in srgb, var(--c
 }
 .seg-btn:active{ background:color-mix(in srgb, var(--card) 88%, transparent); }
 
-/* Checklist: compact + iOS-safe */
-.checklist{ display:grid; gap:8px; }
+/* Checklist */
+.checklist{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:8px;
+}
+
+/* Two columns inside each checklist when space allows */
+@media (min-width: 560px){
+  .settings-section .checklist{
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+  }
+  .settings-section .check{
+    height:100%;
+  }
+}
 
 .check{
   display:flex;
@@ -262,7 +295,6 @@ html[data-theme="dark"] .settings-section{ background:color-mix(in srgb, var(--c
   background:color-mix(in srgb, var(--card) 96%, transparent);
   min-height:var(--tap);
 }
-
 html[data-theme="dark"] .check{
   background:color-mix(in srgb, var(--card) 40%, transparent);
 }
@@ -270,7 +302,7 @@ html[data-theme="dark"] .check{
 .check input{
   flex:0 0 auto;
   width:20px; height:20px;
-  transform:none; /* native feel */
+  transform:none;
   accent-color:#2b6cff;
 }
 
@@ -278,8 +310,8 @@ html[data-theme="dark"] .check{
   display:flex;
   flex-direction:column;
   gap:2px;
-  flex:1 1 auto;   /* key */
-  min-width:0;     /* iOS key */
+  flex:1 1 auto;
+  min-width:0;
   color:var(--text);
 }
 
