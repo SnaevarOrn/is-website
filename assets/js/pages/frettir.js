@@ -527,13 +527,13 @@
   }
 
   function wirePullToRefresh() {
-    window.addEventListener("touchstart", onPtrStart, { passive: true });
-    window.addEventListener("touchmove", onPtrMove, { passive: false });
-    window.addEventListener("touchend", onPtrEnd, { passive: true });
-    window.addEventListener("touchcancel", onPtrEnd, { passive: true });
-  }
+  window.addEventListener("touchstart", onPtrStart, { passive: true });
+  window.addEventListener("touchmove", onPtrMove, { passive: false });
+  window.addEventListener("touchend", onPtrEnd, { passive: true });
+  window.addEventListener("touchcancel", onPtrEnd, { passive: true });
+}
 
-  function wire() {
+function wire() {
   els.btnBack?.addEventListener("click", () => {
     if (history.length > 1) history.back();
     else window.location.href = "/";
@@ -544,15 +544,15 @@
     else openMenu();
   });
 
-  els.btnThemeToggle?.addEventListener("click", () => { 
-    toggleTheme(); 
-    closeMenu(); 
+  els.btnThemeToggle?.addEventListener("click", () => {
+    toggleTheme();
+    closeMenu();
   });
 
   els.btnOpenSettings?.addEventListener("click", openSettings);
-  els.btnRefresh?.addEventListener("click", () => { 
-    closeMenu(); 
-    refresh(); 
+  els.btnRefresh?.addEventListener("click", () => {
+    closeMenu();
+    refresh();
   });
 
   els.btnEmptyOpenSettings?.addEventListener("click", openSettings);
@@ -599,14 +599,14 @@
   });
 }
 
-  function init() {
-    setTheme(getTheme());
-    const prefs = loadPrefs();
-    renderSettings(prefs);
-    wire();
-    wirePullToRefresh();
-    refresh();
-  }
+function init() {
+  setTheme(getTheme());
+  const prefs = loadPrefs();
+  renderSettings(prefs);
+  wire();
+  wirePullToRefresh();
+  refresh();
+}
 
-  init();
+init();
 })();
