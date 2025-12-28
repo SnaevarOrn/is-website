@@ -534,52 +534,70 @@
   }
 
   function wire() {
-    els.btnBack?.addEventListener("click", () => {
-      if (history.length > 1) history.back();
-      else window.location.href = "/";
-    });
+  els.btnBack?.addEventListener("click", () => {
+    if (history.length > 1) history.back();
+    else window.location.href = "/";
+  });
 
-    els.btnMenu?.addEventListener("click", () => {
-      if (els.menuPanel.classList.contains("open")) closeMenu();
-      else openMenu();
-    });
+  els.btnMenu?.addEventListener("click", () => {
+    if (els.menuPanel.classList.contains("open")) closeMenu();
+    else openMenu();
+  });
 
-    els.btnThemeToggle?.addEventListener("click", () => { toggleTheme(); closeMenu(); });
-    els.btnOpenSettings?.addEventListener("click", openSettings);
-    els.btnRefresh?.addEventListener("click", () => { closeMenu(); refresh(); });
+  els.btnThemeToggle?.addEventListener("click", () => { 
+    toggleTheme(); 
+    closeMenu(); 
+  });
 
-    els.btnEmptyOpenSettings?.addEventListener("click", openSettings);
-    els.btnRetry?.addEventListener("click", refresh);
+  els.btnOpenSettings?.addEventListener("click", openSettings);
+  els.btnRefresh?.addEventListener("click", () => { 
+    closeMenu(); 
+    refresh(); 
+  });
 
-    els.btnSourcesAll?.addEventListener("click", () => setAll("source", true));
-    els.btnSourcesNone?.addEventListener("click", () => setAll("source", false));
-    els.btnCatsAll?.addEventListener("click", () => setAll("cat", true));
-    els.btnCatsNone?.addEventListener("click", () => setAll("cat", false));
+  els.btnEmptyOpenSettings?.addEventListener("click", openSettings);
+  els.btnRetry?.addEventListener("click", refresh);
 
-    els.btnResetSettings?.addEventListener("click", () => {
-      const d = defaultPrefs();
-      savePrefs(d);
-      renderSettings(d);
-    });
+  els.btnSourcesAll?.addEventListener("click", () => setAll("source", true));
+  els.btnSourcesNone?.addEventListener("click", () => setAll("source", false));
+  els.btnCatsAll?.addEventListener("click", () => setAll("cat", true));
+  els.btnCatsNone?.addEventListener("click", () => setAll("cat", false));
 
-    els.btnSaveSettings?.addEventListener("click", applySettingsAndClose);
-    els.btnCloseSettings?.addEventListener("click", applySettingsAndClose);
+  els.btnResetSettings?.addEventListener("click", () => {
+    const d = defaultPrefs();
+    savePrefs(d);
+    renderSettings(d);
+  });
 
-    // Mark read titles (event delegation)
-    els.newsList?.addEventListener("click", (e) => {
-      const a = e.target.closest("a");
-      if (!a) return;
-      const art = e.target.closest(".item");
-      const url = a.getAttribute("href") || art?.getAttribute("data-url");
-      if (!url) return;
-      markRead(url);
-      if (art) art.classList.add("is-read");
-    });
+  els.btnSaveSettings?.addEventListener("click", applySettingsAndClose);
+  els.btnCloseSettings?.addEventListener("click", applySettingsAndClose);
 
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeMenu();
-    });
-  }
+  /* --------------------------------------------------
+     News links:
+     - mark as read
+     - FORCE open in new tab (incognito-like behavior)
+     -------------------------------------------------- */
+  els.newsList?.addEventListener("click", (e) => {
+    const a = e.target.closest("a");
+    if (!a) return;
+
+    const art = e.target.closest(".item");
+    const url = a.getAttribute("href") || art?.getAttribute("data-url");
+    if (!url) return;
+
+    // 1) Mark as read
+    markRead(url);
+    if (art) art.classList.add("is-read");
+
+    // 2) Force new tab (keep is.is behind)
+    e.preventDefault();
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+}
 
   function init() {
     setTheme(getTheme());
