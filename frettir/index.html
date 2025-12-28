@@ -18,11 +18,15 @@
 
   <script src="/assets/js/prefs.js"></script>
   <script>
-    (function () {
-      const t = (window.prefs && prefs.getTheme) ? prefs.getTheme() : (localStorage.getItem('theme') || 'light');
-      document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
-    })();
-  </script>
+  (function () {
+    const t = (window.prefs && prefs.getTheme) ? prefs.getTheme() : (localStorage.getItem('theme') || 'light');
+    const theme = (t === 'dark') ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+
+    const meta = document.getElementById('metaThemeColor');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0b0f14' : '#ffffff');
+  })();
+</script>
 </head>
 
 <body>
