@@ -26,7 +26,7 @@
       "btn.calendar": "Dagatal",
       "btn.clock": "Klukka 🕒",
       "btn.random": "Slembiúrtak 🎲",
-      "btn.timer": "Tímatalning",
+      "btn.timer": "Tími",
       "btn.news": "Fréttir",
 
       "footer.pill": "Vefur stofnaður 2025. Engar vafrakökur – bara ís.",
@@ -65,7 +65,7 @@
       "btn.calendar": "Calendar",
       "btn.clock": "Clock 🕒",
       "btn.random": "Random pick 🎲",
-      "btn.timer": "Timer",
+      "btn.timer": "Time",
       "btn.news": "News",
 
       "footer.pill": "Site created 2025. No cookies — just ice.",
