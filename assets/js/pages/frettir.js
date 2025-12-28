@@ -18,10 +18,27 @@
     { id: "vidskipti", label: "Viðskipti" },
     { id: "menning",   label: "Menning" },
     { id: "skodun",    label: "Skoðun" },
-    { id: "oflokkad",  label: "Óflokkað" }, // <- mikilvægt til að missa ekki allt í síu
+    { id: "oflokkad",  label: "Óflokkað" },
   ];
 
   const STORAGE_KEY = "is_news_prefs_v1";
+
+  // Read/visited tracking
+  const READ_KEY = "is_news_read_v1";
+  function loadReadSet(){
+    try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || "[]")); }
+    catch { return new Set(); }
+  }
+  function saveReadSet(set){
+    localStorage.setItem(READ_KEY, JSON.stringify([...set].slice(-2000)));
+  }
+  const readSet = loadReadSet();
+  function markRead(url){
+    if (!url) return;
+    readSet.add(url);
+    saveReadSet(readSet);
+  }
+
   const $ = (sel) => document.querySelector(sel);
 
   const els = {
@@ -41,9 +58,11 @@
     btnCatsNone: $("#btnCatsNone"),
     btnSaveSettings: $("#btnSaveSettings"),
     btnResetSettings: $("#btnResetSettings"),
+    btnCloseSettings: $("#btnCloseSettings"),
 
     newsList: $("#newsList"),
     statusText: $("#statusText"),
+    statusSpinner: $("#statusSpinner"),
     lastUpdated: $("#lastUpdated"),
 
     emptyState: $("#emptyState"),
@@ -97,6 +116,20 @@
     setTheme(t === "dark" ? "light" : "dark");
   }
 
+  function setStatus(msg) { if (els.statusText) els.statusText.textContent = msg; }
+
+  function setLoading(on){
+    if (!els.statusSpinner) return;
+    els.statusSpinner.hidden = !on;
+  }
+
+  function setLastUpdated() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    if (els.lastUpdated) els.lastUpdated.textContent = `Uppfært ${hh}:${mm}`;
+  }
+
   function openMenu() {
     els.menuPanel.classList.add("open");
     els.menuPanel.setAttribute("aria-hidden", "false");
@@ -133,26 +166,17 @@
       .replaceAll("'", "&#039;");
   }
 
-  // Decode HTML entities like &#8211; / &nbsp; etc.
   function decodeHtmlEntities(s) {
     const ta = document.createElement("textarea");
     ta.innerHTML = String(s ?? "");
     return ta.value;
   }
 
-  // Clean text coming from feeds/APIs while keeping output safe (we still escape later).
   function cleanText(s) {
     let out = decodeHtmlEntities(s);
-
-    // Strip any tags defensively (feeds sometimes contain <em> etc.)
     out = out.replace(/<[^>]*>/g, "");
-
-    // Normalize various dash characters to plain hyphen-minus
     out = out.replace(/[\u2012-\u2015]/g, "-");
-
-    // Normalize whitespace
     out = out.replace(/\s+/g, " ").trim();
-
     return out;
   }
 
@@ -212,13 +236,12 @@
     els.settingsDialog.querySelectorAll(selector).forEach(cb => cb.checked = value);
   }
 
-  function setStatus(msg) { els.statusText.textContent = msg; }
-
-  function setLastUpdated() {
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    els.lastUpdated.textContent = `Uppfært ${hh}:${mm}`;
+  function applySettingsAndClose(){
+    const current = loadPrefs();
+    const next = readSettingsIntoPrefs(current);
+    savePrefs(next);
+    closeSettings();
+    refresh();
   }
 
   function showEmpty(show) { els.emptyState.hidden = !show; }
@@ -231,24 +254,21 @@
   /* -----------------------
      Icon proxy: stable per source (host-based) + micro-cache
      ----------------------- */
-  const _iconMemo = new Map(); // domain -> /api/icon?host=domain
+  const _iconMemo = new Map();
 
   function normalizeHost(h) {
     return String(h || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
   }
 
   function domainForItem(it) {
-    // Prefer explicit domain/host from backend
     let domain = it?.domain || it?.host || "";
 
-    // Or map from source id
     if (!domain) {
       const sid = it?.sourceId || it?.source || "";
       const s = SOURCES.find(x => x.id === sid);
       if (s?.domain) domain = s.domain;
     }
 
-    // Last resort: parse it.url
     if (!domain && it?.url) {
       try { domain = new URL(it.url).hostname; } catch { /* ignore */ }
     }
@@ -258,7 +278,6 @@
   }
 
   function iconUrlForItem(it) {
-    // If backend already gave our stable host-proxy, accept it.
     if (it?.iconUrl && String(it.iconUrl).startsWith("/api/icon?host=")) {
       return it.iconUrl;
     }
@@ -304,9 +323,10 @@
       const ageLine = age ? `${age} síðan` : "";
 
       const title = cleanText(it.title);
+      const isRead = readSet.has(it.url);
 
       return `
-        <article class="item">
+        <article class="item ${isRead ? "is-read" : ""}" data-url="${escapeHtml(it.url)}">
           <h3 class="item-title">
             <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">
               ${escapeHtml(title)}
@@ -354,6 +374,7 @@
     showError(false);
     showEmpty(false);
     setStatus("Sæki fréttir…");
+    setLoading(true);
 
     try {
       const data = await fetchNewsFromBackend(prefs);
@@ -373,6 +394,7 @@
       setStatus("Villa.");
     } finally {
       isRefreshing = false;
+      setLoading(false);
       ptrDone();
     }
   }
@@ -540,12 +562,18 @@
       renderSettings(d);
     });
 
-    els.btnSaveSettings?.addEventListener("click", () => {
-      const current = loadPrefs();
-      const next = readSettingsIntoPrefs(current);
-      savePrefs(next);
-      closeSettings();
-      refresh();
+    els.btnSaveSettings?.addEventListener("click", applySettingsAndClose);
+    els.btnCloseSettings?.addEventListener("click", applySettingsAndClose);
+
+    // Mark read titles (event delegation)
+    els.newsList?.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (!a) return;
+      const art = e.target.closest(".item");
+      const url = a.getAttribute("href") || art?.getAttribute("data-url");
+      if (!url) return;
+      markRead(url);
+      if (art) art.classList.add("is-read");
     });
 
     window.addEventListener("keydown", (e) => {
