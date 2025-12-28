@@ -23,11 +23,11 @@
 
       "btn.glaciers": "Jöklar 🧊",
       "btn.towns": "Bæir 🏘️",
-      "btn.calendar": "Dagatal 🗓️",
+      "btn.calendar": "Dagatal",
       "btn.clock": "Klukka 🕒",
       "btn.random": "Slembiúrtak 🎲",
-      "btn.timer": "Tímatalning ⏱️",
-      "btn.news": "Fréttir 📰",
+      "btn.timer": "Tímatalning",
+      "btn.news": "Fréttir",
 
       "footer.pill": "Vefur stofnaður 2025. Engar vafrakökur – bara ís.",
 
@@ -62,11 +62,11 @@
 
       "btn.glaciers": "Glaciers 🧊",
       "btn.towns": "Towns 🏘️",
-      "btn.calendar": "Calendar 🗓️",
+      "btn.calendar": "Calendar",
       "btn.clock": "Clock 🕒",
       "btn.random": "Random pick 🎲",
-      "btn.timer": "Timer ⏱️",
-      "btn.news": "News 📰",
+      "btn.timer": "Timer",
+      "btn.news": "News",
 
       "footer.pill": "Site created 2025. No cookies — just ice.",
 
