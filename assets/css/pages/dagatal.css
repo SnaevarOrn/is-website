@@ -675,3 +675,70 @@ html[data-theme="light"] .c-send{
   padding: 0 2px 6px;
   min-height: 18px;
 }
+/* ===== TOP CENTER CONTROLS ===== */
+.top-controls{
+  flex: 1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  min-width: 0;
+}
+
+.seg--top{
+  gap:6px;
+  flex-wrap: nowrap;
+}
+.seg--top button{
+  padding: 10px 12px;
+}
+
+.btn--ghost{
+  padding:10px 12px;
+}
+
+/* ===== LOWER HEADER: indicator + weekdays in one row ===== */
+.dowwrap{
+  display:flex;
+  align-items:center;
+  gap: var(--gap);
+}
+
+.sub-indicator{
+  appearance:none;
+  border:1px solid var(--border);
+  background: transparent;
+  color: var(--ice);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-weight: 900;
+  letter-spacing:.2px;
+  min-width: 120px;
+  white-space:nowrap;
+}
+.sub-indicator:hover{
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+.sub-indicator:active{
+  transform: translateY(1px);
+}
+
+/* Let weekdays take remaining space */
+.dowwrap .dowbar{
+  flex: 1;
+}
+
+/* Small screens: keep it tidy */
+@media (max-width: 520px){
+  .top-controls{
+    justify-content:center;
+    gap:8px;
+  }
+  .sub-indicator{
+    min-width: 110px;
+  }
+  .seg--top button{
+    padding: 10px 10px;
+  }
+}
