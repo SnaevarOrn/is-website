@@ -1,7 +1,4 @@
-/* /assets/js/pages/nidurtalning.js
-   - Countdown with optional prep countdown + optional milliseconds display
-   - Sync between front-page wheels and settings inputs
-*/
+/* /assets/js/pages/nidurtalning.js */
 
 (() => {
   "use strict";
@@ -17,16 +14,16 @@
   const pauseBtn = $("pause");
   const resetBtn = $("reset");
 
-  // Header buttons
+  // Header/buttons
   const settingsBtn = $("settingsBtn");
   const closeSettings = $("closeSettings");
   const themeBtn = $("themeBtn");
   const settingsOverlay = $("settings");
 
-  // Wheels
-  const wH = $("wH");
-  const wM = $("wM");
-  const wS = $("wS");
+  // Picker lists
+  const listH = $("listH");
+  const listM = $("listM");
+  const listS = $("listS");
 
   // Settings inputs
   const hoursEl = $("hours");
@@ -38,16 +35,15 @@
   const showMsEl = $("showMs");
   const applyBtn = $("apply");
 
-  // Small hints under wheels
+  // Hints
   const hintPrep = $("hintPrep");
   const hintMs = $("hintMs");
 
-  // ---------- State ----------
-  const status = {
-    mode: "ready", // ready | prep | run | done | paused
-    running: false,
-    paused: false,
+  const ITEM_H = 52; // must match CSS li height
+  const PAD_ITEMS = 2; // visual context for "dim" styling
 
+  const status = {
+    mode: "ready", // ready | prep | run | paused | done
     totalMs: 5 * 60 * 1000,
     remainingMs: 5 * 60 * 1000,
 
@@ -57,16 +53,12 @@
 
     showMs: false,
 
-    // timing
     rafId: 0,
     lastTs: 0
   };
 
-  // ---------- Helpers ----------
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
-
   const pad2 = (n) => String(n).padStart(2, "0");
-  const pad3 = (n) => String(n).padStart(3, "0");
 
   function msToParts(ms){
     ms = Math.max(0, Math.floor(ms));
@@ -75,7 +67,8 @@
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     const milli = ms % 1000;
-    return { h, m, s, milli };
+    const cs = Math.floor(milli / 10); // centiseconds 0..99
+    return { h, m, s, cs };
   }
 
   function partsToMs(h, m, s){
@@ -83,17 +76,14 @@
   }
 
   function fmtTime(ms){
-    const { h, m, s, milli } = msToParts(ms);
-
-    // If hours is 0, keep the cleaner look like before (MM:SS)
+    const { h, m, s, cs } = msToParts(ms);
     if (!status.showMs) {
       if (h > 0) return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
       return `${pad2(m)}:${pad2(s)}`;
     }
-
-    // With ms: show .mmm
-    if (h > 0) return `${pad2(h)}:${pad2(m)}:${pad2(s)}.${pad3(milli)}`;
-    return `${pad2(m)}:${pad2(s)}.${pad3(milli)}`;
+    // 2 digits only:
+    if (h > 0) return `${pad2(h)}:${pad2(m)}:${pad2(s)}.${pad2(cs)}`;
+    return `${pad2(m)}:${pad2(s)}.${pad2(cs)}`;
   }
 
   function setStateLabel(){
@@ -107,25 +97,26 @@
     stateEl.textContent = map[status.mode] || "Tilbúið";
   }
 
-  function setButtons(){
-    const isActive = status.mode === "prep" || status.mode === "run";
-    startBtn.disabled = isActive;
-    pauseBtn.disabled = !isActive;
+  function isActive(){
+    return status.mode === "prep" || status.mode === "run" || status.mode === "paused";
   }
 
-  function render(){
-    // During prep, show prep time (seconds) in the big display
-    if (status.mode === "prep") {
-      const secLeft = Math.ceil(status.prepRemainingMs / 1000);
-      timeEl.textContent = String(secLeft);
-      setStateLabel();
-      setButtons();
-      return;
-    }
+  function updateActiveUI(){
+    document.body.setAttribute("data-active", isActive() ? "1" : "0");
+  }
 
-    timeEl.textContent = fmtTime(status.remainingMs);
-    setStateLabel();
-    setButtons();
+  function canReset(){
+    // greyed-out when already reset (ready and remaining==total)
+    if (status.mode === "ready" && Math.abs(status.remainingMs - status.totalMs) < 20) return false;
+    // allow reset in paused/run/prep/done (acts like "cancel to configured value")
+    return true;
+  }
+
+  function setButtons(){
+    const activeRun = status.mode === "prep" || status.mode === "run";
+    startBtn.disabled = activeRun;
+    pauseBtn.disabled = !activeRun;
+    resetBtn.disabled = !canReset();
   }
 
   function renderHints(){
@@ -133,47 +124,20 @@
     hintMs.textContent = `Millisec: ${status.showMs ? "á" : "af"}`;
   }
 
-  function syncWheelsFromMs(ms){
-    const { h, m, s } = msToParts(ms);
-    wH.textContent = pad2(clamp(h, 0, 23));
-    wM.textContent = pad2(clamp(m, 0, 59));
-    wS.textContent = pad2(clamp(s, 0, 59));
+  function render(){
+    updateActiveUI();
+
+    if (status.mode === "prep") {
+      const secLeft = Math.ceil(status.prepRemainingMs / 1000);
+      timeEl.textContent = String(secLeft);
+    } else {
+      timeEl.textContent = fmtTime(status.remainingMs);
+    }
+
+    setStateLabel();
+    setButtons();
   }
 
-  function syncInputsFromMs(ms){
-    const { h, m, s } = msToParts(ms);
-    hoursEl.value = String(clamp(h, 0, 23));
-    minsEl.value  = String(clamp(m, 0, 59));
-    secsEl.value  = String(clamp(s, 0, 59));
-  }
-
-  function currentConfiguredMs(){
-    const h = clamp(Number(hoursEl.value || 0), 0, 23);
-    const m = clamp(Number(minsEl.value || 0), 0, 59);
-    const s = clamp(Number(secsEl.value || 0), 0, 59);
-    return partsToMs(h, m, s);
-  }
-
-  function applyConfigToReadyState(){
-    const ms = currentConfiguredMs();
-    status.totalMs = ms;
-    status.remainingMs = ms;
-
-    status.prepEnabled = !!usePrepEl.checked;
-    status.prepSeconds = clamp(Number(prepEl.value || 0), 0, 60);
-
-    status.showMs = !!showMsEl.checked;
-
-    // keep UI consistent
-    syncWheelsFromMs(ms);
-    renderHints();
-
-    // If time is 0, force a sane ready label, but keep it allowed.
-    status.mode = "ready";
-    render();
-  }
-
-  // ---------- Engine ----------
   function stopLoop(){
     if (status.rafId) cancelAnimationFrame(status.rafId);
     status.rafId = 0;
@@ -193,19 +157,14 @@
 
     if (status.mode === "prep") {
       status.prepRemainingMs -= dt;
-
       if (status.prepRemainingMs <= 0) {
-        // transition to run
-        status.mode = "run";
         status.prepRemainingMs = 0;
-        status.lastTs = ts; // reset dt baseline
-        render();
-      } else {
-        render();
+        status.mode = "run";
+        status.lastTs = ts;
       }
+      render();
     } else if (status.mode === "run") {
       status.remainingMs -= dt;
-
       if (status.remainingMs <= 0) {
         status.remainingMs = 0;
         render();
@@ -215,21 +174,16 @@
       render();
     }
 
-    // Render frequency:
-    // - If ms is off, no need to render at 60fps; but simplest is still RAF.
-    //   Overhead is tiny here, and correctness beats micro-optimization.
     status.rafId = requestAnimationFrame(loop);
   }
 
   function start(){
     if (status.mode === "prep" || status.mode === "run") return;
 
-    // If we're in done, start from configured value again
     if (status.mode === "done") {
       status.remainingMs = status.totalMs;
     }
 
-    // If remaining is 0, still allow start -> it will instantly finish.
     if (status.prepEnabled && status.prepSeconds > 0) {
       status.mode = "prep";
       status.prepRemainingMs = status.prepSeconds * 1000;
@@ -237,7 +191,6 @@
       status.mode = "run";
     }
 
-    setButtons();
     render();
     stopLoop();
     status.rafId = requestAnimationFrame(loop);
@@ -252,63 +205,130 @@
 
   function resume(){
     if (status.mode !== "paused") return;
-
-    // Decide what to resume: if prepRemainingMs > 0 resume prep, else run
     if (status.prepEnabled && status.prepRemainingMs > 0) status.mode = "prep";
     else status.mode = "run";
-
     render();
     stopLoop();
     status.rafId = requestAnimationFrame(loop);
   }
 
+  function readConfigMs(){
+    const h = clamp(Number(hoursEl.value || 0), 0, 23);
+    const m = clamp(Number(minsEl.value || 0), 0, 59);
+    const s = clamp(Number(secsEl.value || 0), 0, 59);
+    return partsToMs(h, m, s);
+  }
+
+  function applyConfigToReady(){
+    const ms = readConfigMs();
+    status.totalMs = ms;
+    status.remainingMs = ms;
+
+    status.prepEnabled = !!usePrepEl.checked;
+    status.prepSeconds = clamp(Number(prepEl.value || 0), 0, 60);
+
+    status.showMs = !!showMsEl.checked;
+
+    status.mode = "ready";
+    renderHints();
+    // keep picker aligned to config
+    setPickerFromParts(msToParts(ms));
+    render();
+  }
+
   function reset(){
+    // Reset always returns to configured value and ready state
     stopLoop();
-    applyConfigToReadyState();
+    applyConfigToReady();
   }
 
-  // ---------- Wheel handling ----------
-  function wheelGet(unit){
-    const h = Number(wH.textContent || 0);
-    const m = Number(wM.textContent || 0);
-    const s = Number(wS.textContent || 0);
-    return { h, m, s, unit };
-  }
-
-  function wheelSet(h, m, s){
-    h = clamp(h, 0, 23);
-    m = clamp(m, 0, 59);
-    s = clamp(s, 0, 59);
-    wH.textContent = pad2(h);
-    wM.textContent = pad2(m);
-    wS.textContent = pad2(s);
-
-    // push into settings inputs too
-    hoursEl.value = String(h);
-    minsEl.value  = String(m);
-    secsEl.value  = String(s);
-  }
-
-  function wheelNudge(unit, dir){
-    const { h, m, s } = wheelGet();
-    let nh = h, nm = m, ns = s;
-
-    const d = dir === "up" ? 1 : -1;
-
-    if (unit === "h") nh = clamp(h + d, 0, 23);
-    if (unit === "m") nm = clamp(m + d, 0, 59);
-    if (unit === "s") ns = clamp(s + d, 0, 59);
-
-    wheelSet(nh, nm, ns);
-
-    // If we’re not actively running, update the ready countdown immediately
-    if (status.mode !== "prep" && status.mode !== "run") {
-      applyConfigToReadyState();
+  // ---------- iOS-like scroll picker ----------
+  function buildList(el, max){
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i <= max; i++) {
+      const li = document.createElement("li");
+      li.textContent = pad2(i);
+      li.dataset.value = String(i);
+      frag.appendChild(li);
     }
+    el.innerHTML = "";
+    el.appendChild(frag);
+  }
+
+  function getCenteredValue(listEl){
+    // listEl has padding top/bottom; compute "nearest" by scrollTop
+    const idx = Math.round(listEl.scrollTop / ITEM_H);
+    return clamp(idx, 0, listEl.children.length - 1);
+  }
+
+  function scrollToIndex(listEl, idx, smooth = true){
+    const top = idx * ITEM_H;
+    listEl.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+  }
+
+  function dimAround(listEl){
+    const idx = getCenteredValue(listEl);
+    [...listEl.children].forEach((li, i) => {
+      const dist = Math.abs(i - idx);
+      li.classList.toggle("dim", dist >= PAD_ITEMS);
+    });
+  }
+
+  function setPickerFromParts({ h, m, s }){
+    scrollToIndex(listH, clamp(h, 0, 23), false);
+    scrollToIndex(listM, clamp(m, 0, 59), false);
+    scrollToIndex(listS, clamp(s, 0, 59), false);
+    dimAround(listH);
+    dimAround(listM);
+    dimAround(listS);
+  }
+
+  function syncInputsFromPicker(){
+    const h = getCenteredValue(listH);
+    const m = getCenteredValue(listM);
+    const s = getCenteredValue(listS);
+    hoursEl.value = String(h);
+    minsEl.value = String(m);
+    secsEl.value = String(s);
+  }
+
+  function commitPickerToReady(){
+    if (isActive()) return; // locked while active
+    syncInputsFromPicker();
+    applyConfigToReady();
+  }
+
+  function attachPicker(listEl){
+    let t = 0;
+
+    const onScroll = () => {
+      dimAround(listEl);
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const idx = getCenteredValue(listEl);
+        scrollToIndex(listEl, idx, true);
+        commitPickerToReady();
+      }, 80);
+    };
+
+    listEl.addEventListener("scroll", onScroll, { passive: true });
+
+    // also support "tap to jump"
+    listEl.addEventListener("click", (e) => {
+      if (isActive()) return;
+      const li = e.target.closest("li");
+      if (!li) return;
+      const idx = Number(li.dataset.value || 0);
+      scrollToIndex(listEl, idx, true);
+      setTimeout(() => {
+        commitPickerToReady();
+      }, 120);
+    });
   }
 
   // ---------- Modal ----------
   function openSettings(){
+    if (isActive()) return; // hidden anyway, but just in case
     settingsOverlay.classList.add("open");
     settingsOverlay.setAttribute("aria-hidden", "false");
   }
@@ -324,114 +344,95 @@
     else start();
   });
 
-  pauseBtn.addEventListener("click", () => pause());
-  resetBtn.addEventListener("click", () => reset());
+  pauseBtn.addEventListener("click", pause);
+  resetBtn.addEventListener("click", reset);
 
-  // Wheels: delegation
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".spin");
-    if (!btn) return;
-
-    const wheel = btn.closest(".wheel");
-    if (!wheel) return;
-
-    const unit = wheel.getAttribute("data-unit");
-    const action = btn.getAttribute("data-action");
-
-    if (status.mode === "prep" || status.mode === "run") return; // don’t change while running
-
-    wheelNudge(unit, action);
-  });
-
-  // Settings apply
   applyBtn.addEventListener("click", () => {
-    // normalize inputs
     hoursEl.value = String(clamp(Number(hoursEl.value || 0), 0, 23));
     minsEl.value  = String(clamp(Number(minsEl.value || 0), 0, 59));
     secsEl.value  = String(clamp(Number(secsEl.value || 0), 0, 59));
     prepEl.value  = String(clamp(Number(prepEl.value || 0), 0, 60));
 
-    // sync wheels and apply
-    const ms = currentConfiguredMs();
-    syncWheelsFromMs(ms);
+    // sync picker to typed values
+    setPickerFromParts({
+      h: Number(hoursEl.value),
+      m: Number(minsEl.value),
+      s: Number(secsEl.value)
+    });
 
-    applyConfigToReadyState();
+    applyConfigToReady();
     closeSettingsFn();
   });
 
-  // Keep wheels in sync while typing (but don’t auto-close)
+  // immediate feedback while typing (only when not active)
   [hoursEl, minsEl, secsEl].forEach((el) => {
     el.addEventListener("input", () => {
-      const ms = currentConfiguredMs();
-      syncWheelsFromMs(ms);
-
-      if (status.mode !== "prep" && status.mode !== "run") {
-        status.totalMs = ms;
-        status.remainingMs = ms;
-        status.mode = "ready";
-        render();
-      }
+      if (isActive()) return;
+      const ms = readConfigMs();
+      status.totalMs = ms;
+      status.remainingMs = ms;
+      status.mode = "ready";
+      setPickerFromParts(msToParts(ms));
+      render();
     });
   });
 
-  // Toggles update hints immediately
   usePrepEl.addEventListener("change", () => {
     status.prepEnabled = !!usePrepEl.checked;
     renderHints();
   });
+
   showMsEl.addEventListener("change", () => {
     status.showMs = !!showMsEl.checked;
     renderHints();
     render();
   });
+
   prepEl.addEventListener("input", () => {
     status.prepSeconds = clamp(Number(prepEl.value || 0), 0, 60);
   });
 
-  // Modal open/close
   settingsBtn.addEventListener("click", openSettings);
   closeSettings.addEventListener("click", closeSettingsFn);
   settingsOverlay.addEventListener("click", (e) => {
     if (e.target === settingsOverlay) closeSettingsFn();
   });
 
-  // Theme
   themeBtn.addEventListener("click", () => {
     if (window.prefs && typeof prefs.toggleTheme === "function") prefs.toggleTheme();
   });
 
-  // Keyboard: close on Escape
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && settingsOverlay.classList.contains("open")) closeSettingsFn();
   });
 
   // ---------- Init ----------
-  function initDefaults(){
+  function init(){
+    // build lists
+    buildList(listH, 23);
+    buildList(listM, 59);
+    buildList(listS, 59);
+
+    attachPicker(listH);
+    attachPicker(listM);
+    attachPicker(listS);
+
     // defaults
     hoursEl.value = "0";
     minsEl.value = "5";
     secsEl.value = "0";
 
-    usePrepEl.checked = false; // default OFF
+    usePrepEl.checked = false;
     prepEl.value = "5";
 
-    showMsEl.checked = false; // default OFF
-
-    const ms = partsToMs(0, 5, 0);
-    status.totalMs = ms;
-    status.remainingMs = ms;
+    showMsEl.checked = false;
 
     status.prepEnabled = false;
     status.prepSeconds = 5;
     status.showMs = false;
 
-    syncWheelsFromMs(ms);
-    renderHints();
-
-    status.mode = "ready";
-    render();
-    setButtons();
+    applyConfigToReady(); // sets picker + renders + disables reset if already reset
   }
 
-  initDefaults();
+  init();
 })();
