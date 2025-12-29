@@ -49,52 +49,43 @@
   <div class="card">
     <div class="timer">
       <div class="big" id="time">05:00</div>
-
       <div class="meta">
         <span class="pill" id="state">Tilbúið</span>
       </div>
     </div>
 
-    <!-- SPIN WHEELS -->
-    <div class="wheels" aria-label="Stilla tíma">
-      <div class="wheel" data-unit="h">
-        <button class="spin" data-action="up" aria-label="Hækka klukkustundir">▲</button>
-        <div class="wheel-val">
-          <div class="wheel-num" id="wH">00</div>
-          <div class="wheel-lbl">klst</div>
+    <!-- iOS-style picker (drag/scroll) -->
+    <div class="pickerWrap" id="pickerWrap" aria-label="Stilla tíma">
+      <div class="picker">
+        <div class="pickerHighlight" aria-hidden="true"></div>
+
+        <div class="col" id="colH" data-unit="h" aria-label="Klukkustundir">
+          <div class="colLabel">hours</div>
+          <ul class="wheelList" id="listH"></ul>
         </div>
-        <button class="spin" data-action="down" aria-label="Lækka klukkustundir">▼</button>
+
+        <div class="col" id="colM" data-unit="m" aria-label="Mínútur">
+          <div class="colLabel">min</div>
+          <ul class="wheelList" id="listM"></ul>
+        </div>
+
+        <div class="col" id="colS" data-unit="s" aria-label="Sekúndur">
+          <div class="colLabel">sec</div>
+          <ul class="wheelList" id="listS"></ul>
+        </div>
       </div>
 
-      <div class="wheel" data-unit="m">
-        <button class="spin" data-action="up" aria-label="Hækka mínútur">▲</button>
-        <div class="wheel-val">
-          <div class="wheel-num" id="wM">05</div>
-          <div class="wheel-lbl">mín</div>
-        </div>
-        <button class="spin" data-action="down" aria-label="Lækka mínútur">▼</button>
+      <div class="hint">
+        <span class="hint-pill" id="hintPrep">Start countdown: af</span>
+        <span class="hint-pill" id="hintMs">Millisec: af</span>
       </div>
-
-      <div class="wheel" data-unit="s">
-        <button class="spin" data-action="up" aria-label="Hækka sekúndur">▲</button>
-        <div class="wheel-val">
-          <div class="wheel-num" id="wS">00</div>
-          <div class="wheel-lbl">sek</div>
-        </div>
-        <button class="spin" data-action="down" aria-label="Lækka sekúndur">▼</button>
-      </div>
-    </div>
-
-    <div class="hint">
-      <span class="hint-pill" id="hintPrep">Start countdown: af</span>
-      <span class="hint-pill" id="hintMs">Millisec: af</span>
     </div>
   </div>
 </main>
 
 <div class="controls">
   <div class="controls-inner">
-    <button class="btn ghost" id="reset">Endurstilla</button>
+    <button class="btn ghost" id="reset" disabled>Endurstilla</button>
     <button class="btn primary" id="start">▶︎ Start</button>
     <button class="btn ghost" id="pause" disabled>⏸︎ Pása</button>
   </div>
