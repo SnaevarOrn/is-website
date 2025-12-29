@@ -8,7 +8,7 @@
 
   const calendarEl = $("#calendar");
   const yearLabel = $("#yearLabel");
-  const monthLabel = $("#monthLabel");
+  const monthLabel = $("#monthLabel"); // now a button in lower header
   const dowBar = $("#dowBar");
 
   const state = {
@@ -24,19 +24,42 @@
     monthObserver: null,
   };
 
+  function syncLayoutSegTop() {
+    const seg = $("#layoutSegTop");
+    if (!seg) return;
+    seg.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+    seg.querySelector(`button[data-layout="${state.layout}"]`)?.classList.add("active");
+  }
+
+  function syncHolidaysToggleBtn() {
+    const btn = $("#holidaysToggleBtn");
+    if (!btn) return;
+    btn.textContent = state.view === "holidays" ? "Skoða dagatal" : "Skoða frídaga";
+    btn.title = btn.textContent;
+  }
+
+  function setMonthLabelText(txt) {
+    if (!monthLabel) return;
+    monthLabel.textContent = txt;
+  }
+
   function setHeaderContext() {
+    syncLayoutSegTop();
+    syncHolidaysToggleBtn();
+
     if (state.view === "holidays") {
-      monthLabel.textContent = "Frídagar";
+      setMonthLabelText("Frídagar");
       dowBar.classList.add("is-hidden");
       return;
     }
+
     dowBar.classList.remove("is-hidden");
 
     if (state.layout === "weeks") {
-      monthLabel.textContent = "Vikur";
+      setMonthLabelText("Vikur");
       return;
     }
-    // months view: monthLabel updated by observer
+    // months view: monthLabel updated by observer (current month name)
   }
 
   function disconnectMonthObserver() {
@@ -54,7 +77,7 @@
     if (!monthSections.length) return;
 
     const firstM = parseInt(monthSections[0].dataset.month, 10);
-    if (Number.isFinite(firstM)) monthLabel.textContent = R.MONTHS_LONG[firstM];
+    if (Number.isFinite(firstM)) setMonthLabelText(R.MONTHS_LONG[firstM]);
 
     const obs = new IntersectionObserver(
       (entries) => {
@@ -62,7 +85,7 @@
         if (!visible.length) return;
         visible.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
         const m = parseInt(visible[0].target.dataset.month, 10);
-        if (Number.isFinite(m)) monthLabel.textContent = R.MONTHS_LONG[m];
+        if (Number.isFinite(m)) setMonthLabelText(R.MONTHS_LONG[m]);
       },
       {
         root: null,
@@ -119,6 +142,19 @@
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  function toggleLayout() {
+    state.layout = state.layout === "months" ? "weeks" : "months";
+    state.view = "calendar";
+    build();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function toggleHolidaysView() {
+    state.view = state.view === "holidays" ? "calendar" : "holidays";
+    build();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   /* YEAR DROPDOWN */
   const pop = $("#yearPop");
   const titleWrap = $("#titleWrap");
@@ -142,6 +178,7 @@
   document.addEventListener("click", (e) => {
     if (pop && pop.classList.contains("show") && titleWrap && !titleWrap.contains(e.target)) togglePop(false);
   });
+
   yearLabel.addEventListener("click", () => togglePop());
 
   $("#goYearBtn")?.addEventListener("click", () => setYear(parseInt($("#yearInput")?.value, 10)));
@@ -149,6 +186,7 @@
     if (e.key === "Enter") $("#goYearBtn")?.click();
     if (e.key === "Escape") togglePop(false);
   });
+
   pop?.querySelectorAll("[data-jump]")?.forEach((btn) => {
     btn.addEventListener("click", () => {
       const j = parseInt(btn.getAttribute("data-jump"), 10);
@@ -172,18 +210,6 @@
   $("#closeSheet")?.addEventListener("click", closeSheet);
   overlay?.addEventListener("click", closeSheet);
 
-  $("#layoutSeg")
-    ?.querySelectorAll("button")
-    ?.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        $("#layoutSeg")?.querySelectorAll("button")?.forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        state.layout = btn.dataset.layout;
-        state.view = "calendar";
-        build();
-      });
-    });
-
   $("#toggleHolidays")?.addEventListener("change", (e) => {
     state.showHolidays = e.target.checked;
     build();
@@ -197,16 +223,31 @@
     build();
   });
 
-  $("#showHolidaysBtn")?.addEventListener("click", () => {
-    state.view = "holidays";
-    build();
-    closeSheet();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  /* TOP CENTER CONTROLS */
+  $("#layoutSegTop")
+    ?.querySelectorAll("button")
+    ?.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.layout = btn.dataset.layout;
+        state.view = "calendar";
+        build();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
 
-  $("#todayBtn")?.addEventListener("click", () => {
-    closeSheet();
-    jumpToToday();
+  $("#todayBtnTop")?.addEventListener("click", () => jumpToToday());
+  $("#holidaysToggleBtn")?.addEventListener("click", () => toggleHolidaysView());
+
+  // Lower header indicator: toggle months/weeks (as requested)
+  monthLabel?.addEventListener("click", () => {
+    if (state.view === "holidays") {
+      // If you tap "Frídagar" label, take you back to calendar (nice UX)
+      state.view = "calendar";
+      build();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    toggleLayout();
   });
 
   $("#backBtn")?.addEventListener("click", () => history.back());
@@ -307,17 +348,17 @@
   });
 
   /* INIT */
-(() => {
-  const now = new Date();
-  state.year = now.getFullYear();
-  build();
+  (() => {
+    const now = new Date();
+    state.year = now.getFullYear();
+    build();
 
-  requestAnimationFrame(() => {
-    const iso = D.isoDate(now);
-    const el = document.querySelector(`[data-iso="${iso}"]`);
-    if (el) el.scrollIntoView({ block: "center" });
-  });
-})();
+    requestAnimationFrame(() => {
+      const iso = D.isoDate(now);
+      const el = document.querySelector(`[data-iso="${iso}"]`);
+      if (el) el.scrollIntoView({ block: "center" });
+    });
+  })();
 
   // Optional tiny debug handle (safe)
   NS._state = state;
