@@ -8,7 +8,7 @@
 
   const calendarEl = $("#calendar");
   const yearLabel = $("#yearLabel");
-  const monthLabel = $("#monthLabel"); // now a button in lower header
+  const monthLabel = $("#monthLabel"); // button in lower header
   const dowBar = $("#dowBar");
 
   const state = {
@@ -24,11 +24,11 @@
     monthObserver: null,
   };
 
-  function syncLayoutSegTop() {
-    const seg = $("#layoutSegTop");
-    if (!seg) return;
-    seg.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
-    seg.querySelector(`button[data-layout="${state.layout}"]`)?.classList.add("active");
+  function syncLayoutChip() {
+    const chip = $("#layoutToggleChip");
+    if (!chip) return;
+    chip.textContent = state.layout === "months" ? "Mánuðir" : "Vikur";
+    chip.title = "Breyta sýn";
   }
 
   function syncHolidaysToggleBtn() {
@@ -44,8 +44,8 @@
   }
 
   function setHeaderContext() {
-    syncLayoutSegTop();
     syncHolidaysToggleBtn();
+    syncLayoutChip();
 
     if (state.view === "holidays") {
       setMonthLabelText("Frídagar");
@@ -59,7 +59,7 @@
       setMonthLabelText("Vikur");
       return;
     }
-    // months view: monthLabel updated by observer (current month name)
+    // months view: monthLabel updated by observer
   }
 
   function disconnectMonthObserver() {
@@ -179,7 +179,7 @@
     if (pop && pop.classList.contains("show") && titleWrap && !titleWrap.contains(e.target)) togglePop(false);
   });
 
-  yearLabel.addEventListener("click", () => togglePop());
+  yearLabel?.addEventListener("click", () => togglePop());
 
   $("#goYearBtn")?.addEventListener("click", () => setYear(parseInt($("#yearInput")?.value, 10)));
   $("#yearInput")?.addEventListener("keydown", (e) => {
@@ -223,25 +223,22 @@
     build();
   });
 
-  /* TOP CENTER CONTROLS */
-  $("#layoutSegTop")
-    ?.querySelectorAll("button")
-    ?.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.layout = btn.dataset.layout;
-        state.view = "calendar";
-        build();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    });
-
-  $("#todayBtnTop")?.addEventListener("click", () => jumpToToday());
+  /* HEADER BUTTONS */
   $("#holidaysToggleBtn")?.addEventListener("click", () => toggleHolidaysView());
+  $("#todayChip")?.addEventListener("click", () => jumpToToday());
+  $("#layoutToggleChip")?.addEventListener("click", () => {
+    if (state.view === "holidays") {
+      state.view = "calendar";
+      build();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    toggleLayout();
+  });
 
-  // Lower header indicator: toggle months/weeks (as requested)
+  // Lower header indicator: toggle months/weeks; in holidays returns to calendar
   monthLabel?.addEventListener("click", () => {
     if (state.view === "holidays") {
-      // If you tap "Frídagar" label, take you back to calendar (nice UX)
       state.view = "calendar";
       build();
       window.scrollTo({ top: 0, behavior: "smooth" });
