@@ -742,3 +742,35 @@ html[data-theme="light"] .c-send{
     padding: 10px 10px;
   }
 }
+/* ===== YEAR ROW: keeps year centered, chips left ===== */
+.subrow--year{
+  display:grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items:center;
+  gap:10px;
+}
+.yr-left{ display:flex; gap:8px; align-items:center; justify-content:flex-start; min-width:0; }
+.yr-right{ min-width:0; }
+
+.chip--ghost{
+  border:1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.chip--ghost:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
+.chip--ghost:active{ transform: translateY(1px); }
+
+/* ===== Give days/cells more width on mobile ===== */
+.grid, .dowbar, .week-grid{
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+@media (max-width: 520px){
+  :root{ --padX: 8px; --gap: 6px; }
+  .chip--ghost{ padding: 10px 10px; }
+}
