@@ -37,16 +37,8 @@
     <div class="topbar-inner">
       <button class="btn" id="backBtn" title="Til baka">← <span style="opacity:.9">Til baka</span></button>
 
-      <!-- CENTER CONTROLS (moved from settings) -->
-      <div class="top-controls" aria-label="Stjórnun">
-        <div class="seg seg--top" id="layoutSegTop" aria-label="Sýn">
-          <button data-layout="months" class="active" type="button">Mánuðir</button>
-          <button data-layout="weeks" type="button">Vikur</button>
-        </div>
-
-        <button class="btn btn--ghost" id="todayBtnTop" type="button" title="Í dag">Í dag</button>
-        <button class="btn btn--ghost" id="holidaysToggleBtn" type="button" title="Skoða frídaga">Skoða frídaga</button>
-      </div>
+      <!-- Keep holidays toggle in top header -->
+      <button class="btn btn--ghost" id="holidaysToggleBtn" type="button" title="Skoða frídaga">Skoða frídaga</button>
 
       <!-- HAMBURGER MENU -->
       <div class="menu-wrap">
@@ -63,8 +55,14 @@
     <div class="subbar">
       <div class="subbar-inner">
 
-        <!-- YEAR NAV (stays here) -->
-        <div class="subrow">
+        <!-- YEAR ROW: chips + year centered -->
+        <div class="subrow subrow--year">
+          <div class="yr-left">
+            <button class="chip chip--ghost" id="layoutToggleChip" type="button" title="Breyta sýn">Mánuðir</button>
+            <button class="chip chip--ghost" id="todayChip" type="button" title="Í dag">Í dag</button>
+          </div>
+
+          <!-- YEAR NAV -->
           <div class="year-nav title-wrap" id="titleWrap">
             <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
             <div class="year" id="yearLabel" title="Velja ár">2025</div>
@@ -76,15 +74,13 @@
                 <button class="btn" id="goYearBtn">Fara</button>
               </div>
               <div class="row" style="justify-content:space-between;">
-                <!-- removed -50 / +50 -->
                 <button class="chip" data-jump="-10">-10</button>
                 <button class="chip" data-jump="10">+10</button>
               </div>
             </div>
           </div>
 
-          <!-- (optional spacer/right side if needed later) -->
-          <div style="width:44px;"></div>
+          <div class="yr-right"></div>
         </div>
 
         <!-- LOWER HEADER: indicator left of weekdays -->
@@ -108,8 +104,6 @@
       <button class="btn" id="closeSheet" title="Loka">✕</button>
     </div>
     <div class="sheet-body">
-
-      <!-- removed "Sýn" group + removed Flýtileiðir group (moved to header) -->
 
       <div class="group">
         <h4>Merkingar</h4>
