@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "fixed": {
+    "01-01": {
+      "id": "new-years-day",
+      "title": "🎆 Nýársdagur",
+      "summary": "Upphaf nýs árs samkvæmt gregoríska tímatalinu; lögbundinn almennur frídagur á Íslandi.",
+      "body": "Nýársdagur markar upphaf nýs árs samkvæmt gregoríska tímatalinu og hefur lengi haft táknræna merkingu um endurnýjun, upphaf og samfélagslega samveru.\n\nDagurinn er lögbundinn almennur frídagur á Íslandi og hluti af hefðbundnu frídagakerfi sem mótaðist á 20. öld í tengslum við þróun vinnuréttar og skipulag vinnuviku.\n\nÞótt ekki liggi fyrir ein nákvæm lagagrein um „stofnun“ nýársdags sem frídags, hefur hann verið fastur hluti af lögbundnum frídögum í íslenskum rétti í áratugi og telst sjálfsagður frídagur í samfélaginu í dag.\n\nNýársdagur þjónar því bæði félagslegum og hagnýtum tilgangi sem hvíldardagur eftir áramótahátíðir og sameiginleg byrjun nýs starfsárs.",
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
+      ]
+    },
+
+    "05-01": {
+      "id": "labour-day",
+      "title": "✊ Verkalýðsdagurinn",
+      "summary": "Alþjóðlegur baráttudagur verkafólks; á Íslandi með fyrstu kröfugöngu 1923 og formfest frídagakerfi 1972.",
+      "body": "Alþjóðlegur baráttudagur verkafólks (May Day / Labour Day) sem á rætur sínar að rekja til vinnu- og verkfallsbaráttu í Bandaríkjunum á síðari hluta 19. aldar, einkum kröfunnar um 8 stunda vinnudag.\n\nÁ Íslandi fór fyrsta kröfugangan fram 1. maí 1923 í Reykjavík, þar sem verkalýðshreyfingin setti fram kröfur um bætt kjör og vinnuréttindi.\n\nÞrátt fyrir langa hefð kröfuganga og samkomna varð 1. maí ekki almennur lögbundinn frídagur fyrr en árið 1972, þegar frídagakerfi launafólks var formfest.\n\nÍ dag er 1. maí bæði lögbundinn frídagur og virkur baráttudagur þar sem kröfugöngur, fundir og félagsleg umræða um stöðu launafólks eru í forgrunni.",
+      "sources": [
+        { "label": "IWW Ísland: The First May 1st in Iceland (1923)", "url": "https://iwwisland.org/2021/05/03/the-first-may-1st-in-iceland-1923/" },
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
+      ]
+    },
+
+    "06-17": {
+      "id": "national-day",
+      "title": "🇮🇸 Þjóðhátíðardagurinn",
+      "summary": "Minnir á stofnun Lýðveldisins 1944 og er fæðingardagur Jóns Sigurðssonar.",
+      "body": "17. júní er þjóðhátíðardagur Íslendinga og minnir á stofnun Lýðveldisins Íslands árið 1944, þegar sambandinu við Danmörku var formlega slitið.\n\nDagurinn var valinn vegna þess að hann er fæðingardagur Jóns Sigurðssonar (1811–1879), helsta leiðtoga sjálfstæðisbaráttu Íslendinga á 19. öld.\n\nÞótt hátíðarhöld 17. júní hafi verið stunduð í áratugi fyrir lýðveldisstofnun, varð dagurinn að almennum þjóðhátíðar- og frídegi frá og með 1944, og festist síðar í sessi sem lögbundinn frídagur með almennri frídagalöggjöf.\n\nÍ dag er 17. júní stærsti sameiginlegi hátíðisdagur þjóðarinnar, þar sem þjóðarsjálfstæði, saga og menningarleg sjálfsmynd eru í brennidepli.",
+      "sources": [
+        { "label": "Wikipedia: Icelandic National Day", "url": "https://en.wikipedia.org/wiki/Icelandic_National_Day" },
+        { "label": "Vísindavefur HÍ: Af hverju er 17. júní þjóðhátíðardagur?", "url": "https://www.visindavefur.is/svar.php?id=1692" }
+      ]
+    }
+  },
+
+  "rules": [
+    {
+      "id": "fishermens-day",
+      "title": "⚓ Sjómannadagurinn",
+      "summary": "Helgaður sjómönnum; sérstakur frídagur sjómanna. Yfirleitt fyrsti sunnudagur í júní (með hefðbundinni undantekningu ef hann rekst á hvítasunnu).",
+      "body": "Sjómannadagurinn er helgaður íslenskum sjómönnum og þeirri sjósókn sem um aldir hefur verið ein af grunnstoðum íslensks samfélags og efnahags.\n\nDagurinn var fyrst haldinn hátíðlegur árið 1938, meðal annars í Reykjavík og á Ísafirði, að frumkvæði sjómanna og stuðningsfólks þeirra.\n\nMeð lögum nr. 20/1987 var ákveðið að fyrsti sunnudagur í júní skyldi vera formlegur frídagur sjómanna, með ákvæðum um að skip skyldu almennt vera í höfn.\n\nSjómannadagurinn er því ekki almennur frídagur fyrir allt launafólk, heldur sérstakur lögbundinn frídagur sjómanna, jafnframt því að vera mikilvægur menningar- og minningardagur fyrir þjóðina.",
+      "rule": {
+        "type": "nthWeekdayOfMonth",
+        "month": 6,
+        "weekday": 0,
+        "nth": 1,
+        "notes": "weekday: 0 = sunnudagur"
+      },
+      "exceptions": [
+        {
+          "type": "avoidMoveableFeast",
+          "feast": "pentecost",
+          "action": { "type": "addDays", "days": 7 },
+          "notes": "Ef sjómannadagur lendir á hvítasunnudegi, færist um viku."
+        }
+      ],
+      "sources": [
+        { "label": "Alþingi: Lög nr. 20/1987 um sjómannadag", "url": "https://www.althingi.is/lagas/nuna/1987020.html" },
+        { "label": "Wikipedia (IS): Sjómannadagurinn", "url": "https://is.wikipedia.org/wiki/Sj%C3%B3mannadagurinn" }
+      ]
+    }
+  ]
+}
