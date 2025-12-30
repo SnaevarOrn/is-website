@@ -33,25 +33,6 @@
   <script defer src="/assets/js/pages/dagatal/render.js"></script>
   <script defer src="/assets/js/pages/dagatal/ui.js"></script>
 </head>
-  
-  <!-- Info modal -->
-  <div class="i-overlay" id="iOverlay" role="dialog" aria-modal="true" aria-labelledby="iTitle">
-    <div class="i-modal">
-      <div class="i-modal-h">
-        <b id="iTitle">Upplýsingar</b>
-        <button class="i-close" id="iCloseBtn" aria-label="Loka">✕</button>
-      </div>
-
-      <div class="i-body">
-        <div class="i-muted" id="iMeta"></div>
-        <div class="i-summary" id="iSummary"></div>
-        <div class="i-text" id="iText"></div>
-
-        <div class="i-muted" style="margin-top:8px;">Heimildir</div>
-        <ul class="i-sources" id="iSources"></ul>
-      </div>
-    </div>
-  </div>
 
 <body>
   <header class="topbar">
@@ -112,6 +93,7 @@
     </div>
   </header>
 
+  <!-- Settings overlay/sheet -->
   <div class="overlay" id="overlay"></div>
   <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Stillingar">
     <div class="sheet-header">
@@ -119,7 +101,6 @@
       <button class="btn" id="closeSheet" title="Loka">✕</button>
     </div>
     <div class="sheet-body">
-
       <div class="group">
         <h4>Merkingar</h4>
         <div class="toggle">
@@ -132,7 +113,6 @@
           <label><input type="checkbox" id="toggleMoon" /> Tungl (🌕 / 🌑)</label>
         </div>
       </div>
-
     </div>
   </aside>
 
@@ -141,20 +121,21 @@
     <div class="footer">ís.is — dagatal protótýpa</div>
   </main>
 
-  <!-- INFO MODAL -->
+  <!-- INFO MODAL (ONLY ONCE) -->
   <div class="i-overlay" id="iOverlay" role="dialog" aria-modal="true" aria-labelledby="iTitle">
     <div class="i-modal">
       <div class="i-modal-h">
         <b id="iTitle">Upplýsingar</b>
         <button class="i-close" id="iCloseBtn" aria-label="Loka">✕</button>
       </div>
+
       <div class="i-body">
+        <div class="i-muted" id="iMeta"></div>
         <div class="i-summary" id="iSummary"></div>
-        <div class="i-text" id="iBody"></div>
-        <div>
-          <div class="i-muted" style="margin-bottom:6px;">Heimildir</div>
-          <div id="iSources"></div>
-        </div>
+        <div class="i-text" id="iText"></div>
+
+        <div class="i-muted" style="margin-top:8px;">Heimildir</div>
+        <ul class="i-sources" id="iSources"></ul>
       </div>
     </div>
   </div>
