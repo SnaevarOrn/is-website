@@ -1,4 +1,4 @@
-/* dagatal/render.js — rendering only (DOM in/out), no event wiring */
+/*  dagatal/render.js — rendering only (DOM in/out), no event wiring */
 (() => {
   const NS = (window.dagatal = window.dagatal || {});
   const D = NS.date;
