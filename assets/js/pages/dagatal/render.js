@@ -196,43 +196,51 @@
 
   // Holiday list = lögbundnir frídagar (🇮🇸) úr holidayMap
   function renderHolidayList(state, calendarEl) {
-    const box = document.createElement("section");
-    box.className = "holidays";
+  const box = document.createElement("section");
+  box.className = "holidays";
 
-    const items = Array.from(state.holidayMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-    const infoMap = getInfoMap(state);
+  const holidays = Array.from(state.holidayMap.entries()).map(([iso, name]) => ({
+    iso, name, kind: "holiday"
+  }));
 
-    for (const [iso, name] of items) {
-      const [y, mm, dd] = iso.split("-").map(Number);
-      const date = new Date(y, mm - 1, dd);
-      const right = `${dd} ${monthShort(mm - 1)} — ${weekdayShort(date)}`;
+  const specials = Array.from(state.specialMap.entries()).map(([iso, name]) => ({
+    iso, name, kind: "special"
+  }));
 
-      const item = document.createElement("div");
-      item.className = "hitem";
+  // sameina + raða eftir dagsetningu
+  const items = [...holidays, ...specials].sort((a, b) => a.iso.localeCompare(b.iso));
 
-      const left = document.createElement("div");
-      left.className = "hleft";
-      left.textContent = `🎉 ${name}`;
+  for (const it of items) {
+    const [y, mm, dd] = it.iso.split("-").map(Number);
+    const date = new Date(y, mm - 1, dd);
+    const right = `${dd} ${monthShort(mm - 1)} — ${weekdayShort(date)}`;
 
-      const rightWrap = document.createElement("div");
-      rightWrap.className = "hright";
+    const item = document.createElement("div");
+    item.className = "hitem";
 
-      const meta = document.createElement("span");
-      meta.className = "hmeta";
-      meta.textContent = right;
+    const left = document.createElement("div");
+    left.className = "hleft";
 
-      rightWrap.appendChild(meta);
+    // 🎉 aðeins fyrir lögbundna
+    left.textContent = it.kind === "holiday" ? `🎉 ${it.name}` : it.name;
 
-      // ⓘ in list
-      if (infoMap?.has(iso)) maybeAddInfoButton(state, iso, rightWrap);
+    const rightWrap = document.createElement("div");
+    rightWrap.className = "hright";
 
-      item.appendChild(left);
-      item.appendChild(rightWrap);
-      box.appendChild(item);
-    }
+    const meta = document.createElement("span");
+    meta.className = "hmeta";
+    meta.textContent = right;
 
-    calendarEl.appendChild(box);
+    rightWrap.appendChild(meta);
+    maybeAddInfoButton(state, it.iso, rightWrap);
+
+    item.appendChild(left);
+    item.appendChild(rightWrap);
+    box.appendChild(item);
   }
+
+  calendarEl.appendChild(box);
+}
 
   NS.render = {
     MONTHS_LONG,
