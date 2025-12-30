@@ -12,13 +12,14 @@
   const monthLabel = $("#monthLabel");
   const dowBar = $("#dowBar");
 
-  // Info modal elements
+  // Info modal bits
   const iOverlay = $("#iOverlay");
   const iCloseBtn = $("#iCloseBtn");
   const iTitle = $("#iTitle");
   const iSummary = $("#iSummary");
-  const iBody = $("#iBody");
+  const iText = $("#iText");
   const iSources = $("#iSources");
+  const iMeta = $("#iMeta");
 
   const state = {
     year: 2025,
@@ -30,8 +31,7 @@
     holidayMap: new Map(),
     specialMap: new Map(),
     moonMarkers: new Map(),
-    holidayInfoData: null,
-    holidayInfoMap: new Map(), // iso -> info object
+    holidayInfoMap: new Map(),  // iso -> info obj
     monthObserver: null,
   };
 
@@ -60,11 +60,11 @@
 
     if (state.view === "holidays") {
       setMonthLabelText("Frídagar");
-      dowBar.classList.add("is-hidden");
+      dowBar?.classList.add("is-hidden");
       return;
     }
 
-    dowBar.classList.remove("is-hidden");
+    dowBar?.classList.remove("is-hidden");
 
     if (state.layout === "weeks") {
       setMonthLabelText("Vikur");
@@ -98,62 +98,28 @@
         const m = parseInt(visible[0].target.dataset.month, 10);
         if (Number.isFinite(m)) setMonthLabelText(R.MONTHS_LONG[m]);
       },
-      {
-        root: null,
-        rootMargin: "-45% 0px -50% 0px",
-        threshold: [0.01, 0.1, 0.25, 0.5],
-      }
+      { root: null, rootMargin: "-45% 0px -50% 0px", threshold: [0.01, 0.1, 0.25, 0.5] }
     );
 
     monthSections.forEach((sec) => obs.observe(sec));
     state.monthObserver = obs;
   }
 
-  function renderSources(sources) {
-    iSources.innerHTML = "";
-    if (!sources || !sources.length) {
-      const p = document.createElement("div");
-      p.className = "i-muted";
-      p.textContent = "Engar heimildir skráðar.";
-      iSources.appendChild(p);
-      return;
+  async function rebuildInfoMap() {
+    try {
+      if (!H || typeof H.load !== "function" || typeof H.buildInfoMapForYear !== "function") {
+        state.holidayInfoMap = new Map();
+        return;
+      }
+      const data = await H.load();
+      state.holidayInfoMap = H.buildInfoMapForYear(state.year, data) || new Map();
+    } catch (e) {
+      console.warn("holiday info map failed", e);
+      state.holidayInfoMap = new Map();
     }
-
-    const ul = document.createElement("ul");
-    ul.className = "i-sources";
-
-    for (const s of sources) {
-      const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.href = s.url;
-      a.textContent = s.label || s.url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      li.appendChild(a);
-      ul.appendChild(li);
-    }
-
-    iSources.appendChild(ul);
   }
 
-  function openInfoForIso(iso) {
-    const info = state.holidayInfoMap.get(iso);
-    if (!info) return;
-
-    iTitle.textContent = info.title || "Upplýsingar";
-    iSummary.textContent = info.summary || "";
-    iBody.textContent = info.body || "";
-    renderSources(info.sources);
-
-    iOverlay?.classList.add("open");
-    setTimeout(() => iCloseBtn?.focus(), 30);
-  }
-
-  function closeInfo() {
-    iOverlay?.classList.remove("open");
-  }
-
-  function build() {
+  async function build() {
     yearLabel.textContent = state.year;
     const yi = $("#yearInput");
     if (yi) yi.value = state.year;
@@ -169,8 +135,7 @@
     state.specialMap = D.getIcelandSpecialDays(state.year);
     state.moonMarkers = D.computeMoonMarkersForYear(state.year);
 
-    // Build info map (regludrifið + fixed) for this year
-    state.holidayInfoMap = H && state.holidayInfoData ? H.buildInfoMapForYear(state.year, state.holidayInfoData) : new Map();
+    await rebuildInfoMap(); // <-- ⓘ map for this year
 
     calendarEl.innerHTML = "";
     disconnectMonthObserver();
@@ -193,24 +158,22 @@
     const now = new Date();
     state.year = now.getFullYear();
     state.view = "calendar";
-    build();
-
-    const iso = D.isoDate(now);
-    const el = document.querySelector(`[data-iso="${iso}"]`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    build().then(() => {
+      const iso = D.isoDate(now);
+      const el = document.querySelector(`[data-iso="${iso}"]`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
   }
 
   function toggleLayout() {
     state.layout = state.layout === "months" ? "weeks" : "months";
     state.view = "calendar";
-    build();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   }
 
   function toggleHolidaysView() {
     state.view = state.view === "holidays" ? "calendar" : "holidays";
-    build();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   }
 
   /* YEAR DROPDOWN */
@@ -228,9 +191,10 @@
   function setYear(y) {
     if (!Number.isFinite(y)) return;
     state.year = y;
-    build();
-    togglePop(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    build().then(() => {
+      togglePop(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
   }
 
   document.addEventListener("click", (e) => {
@@ -287,8 +251,7 @@
   $("#layoutToggleChip")?.addEventListener("click", () => {
     if (state.view === "holidays") {
       state.view = "calendar";
-      build();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
       return;
     }
     toggleLayout();
@@ -297,8 +260,7 @@
   monthLabel?.addEventListener("click", () => {
     if (state.view === "holidays") {
       state.view = "calendar";
-      build();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
       return;
     }
     toggleLayout();
@@ -308,8 +270,7 @@
 
   function bumpYear(delta) {
     state.year += delta;
-    build();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   }
   $("#prevYear")?.addEventListener("click", () => bumpYear(-1));
   $("#nextYear")?.addEventListener("click", () => bumpYear(1));
@@ -318,24 +279,14 @@
   const menuBtn = $("#menuBtn");
   const menuPop = $("#menuPop");
 
-  function toggleMenu() {
-    menuPop?.classList.toggle("show");
-  }
-  function closeMenu() {
-    menuPop?.classList.remove("show");
-  }
+  function toggleMenu() { menuPop?.classList.toggle("show"); }
+  function closeMenu() { menuPop?.classList.remove("show"); }
 
-  menuBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleMenu();
-  });
+  menuBtn?.addEventListener("click", (e) => { e.stopPropagation(); toggleMenu(); });
   menuPop?.addEventListener("click", (e) => e.stopPropagation());
   document.addEventListener("click", () => closeMenu());
 
-  $("#menuSettings")?.addEventListener("click", () => {
-    closeMenu();
-    openSheet();
-  });
+  $("#menuSettings")?.addEventListener("click", () => { closeMenu(); openSheet(); });
 
   /* CONTACT MODAL (unchanged) */
   const cOverlay = $("#cOverlay");
@@ -348,19 +299,11 @@
     if (cStatus) cStatus.textContent = "";
     setTimeout(() => $("#cName")?.focus(), 50);
   }
-  function closeContact() {
-    cOverlay?.classList.remove("open");
-  }
+  function closeContact() { cOverlay?.classList.remove("open"); }
 
-  $("#menuContact")?.addEventListener("click", () => {
-    closeMenu();
-    openContact();
-  });
-
+  $("#menuContact")?.addEventListener("click", () => { closeMenu(); openContact(); });
   cCloseBtn?.addEventListener("click", closeContact);
-  cOverlay?.addEventListener("click", (e) => {
-    if (e.target === cOverlay) closeContact();
-  });
+  cOverlay?.addEventListener("click", (e) => { if (e.target === cOverlay) closeContact(); });
 
   cForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -392,18 +335,56 @@
     }
   });
 
-  /* INFO MODAL wiring */
-  iCloseBtn?.addEventListener("click", closeInfo);
-  iOverlay?.addEventListener("click", (e) => {
-    if (e.target === iOverlay) closeInfo();
-  });
+  /* ⓘ INFO MODAL */
+  function openInfoModal(iso) {
+    if (!iOverlay) return;
+    const info = state.holidayInfoMap?.get(iso);
+    if (!info) return;
 
-  // Event delegation: any ⓘ inside calendar/list
-  calendarEl?.addEventListener("click", (e) => {
-    const btn = e.target?.closest?.(".info-btn");
+    if (iTitle) iTitle.textContent = info.title || info.name || "Upplýsingar";
+    if (iSummary) iSummary.textContent = info.summary || "";
+    if (iText) iText.textContent = info.text || "";
+
+    // meta (date label)
+    if (iMeta) {
+      const [y, m, d] = iso.split("-").map(Number);
+      const dt = new Date(y, m - 1, d);
+      iMeta.textContent = `${d} ${["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"][m-1]} — ${["mán","þri","mið","fim","fös","lau","sun"][D.monIndex(dt.getDay())]}`;
+    }
+
+    // sources
+    if (iSources) {
+      iSources.innerHTML = "";
+      const srcs = Array.isArray(info.sources) ? info.sources : [];
+      for (const s of srcs) {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = s.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = s.label || s.url;
+        li.appendChild(a);
+        iSources.appendChild(li);
+      }
+      iSources.style.display = srcs.length ? "" : "none";
+    }
+
+    iOverlay.classList.add("open");
+  }
+
+  function closeInfoModal() {
+    iOverlay?.classList.remove("open");
+  }
+
+  iCloseBtn?.addEventListener("click", closeInfoModal);
+  iOverlay?.addEventListener("click", (e) => { if (e.target === iOverlay) closeInfoModal(); });
+
+  // Event delegation for info buttons (works for calendar + list)
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest?.(".info-btn");
     if (!btn) return;
     const iso = btn.dataset.iso;
-    if (iso) openInfoForIso(iso);
+    if (iso) openInfoModal(iso);
   });
 
   document.addEventListener("keydown", (e) => {
@@ -412,27 +393,22 @@
       closeSheet();
       closeMenu();
       closeContact();
-      closeInfo();
+      closeInfoModal();
     }
   });
 
-  /* INIT (async: load JSON once, then build) */
-  (async () => {
+  /* INIT */
+  (() => {
     const now = new Date();
     state.year = now.getFullYear();
-
-    // load holiday info JSON
-    state.holidayInfoData = await H.load();
-
-    build();
-
-    requestAnimationFrame(() => {
-      const iso = D.isoDate(now);
-      const el = document.querySelector(`[data-iso="${iso}"]`);
-      if (el) el.scrollIntoView({ block: "center" });
+    build().then(() => {
+      requestAnimationFrame(() => {
+        const iso = D.isoDate(now);
+        const el = document.querySelector(`[data-iso="${iso}"]`);
+        if (el) el.scrollIntoView({ block: "center" });
+      });
     });
   })();
 
-  // Optional tiny debug handle (safe)
   NS._state = state;
 })();
