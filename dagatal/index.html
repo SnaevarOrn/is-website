@@ -8,7 +8,7 @@
 
   <meta name="theme-color" content="#000000" id="metaThemeColor">
 
-  <!-- Theme ASAP (same convention as front page) -->
+  <!-- Theme ASAP -->
   <script src="/assets/js/prefs.js"></script>
   <script>
     if (window.prefs && typeof prefs.applyThemeFromStorage === "function") {
@@ -27,11 +27,11 @@
   <script defer src="/assets/js/utils.js"></script>
   <script defer src="/assets/js/theme.js"></script>
 
-  <!-- Page JS -->
-  <script defer src="/assets/js/pages/dagatal/dates.js"></script>
-  <script defer src="/assets/js/pages/dagatal/holidays.js"></script>
-  <script defer src="/assets/js/pages/dagatal/render.js"></script>
-  <script defer src="/assets/js/pages/dagatal/ui.js"></script>
+  <!-- Page JS (cache-bust tímabundið) -->
+  <script defer src="/assets/js/pages/dagatal/dates.js?v=1"></script>
+  <script defer src="/assets/js/pages/dagatal/holidays.js?v=1"></script>
+  <script defer src="/assets/js/pages/dagatal/render.js?v=1"></script>
+  <script defer src="/assets/js/pages/dagatal/ui.js?v=1"></script>
 </head>
 
 <body>
@@ -54,7 +54,6 @@
 
     <div class="subbar">
       <div class="subbar-inner">
-
         <div class="subrow subrow--year">
           <div class="yr-left">
             <button class="chip chip--ghost" id="layoutToggleChip" type="button" title="Breyta sýn">Mánuðir</button>
@@ -88,12 +87,10 @@
             <div>mán</div><div>þri</div><div>mið</div><div>fim</div><div>fös</div><div>lau</div><div>sun</div>
           </div>
         </div>
-
       </div>
     </div>
   </header>
 
-  <!-- Settings overlay/sheet -->
   <div class="overlay" id="overlay"></div>
   <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Stillingar">
     <div class="sheet-header">
@@ -121,7 +118,7 @@
     <div class="footer">ís.is — dagatal protótýpa</div>
   </main>
 
-  <!-- INFO MODAL (ONLY ONCE) -->
+  <!-- INFO MODAL (EITT STK) -->
   <div class="i-overlay" id="iOverlay" role="dialog" aria-modal="true" aria-labelledby="iTitle">
     <div class="i-modal">
       <div class="i-modal-h">
@@ -140,7 +137,7 @@
     </div>
   </div>
 
-  <!-- Contact modal -->
+  <!-- Contact modal (óbreytt) -->
   <div class="c-overlay" id="cOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
     <div class="c-modal">
       <div class="c-modal-h">
