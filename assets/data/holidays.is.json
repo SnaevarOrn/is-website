@@ -11,7 +11,6 @@
         { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
       ]
     },
-
     "05-01": {
       "id": "labour-day",
       "title": "✊ Verkalýðsdagurinn",
@@ -22,7 +21,6 @@
         { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
       ]
     },
-
     "06-17": {
       "id": "national-day",
       "title": "🇮🇸 Þjóðhátíðardagurinn",
@@ -34,12 +32,11 @@
       ]
     }
   },
-
   "rules": [
     {
       "id": "fishermens-day",
       "title": "⚓ Sjómannadagurinn",
-      "summary": "Helgaður sjómönnum; sérstakur frídagur sjómanna. Yfirleitt fyrsti sunnudagur í júní (með hefðbundinni undantekningu ef hann rekst á hvítasunnu).",
+      "summary": "Helgaður sjómönnum; sérstakur frídagur sjómanna. Yfirleitt fyrsti sunnudagur í júní (með undantekningu ef hann rekst á hvítasunnu).",
       "body": "Sjómannadagurinn er helgaður íslenskum sjómönnum og þeirri sjósókn sem um aldir hefur verið ein af grunnstoðum íslensks samfélags og efnahags.\n\nDagurinn var fyrst haldinn hátíðlegur árið 1938, meðal annars í Reykjavík og á Ísafirði, að frumkvæði sjómanna og stuðningsfólks þeirra.\n\nMeð lögum nr. 20/1987 var ákveðið að fyrsti sunnudagur í júní skyldi vera formlegur frídagur sjómanna, með ákvæðum um að skip skyldu almennt vera í höfn.\n\nSjómannadagurinn er því ekki almennur frídagur fyrir allt launafólk, heldur sérstakur lögbundinn frídagur sjómanna, jafnframt því að vera mikilvægur menningar- og minningardagur fyrir þjóðina.",
       "rule": {
         "type": "nthWeekdayOfMonth",
