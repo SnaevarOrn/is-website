@@ -1,4 +1,4 @@
-/* dagatal/dates.js — date helpers + holidays + moon (no DOM) */
+/*  dagatal/dates.js — date helpers + holidays + moon (no DOM) */
 (() => {
   const NS = (window.dagatal = window.dagatal || {});
 
