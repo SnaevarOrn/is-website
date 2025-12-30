@@ -774,3 +774,136 @@ html[data-theme="light"] .c-send{
   :root{ --padX: 8px; --gap: 6px; }
   .chip--ghost{ padding: 10px 10px; }
 }
+/* =========================
+   INFO BUTTON + INFO MODAL
+   ========================= */
+
+.info-btn{
+  position:absolute;
+  bottom: 6px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: color-mix(in srgb, var(--text) 88%, transparent);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  font-size: 12px;
+  cursor:pointer;
+  padding:0;
+  line-height:1;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow) 45%, transparent);
+}
+.info-btn:hover{
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+.info-btn:active{
+  transform: translateY(1px);
+}
+
+/* In holidays list: we place it in .hright, so neutralize absolute */
+.holidays .info-btn{
+  position: static;
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  box-shadow: none;
+  margin-left: 10px;
+}
+
+.hright{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+}
+
+.hmeta{
+  color: var(--muted);
+  font-size: 13px;
+  white-space:nowrap;
+}
+
+/* Info modal overlay */
+.i-overlay{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+  z-index: 95;
+}
+.i-overlay.open{ display:flex; }
+
+.i-modal{
+  width: min(640px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 24px 90px var(--shadow);
+  overflow:hidden;
+}
+
+.i-modal-h{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.i-modal-h b{
+  font-size: 16px;
+  letter-spacing:.2px;
+  color: var(--ice);
+}
+.i-close{
+  border:1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor:pointer;
+}
+.i-close:hover{ background: color-mix(in srgb, var(--text) 6%, transparent); }
+
+.i-body{
+  padding: 14px;
+  display:grid;
+  gap: 10px;
+}
+
+.i-summary{
+  color: color-mix(in srgb, var(--muted) 92%, transparent);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.i-text{
+  white-space: pre-wrap;
+  line-height: 1.45;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.i-muted{
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.i-sources{
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+.i-sources a{
+  color: color-mix(in srgb, var(--ice) 90%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.i-sources a:hover{
+  opacity: .9;
+}
