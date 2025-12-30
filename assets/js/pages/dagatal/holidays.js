@@ -3,6 +3,9 @@
   const NS = (window.dagatal = window.dagatal || {});
   const D = NS.date; 
 
+ // local helper (was referenced by rule engine)
+const getD = (year, month1to12, day) => new Date(year, month1to12 - 1, day);
+  
   const DATA_URL = "/assets/data/holidays.is.json";
   let _data = null;
   let _loading = null;
