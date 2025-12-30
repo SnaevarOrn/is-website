@@ -1,30 +1,29 @@
 /* dagatal/holidays.js — loads holidays.is.json and builds info map per year (no DOM) */
 (() => {
   const NS = (window.dagatal = window.dagatal || {});
-  const D = NS.date;
+  const D = NS.date || {};
 
   const DATA_URL = "/assets/data/holidays.is.json";
   let _data = null;
   let _loading = null;
 
-  function pad2(n) {
-    return String(n).padStart(2, "0");
-  }
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const isoFromYMD = (year, month1to12, day) => `${year}-${pad2(month1to12)}-${pad2(day)}`;
 
-  function mmddFromIso(iso) {
-    const parts = iso.split("-");
-    return `${parts[1]}-${parts[2]}`;
-  }
-
-  function isoFromYMD(year, month1to12, day) {
-    return `${year}-${pad2(month1to12)}-${pad2(day)}`;
+  // Local fallback: Nth weekday of month (weekday: 0=Sun..6=Sat), nth: 1..5
+  function nthWeekdayOfMonthLocal(year, month1to12, weekday0Sun, nth) {
+    const monthIdx = month1to12 - 1;
+    const first = new Date(year, monthIdx, 1);
+    const delta = (weekday0Sun - first.getDay() + 7) % 7;
+    const day = 1 + delta + (nth - 1) * 7;
+    return new Date(year, monthIdx, day);
   }
 
   function computeFeastDate(year, feast) {
-    // expand when needed
+    // Pentecost = Easter + 49
     if (feast === "pentecost") {
-      const easter = D.easterSunday(year);
-      return D.addDays(easter, 49); // Pentecost Sunday
+      if (typeof D.easterSunday !== "function" || typeof D.addDays !== "function") return null;
+      return D.addDays(D.easterSunday(year), 49);
     }
     return null;
   }
@@ -35,8 +34,19 @@
     for (const ex of exceptions || []) {
       if (ex.type === "avoidMoveableFeast" && ex.feast && ex.action?.type === "addDays") {
         const feastDate = computeFeastDate(year, ex.feast);
-        if (feastDate && D.isoDate(feastDate) === D.isoDate(d)) {
-          d = D.addDays(d, Number(ex.action.days || 0));
+        if (!feastDate) continue;
+
+        const iso = typeof D.isoDate === "function"
+          ? D.isoDate(d)
+          : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+        const isoFeast = typeof D.isoDate === "function"
+          ? D.isoDate(feastDate)
+          : `${feastDate.getFullYear()}-${pad2(feastDate.getMonth() + 1)}-${pad2(feastDate.getDate())}`;
+
+        if (iso === isoFeast) {
+          const days = Number(ex.action.days || 0);
+          d = typeof D.addDays === "function" ? D.addDays(d, days) : new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
         }
       }
     }
@@ -47,11 +57,10 @@
     if (!rule || !rule.type) return null;
 
     if (rule.type === "nthWeekdayOfMonth") {
-      // rule.weekday: 0=Sunday..6=Saturday (JS day)
-      const base = D.nthWeekdayOfMonth(year, Number(rule.month), Number(rule.weekday), Number(rule.nth));
+      const fn = (typeof D.nthWeekdayOfMonth === "function") ? D.nthWeekdayOfMonth : nthWeekdayOfMonthLocal;
+      const base = fn(year, Number(rule.month), Number(rule.weekday), Number(rule.nth));
       return applyExceptions(base, year, exceptions);
     }
-
     return null;
   }
 
@@ -63,8 +72,7 @@
       try {
         const res = await fetch(DATA_URL, { cache: "force-cache" });
         if (!res.ok) throw new Error(`Failed to load ${DATA_URL}: ${res.status}`);
-        const json = await res.json();
-        _data = json;
+        _data = await res.json();
         return _data;
       } catch (err) {
         console.warn("[dagatal] holidays info load failed:", err);
@@ -78,13 +86,11 @@
     return _loading;
   }
 
-  // Builds Map: iso -> infoObj (title/summary/body/sources + id + computedFrom)
   function buildInfoMapForYear(year, data) {
     const map = new Map();
     const fixed = data?.fixed || {};
     const rules = data?.rules || [];
 
-    // fixed: key = "MM-DD"
     for (const mmdd of Object.keys(fixed)) {
       const info = fixed[mmdd];
       if (!info) continue;
@@ -93,11 +99,14 @@
       map.set(iso, { ...info, _kind: "fixed", _key: mmdd });
     }
 
-    // rules
     for (const item of rules) {
       const dt = computeRuleDate(year, item.rule, item.exceptions);
       if (!dt) continue;
-      const iso = D.isoDate(dt);
+
+      const iso = (typeof D.isoDate === "function")
+        ? D.isoDate(dt)
+        : `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
+
       map.set(iso, { ...item, _kind: "rule", _key: item.id });
     }
 
@@ -107,6 +116,6 @@
   NS.holidays = {
     load,
     buildInfoMapForYear,
-    mmddFromIso,
+    mmddFromIso: (iso) => iso.split("-").slice(1).join("-"),
   };
 })();
