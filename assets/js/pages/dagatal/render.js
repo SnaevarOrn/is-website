@@ -13,6 +13,19 @@
     return ["jan", "feb", "mar", "apr", "maí", "jún", "júl", "ágú", "sep", "okt", "nóv", "des"][m];
   }
 
+  function maybeAddInfoButton(state, iso, hostEl) {
+    if (!state || !state.holidayInfoMap) return;
+    if (!state.holidayInfoMap.has(iso)) return;
+
+    const btn = document.createElement("button");
+    btn.className = "info-btn";
+    btn.type = "button";
+    btn.dataset.iso = iso;
+    btn.title = "Upplýsingar";
+    btn.textContent = "i";
+    hostEl.appendChild(btn);
+  }
+
   function makeDayCell(state, date) {
     const iso = D.isoDate(date);
     const cell = document.createElement("div");
@@ -46,6 +59,9 @@
         cell.appendChild(moon);
       }
     }
+
+    // ⓘ info bubble (only if we have info for this iso)
+    maybeAddInfoButton(state, iso, cell);
 
     const today = new Date();
     if (iso === D.isoDate(today) && state.year === today.getFullYear()) cell.classList.add("is-today");
@@ -173,7 +189,24 @@
 
       const item = document.createElement("div");
       item.className = "hitem";
-      item.innerHTML = `<div class="hleft">🎉 ${name}</div><div class="hright">${right}</div>`;
+
+      const left = document.createElement("div");
+      left.className = "hleft";
+      left.textContent = `🎉 ${name}`;
+
+      const rightWrap = document.createElement("div");
+      rightWrap.className = "hright";
+
+      const meta = document.createElement("span");
+      meta.className = "hmeta";
+      meta.textContent = right;
+
+      rightWrap.appendChild(meta);
+      // ⓘ in list
+      maybeAddInfoButton(state, iso, rightWrap);
+
+      item.appendChild(left);
+      item.appendChild(rightWrap);
       box.appendChild(item);
     }
 
