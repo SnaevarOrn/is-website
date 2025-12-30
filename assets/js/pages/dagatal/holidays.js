@@ -1,7 +1,7 @@
 /* dagatal/holidays.js — loads holidays.is.json and builds info map per year (no DOM) */
 (() => {
   const NS = (window.dagatal = window.dagatal || {});
-  const D = NS.date || {};
+  const getD = () => (NS.date || {});
 
   const DATA_URL = "/assets/data/holidays.is.json";
   let _data = null;
@@ -20,13 +20,13 @@
   }
 
   function computeFeastDate(year, feast) {
-    // Pentecost = Easter + 49
-    if (feast === "pentecost") {
-      if (typeof D.easterSunday !== "function" || typeof D.addDays !== "function") return null;
-      return D.addDays(D.easterSunday(year), 49);
-    }
-    return null;
+  const D = getD(); // <-- late bind
+  if (feast === "pentecost") {
+    if (typeof D.easterSunday !== "function" || typeof D.addDays !== "function") return null;
+    return D.addDays(D.easterSunday(year), 49);
   }
+  return null;
+}
 
   function applyExceptions(date, year, exceptions) {
     let d = new Date(date);
@@ -54,15 +54,18 @@
   }
 
   function computeRuleDate(year, rule, exceptions) {
-    if (!rule || !rule.type) return null;
+  const D = getD(); // <-- late bind
 
-    if (rule.type === "nthWeekdayOfMonth") {
-      const fn = (typeof D.nthWeekdayOfMonth === "function") ? D.nthWeekdayOfMonth : nthWeekdayOfMonthLocal;
-      const base = fn(year, Number(rule.month), Number(rule.weekday), Number(rule.nth));
-      return applyExceptions(base, year, exceptions);
-    }
-    return null;
+  if (!rule || !rule.type) return null;
+
+  if (rule.type === "nthWeekdayOfMonth") {
+    if (typeof D.nthWeekdayOfMonth !== "function") return null;
+    const base = D.nthWeekdayOfMonth(year, Number(rule.month), Number(rule.weekday), Number(rule.nth));
+    return applyExceptions(base, year, exceptions);
   }
+
+  return null;
+}
 
   async function load() {
     if (_data) return _data;
