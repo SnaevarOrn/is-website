@@ -42,63 +42,111 @@
     return new Date(year, monthIdx, day);
   }
 
+  // First given weekday on/after a specific date
+  function weekdayOnOrAfter(year, month1to12, dayOfMonth, weekday0Sun) {
+    const d = new Date(year, month1to12 - 1, dayOfMonth);
+    const delta = (weekday0Sun - d.getDay() + 7) % 7;
+    return addDays(d, delta);
+  }
+
+  // Sumardagurinn fyrsti = first Thursday after April 18 (i.e. on/after Apr 19)
   function firstThursdayAfterApril18(year) {
     const start = new Date(year, 3, 19);
     const delta = (3 - monIndex(start.getDay()) + 7) % 7; // Thursday=3 in monIndex
     return addDays(start, delta);
   }
 
+  // Frídagur verslunarmanna = first Monday in August
   function firstMondayOfAugust(year) {
     const d = new Date(year, 7, 1);
     const delta = (0 - monIndex(d.getDay()) + 7) % 7; // Monday=0
     return addDays(d, delta);
   }
 
+  /* =========================
+     🇮🇸 LÖGBUNDNIR FRÍDAGAR (samkvæmt mynd: bara þeir með fána)
+     ========================= */
   function getIcelandHolidayMap(year) {
     const map = new Map(); // iso -> name
     const add = (m, d, name) => map.set(`${year}-${pad2(m)}-${pad2(d)}`, name);
 
+    // 🇮🇸 flagged on the image
     add(1, 1, "Nýársdagur");
-    add(1, 6, "Þrettándinn");
-    add(5, 1, "Verkalýðsdagurinn");
-    add(6, 17, "Þjóðhátíðardagurinn");
-    add(12, 24, "Aðfangadagur");
+    add(5, 1, "Baráttudagur verkalýðsins");
+    add(6, 17, "Þjóðhátíðardagur Íslendinga");
+    add(10, 11, "Fæðingardagur forseta (HT)");
+    add(11, 16, "Dagur íslenskrar tungu");
+    add(12, 1, "Fullveldisdagurinn");
     add(12, 25, "Jóladagur");
-    add(12, 26, "Annar í jólum");
-    add(12, 31, "Gamlársdagur");
 
     const easter = easterSunday(year);
-    map.set(isoDate(addDays(easter, -3)), "Skírdagur");
+    // 🇮🇸 flagged on the image
     map.set(isoDate(addDays(easter, -2)), "Föstudagurinn langi");
     map.set(isoDate(easter), "Páskadagur");
-    map.set(isoDate(addDays(easter, 1)), "Annar í páskum");
-    map.set(isoDate(addDays(easter, 39)), "Uppstigningardagur");
-    map.set(isoDate(addDays(easter, 49)), "Hvítasunnudagur");
-    map.set(isoDate(addDays(easter, 50)), "Annar í hvítasunnu");
 
+    // 🇮🇸 flagged on the image
     map.set(isoDate(firstThursdayAfterApril18(year)), "Sumardagurinn fyrsti");
-    map.set(isoDate(firstMondayOfAugust(year)), "Frídagur verslunarmanna");
 
     return map;
   }
 
+  /* =========================
+     ℹ️ MERKISDAGAR (allt hitt á myndinni, + það sem þú varst með áður)
+     ========================= */
   function getIcelandSpecialDays(year) {
     const map = new Map(); // iso -> name
     const add = (m, d, name) => map.set(`${year}-${pad2(m)}-${pad2(d)}`, name);
 
-    add(2, 14, "Valentínusardagur");
-    add(12, 23, "Þorláksmessa");
+    // Fixed specials (from image)
+    add(1, 6, "Þrettándinn");
+    add(2, 14, "Valentínusardagurinn");
     add(10, 31, "Hrekkjavaka");
+    add(12, 23, "Þorláksmessa");
+    add(12, 24, "Aðfangadagur jóla");
+    add(12, 26, "Annar í jólum");
+    add(12, 31, "Gamlársdagur");
+
+    // Bóndadagur (upphaf Þorra): first Friday on/after Jan 19
+    map.set(isoDate(weekdayOnOrAfter(year, 1, 19, 5 /* Fri */)), "Bóndadagur, upphaf Þorra");
+
+    // Konudagur (upphaf Góu): first Sunday on/after Feb 18
+    map.set(isoDate(weekdayOnOrAfter(year, 2, 18, 0 /* Sun */)), "Konudagur, upphaf Góu");
+
+    // Mæðradagurinn: second Sunday in May
+    map.set(isoDate(nthWeekdayOfMonth(year, 5, 0 /* Sun */, 2)), "Mæðradagurinn");
+
+    // Feðradagurinn: second Sunday in November
+    map.set(isoDate(nthWeekdayOfMonth(year, 11, 0 /* Sun */, 2)), "Feðradagurinn");
+
+    // Fyrsti vetrardagur: first Saturday on/after Oct 21 (matches 25. okt 2025)
+    map.set(isoDate(weekdayOnOrAfter(year, 10, 21, 6 /* Sat */)), "Fyrsti vetrardagur");
+
+    // Sjómannadagurinn: first Sunday in June
+    map.set(isoDate(nthWeekdayOfMonth(year, 6, 0 /* Sun */, 1)), "Sjómannadagurinn");
+
+    // Frídagur verslunarmanna: first Monday in August (no flag on image => special)
+    map.set(isoDate(firstMondayOfAugust(year)), "Frídagur verslunarmanna");
+
+    // Reykjavík Pride / Gleðigangan: second Saturday in August (matches 9. ágú 2025)
+    map.set(isoDate(nthWeekdayOfMonth(year, 8, 6 /* Sat */, 2)), "Reykjavík Pride / Gleðigangan");
+
+    // Menningarnótt í Reykjavík: fourth Saturday in August (matches 23. ágú 2025)
+    map.set(isoDate(nthWeekdayOfMonth(year, 8, 6 /* Sat */, 4)), "Menningarnótt í Reykjavík");
 
     const easter = easterSunday(year);
+
+    // From image (moveable, not flagged => special)
+    map.set(isoDate(addDays(easter, -7)), "Pálmasunnudagur");
+    map.set(isoDate(addDays(easter, -3)), "Skírdagur");
+    map.set(isoDate(addDays(easter, 1)), "Annar í páskum");
+    map.set(isoDate(addDays(easter, 39)), "Uppstigningardagur");
+    map.set(isoDate(addDays(easter, 49)), "Hvítasunnudagur");
+    map.set(isoDate(addDays(easter, 50)), "Annar í Hvítasunnu");
+
+    // Bolludagur/Sprengidagur/Öskudagur (from your old file; also shown on image)
     map.set(isoDate(addDays(easter, -48)), "Bolludagur");
     map.set(isoDate(addDays(easter, -47)), "Sprengidagur");
     map.set(isoDate(addDays(easter, -46)), "Öskudagur");
-
-    // Sjómannadagurinn (legacy marker): first Sunday in June (kept as "special")
-    const june1 = new Date(year, 5, 1);
-    const delta = (6 - monIndex(june1.getDay()) + 7) % 7; // Sunday=6 in monIndex
-    map.set(isoDate(addDays(june1, delta)), "Sjómannadagurinn");
 
     return map;
   }
@@ -159,6 +207,9 @@
     addDays,
     easterSunday,
     nthWeekdayOfMonth,
+    weekdayOnOrAfter,
+    firstThursdayAfterApril18,
+    firstMondayOfAugust,
     getIcelandHolidayMap,
     getIcelandSpecialDays,
     computeMoonMarkersForYear,
