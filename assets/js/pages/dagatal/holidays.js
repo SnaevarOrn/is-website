@@ -1,7 +1,7 @@
 /* dagatal/holidays.js — loads holidays.is.json and builds info map per year (no DOM) */
 (() => {
   const NS = (window.dagatal = window.dagatal || {});
-  const getD = () => (NS.date || {});
+  const D = NS.date; 
 
   const DATA_URL = "/assets/data/holidays.is.json";
   let _data = null;
