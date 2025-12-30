@@ -74,10 +74,9 @@
     add(1, 1, "Nýársdagur");
     add(5, 1, "Baráttudagur verkalýðsins");
     add(6, 17, "Þjóðhátíðardagur Íslendinga");
-    add(10, 11, "Fæðingardagur forseta (HT)");
-    add(11, 16, "Dagur íslenskrar tungu");
-    add(12, 1, "Fullveldisdagurinn");
+    add(12, 24, "Aðfangadagur jóla");
     add(12, 25, "Jóladagur");
+    add(12, 26, "Annar í jólum");
 
     const easter = easterSunday(year);
     // 🇮🇸 flagged on the image
@@ -100,10 +99,11 @@
     // Fixed specials (from image)
     add(1, 6, "Þrettándinn");
     add(2, 14, "Valentínusardagurinn");
+    add(10, 11, "Fæðingardagur forseta (HT)");
+    add(11, 16, "Dagur íslenskrar tungu");
+    add(12, 1, "Fullveldisdagurinn");
     add(10, 31, "Hrekkjavaka");
     add(12, 23, "Þorláksmessa");
-    add(12, 24, "Aðfangadagur jóla");
-    add(12, 26, "Annar í jólum");
     add(12, 31, "Gamlársdagur");
 
     // Bóndadagur (upphaf Þorra): first Friday on/after Jan 19
