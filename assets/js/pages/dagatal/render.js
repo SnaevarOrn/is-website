@@ -14,17 +14,19 @@
   }
 
   function maybeAddInfoButton(state, iso, hostEl) {
-    if (!state || !state.holidayInfoMap) return;
-    if (!state.holidayInfoMap.has(iso)) return;
+  const map = state?.holidayInfoMap || state?.holidayInfo || state?.infoMap;
+  if (!map || typeof map.has !== "function") return;
+  if (!map.has(iso)) return;
 
-    const btn = document.createElement("button");
-    btn.className = "info-btn";
-    btn.type = "button";
-    btn.dataset.iso = iso;
-    btn.title = "Upplýsingar";
-    btn.textContent = "i";
-    hostEl.appendChild(btn);
-  }
+  const btn = document.createElement("button");
+  btn.className = "info-btn";
+  btn.type = "button";
+  btn.dataset.iso = iso;
+  btn.title = "Upplýsingar";
+  btn.textContent = "i";
+  hostEl.appendChild(btn);
+}
+
 
   function makeDayCell(state, date) {
     const iso = D.isoDate(date);
