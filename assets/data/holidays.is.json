@@ -14,11 +14,19 @@
     "01-06": {
       "id": "twelfth-night",
       "title": "✨ Þrettándinn",
-      "summary": "Hátíðisdagur í lok jólatímans (þrettándi dagur jóla); lögbundinn frídagur á Íslandi.",
-      "body": "Þrettándinn er haldinn 6. janúar og markar hefðbundið lok jólatímans.\n\nÍ kristinni hefð tengist dagurinn birtingu Krists (Epiphany) og „þrettánda degi jóla“. Á Íslandi hefur dagurinn einnig sterka þjóðtrúar- og menningarlega vídd, þar sem sögur um huldufólk og álfabrennur hafa verið lifandi.\n\nÞrettándinn er lögbundinn frídagur á Íslandi og fellur inn í frídagakerfi jólahátíðarinnar.",
+      "summary": "Hátíðisdagur í lok jólatímans (þrettándi dagur jóla); merkisdagur með sterkum menningarhefðum á Íslandi.",
+      "body": "Þrettándinn er haldinn 6. janúar og markar hefðbundið lok jólatímans.\n\nÍ kristinni hefð tengist dagurinn birtingu Krists (Epiphany) og „þrettánda degi jóla“. Á Íslandi hefur dagurinn einnig sterka þjóðtrúar- og menningarlega vídd, þar sem sögur um huldufólk og álfabrennur hafa verið lifandi.\n\nÞrettándinn er almennt talinn merkisdagur í íslenskri hefð (ekki lögbundinn almennur frídagur fyrir allt launafólk).",
       "sources": [
-        { "label": "Wikipedia (IS): Þrettándinn", "url": "https://is.wikipedia.org/wiki/%C3%9Erett%C3%A1ndinn" },
-        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
+        { "label": "Wikipedia (IS): Þrettándinn", "url": "https://is.wikipedia.org/wiki/%C3%9Erett%C3%A1ndinn" }
+      ]
+    },
+    "02-14": {
+      "id": "valentines-day",
+      "title": "💌 Valentínusardagurinn",
+      "summary": "Dagur sem tengist ást og vináttu; merkisdagur (ekki lögbundinn frídagur).",
+      "body": "Valentínusardagurinn er haldinn 14. febrúar og tengist í nútímahefð kveðjum, gjöfum og athöfnum sem snúa að ást og vináttu.\n\nDagurinn er víða haldinn hátíðlegur, en telst merkisdagur en ekki lögbundinn frídagur á Íslandi.",
+      "sources": [
+        { "label": "Wikipedia (IS): Valentínusardagur", "url": "https://is.wikipedia.org/wiki/Valent%C3%ADnusardagur" }
       ]
     },
     "05-01": {
@@ -39,6 +47,49 @@
       "sources": [
         { "label": "Wikipedia: Icelandic National Day", "url": "https://en.wikipedia.org/wiki/Icelandic_National_Day" },
         { "label": "Vísindavefur HÍ: Af hverju er 17. júní þjóðhátíðardagur?", "url": "https://www.visindavefur.is/svar.php?id=1692" }
+      ]
+    },
+    "10-11": {
+      "id": "presidents-birthday-ht",
+      "title": "🎂 Fæðingardagur forseta (HT)",
+      "summary": "Merkisdagur tengdur sögu embættis forseta; ekki lögbundinn frídagur.",
+      "body": "Dagurinn er stundum merktur í dagatölum sem merkisdagur.\n\nHann telst ekki til lögbundinna almennra frídaga.",
+      "sources": []
+    },
+    "10-31": {
+      "id": "halloween",
+      "title": "🎃 Hrekkjavaka",
+      "summary": "Merkisdagur sem hefur orðið algengari á Íslandi síðustu áratugi; ekki lögbundinn frídagur.",
+      "body": "Hrekkjavaka (Halloween) er 31. október og tengist búningum, skreytingum og leikjum.\n\nHún telst merkisdagur en ekki lögbundinn frídagur á Íslandi.",
+      "sources": [
+        { "label": "Wikipedia (IS): Hrekkjavaka", "url": "https://is.wikipedia.org/wiki/Hrekkjavaka" }
+      ]
+    },
+    "11-16": {
+      "id": "icelandic-language-day",
+      "title": "📚 Dagur íslenskrar tungu",
+      "summary": "Merkisdagur tileinkaður íslensku; haldinn á fæðingardegi Jónasar Hallgrímssonar. Ekki lögbundinn frídagur.",
+      "body": "Dagur íslenskrar tungu er haldinn 16. nóvember og er tileinkaður íslenskri tungu og menningararfi.\n\nDagurinn er valinn vegna þess að hann er fæðingardagur Jónasar Hallgrímssonar.",
+      "sources": [
+        { "label": "Wikipedia (IS): Dagur íslenskrar tungu", "url": "https://is.wikipedia.org/wiki/Dagur_%C3%ADslenskrar_tungu" }
+      ]
+    },
+    "12-01": {
+      "id": "sovereignty-day",
+      "title": "🇮🇸 Fullveldisdagurinn",
+      "summary": "Minnir á fullveldi Íslands 1918; merkisdagur (ekki lögbundinn almennur frídagur).",
+      "body": "Fullveldisdagurinn 1. desember minnir á að Ísland varð fullvalda ríki árið 1918.\n\nDagurinn er almennt merktur sem merkisdagur, en er ekki lögbundinn almennur frídagur fyrir allt launafólk.",
+      "sources": [
+        { "label": "Wikipedia (IS): Fullveldi Íslands", "url": "https://is.wikipedia.org/wiki/Fullveldi_%C3%8Dslands" }
+      ]
+    },
+    "12-23": {
+      "id": "thorlaksmessa",
+      "title": "🕯️ Þorláksmessa",
+      "summary": "Merkisdagur 23. desember; tengist Þorláki helga og íslenskum jólaundirbúningi.",
+      "body": "Þorláksmessa er 23. desember og hefur lengi verið mikilvægur dagur í íslenskum jólaundirbúningi.\n\nDagurinn tengist Þorláki helga og hefur einnig sterkar matarmenningarhefðir (t.d. kæst skata hjá mörgum).",
+      "sources": [
+        { "label": "Wikipedia (IS): Þorláksmessa", "url": "https://is.wikipedia.org/wiki/%C3%9Eorl%C3%A1ksmessa" }
       ]
     },
     "12-24": {
@@ -84,6 +135,66 @@
   },
   "rules": [
     {
+      "id": "bondadagur",
+      "title": "🧣 Bóndadagur, upphaf Þorra",
+      "summary": "Fyrsti föstudagur á eða eftir 19. janúar (upphaf Þorra í hefðbundnu misseristali).",
+      "body": "Bóndadagur markar upphaf Þorra í íslenskri hefð og er tengdur gömlum misserisskiptum.\n\nDagurinn er merkisdagur (ekki lögbundinn frídagur).",
+      "rule": { "type": "weekdayOnOrAfter", "month": 1, "day": 19, "weekday": 5 },
+      "sources": [
+        { "label": "Wikipedia (IS): Þorri", "url": "https://is.wikipedia.org/wiki/%C3%9Eorri" }
+      ]
+    },
+    {
+      "id": "konudagur",
+      "title": "🌸 Konudagur, upphaf Góu",
+      "summary": "Fyrsti sunnudagur á eða eftir 18. febrúar (upphaf Góu í hefðbundnu misseristali).",
+      "body": "Konudagur markar upphaf Góu í íslenskri hefð og er hluti af gömlum misserisskiptum.\n\nDagurinn er merkisdagur (ekki lögbundinn frídagur).",
+      "rule": { "type": "weekdayOnOrAfter", "month": 2, "day": 18, "weekday": 0 },
+      "sources": [
+        { "label": "Wikipedia (IS): Góa", "url": "https://is.wikipedia.org/wiki/G%C3%B3a" }
+      ]
+    },
+    {
+      "id": "bun-day",
+      "title": "🥯 Bolludagur",
+      "summary": "Mánudagur 48 dögum fyrir páskadag; merkisdagur.",
+      "body": "Bolludagur er hluti af þriggja daga röð fyrir föstu: Bolludagur, Sprengidagur og Öskudagur.\n\nÁ Íslandi tengist hann einkum rjómabollum og fjölskylduhefðum.",
+      "rule": { "type": "easterOffset", "days": -48 },
+      "sources": [
+        { "label": "Wikipedia (IS): Bolludagur", "url": "https://is.wikipedia.org/wiki/Bolludagur" }
+      ]
+    },
+    {
+      "id": "sprengidagur",
+      "title": "🍲 Sprengidagur",
+      "summary": "Þriðjudagur 47 dögum fyrir páskadag; merkisdagur.",
+      "body": "Sprengidagur er dagurinn á undan öskudegi og tengist hefð um saðningu fyrir föstu.\n\nÁ Íslandi tengist hann oft saltkjöti og baunum.",
+      "rule": { "type": "easterOffset", "days": -47 },
+      "sources": [
+        { "label": "Wikipedia (IS): Sprengidagur", "url": "https://is.wikipedia.org/wiki/Sprengidagur" }
+      ]
+    },
+    {
+      "id": "askudagur",
+      "title": "🎭 Öskudagur",
+      "summary": "Miðvikudagur 46 dögum fyrir páskadag; upphaf föstu; merkisdagur.",
+      "body": "Öskudagur markar upphaf löngu föstu í kristinni hefð.\n\nÁ Íslandi tengist dagurinn búningum, söngvum og „öskupokum“ hjá börnum.",
+      "rule": { "type": "easterOffset", "days": -46 },
+      "sources": [
+        { "label": "Wikipedia (IS): Öskudagur", "url": "https://is.wikipedia.org/wiki/%C3%96skudagur" }
+      ]
+    },
+    {
+      "id": "palm-sunday",
+      "title": "🌿 Pálmasunnudagur",
+      "summary": "Sunnudagur 7 dögum fyrir páskadag; merkisdagur í kirkjuári.",
+      "body": "Pálmasunnudagur er sunnudagurinn fyrir páska og markar upphaf dymbilviku í kirkjuárinu.\n\nDagurinn er ekki lögbundinn almennur frídagur á Íslandi.",
+      "rule": { "type": "easterOffset", "days": -7 },
+      "sources": [
+        { "label": "Wikipedia (IS): Pálmasunnudagur", "url": "https://is.wikipedia.org/wiki/P%C3%A1lmasunnudagur" }
+      ]
+    },
+    {
       "id": "maundy-thursday",
       "title": "✝️ Skírdagur",
       "summary": "Fimmtudagur fyrir páska; minnir á síðustu kvöldmáltíðina. Lögbundinn frídagur.",
@@ -123,8 +234,17 @@
       "body": "Annar í páskum er mánudagurinn eftir páskadag og er hluti af lögbundnum frídögum páskahátíðarinnar á Íslandi.\n\nDagurinn lengir páskahátíðina og er almennt nýttur til hvíldar og samveru.",
       "rule": { "type": "easterOffset", "days": 1 },
       "sources": [
-        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
-        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
+      ]
+    },
+    {
+      "id": "mothers-day",
+      "title": "🌷 Mæðradagurinn",
+      "summary": "Annar sunnudagur í maí; merkisdagur.",
+      "body": "Mæðradagurinn er haldinn annan sunnudag í maí og er tileinkaður mæðrum og uppeldi.\n\nDagurinn er merkisdagur (ekki lögbundinn frídagur).",
+      "rule": { "type": "nthWeekdayOfMonth", "month": 5, "weekday": 0, "nth": 2 },
+      "sources": [
+        { "label": "Wikipedia (IS): Mæðradagurinn", "url": "https://is.wikipedia.org/wiki/M%C3%A6%C3%B0radagurinn" }
       ]
     },
     {
@@ -145,8 +265,21 @@
       "body": "Uppstigningardagur er haldinn 39 dögum eftir páskadag (alltaf á fimmtudegi).\n\nÍ kristinni hefð minnir dagurinn á uppstigningu Krists. Dagurinn er lögbundinn frídagur á Íslandi.",
       "rule": { "type": "easterOffset", "days": 39 },
       "sources": [
-        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
         { "label": "Wikipedia (IS): Uppstigningardagur", "url": "https://is.wikipedia.org/wiki/Uppstigningardagur" }
+      ]
+    },
+    {
+      "id": "fishermens-day",
+      "title": "⚓ Sjómannadagurinn",
+      "summary": "Helgaður sjómönnum; sérstakur frídagur sjómanna. Yfirleitt fyrsti sunnudagur í júní (með undantekningu ef hann rekst á hvítasunnu).",
+      "body": "Sjómannadagurinn er helgaður íslenskum sjómönnum og þeirri sjósókn sem um aldir hefur verið ein af grunnstoðum íslensks samfélags og efnahags.\n\nDagurinn var fyrst haldinn hátíðlegur árið 1938. Með lögum nr. 20/1987 var ákveðið að fyrsti sunnudagur í júní skyldi vera formlegur frídagur sjómanna.\n\nSjómannadagurinn er því ekki almennur frídagur fyrir allt launafólk, heldur sérstakur lögbundinn frídagur sjómanna, jafnframt því að vera mikilvægur menningar- og minningardagur fyrir þjóðina.",
+      "rule": { "type": "nthWeekdayOfMonth", "month": 6, "weekday": 0, "nth": 1 },
+      "exceptions": [
+        { "type": "avoidMoveableFeast", "feast": "pentecost", "action": { "type": "addDays", "days": 7 } }
+      ],
+      "sources": [
+        { "label": "Alþingi: Lög nr. 20/1987 um sjómannadag", "url": "https://www.althingi.is/lagas/nuna/1987020.html" },
+        { "label": "Wikipedia (IS): Sjómannadagurinn", "url": "https://is.wikipedia.org/wiki/Sj%C3%B3mannadagurinn" }
       ]
     },
     {
@@ -156,7 +289,6 @@
       "body": "Hvítasunnudagur er haldinn 49 dögum eftir páskadag.\n\nÍ kristinni hefð tengist dagurinn hvítasunnu og upphafi kirkjunnar. Á Íslandi er hvítasunnudagur lögbundinn frídagur.",
       "rule": { "type": "easterOffset", "days": 49 },
       "sources": [
-        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
         { "label": "Wikipedia (IS): Hvítasunna", "url": "https://is.wikipedia.org/wiki/Hv%C3%ADtasunna" }
       ]
     },
@@ -167,8 +299,7 @@
       "body": "Annar í hvítasunnu er mánudagurinn eftir hvítasunnudag og er hluti af lögbundnum frídögum tengdum hvítasunnu á Íslandi.\n\nDagurinn er almennt nýttur til hvíldar og samveru.",
       "rule": { "type": "easterOffset", "days": 50 },
       "sources": [
-        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
-        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
       ]
     },
     {
@@ -178,33 +309,37 @@
       "body": "Frídagur verslunarmanna er haldinn fyrsta mánudag í ágúst.\n\nDagurinn tengist upphafi verslunarmannahelgarinnar og sumarfríum. Hann er lögbundinn frídagur á Íslandi og hefur lengi verið einn af helstu „langhelgardögum“ sumarsins.",
       "rule": { "type": "firstMondayOfAugust" },
       "sources": [
-        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
         { "label": "Wikipedia (IS): Verslunarmannahelgi", "url": "https://is.wikipedia.org/wiki/Verslunarmannahelgi" }
       ]
     },
     {
-      "id": "fishermens-day",
-      "title": "⚓ Sjómannadagurinn",
-      "summary": "Helgaður sjómönnum; sérstakur frídagur sjómanna. Yfirleitt fyrsti sunnudagur í júní (með undantekningu ef hann rekst á hvítasunnu).",
-      "body": "Sjómannadagurinn er helgaður íslenskum sjómönnum og þeirri sjósókn sem um aldir hefur verið ein af grunnstoðum íslensks samfélags og efnahags.\n\nDagurinn var fyrst haldinn hátíðlegur árið 1938. Með lögum nr. 20/1987 var ákveðið að fyrsti sunnudagur í júní skyldi vera formlegur frídagur sjómanna.\n\nSjómannadagurinn er því ekki almennur frídagur fyrir allt launafólk, heldur sérstakur lögbundinn frídagur sjómanna, jafnframt því að vera mikilvægur menningar- og minningardagur fyrir þjóðina.",
-      "rule": {
-        "type": "nthWeekdayOfMonth",
-        "month": 6,
-        "weekday": 0,
-        "nth": 1,
-        "notes": "weekday: 0 = sunnudagur"
-      },
-      "exceptions": [
-        {
-          "type": "avoidMoveableFeast",
-          "feast": "pentecost",
-          "action": { "type": "addDays", "days": 7 },
-          "notes": "Ef sjómannadagur lendir á hvítasunnudegi, færist um viku."
-        }
-      ],
+      "id": "reykjavik-pride",
+      "title": "🏳️‍🌈 Reykjavík Pride / Gleðigangan",
+      "summary": "Önnur laugardagur í ágúst; merkisdagur/viðburður (ekki lögbundinn frídagur).",
+      "body": "Reykjavík Pride er árleg hátíð sem endar oft með Gleðigöngunni.\n\nDagsetningin getur verið breytileg milli ára en er oft önnur helgin í ágúst.",
+      "rule": { "type": "nthWeekdayOfMonth", "month": 8, "weekday": 6, "nth": 2 },
       "sources": [
-        { "label": "Alþingi: Lög nr. 20/1987 um sjómannadag", "url": "https://www.althingi.is/lagas/nuna/1987020.html" },
-        { "label": "Wikipedia (IS): Sjómannadagurinn", "url": "https://is.wikipedia.org/wiki/Sj%C3%B3mannadagurinn" }
+        { "label": "Wikipedia: Reykjavík Pride", "url": "https://en.wikipedia.org/wiki/Reykjav%C3%ADk_Pride" }
+      ]
+    },
+    {
+      "id": "culture-night",
+      "title": "🎶 Menningarnótt í Reykjavík",
+      "summary": "Fjórði laugardagur í ágúst; merkisdagur/viðburður (ekki lögbundinn frídagur).",
+      "body": "Menningarnótt er árleg borgarhátíð í Reykjavík með fjölbreyttri dagskrá.\n\nDagsetningin er breytileg milli ára en fellur oft seint í ágúst.",
+      "rule": { "type": "nthWeekdayOfMonth", "month": 8, "weekday": 6, "nth": 4 },
+      "sources": [
+        { "label": "Wikipedia (IS): Menningarnótt", "url": "https://is.wikipedia.org/wiki/Menningarn%C3%B3tt" }
+      ]
+    },
+    {
+      "id": "first-winter-day",
+      "title": "❄️ Fyrsti vetrardagur",
+      "summary": "Fyrsti laugardagur á eða eftir 21. október; merkisdagur úr gömlu misseristali.",
+      "body": "Fyrsti vetrardagur markar upphaf vetrarmisseris í hefðbundnu íslensku misseristali.\n\nDagurinn er merkisdagur (ekki lögbundinn frídagur).",
+      "rule": { "type": "weekdayOnOrAfter", "month": 10, "day": 21, "weekday": 6 },
+      "sources": [
+        { "label": "Wikipedia (IS): Misseri", "url": "https://is.wikipedia.org/wiki/Misseri" }
       ]
     }
   ]
