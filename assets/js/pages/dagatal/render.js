@@ -4,32 +4,40 @@
   const D = NS.date;
 
   const WEEKDAYS = ["mán", "þri", "mið", "fim", "fös", "lau", "sun"];
-  const MONTHS_LONG = ["janúar", "febrúar", "mars", "apríl", "maí", "júní", "júlí", "ágúst", "september", "október", "nóvember", "desember"];
+  const MONTHS_LONG = [
+    "janúar","febrúar","mars","apríl","maí","júní",
+    "júlí","ágúst","september","október","nóvember","desember"
+  ];
 
   function weekdayShort(date) {
     return WEEKDAYS[D.monIndex(date.getDay())];
   }
+
   function monthShort(m) {
-    return ["jan", "feb", "mar", "apr", "maí", "jún", "júl", "ágú", "sep", "okt", "nóv", "des"][m];
+    return ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"][m];
+  }
+
+  function getInfoMap(state) {
+    const map = state?.holidayInfoMap || state?.holidayInfo || state?.infoMap;
+    return map && typeof map.has === "function" ? map : null;
   }
 
   function maybeAddInfoButton(state, iso, hostEl) {
-  const map = state?.holidayInfoMap || state?.holidayInfo || state?.infoMap;
-  if (!map || typeof map.has !== "function") return;
-  if (!map.has(iso)) return;
+    const map = getInfoMap(state);
+    if (!map || !map.has(iso)) return;
 
-  const btn = document.createElement("button");
-  btn.className = "info-btn";
-  btn.type = "button";
-  btn.dataset.iso = iso;
-  btn.title = "Upplýsingar";
-  btn.textContent = "i";
-  hostEl.appendChild(btn);
-}
-
+    const btn = document.createElement("button");
+    btn.className = "info-btn";
+    btn.type = "button";
+    btn.dataset.iso = iso;
+    btn.title = "Upplýsingar";
+    btn.textContent = "i";
+    hostEl.appendChild(btn);
+  }
 
   function makeDayCell(state, date) {
     const iso = D.isoDate(date);
+
     const cell = document.createElement("div");
     cell.className = "cell";
     cell.dataset.iso = iso;
@@ -39,7 +47,10 @@
     dnum.textContent = date.getDate();
     cell.appendChild(dnum);
 
-    const isHoliday = state.holidayMap.has(iso);
+    const isHoliday = !!state?.holidayMap?.has?.(iso);
+    const isSpecial = !!state?.specialMap?.has?.(iso) && !isHoliday;
+
+    // Lögbundnir frídagar (🇮🇸) -> 🎉 bara þegar showHolidays er ON
     if (state.showHolidays && isHoliday) {
       cell.classList.add("is-holiday");
       const ce = document.createElement("div");
@@ -48,12 +59,14 @@
       cell.appendChild(ce);
     }
 
-    if (state.showSpecial && state.specialMap.has(iso) && !isHoliday) {
+    // Merkisdaga highlight (án 🎉)
+    if (state.showSpecial && isSpecial) {
       cell.classList.add("is-special");
     }
 
+    // Moon
     if (state.showMoon) {
-      const mk = state.moonMarkers.get(iso);
+      const mk = state?.moonMarkers?.get?.(iso);
       if (mk) {
         const moon = document.createElement("div");
         moon.className = "moon";
@@ -65,8 +78,11 @@
     // ⓘ info bubble (only if we have info for this iso)
     maybeAddInfoButton(state, iso, cell);
 
+    // Today marker
     const today = new Date();
-    if (iso === D.isoDate(today) && state.year === today.getFullYear()) cell.classList.add("is-today");
+    if (iso === D.isoDate(today) && state.year === today.getFullYear()) {
+      cell.classList.add("is-today");
+    }
 
     return cell;
   }
@@ -178,11 +194,13 @@
     calendarEl.appendChild(box);
   }
 
+  // Holiday list = lögbundnir frídagar (🇮🇸) úr holidayMap
   function renderHolidayList(state, calendarEl) {
     const box = document.createElement("section");
     box.className = "holidays";
 
     const items = Array.from(state.holidayMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    const infoMap = getInfoMap(state);
 
     for (const [iso, name] of items) {
       const [y, mm, dd] = iso.split("-").map(Number);
@@ -204,8 +222,9 @@
       meta.textContent = right;
 
       rightWrap.appendChild(meta);
+
       // ⓘ in list
-      maybeAddInfoButton(state, iso, rightWrap);
+      if (infoMap?.has(iso)) maybeAddInfoButton(state, iso, rightWrap);
 
       item.appendChild(left);
       item.appendChild(rightWrap);
