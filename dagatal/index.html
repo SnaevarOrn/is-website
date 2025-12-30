@@ -33,6 +33,25 @@
   <script defer src="/assets/js/pages/dagatal/render.js"></script>
   <script defer src="/assets/js/pages/dagatal/ui.js"></script>
 </head>
+  
+  <!-- Info modal -->
+  <div class="i-overlay" id="iOverlay" role="dialog" aria-modal="true" aria-labelledby="iTitle">
+    <div class="i-modal">
+      <div class="i-modal-h">
+        <b id="iTitle">Upplýsingar</b>
+        <button class="i-close" id="iCloseBtn" aria-label="Loka">✕</button>
+      </div>
+
+      <div class="i-body">
+        <div class="i-muted" id="iMeta"></div>
+        <div class="i-summary" id="iSummary"></div>
+        <div class="i-text" id="iText"></div>
+
+        <div class="i-muted" style="margin-top:8px;">Heimildir</div>
+        <ul class="i-sources" id="iSources"></ul>
+      </div>
+    </div>
+  </div>
 
 <body>
   <header class="topbar">
