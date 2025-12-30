@@ -33,9 +33,18 @@
     return d;
   }
 
+  // Nth weekday of month (weekday: 0=Sun .. 6=Sat), nth: 1..5
+  function nthWeekdayOfMonth(year, month1to12, weekday0Sun, nth) {
+    const monthIdx = month1to12 - 1;
+    const first = new Date(year, monthIdx, 1);
+    const delta = (weekday0Sun - first.getDay() + 7) % 7;
+    const day = 1 + delta + (nth - 1) * 7;
+    return new Date(year, monthIdx, day);
+  }
+
   function firstThursdayAfterApril18(year) {
     const start = new Date(year, 3, 19);
-    const delta = (3 - monIndex(start.getDay()) + 7) % 7; // Thursday=3
+    const delta = (3 - monIndex(start.getDay()) + 7) % 7; // Thursday=3 in monIndex
     return addDays(start, delta);
   }
 
@@ -86,7 +95,7 @@
     map.set(isoDate(addDays(easter, -47)), "Sprengidagur");
     map.set(isoDate(addDays(easter, -46)), "Öskudagur");
 
-    // Sjómannadagurinn: first Sunday in June
+    // Sjómannadagurinn (legacy marker): first Sunday in June (kept as "special")
     const june1 = new Date(year, 5, 1);
     const delta = (6 - monIndex(june1.getDay()) + 7) % 7; // Sunday=6 in monIndex
     map.set(isoDate(addDays(june1, delta)), "Sjómannadagurinn");
@@ -149,6 +158,7 @@
     daysInMonth,
     addDays,
     easterSunday,
+    nthWeekdayOfMonth,
     getIcelandHolidayMap,
     getIcelandSpecialDays,
     computeMoonMarkersForYear,
