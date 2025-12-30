@@ -3,13 +3,22 @@
   const NS = (window.dagatal = window.dagatal || {});
   const D = NS.date;
   const R = NS.render;
+  const H = NS.holidays;
 
   const $ = (sel) => document.querySelector(sel);
 
   const calendarEl = $("#calendar");
   const yearLabel = $("#yearLabel");
-  const monthLabel = $("#monthLabel"); // button in lower header
+  const monthLabel = $("#monthLabel");
   const dowBar = $("#dowBar");
+
+  // Info modal elements
+  const iOverlay = $("#iOverlay");
+  const iCloseBtn = $("#iCloseBtn");
+  const iTitle = $("#iTitle");
+  const iSummary = $("#iSummary");
+  const iBody = $("#iBody");
+  const iSources = $("#iSources");
 
   const state = {
     year: 2025,
@@ -21,6 +30,8 @@
     holidayMap: new Map(),
     specialMap: new Map(),
     moonMarkers: new Map(),
+    holidayInfoData: null,
+    holidayInfoMap: new Map(), // iso -> info object
     monthObserver: null,
   };
 
@@ -98,6 +109,50 @@
     state.monthObserver = obs;
   }
 
+  function renderSources(sources) {
+    iSources.innerHTML = "";
+    if (!sources || !sources.length) {
+      const p = document.createElement("div");
+      p.className = "i-muted";
+      p.textContent = "Engar heimildir skráðar.";
+      iSources.appendChild(p);
+      return;
+    }
+
+    const ul = document.createElement("ul");
+    ul.className = "i-sources";
+
+    for (const s of sources) {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = s.url;
+      a.textContent = s.label || s.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
+
+    iSources.appendChild(ul);
+  }
+
+  function openInfoForIso(iso) {
+    const info = state.holidayInfoMap.get(iso);
+    if (!info) return;
+
+    iTitle.textContent = info.title || "Upplýsingar";
+    iSummary.textContent = info.summary || "";
+    iBody.textContent = info.body || "";
+    renderSources(info.sources);
+
+    iOverlay?.classList.add("open");
+    setTimeout(() => iCloseBtn?.focus(), 30);
+  }
+
+  function closeInfo() {
+    iOverlay?.classList.remove("open");
+  }
+
   function build() {
     yearLabel.textContent = state.year;
     const yi = $("#yearInput");
@@ -113,6 +168,9 @@
     state.holidayMap = D.getIcelandHolidayMap(state.year);
     state.specialMap = D.getIcelandSpecialDays(state.year);
     state.moonMarkers = D.computeMoonMarkersForYear(state.year);
+
+    // Build info map (regludrifið + fixed) for this year
+    state.holidayInfoMap = H && state.holidayInfoData ? H.buildInfoMapForYear(state.year, state.holidayInfoData) : new Map();
 
     calendarEl.innerHTML = "";
     disconnectMonthObserver();
@@ -236,7 +294,6 @@
     toggleLayout();
   });
 
-  // Lower header indicator: toggle months/weeks; in holidays returns to calendar
   monthLabel?.addEventListener("click", () => {
     if (state.view === "holidays") {
       state.view = "calendar";
@@ -280,7 +337,7 @@
     openSheet();
   });
 
-  /* CONTACT MODAL */
+  /* CONTACT MODAL (unchanged) */
   const cOverlay = $("#cOverlay");
   const cCloseBtn = $("#cCloseBtn");
   const cForm = $("#contactForm");
@@ -335,19 +392,38 @@
     }
   });
 
+  /* INFO MODAL wiring */
+  iCloseBtn?.addEventListener("click", closeInfo);
+  iOverlay?.addEventListener("click", (e) => {
+    if (e.target === iOverlay) closeInfo();
+  });
+
+  // Event delegation: any ⓘ inside calendar/list
+  calendarEl?.addEventListener("click", (e) => {
+    const btn = e.target?.closest?.(".info-btn");
+    if (!btn) return;
+    const iso = btn.dataset.iso;
+    if (iso) openInfoForIso(iso);
+  });
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       togglePop(false);
       closeSheet();
       closeMenu();
       closeContact();
+      closeInfo();
     }
   });
 
-  /* INIT */
-  (() => {
+  /* INIT (async: load JSON once, then build) */
+  (async () => {
     const now = new Date();
     state.year = now.getFullYear();
+
+    // load holiday info JSON
+    state.holidayInfoData = await H.load();
+
     build();
 
     requestAnimationFrame(() => {
