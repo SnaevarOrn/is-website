@@ -11,6 +11,16 @@
         { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
       ]
     },
+    "01-06": {
+      "id": "twelfth-night",
+      "title": "✨ Þrettándinn",
+      "summary": "Hátíðisdagur í lok jólatímans (þrettándi dagur jóla); lögbundinn frídagur á Íslandi.",
+      "body": "Þrettándinn er haldinn 6. janúar og markar hefðbundið lok jólatímans.\n\nÍ kristinni hefð tengist dagurinn birtingu Krists (Epiphany) og „þrettánda degi jóla“. Á Íslandi hefur dagurinn einnig sterka þjóðtrúar- og menningarlega vídd, þar sem sögur um huldufólk og álfabrennur hafa verið lifandi.\n\nÞrettándinn er lögbundinn frídagur á Íslandi og fellur inn í frídagakerfi jólahátíðarinnar.",
+      "sources": [
+        { "label": "Wikipedia (IS): Þrettándinn", "url": "https://is.wikipedia.org/wiki/%C3%9Erett%C3%A1ndinn" },
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
+      ]
+    },
     "05-01": {
       "id": "labour-day",
       "title": "✊ Verkalýðsdagurinn",
@@ -25,19 +35,158 @@
       "id": "national-day",
       "title": "🇮🇸 Þjóðhátíðardagurinn",
       "summary": "Minnir á stofnun Lýðveldisins 1944 og er fæðingardagur Jóns Sigurðssonar.",
-      "body": "17. júní er þjóðhátíðardagur Íslendinga og minnir á stofnun Lýðveldisins Íslands árið 1944, þegar sambandinu við Danmörku var formlega slitið.\n\nDagurinn var valinn vegna þess að hann er fæðingardagur Jóns Sigurðssonar (1811–1879), helsta leiðtoga sjálfstæðisbaráttu Íslendinga á 19. öld.\n\nÞótt hátíðarhöld 17. júní hafi verið stunduð í áratugi fyrir lýðveldisstofnun, varð dagurinn að almennum þjóðhátíðar- og frídegi frá og með 1944, og festist síðar í sessi sem lögbundinn frídagur með almennri frídagalöggjöf.\n\nÍ dag er 17. júní stærsti sameiginlegi hátíðisdagur þjóðarinnar, þar sem þjóðarsjálfstæði, saga og menningarleg sjálfsmynd eru í brennidepli.",
+      "body": "17. júní er þjóðhátíðardagur Íslendinga og minnir á stofnun Lýðveldisins Íslands árið 1944, þegar sambandinu við Danmörku var formlega slitið.\n\nDagurinn var valinn vegna þess að hann er fæðingardagur Jóns Sigurðssonar (1811–1879), helsta leiðtoga sjálfstæðisbaráttu Íslendinga á 19. öld.\n\nÍ dag er 17. júní stærsti sameiginlegi hátíðisdagur þjóðarinnar, þar sem þjóðarsjálfstæði, saga og menningarleg sjálfsmynd eru í brennidepli.",
       "sources": [
         { "label": "Wikipedia: Icelandic National Day", "url": "https://en.wikipedia.org/wiki/Icelandic_National_Day" },
         { "label": "Vísindavefur HÍ: Af hverju er 17. júní þjóðhátíðardagur?", "url": "https://www.visindavefur.is/svar.php?id=1692" }
+      ]
+    },
+    "12-24": {
+      "id": "christmas-eve",
+      "title": "🕯️ Aðfangadagur",
+      "summary": "Aðfangadagur jóla; helsti hátíðarkvöldverður og jólaathafnir. Hluti af lögbundnu frídagakerfi jóla.",
+      "body": "Aðfangadagur er 24. desember og er eitt mikilvægasta kvöld ársins í íslenskri jólahefð.\n\nÁ kvöldinu eru jól haldin hátíðleg með samveru, máltíð, gjöfum og oft kirkjuathöfnum. Í raun upplifa margir Aðfangadag sem „aðal-jóladaginn“ í menningarlegum skilningi, þótt 25. desember sé formlegi jóladagurinn.\n\nAðfangadagur telst til lögbundinna frídaga í íslensku frídagakerfi jóla.",
+      "sources": [
+        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" },
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
+      ]
+    },
+    "12-25": {
+      "id": "christmas-day",
+      "title": "🎄 Jóladagur",
+      "summary": "Fyrsti dagur jóla; lögbundinn almennur frídagur.",
+      "body": "Jóladagur, 25. desember, er fyrsti dagur jóla og einn af stærstu kirkju- og fjölskylduhátíðisdögum ársins.\n\nDagurinn er lögbundinn almennur frídagur á Íslandi og tengist bæði kristinni hefð og sterkri menningarhefð um samveru og hvíld yfir hátíðarnar.",
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
+      ]
+    },
+    "12-26": {
+      "id": "second-day-of-christmas",
+      "title": "🎄 Annar í jólum",
+      "summary": "Annar dagur jóla; lögbundinn almennur frídagur.",
+      "body": "Annar í jólum, 26. desember, er framhald jóladaga og hluti af lögbundnum frídagakerfi yfir jólahátíðina.\n\nDagurinn er nýttur til hvíldar og samveru og er almennur frídagur á Íslandi.",
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
+      ]
+    },
+    "12-31": {
+      "id": "new-years-eve",
+      "title": "🎇 Gamlársdagur",
+      "summary": "Síðasti dagur ársins; áramótahátíð og kvöldsamvera. Hluti af frídagakerfi áramóta.",
+      "body": "Gamlársdagur er 31. desember og markar lok ársins. Á Íslandi er dagurinn sterkt tengdur áramótahátíð, fjölskyldusamveru og hefðum um áramótabrennur og flugelda.\n\nÍ frídagakerfinu myndar hann ásamt nýársdegi samhangandi hátíðartíma um áramót.",
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
       ]
     }
   },
   "rules": [
     {
+      "id": "maundy-thursday",
+      "title": "✝️ Skírdagur",
+      "summary": "Fimmtudagur fyrir páska; minnir á síðustu kvöldmáltíðina. Lögbundinn frídagur.",
+      "body": "Skírdagur er fimmtudagurinn í dymbilviku, rétt fyrir páskadag.\n\nDagurinn tengist kristinni hefð um síðustu kvöldmáltíðina og fótþvott (þar af nafnið). Á Íslandi er Skírdagur hluti af lögbundnum frídögum páskahátíðarinnar.",
+      "rule": { "type": "easterOffset", "days": -3 },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Skírdagur", "url": "https://is.wikipedia.org/wiki/Sk%C3%ADrdagur" }
+      ]
+    },
+    {
+      "id": "good-friday",
+      "title": "✝️ Föstudagurinn langi",
+      "summary": "Föstudagur fyrir páska; minningarathöfn um krossfestingu. Lögbundinn frídagur.",
+      "body": "Föstudagurinn langi er föstudagurinn í dymbilviku, tveimur dögum fyrir páskadag.\n\nÍ kristinni hefð er þetta helgur minningardagur um krossfestingu Krists. Dagurinn er lögbundinn frídagur á Íslandi.",
+      "rule": { "type": "easterOffset", "days": -2 },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Föstudagurinn langi", "url": "https://is.wikipedia.org/wiki/F%C3%B6studagurinn_langi" }
+      ]
+    },
+    {
+      "id": "easter-sunday",
+      "title": "🐣 Páskadagur",
+      "summary": "Páskadagur; helsti hátíðisdagur kristni. Lögbundinn frídagur.",
+      "body": "Páskadagur er helsti hátíðisdagur kristni og tengist upprisuhátíðinni.\n\nÁ Íslandi er páskadagur lögbundinn frídagur og miðpunktur páskahátíðarinnar, sem einnig nær yfir fleiri frídaga í kring.",
+      "rule": { "type": "easterOffset", "days": 0 },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Páskar", "url": "https://is.wikipedia.org/wiki/P%C3%A1skar" }
+      ]
+    },
+    {
+      "id": "easter-monday",
+      "title": "🐣 Annar í páskum",
+      "summary": "Mánudagur eftir páskadag. Lögbundinn frídagur.",
+      "body": "Annar í páskum er mánudagurinn eftir páskadag og er hluti af lögbundnum frídögum páskahátíðarinnar á Íslandi.\n\nDagurinn lengir páskahátíðina og er almennt nýttur til hvíldar og samveru.",
+      "rule": { "type": "easterOffset", "days": 1 },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
+      ]
+    },
+    {
+      "id": "first-day-of-summer",
+      "title": "🌱 Sumardagurinn fyrsti",
+      "summary": "Fyrsti fimmtudagur eftir 18. apríl. Lögbundinn frídagur og upphaf „sumars“ í fornu tímatalsskilningi.",
+      "body": "Sumardagurinn fyrsti á sér rætur í fornu íslensku misseristali, þar sem árinu var skipt í vetur og sumar.\n\nÁ nútímaformi er dagurinn skilgreindur sem fyrsti fimmtudagur eftir 18. apríl. Dagurinn er lögbundinn frídagur á Íslandi og tengist bæði menningarhefðum og tilfinningu fyrir árstíðaskiptum.",
+      "rule": { "type": "firstThursdayAfterApril18" },
+      "sources": [
+        { "label": "Wikipedia (IS): Sumardagurinn fyrsti", "url": "https://is.wikipedia.org/wiki/Sumardagurinn_fyrsti" },
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" }
+      ]
+    },
+    {
+      "id": "ascension-day",
+      "title": "⛪ Uppstigningardagur",
+      "summary": "Fimmtudagur, 39 dögum eftir páskadag. Lögbundinn frídagur.",
+      "body": "Uppstigningardagur er haldinn 39 dögum eftir páskadag (alltaf á fimmtudegi).\n\nÍ kristinni hefð minnir dagurinn á uppstigningu Krists. Dagurinn er lögbundinn frídagur á Íslandi.",
+      "rule": { "type": "easterOffset", "days": 39 },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Uppstigningardagur", "url": "https://is.wikipedia.org/wiki/Uppstigningardagur" }
+      ]
+    },
+    {
+      "id": "pentecost",
+      "title": "🕊️ Hvítasunnudagur",
+      "summary": "Sunnudagur, 49 dögum eftir páskadag. Lögbundinn frídagur.",
+      "body": "Hvítasunnudagur er haldinn 49 dögum eftir páskadag.\n\nÍ kristinni hefð tengist dagurinn hvítasunnu og upphafi kirkjunnar. Á Íslandi er hvítasunnudagur lögbundinn frídagur.",
+      "rule": { "type": "easterOffset", "days": 49 },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Hvítasunna", "url": "https://is.wikipedia.org/wiki/Hv%C3%ADtasunna" }
+      ]
+    },
+    {
+      "id": "whit-monday",
+      "title": "🕊️ Annar í hvítasunnu",
+      "summary": "Mánudagur eftir hvítasunnudag. Lögbundinn frídagur.",
+      "body": "Annar í hvítasunnu er mánudagurinn eftir hvítasunnudag og er hluti af lögbundnum frídögum tengdum hvítasunnu á Íslandi.\n\nDagurinn er almennt nýttur til hvíldar og samveru.",
+      "rule": { "type": "easterOffset", "days": 50 },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Lögbundnir frídagar á Íslandi", "url": "https://is.wikipedia.org/wiki/L%C3%B6gbundnir_fr%C3%ADdagar_%C3%A1_%C3%8Dslandi" }
+      ]
+    },
+    {
+      "id": "commerce-day",
+      "title": "🛍️ Frídagur verslunarmanna",
+      "summary": "Fyrsti mánudagur í ágúst. Lögbundinn frídagur (bank holiday).",
+      "body": "Frídagur verslunarmanna er haldinn fyrsta mánudag í ágúst.\n\nDagurinn tengist upphafi verslunarmannahelgarinnar og sumarfríum. Hann er lögbundinn frídagur á Íslandi og hefur lengi verið einn af helstu „langhelgardögum“ sumarsins.",
+      "rule": { "type": "firstMondayOfAugust" },
+      "sources": [
+        { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
+        { "label": "Wikipedia (IS): Verslunarmannahelgi", "url": "https://is.wikipedia.org/wiki/Verslunarmannahelgi" }
+      ]
+    },
+    {
       "id": "fishermens-day",
       "title": "⚓ Sjómannadagurinn",
       "summary": "Helgaður sjómönnum; sérstakur frídagur sjómanna. Yfirleitt fyrsti sunnudagur í júní (með undantekningu ef hann rekst á hvítasunnu).",
-      "body": "Sjómannadagurinn er helgaður íslenskum sjómönnum og þeirri sjósókn sem um aldir hefur verið ein af grunnstoðum íslensks samfélags og efnahags.\n\nDagurinn var fyrst haldinn hátíðlegur árið 1938, meðal annars í Reykjavík og á Ísafirði, að frumkvæði sjómanna og stuðningsfólks þeirra.\n\nMeð lögum nr. 20/1987 var ákveðið að fyrsti sunnudagur í júní skyldi vera formlegur frídagur sjómanna, með ákvæðum um að skip skyldu almennt vera í höfn.\n\nSjómannadagurinn er því ekki almennur frídagur fyrir allt launafólk, heldur sérstakur lögbundinn frídagur sjómanna, jafnframt því að vera mikilvægur menningar- og minningardagur fyrir þjóðina.",
+      "body": "Sjómannadagurinn er helgaður íslenskum sjómönnum og þeirri sjósókn sem um aldir hefur verið ein af grunnstoðum íslensks samfélags og efnahags.\n\nDagurinn var fyrst haldinn hátíðlegur árið 1938. Með lögum nr. 20/1987 var ákveðið að fyrsti sunnudagur í júní skyldi vera formlegur frídagur sjómanna.\n\nSjómannadagurinn er því ekki almennur frídagur fyrir allt launafólk, heldur sérstakur lögbundinn frídagur sjómanna, jafnframt því að vera mikilvægur menningar- og minningardagur fyrir þjóðina.",
       "rule": {
         "type": "nthWeekdayOfMonth",
         "month": 6,
