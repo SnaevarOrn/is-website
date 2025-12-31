@@ -127,9 +127,6 @@
     // Frídagur verslunarmanna: first Monday in August (no flag on image => special)
     map.set(isoDate(firstMondayOfAugust(year)), "Frídagur verslunarmanna");
 
-    // Reykjavík Pride / Gleðigangan: second Saturday in August (matches 9. ágú 2025)
-    map.set(isoDate(nthWeekdayOfMonth(year, 8, 6 /* Sat */, 2)), "Reykjavík Pride / Gleðigangan");
-
     // Menningarnótt í Reykjavík: fourth Saturday in August (matches 23. ágú 2025)
     map.set(isoDate(nthWeekdayOfMonth(year, 8, 6 /* Sat */, 4)), "Menningarnótt í Reykjavík");
 
