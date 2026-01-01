@@ -170,12 +170,14 @@ export async function onRequestGet({ request }) {
    ========================= */
 
 function parseFeedBlocks(xml) {
-  // Prefer RSS items if present, else Atom entries
-  const items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/g)].map(m => m[0]);
+  // Match <item>, <rss:item>, <content:item>, etc.
+  const itemRe = /<(?:\w+:)?item\b[^>]*>([\s\S]*?)<\/(?:\w+:)?item>/gi;
+  const items = [...xml.matchAll(itemRe)].map(m => m[0]);
   if (items.length) return items;
 
-  const entries = [...xml.matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/g)].map(m => m[0]);
-  return entries;
+  // Atom fallback: <entry> or <atom:entry>
+  const entryRe = /<(?:\w+:)?entry\b[^>]*>([\s\S]*?)<\/(?:\w+:)?entry>/gi;
+  return [...xml.matchAll(entryRe)].map(m => m[0]);
 }
 
 function extractTagValue(xml, tag) {
