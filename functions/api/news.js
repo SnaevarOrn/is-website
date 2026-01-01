@@ -21,7 +21,10 @@ export async function onRequestGet({ request }) {
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
-  const activeCats = new Set(catsParam.length ? catsParam : []); // empty => no filtering
+  // ✅ hunsa óþekkt cats í stað þess að sía allt út
+const activeCats = new Set(
+  (catsParam.length ? catsParam : []).filter(id => VALID_CATEGORY_IDS.has(id))
+);
 
   const items = [];
 
@@ -82,7 +85,12 @@ export async function onRequestGet({ request }) {
   items.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
 
   const sliced = items.slice(0, limit);
-  const availableCategories = [...new Set(sliced.map(x => x.categoryId).filter(Boolean))];
+
+// ✅ availableCategories á að byggjast á "sliced" ÁN þess að cats-filter tæmi það.
+// Til að ná því: reiknaðu categories úr sliced en tryggðu að oflokkad sé alltaf í boði.
+const availableSet = new Set(sliced.map(x => x.categoryId).filter(Boolean));
+availableSet.add("oflokkad");
+const availableCategories = [...availableSet];
 
   return new Response(
     JSON.stringify({ items: sliced, availableCategories }),
@@ -126,7 +134,7 @@ const CATEGORY_MAP = [
 
   { id: "oflokkad",  label: "Óflokkað" },
 ];
-
+const VALID_CATEGORY_IDS = new Set(CATEGORY_MAP.map(c => c.id));
 function labelFor(id) {
   return (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
 }
