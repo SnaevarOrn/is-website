@@ -15,10 +15,8 @@ export async function onRequestGet({ request }) {
     vb:    { url: "https://www.vb.is/rss",          label: "Viðskiptablaðið" },
     stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
-    
-    // 🔒 COMMENTED OUT — enable one by one when you want
 
-    
+    // 🔒 COMMENTED OUT — enable one by one when you want
     // romur:     { url: "https://romur.is/feed/",      label: "Rómur" },
   };
 
@@ -53,8 +51,9 @@ export async function onRequestGet({ request }) {
 
         if (!title || !link) continue;
 
+        // ✅ Read ALL categories (many feeds put the useful one later)
         const rssCats = extractAll(block, "category");
-        const rssCatText = (rssCats[0] || "").trim();
+        const rssCatText = rssCats.join(" ").trim();
 
         const { categoryId, categoryLabel } = inferCategory({
           sourceId: id,
@@ -99,12 +98,12 @@ export async function onRequestGet({ request }) {
 /* -------- Helpers -------- */
 
 function extract(xml, tag) {
-  const m = xml.match(new RegExp(`<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>`));
+  const m = xml.match(new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`));
   return m ? m[2].trim() : null;
 }
 
 function extractAll(xml, tag) {
-  const re = new RegExp(`<${tag}>(<!\\[CDATA\\[)?([\\s\\S]*?)(\\]\\]>)?<\\/${tag}>`, "g");
+  const re = new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`, "g");
   const out = [];
   let m;
   while ((m = re.exec(xml)) !== null) out.push((m[2] || "").trim());
@@ -118,6 +117,13 @@ const CATEGORY_MAP = [
   { id: "vidskipti", label: "Viðskipti" },
   { id: "menning",   label: "Menning" },
   { id: "skodun",    label: "Skoðun" },
+
+  // ✅ More buckets (optional, but useful)
+  { id: "taekni",    label: "Tækni" },
+  { id: "heilsa",    label: "Heilsa" },
+  { id: "umhverfi",  label: "Umhverfi" },
+  { id: "visindi",   label: "Vísindi" },
+
   { id: "oflokkad",  label: "Óflokkað" },
 ];
 
@@ -126,9 +132,13 @@ function labelFor(id) {
 }
 
 function normalizeText(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replaceAll("í", "i")
+  const str = String(s || "").toLowerCase();
+
+  // Remove diacritics: á/é/ó/ú/ý/í -> a/e/o/u/y/i, etc.
+  const noMarks = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Icelandic special cases
+  return noMarks
     .replaceAll("ð", "d")
     .replaceAll("þ", "th")
     .replaceAll("æ", "ae")
@@ -140,6 +150,7 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
   const c = normalizeText(rssCategoryText);
   const t = normalizeText(title);
 
+  // Prefer RSS/category/title signals; fall back to URL patterns
   const fromRss = mapFromText(c) || mapFromText(t);
   const fromUrl = mapFromUrl(sourceId, u);
 
@@ -149,12 +160,74 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
 
 function mapFromText(x) {
   if (!x) return null;
-  if (x.includes("sport") || x.includes("ithrott")) return "ithrottir";
-  if (x.includes("vidskip") || x.includes("business") || x.includes("markad")) return "vidskipti";
-  if (x.includes("menning") || x.includes("lifid") || x.includes("list")) return "menning";
-  if (x.includes("skodun") || x.includes("comment") || x.includes("pistill")) return "skodun";
-  if (x.includes("erlent") || x.includes("foreign")) return "erlent";
-  if (x.includes("innlent") || x.includes("island")) return "innlent";
+
+  // ----- Sports -----
+  const sportWords = [
+    "sport", "ithrott", "fotbolti", "bolti", "enski boltinn",
+    "premier league", "champions league", "europa league",
+    "handbolti", "korfubolti", "golf", "tennis", "motorsport", "formula",
+    "ufc", "mma", "olymp", "skidi", "skid", "hest", "hlaup", "marathon",
+    "433", "4-3-3", "4 3 3"
+  ];
+
+  // ----- Business -----
+  const bizWords = [
+    "vidskip", "business", "markad", "fjarmal", "kaupholl",
+    "verdbref", "gengi", "vext", "hagkerfi", "verdbolga"
+  ];
+
+  // ----- Culture -----
+  const cultureWords = [
+    "menning", "lifid", "list", "tonlist", "kvikmynd", "bok",
+    "leikhus", "sjonvarp", "utvarp", "svidslist"
+  ];
+
+  // ----- Opinion -----
+  const opinionWords = [
+    "skodun", "comment", "pistill", "leidari", "grein",
+    "ummal", "dalkur", "vidtal", "kronika"
+  ];
+
+  // ----- Foreign / Local -----
+  const foreignWords = ["erlent", "foreign", "world", "alheim", "althjod"];
+  const localWords = ["innlent", "island", "reykjavik", "landid", "borgin"];
+
+  // ----- Tech -----
+  const techWords = [
+    "taekni", "tölva", "tolva", "forrit", "forritun", "gervigreind", "ai",
+    "netoryggi", "oryggi", "tolvuleikir", "leikjat", "simi", "snjallsimi",
+    "apple", "google", "microsoft", "tesla", "rafr", "rafmagnsbill"
+  ];
+
+  // ----- Health -----
+  const healthWords = [
+    "heilsa", "laekn", "sjuk", "sjukdom", "lyf", "spitali",
+    "naering", "mataraedi", "smit", "veira", "influenza"
+  ];
+
+  // ----- Environment -----
+  const envWords = [
+    "umhverfi", "loftslag", "mengun", "natur", "jokull", "joklar",
+    "eldgos", "skjalfti", "vedur", "haf", "fisk"
+  ];
+
+  // ----- Science -----
+  const sciWords = [
+    "visindi", "rannsokn", "geim", "stjorn", "eðlis", "edlis",
+    "efna", "liffraedi", "stjornufraedi", "tungl", "sol"
+  ];
+
+  if (sportWords.some(w => x.includes(w))) return "ithrottir";
+  if (bizWords.some(w => x.includes(w))) return "vidskipti";
+  if (cultureWords.some(w => x.includes(w))) return "menning";
+  if (opinionWords.some(w => x.includes(w))) return "skodun";
+  if (techWords.some(w => x.includes(w))) return "taekni";
+  if (healthWords.some(w => x.includes(w))) return "heilsa";
+  if (envWords.some(w => x.includes(w))) return "umhverfi";
+  if (sciWords.some(w => x.includes(w))) return "visindi";
+  if (foreignWords.some(w => x.includes(w))) return "erlent";
+  if (localWords.some(w => x.includes(w))) return "innlent";
+
   return null;
 }
 
@@ -164,6 +237,10 @@ function mapFromUrl(sourceId, u) {
   if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
   if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list")) return "menning";
   if (u.includes("/skodun") || u.includes("/pistill") || u.includes("/comment")) return "skodun";
+  if (u.includes("/taekni") || u.includes("/tech")) return "taekni";
+  if (u.includes("/heilsa") || u.includes("/health")) return "heilsa";
+  if (u.includes("/umhverfi") || u.includes("/environment")) return "umhverfi";
+  if (u.includes("/visindi") || u.includes("/science")) return "visindi";
   if (u.includes("/erlent")) return "erlent";
   if (u.includes("/innlent")) return "innlent";
 
@@ -177,7 +254,7 @@ function mapFromUrl(sourceId, u) {
   }
 
   if (sourceId === "mbl") {
-    if (u.includes("/sport")) return "ithrottir";
+    if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
     if (u.includes("/vidskipti")) return "vidskipti";
     if (u.includes("/frettir/innlent")) return "innlent";
     if (u.includes("/frettir/erlent")) return "erlent";
@@ -188,12 +265,19 @@ function mapFromUrl(sourceId, u) {
     if (u.includes("/vidskipti")) return "vidskipti";
     if (u.includes("/frettir/innlent")) return "innlent";
     if (u.includes("/frettir/erlent")) return "erlent";
+
+    // ✅ Vísir sport underpaths
+    if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
+    if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
 
   if (sourceId === "dv") {
     if (u.includes("/sport")) return "ithrottir";
     if (u.includes("/vidskipti")) return "vidskipti";
     if (u.includes("/frettir")) return "innlent";
+
+    // ✅ DV/433 patterns
+    if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
   }
 
   // ✅ VB tweaks
