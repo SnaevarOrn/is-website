@@ -1,4 +1,30 @@
 // /functions/api/news.js
+
+const CATEGORY_MAP = [
+  { id: "innlent",   label: "Innlent" },
+  { id: "erlent",    label: "Erlent" },
+  { id: "ithrottir", label: "Íþróttir" },
+  { id: "vidskipti", label: "Viðskipti" },
+  { id: "menning",   label: "Menning" },
+  { id: "skodun",    label: "Skoðun" },
+
+  // More buckets (optional)
+  { id: "taekni",    label: "Tækni" },
+  { id: "heilsa",    label: "Heilsa" },
+  { id: "umhverfi",  label: "Umhverfi" },
+  { id: "visindi",   label: "Vísindi" },
+
+  { id: "oflokkad",  label: "Óflokkað" },
+];
+
+const VALID_CATEGORY_IDS = new Set(CATEGORY_MAP.map(c => c.id));
+
+function labelFor(id) {
+  return (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
+}
+
+/* -------- API -------- */
+
 export async function onRequestGet({ request }) {
   const { searchParams } = new URL(request.url);
 
@@ -7,7 +33,6 @@ export async function onRequestGet({ request }) {
   const limit = Number(searchParams.get("limit") || 50);
 
   const feeds = {
-    // ✅ ACTIVE
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
     mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
@@ -15,16 +40,14 @@ export async function onRequestGet({ request }) {
     vb:    { url: "https://www.vb.is/rss",          label: "Viðskiptablaðið" },
     stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
-
-    // 🔒 COMMENTED OUT — enable one by one when you want
-    // romur:     { url: "https://romur.is/feed/",      label: "Rómur" },
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
-  // ✅ hunsa óþekkt cats í stað þess að sía allt út
-const activeCats = new Set(
-  (catsParam.length ? catsParam : []).filter(id => VALID_CATEGORY_IDS.has(id))
-);
+
+  // ✅ Ignore unknown cats instead of filtering everything out
+  const activeCats = new Set(
+    (catsParam.length ? catsParam : []).filter(id => VALID_CATEGORY_IDS.has(id))
+  );
 
   const items = [];
 
@@ -54,7 +77,7 @@ const activeCats = new Set(
 
         if (!title || !link) continue;
 
-        // ✅ Read ALL categories (many feeds put the useful one later)
+        // ✅ Use ALL <category> entries (not only the first)
         const rssCats = extractAll(block, "category");
         const rssCatText = rssCats.join(" ").trim();
 
@@ -86,11 +109,10 @@ const activeCats = new Set(
 
   const sliced = items.slice(0, limit);
 
-// ✅ availableCategories á að byggjast á "sliced" ÁN þess að cats-filter tæmi það.
-// Til að ná því: reiknaðu categories úr sliced en tryggðu að oflokkad sé alltaf í boði.
-const availableSet = new Set(sliced.map(x => x.categoryId).filter(Boolean));
-availableSet.add("oflokkad");
-const availableCategories = [...availableSet];
+  // ✅ availableCategories derived from sliced and always includes oflokkad
+  const availableSet = new Set(sliced.map(x => x.categoryId).filter(Boolean));
+  availableSet.add("oflokkad");
+  const availableCategories = [...availableSet];
 
   return new Response(
     JSON.stringify({ items: sliced, availableCategories }),
@@ -106,8 +128,9 @@ const availableCategories = [...availableSet];
 /* -------- Helpers -------- */
 
 function extract(xml, tag) {
+  // Matches <tag>...</tag> and <tag><![CDATA[...]]></tag>
   const m = xml.match(new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`));
-  return m ? m[2].trim() : null;
+  return m ? (m[2] || "").trim() : null;
 }
 
 function extractAll(xml, tag) {
@@ -118,31 +141,10 @@ function extractAll(xml, tag) {
   return out;
 }
 
-const CATEGORY_MAP = [
-  { id: "innlent",   label: "Innlent" },
-  { id: "erlent",    label: "Erlent" },
-  { id: "ithrottir", label: "Íþróttir" },
-  { id: "vidskipti", label: "Viðskipti" },
-  { id: "menning",   label: "Menning" },
-  { id: "skodun",    label: "Skoðun" },
-
-  // ✅ More buckets (optional, but useful)
-  { id: "taekni",    label: "Tækni" },
-  { id: "heilsa",    label: "Heilsa" },
-  { id: "umhverfi",  label: "Umhverfi" },
-  { id: "visindi",   label: "Vísindi" },
-
-  { id: "oflokkad",  label: "Óflokkað" },
-];
-const VALID_CATEGORY_IDS = new Set(CATEGORY_MAP.map(c => c.id));
-function labelFor(id) {
-  return (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
-}
-
 function normalizeText(s) {
   const str = String(s || "").toLowerCase();
 
-  // Remove diacritics: á/é/ó/ú/ý/í -> a/e/o/u/y/i, etc.
+  // á/é/ó/ú/ý/í => a/e/o/u/y/i etc.
   const noMarks = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   // Icelandic special cases
@@ -158,7 +160,6 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
   const c = normalizeText(rssCategoryText);
   const t = normalizeText(title);
 
-  // Prefer RSS/category/title signals; fall back to URL patterns
   const fromRss = mapFromText(c) || mapFromText(t);
   const fromUrl = mapFromUrl(sourceId, u);
 
@@ -169,7 +170,6 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
 function mapFromText(x) {
   if (!x) return null;
 
-  // ----- Sports -----
   const sportWords = [
     "sport", "ithrott", "fotbolti", "bolti", "enski boltinn",
     "premier league", "champions league", "europa league",
@@ -178,50 +178,42 @@ function mapFromText(x) {
     "433", "4-3-3", "4 3 3"
   ];
 
-  // ----- Business -----
   const bizWords = [
     "vidskip", "business", "markad", "fjarmal", "kaupholl",
     "verdbref", "gengi", "vext", "hagkerfi", "verdbolga"
   ];
 
-  // ----- Culture -----
   const cultureWords = [
     "menning", "lifid", "list", "tonlist", "kvikmynd", "bok",
     "leikhus", "sjonvarp", "utvarp", "svidslist"
   ];
 
-  // ----- Opinion -----
   const opinionWords = [
     "skodun", "comment", "pistill", "leidari", "grein",
     "ummal", "dalkur", "vidtal", "kronika"
   ];
 
-  // ----- Foreign / Local -----
   const foreignWords = ["erlent", "foreign", "world", "alheim", "althjod"];
   const localWords = ["innlent", "island", "reykjavik", "landid", "borgin"];
 
-  // ----- Tech -----
   const techWords = [
-    "taekni", "tölva", "tolva", "forrit", "forritun", "gervigreind", "ai",
+    "taekni", "tolva", "forrit", "forritun", "gervigreind", "ai",
     "netoryggi", "oryggi", "tolvuleikir", "leikjat", "simi", "snjallsimi",
-    "apple", "google", "microsoft", "tesla", "rafr", "rafmagnsbill"
+    "apple", "google", "microsoft", "tesla", "raf", "rafmagn"
   ];
 
-  // ----- Health -----
   const healthWords = [
     "heilsa", "laekn", "sjuk", "sjukdom", "lyf", "spitali",
     "naering", "mataraedi", "smit", "veira", "influenza"
   ];
 
-  // ----- Environment -----
   const envWords = [
     "umhverfi", "loftslag", "mengun", "natur", "jokull", "joklar",
     "eldgos", "skjalfti", "vedur", "haf", "fisk"
   ];
 
-  // ----- Science -----
   const sciWords = [
-    "visindi", "rannsokn", "geim", "stjorn", "eðlis", "edlis",
+    "visindi", "rannsokn", "geim", "stjorn", "edlis",
     "efna", "liffraedi", "stjornufraedi", "tungl", "sol"
   ];
 
@@ -274,7 +266,6 @@ function mapFromUrl(sourceId, u) {
     if (u.includes("/frettir/innlent")) return "innlent";
     if (u.includes("/frettir/erlent")) return "erlent";
 
-    // ✅ Vísir sport underpaths
     if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
     if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
@@ -284,11 +275,9 @@ function mapFromUrl(sourceId, u) {
     if (u.includes("/vidskipti")) return "vidskipti";
     if (u.includes("/frettir")) return "innlent";
 
-    // ✅ DV/433 patterns
     if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
   }
 
-  // ✅ VB tweaks
   if (sourceId === "vb") {
     if (u.includes("/sport")) return "ithrottir";
     if (u.includes("/vidskipti") || u.includes("/markad")) return "vidskipti";
