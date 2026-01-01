@@ -181,8 +181,15 @@ function parseFeedBlocks(xml) {
 }
 
 function extractTagValue(xml, tag) {
-  // Matches <tag>...</tag> and <tag><![CDATA[...]]></tag>
-  const m = xml.match(new RegExp(`<${tag}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/${tag}>`, "i"));
+  // Matches:
+  // <tag>...</tag>
+  // <tag><![CDATA[...]]></tag>
+  // <dc:date>...</dc:date> (if you pass "dc:date" as tag)
+  const re = new RegExp(
+    `<${tag}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/${tag}>`,
+    "i"
+  );
+  const m = xml.match(re);
   return m ? decodeEntities(m[1]).trim() : null;
 }
 
