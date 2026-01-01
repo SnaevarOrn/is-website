@@ -1,4 +1,5 @@
 // /functions/api/news.js
+// News RSS/Atom aggregator for ís.is (Cloudflare Pages Functions)
 
 /* =========================
    Category model
@@ -36,7 +37,7 @@ export async function onRequestGet({ request }) {
 
   const sources = (searchParams.get("sources") || "").split(",").filter(Boolean);
   const catsParam = (searchParams.get("cats") || "").split(",").filter(Boolean);
-  const limit = Number(searchParams.get("limit") || 50);
+  const limit = clampInt(searchParams.get("limit"), 1, 200, 50);
   const debug = searchParams.get("debug") === "1";
 
   const feeds = {
@@ -51,7 +52,7 @@ export async function onRequestGet({ request }) {
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
 
-  // ✅ Ignore unknown cats instead of filtering everything out
+  // Ignore unknown cats instead of filtering everything out
   const activeCats = new Set(
     (catsParam.length ? catsParam : []).filter(id => VALID_CATEGORY_IDS.has(id))
   );
@@ -68,56 +69,62 @@ export async function onRequestGet({ request }) {
         headers: {
           "User-Agent": "is.is news bot",
           "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7"
+          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
         }
       });
 
       const xml = await res.text();
 
+      if (!res.ok) {
+        console.error("Feed HTTP error:", id, res.status);
+        if (debug) {
+          debugStats[id] = { url: feed.url, status: res.status, ok: res.ok, length: xml.length, head: xml.slice(0, 220) };
+        }
+        continue;
+      }
+
+      const blocks = parseFeedBlocks(xml);
+
+      // Debug: show whether parsing works at all, and whether title/link extraction works
       if (debug) {
+        const firstBlock = blocks[0] || "";
+        const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
+        const firstLink = firstBlock ? extractLink(firstBlock) : null;
+
         debugStats[id] = {
           url: feed.url,
           status: res.status,
           ok: res.ok,
           length: xml.length,
-          hasItem: xml.includes("<item"),
-          hasEntry: xml.includes("<entry"),
-          head: xml.slice(0, 220)
+          hasItem: xml.toLowerCase().includes("<item"),
+          hasEntry: xml.toLowerCase().includes("<entry"),
+          blocksCount: blocks.length,
+          firstTitle,
+          firstLink,
+          head: xml.slice(0, 220),
+          firstBlockHead: firstBlock.slice(0, 220),
         };
       }
 
-      if (!res.ok) {
-        console.error("Feed HTTP error:", id, res.status);
-        continue;
-      }
-
-      // Parse RSS <item> blocks OR Atom <entry> blocks
-      const blocks = parseFeedBlocks(xml);
-
       for (const block of blocks) {
         const title = extractTagValue(block, "title");
-
-        // Link can be <link>URL</link> OR <link href="..."/>
         const link = extractLink(block);
 
-        // RSS uses <pubDate>, Atom uses <updated>/<published>
         const pubDate =
           extractTagValue(block, "pubDate") ||
           extractTagValue(block, "updated") ||
-          extractTagValue(block, "published");
+          extractTagValue(block, "published") ||
+          extractTagValue(block, "dc:date"); // some feeds
 
         if (!title || !link) continue;
 
-        // Categories:
-        // RSS: <category>Text</category>
-        // Atom: <category term="Text"/>
-        const rssCats = extractCategories(block);
-        const rssCatText = rssCats.join(" ").trim();
+        const cats = extractCategories(block);
+        const catText = cats.join(" ").trim();
 
         const { categoryId, categoryLabel } = inferCategory({
           sourceId: id,
           url: link,
-          rssCategoryText: rssCatText,
+          rssCategoryText: catText,
           title
         });
 
@@ -135,12 +142,7 @@ export async function onRequestGet({ request }) {
       }
     } catch (err) {
       console.error("Feed error:", id, err);
-      if (debug) {
-        debugStats[id] = {
-          url: feeds[id]?.url,
-          error: String(err?.message || err)
-        };
-      }
+      if (debug) debugStats[id] = { url: feeds[id]?.url, error: String(err?.message || err) };
     }
   }
 
@@ -148,7 +150,6 @@ export async function onRequestGet({ request }) {
 
   const sliced = items.slice(0, limit);
 
-  // ✅ availableCategories from sliced + always include oflokkad
   const availableSet = new Set(sliced.map(x => x.categoryId).filter(Boolean));
   availableSet.add("oflokkad");
   const availableCategories = [...availableSet];
@@ -160,7 +161,8 @@ export async function onRequestGet({ request }) {
   return new Response(JSON.stringify(payload), {
     headers: {
       "content-type": "application/json; charset=utf-8",
-      "cache-control": "public, max-age=300"
+      // When debugging, NEVER cache (avoids stale worker edge caches)
+      "cache-control": debug ? "no-store" : "public, max-age=300"
     }
   });
 }
@@ -171,54 +173,61 @@ export async function onRequestGet({ request }) {
 
 function parseFeedBlocks(xml) {
   // Match <item>, <rss:item>, <content:item>, etc.
-  const itemRe = /<(?:\w+:)?item\b[^>]*>([\s\S]*?)<\/(?:\w+:)?item>/gi;
-  const items = [...xml.matchAll(itemRe)].map(m => m[0]);
+  const itemRe = /<(?:\w+:)?item\b[^>]*>[\s\S]*?<\/(?:\w+:)?item>/gi;
+  const items = [...String(xml || "").matchAll(itemRe)].map(m => m[0]);
   if (items.length) return items;
 
   // Atom fallback: <entry> or <atom:entry>
-  const entryRe = /<(?:\w+:)?entry\b[^>]*>([\s\S]*?)<\/(?:\w+:)?entry>/gi;
-  return [...xml.matchAll(entryRe)].map(m => m[0]);
+  const entryRe = /<(?:\w+:)?entry\b[^>]*>[\s\S]*?<\/(?:\w+:)?entry>/gi;
+  return [...String(xml || "").matchAll(entryRe)].map(m => m[0]);
 }
 
 function extractTagValue(xml, tag) {
-  // Matches:
-  // <tag>...</tag>
-  // <tag><![CDATA[...]]></tag>
-  // <dc:date>...</dc:date> (if you pass "dc:date" as tag)
+  // Robust, namespace-safe, CDATA-safe
+  // Works for: title, pubDate, updated, published, and "dc:date" if passed in.
+  const src = String(xml || "");
+  const esc = escapeRegExp(tag);
+
+  // Allow optional namespace prefix on both open/close tags.
+  // Example: <dc:date>...</dc:date> OR <date>...</date>
   const re = new RegExp(
-    `<${tag}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/${tag}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
-  const m = xml.match(re);
+
+  const m = src.match(re);
   return m ? decodeEntities(m[1]).trim() : null;
 }
 
 function extractLink(block) {
+  const src = String(block || "");
+
   // 1) Atom style: <link href="..."/>
-  const mHref = block.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
+  const mHref = src.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
   if (mHref?.[1]) return decodeEntities(mHref[1]).trim();
 
   // 2) RSS style: <link>...</link>
-  const m = block.match(/<link\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+  const m = src.match(/<link\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
   if (m?.[1]) return decodeEntities(m[1]).trim();
 
   return null;
 }
 
 function extractCategories(block) {
+  const src = String(block || "");
   const out = [];
 
   // RSS: <category>Text</category>
   const reRss = /<category\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/category>/gi;
   let m;
-  while ((m = reRss.exec(block)) !== null) {
+  while ((m = reRss.exec(src)) !== null) {
     const v = decodeEntities(m[1] || "").trim();
     if (v) out.push(v);
   }
 
   // Atom: <category term="Text" />
   const reAtom = /<category\b[^>]*\bterm=["']([^"']+)["'][^>]*\/?>/gi;
-  while ((m = reAtom.exec(block)) !== null) {
+  while ((m = reAtom.exec(src)) !== null) {
     const v = decodeEntities(m[1] || "").trim();
     if (v) out.push(v);
   }
@@ -227,13 +236,12 @@ function extractCategories(block) {
 }
 
 function safeToIso(dateString) {
-  // Some feeds give weird strings; avoid throwing
   const d = new Date(dateString);
   return isNaN(d.getTime()) ? null : d.toISOString();
 }
 
 function decodeEntities(s) {
-  // Minimal XML entity decoding (enough for URLs/titles)
+  // Minimal decode, enough for titles/links.
   return String(s || "")
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
@@ -241,6 +249,16 @@ function decodeEntities(s) {
     .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
     .replaceAll("&apos;", "'");
+}
+
+function escapeRegExp(s) {
+  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function clampInt(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, Math.trunc(n)));
 }
 
 /* =========================
@@ -334,7 +352,6 @@ function mapFromText(x) {
 }
 
 function mapFromUrl(sourceId, u) {
-  // Generic patterns
   if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
   if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
   if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list")) return "menning";
@@ -346,7 +363,7 @@ function mapFromUrl(sourceId, u) {
   if (u.includes("/erlent")) return "erlent";
   if (u.includes("/innlent")) return "innlent";
 
-  // Source-specific tweaks (safe, minimal)
+  // Source-specific tweaks
   if (sourceId === "visir") {
     if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
     if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
