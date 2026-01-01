@@ -1,5 +1,9 @@
 // /functions/api/news.js
 
+/* =========================
+   Category model
+   ========================= */
+
 const CATEGORY_MAP = [
   { id: "innlent",   label: "Innlent" },
   { id: "erlent",    label: "Erlent" },
@@ -8,7 +12,7 @@ const CATEGORY_MAP = [
   { id: "menning",   label: "Menning" },
   { id: "skodun",    label: "Skoðun" },
 
-  // More buckets (optional)
+  // Extra buckets
   { id: "taekni",    label: "Tækni" },
   { id: "heilsa",    label: "Heilsa" },
   { id: "umhverfi",  label: "Umhverfi" },
@@ -23,7 +27,9 @@ function labelFor(id) {
   return (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
 }
 
-/* -------- API -------- */
+/* =========================
+   API
+   ========================= */
 
 export async function onRequestGet({ request }) {
   const { searchParams } = new URL(request.url);
@@ -31,6 +37,7 @@ export async function onRequestGet({ request }) {
   const sources = (searchParams.get("sources") || "").split(",").filter(Boolean);
   const catsParam = (searchParams.get("cats") || "").split(",").filter(Boolean);
   const limit = Number(searchParams.get("limit") || 50);
+  const debug = searchParams.get("debug") === "1";
 
   const feeds = {
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
@@ -50,6 +57,7 @@ export async function onRequestGet({ request }) {
   );
 
   const items = [];
+  const debugStats = {};
 
   for (const id of activeSources) {
     const feed = feeds[id];
@@ -57,28 +65,53 @@ export async function onRequestGet({ request }) {
 
     try {
       const res = await fetch(feed.url, {
-        headers: { "User-Agent": "is.is news bot" }
+        headers: {
+          "User-Agent": "is.is news bot",
+          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7"
+        }
       });
+
+      const xml = await res.text();
+
+      if (debug) {
+        debugStats[id] = {
+          url: feed.url,
+          status: res.status,
+          ok: res.ok,
+          length: xml.length,
+          hasItem: xml.includes("<item"),
+          hasEntry: xml.includes("<entry"),
+          head: xml.slice(0, 220)
+        };
+      }
 
       if (!res.ok) {
         console.error("Feed HTTP error:", id, res.status);
         continue;
       }
 
-      const xml = await res.text();
-      const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+      // Parse RSS <item> blocks OR Atom <entry> blocks
+      const blocks = parseFeedBlocks(xml);
 
-      for (const m of matches) {
-        const block = m[1];
+      for (const block of blocks) {
+        const title = extractTagValue(block, "title");
 
-        const title = extract(block, "title");
-        const link = extract(block, "link");
-        const pubDate = extract(block, "pubDate");
+        // Link can be <link>URL</link> OR <link href="..."/>
+        const link = extractLink(block);
+
+        // RSS uses <pubDate>, Atom uses <updated>/<published>
+        const pubDate =
+          extractTagValue(block, "pubDate") ||
+          extractTagValue(block, "updated") ||
+          extractTagValue(block, "published");
 
         if (!title || !link) continue;
 
-        // ✅ Use ALL <category> entries (not only the first)
-        const rssCats = extractAll(block, "category");
+        // Categories:
+        // RSS: <category>Text</category>
+        // Atom: <category term="Text"/>
+        const rssCats = extractCategories(block);
         const rssCatText = rssCats.join(" ").trim();
 
         const { categoryId, categoryLabel } = inferCategory({
@@ -93,7 +126,7 @@ export async function onRequestGet({ request }) {
         items.push({
           title,
           url: link,
-          publishedAt: pubDate ? new Date(pubDate).toISOString() : null,
+          publishedAt: pubDate ? safeToIso(pubDate) : null,
           sourceId: id,
           sourceLabel: feed.label,
           categoryId,
@@ -102,6 +135,12 @@ export async function onRequestGet({ request }) {
       }
     } catch (err) {
       console.error("Feed error:", id, err);
+      if (debug) {
+        debugStats[id] = {
+          url: feeds[id]?.url,
+          error: String(err?.message || err)
+        };
+      }
     }
   }
 
@@ -109,45 +148,99 @@ export async function onRequestGet({ request }) {
 
   const sliced = items.slice(0, limit);
 
-  // ✅ availableCategories derived from sliced and always includes oflokkad
+  // ✅ availableCategories from sliced + always include oflokkad
   const availableSet = new Set(sliced.map(x => x.categoryId).filter(Boolean));
   availableSet.add("oflokkad");
   const availableCategories = [...availableSet];
 
-  return new Response(
-    JSON.stringify({ items: sliced, availableCategories }),
-    {
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "public, max-age=300"
-      }
+  const payload = debug
+    ? { items: sliced, availableCategories, debugStats }
+    : { items: sliced, availableCategories };
+
+  return new Response(JSON.stringify(payload), {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "public, max-age=300"
     }
-  );
+  });
 }
 
-/* -------- Helpers -------- */
+/* =========================
+   Parsing helpers (RSS + Atom)
+   ========================= */
 
-function extract(xml, tag) {
+function parseFeedBlocks(xml) {
+  // Prefer RSS items if present, else Atom entries
+  const items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/g)].map(m => m[0]);
+  if (items.length) return items;
+
+  const entries = [...xml.matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/g)].map(m => m[0]);
+  return entries;
+}
+
+function extractTagValue(xml, tag) {
   // Matches <tag>...</tag> and <tag><![CDATA[...]]></tag>
-  const m = xml.match(new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`));
-  return m ? (m[2] || "").trim() : null;
+  const m = xml.match(new RegExp(`<${tag}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/${tag}>`, "i"));
+  return m ? decodeEntities(m[1]).trim() : null;
 }
 
-function extractAll(xml, tag) {
-  const re = new RegExp(`<${tag}>(<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\\$end:math:display$\\]>)?<\\/${tag}>`, "g");
+function extractLink(block) {
+  // 1) Atom style: <link href="..."/>
+  const mHref = block.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
+  if (mHref?.[1]) return decodeEntities(mHref[1]).trim();
+
+  // 2) RSS style: <link>...</link>
+  const m = block.match(/<link\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+  if (m?.[1]) return decodeEntities(m[1]).trim();
+
+  return null;
+}
+
+function extractCategories(block) {
   const out = [];
+
+  // RSS: <category>Text</category>
+  const reRss = /<category\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/category>/gi;
   let m;
-  while ((m = re.exec(xml)) !== null) out.push((m[2] || "").trim());
+  while ((m = reRss.exec(block)) !== null) {
+    const v = decodeEntities(m[1] || "").trim();
+    if (v) out.push(v);
+  }
+
+  // Atom: <category term="Text" />
+  const reAtom = /<category\b[^>]*\bterm=["']([^"']+)["'][^>]*\/?>/gi;
+  while ((m = reAtom.exec(block)) !== null) {
+    const v = decodeEntities(m[1] || "").trim();
+    if (v) out.push(v);
+  }
+
   return out;
 }
 
+function safeToIso(dateString) {
+  // Some feeds give weird strings; avoid throwing
+  const d = new Date(dateString);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function decodeEntities(s) {
+  // Minimal XML entity decoding (enough for URLs/titles)
+  return String(s || "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&apos;", "'");
+}
+
+/* =========================
+   Categorization
+   ========================= */
+
 function normalizeText(s) {
   const str = String(s || "").toLowerCase();
-
-  // á/é/ó/ú/ý/í => a/e/o/u/y/i etc.
   const noMarks = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  // Icelandic special cases
   return noMarks
     .replaceAll("ð", "d")
     .replaceAll("þ", "th")
@@ -160,10 +253,10 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
   const c = normalizeText(rssCategoryText);
   const t = normalizeText(title);
 
-  const fromRss = mapFromText(c) || mapFromText(t);
+  const fromText = mapFromText(c) || mapFromText(t);
   const fromUrl = mapFromUrl(sourceId, u);
 
-  const categoryId = fromRss || fromUrl || "oflokkad";
+  const categoryId = fromText || fromUrl || "oflokkad";
   return { categoryId, categoryLabel: labelFor(categoryId) };
 }
 
@@ -174,7 +267,7 @@ function mapFromText(x) {
     "sport", "ithrott", "fotbolti", "bolti", "enski boltinn",
     "premier league", "champions league", "europa league",
     "handbolti", "korfubolti", "golf", "tennis", "motorsport", "formula",
-    "ufc", "mma", "olymp", "skidi", "skid", "hest", "hlaup", "marathon",
+    "ufc", "mma", "olymp", "skid", "skidi", "hest", "hlaup", "marathon",
     "433", "4-3-3", "4 3 3"
   ];
 
@@ -244,45 +337,26 @@ function mapFromUrl(sourceId, u) {
   if (u.includes("/erlent")) return "erlent";
   if (u.includes("/innlent")) return "innlent";
 
-  // Source-specific tweaks
-  if (sourceId === "ruv") {
-    if (u.includes("/ithrottir")) return "ithrottir";
-    if (u.includes("/vidskipti")) return "vidskipti";
-    if (u.includes("/menning")) return "menning";
-    if (u.includes("/erlent")) return "erlent";
-    if (u.includes("/innlent")) return "innlent";
-  }
-
-  if (sourceId === "mbl") {
-    if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
-    if (u.includes("/vidskipti")) return "vidskipti";
-    if (u.includes("/frettir/innlent")) return "innlent";
-    if (u.includes("/frettir/erlent")) return "erlent";
-  }
-
+  // Source-specific tweaks (safe, minimal)
   if (sourceId === "visir") {
-    if (u.includes("/sport")) return "ithrottir";
-    if (u.includes("/vidskipti")) return "vidskipti";
-    if (u.includes("/frettir/innlent")) return "innlent";
-    if (u.includes("/frettir/erlent")) return "erlent";
-
     if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
     if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
 
   if (sourceId === "dv") {
-    if (u.includes("/sport")) return "ithrottir";
-    if (u.includes("/vidskipti")) return "vidskipti";
-    if (u.includes("/frettir")) return "innlent";
-
     if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
   }
 
-  if (sourceId === "vb") {
+  if (sourceId === "mbl") {
+    if (u.includes("/frettir/innlent")) return "innlent";
+    if (u.includes("/frettir/erlent")) return "erlent";
     if (u.includes("/sport")) return "ithrottir";
-    if (u.includes("/vidskipti") || u.includes("/markad")) return "vidskipti";
-    if (u.includes("/menning") || u.includes("/lifid")) return "menning";
-    if (u.includes("/pistill") || u.includes("/skodun")) return "skodun";
+  }
+
+  if (sourceId === "ruv") {
+    if (u.includes("/ithrottir")) return "ithrottir";
+    if (u.includes("/vidskipti")) return "vidskipti";
+    if (u.includes("/menning")) return "menning";
     if (u.includes("/erlent")) return "erlent";
     if (u.includes("/innlent")) return "innlent";
   }
