@@ -36,11 +36,29 @@
 
 <body>
   <header class="topbar">
+    <!-- TOP ROW -->
     <div class="topbar-inner">
       <button class="btn" id="backBtn" title="Til baka">← <span style="opacity:.9">Til baka</span></button>
 
-      <button class="btn btn--ghost" id="holidaysToggleBtn" type="button" title="Skoða frídaga">Skoða frídaga</button>
+      <!-- YEAR NAV: now centered in top header -->
+      <div class="year-nav title-wrap" id="titleWrap">
+        <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
+        <div class="year" id="yearLabel" title="Velja ár">2025</div>
+        <button class="btn" id="nextYear" title="Næsta ár">›</button>
 
+        <div class="year-pop" id="yearPop" aria-hidden="true">
+          <div class="row">
+            <input id="yearInput" type="number" inputmode="numeric" />
+            <button class="btn" id="goYearBtn">Fara</button>
+          </div>
+          <div class="row" style="justify-content:space-between;">
+            <button class="chip" data-jump="-10">-10</button>
+            <button class="chip" data-jump="10">+10</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu -->
       <div class="menu-wrap">
         <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
           <div class="burger" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -52,6 +70,7 @@
       </div>
     </div>
 
+    <!-- SUBBAR -->
     <div class="subbar">
       <div class="subbar-inner">
         <div class="subrow subrow--year">
@@ -60,24 +79,10 @@
             <button class="chip chip--ghost" id="todayChip" type="button" title="Í dag">Í dag</button>
           </div>
 
-          <div class="year-nav title-wrap" id="titleWrap">
-            <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
-            <div class="year" id="yearLabel" title="Velja ár">2025</div>
-            <button class="btn" id="nextYear" title="Næsta ár">›</button>
-
-            <div class="year-pop" id="yearPop" aria-hidden="true">
-              <div class="row">
-                <input id="yearInput" type="number" inputmode="numeric" />
-                <button class="btn" id="goYearBtn">Fara</button>
-              </div>
-              <div class="row" style="justify-content:space-between;">
-                <button class="chip" data-jump="-10">-10</button>
-                <button class="chip" data-jump="10">+10</button>
-              </div>
-            </div>
+          <!-- moved here: holidays/day calendar toggle, aligned right -->
+          <div class="yr-right">
+            <button class="btn btn--ghost" id="holidaysToggleBtn" type="button" title="Skoða frídaga">Skoða frídaga</button>
           </div>
-
-          <div class="yr-right"></div>
         </div>
 
         <div class="dowwrap">
