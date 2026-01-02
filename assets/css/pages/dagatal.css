@@ -712,8 +712,11 @@ html[data-theme="light"] .cell.is-today .dnum{ color:#ffffff; }
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-@media (max-width:520px){
-  .c-row{ grid-template-columns: 1fr; }
+@media (max-width: 520px){
+  .c-row{
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 
 .c-send{
