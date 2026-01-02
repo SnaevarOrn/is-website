@@ -1,6 +1,8 @@
 // /functions/api/news.js
 // News RSS/Atom aggregator for ís.is (Cloudflare Pages Functions)
 
+"use strict";
+
 /* =========================
    Category model
    ========================= */
@@ -161,7 +163,6 @@ export async function onRequestGet({ request }) {
   return new Response(JSON.stringify(payload), {
     headers: {
       "content-type": "application/json; charset=utf-8",
-      // When debugging, NEVER cache (avoids stale worker edge caches)
       "cache-control": debug ? "no-store" : "public, max-age=300"
     }
   });
@@ -183,15 +184,11 @@ function parseFeedBlocks(xml) {
 }
 
 function extractTagValue(xml, tag) {
-  // Robust, namespace-safe, CDATA-safe
-  // Works for: title, pubDate, updated, published, and "dc:date" if passed in.
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
-  // Allow optional namespace prefix on both open/close tags.
-  // Example: <dc:date>...</dc:date> OR <date>...</date>
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
@@ -241,7 +238,6 @@ function safeToIso(dateString) {
 }
 
 function decodeEntities(s) {
-  // Minimal decode, enough for titles/links.
   return String(s || "")
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
@@ -281,7 +277,7 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
   const t = normalizeText(title);
 
   const fromText = mapFromText(c) || mapFromText(t);
-  const fromUrl = mapFromUrl(sourceId, u);
+  const fromUrl = mapFromUrl(sourceId, u, t);
 
   const categoryId = fromText || fromUrl || "oflokkad";
   return { categoryId, categoryLabel: labelFor(categoryId) };
@@ -290,11 +286,30 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
 function mapFromText(x) {
   if (!x) return null;
 
+  // --- ÍÞRÓTTIR: víkkað til að grípa Vísir titla sem hafa enga /sport slóð né RSS category ---
   const sportWords = [
-    "sport", "ithrott", "fotbolti", "bolti", "enski boltinn",
-    "premier league", "champions league", "europa league",
+    // generic
+    "sport", "ithrott", "fotbolti", "futbol", "bolti",
     "handbolti", "korfubolti", "golf", "tennis", "motorsport", "formula",
-    "ufc", "mma", "olymp", "skid", "skidi", "hest", "hlaup", "marathon",
+    "ufc", "mma", "olymp", "olympi", "skid", "skidi", "hest", "hlaup", "marathon",
+    "darts", "pila", "undanu r slit", "undanurslit", "urslit", "leikur", "stodutafla",
+
+    // competitions/leagues
+    "premier league", "champions league", "europa league",
+    "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
+
+    // Vísir-style “sports headlines” (names often appear without the word “fótbolti”)
+    "ronaldo", "messi", "mourinho", "pep", "guardiola", "klopp",
+    "arsenal", "man city", "man. city", "manchester city", "manchester united",
+    "fulham", "crystal palace", "sunderland", "liverpool", "chelsea",
+    "tottenham", "barcelona", "real madrid", "atletico",
+    "psg", "bayern", "dortmund", "juventus", "milan", "inter",
+
+    // ísl. fótbolta orð
+    "mark", "markaskor", "jafnarmark", "raud spjald", "gult spjald", "vik", "tabadi",
+    "sigur", "tap", "jafntefli",
+
+    // 433 / 4-3-3
     "433", "4-3-3", "4 3 3"
   ];
 
@@ -305,7 +320,9 @@ function mapFromText(x) {
 
   const cultureWords = [
     "menning", "lifid", "list", "tonlist", "kvikmynd", "bok",
-    "leikhus", "sjonvarp", "utvarp", "svidslist"
+    "leikhus", "sjonvarp", "utvarp", "svidslist",
+    // celeb/lifestyle-ish
+    "tattuin", "tattoo", "stjarna", "fyrirsaeta", "model", "fegurd"
   ];
 
   const opinionWords = [
@@ -314,7 +331,11 @@ function mapFromText(x) {
   ];
 
   const foreignWords = ["erlent", "foreign", "world", "alheim", "althjod"];
-  const localWords = ["innlent", "island", "reykjavik", "landid", "borgin"];
+  const localWords = [
+    "innlent", "island", "reykjavik", "landid", "borgin",
+    // crime/courts – oft DV/Pressan
+    "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
+  ];
 
   const techWords = [
     "taekni", "tolva", "forrit", "forritun", "gervigreind", "ai",
@@ -332,9 +353,11 @@ function mapFromText(x) {
     "eldgos", "skjalfti", "vedur", "haf", "fisk"
   ];
 
+  // IMPORTANT: removed "stjorn" to avoid matching "stjornmal" (politics).
   const sciWords = [
-    "visindi", "rannsokn", "geim", "stjorn", "edlis",
-    "efna", "liffraedi", "stjornufraedi", "tungl", "sol"
+    "visindi", "rannsokn", "geim", "edlis",
+    "efna", "liffraedi", "stjornufraedi", "stjarna", "stjornus", "stjornukerfi",
+    "tungl", "sol"
   ];
 
   if (sportWords.some(w => x.includes(w))) return "ithrottir";
@@ -351,7 +374,8 @@ function mapFromText(x) {
   return null;
 }
 
-function mapFromUrl(sourceId, u) {
+function mapFromUrl(sourceId, u, titleNorm) {
+  // Generic patterns
   if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
   if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
   if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list")) return "menning";
@@ -363,14 +387,29 @@ function mapFromUrl(sourceId, u) {
   if (u.includes("/erlent")) return "erlent";
   if (u.includes("/innlent")) return "innlent";
 
-  // Source-specific tweaks
-  if (sourceId === "visir") {
-    if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
-    if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
+  // DV: URL sections are strong signals
+  if (sourceId === "dv") {
+    if (u.includes("/pressan")) return "innlent";
+    if (u.includes("/fokus")) return "menning";
+    if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
   }
 
-  if (sourceId === "dv") {
-    if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
+  // Vísir: many links are /g/<id>/<slug> => no section in URL.
+  // We add a tiny safety net using title hints (already normalized)
+  if (sourceId === "visir") {
+    // If Vísir URL has no section, use extra title heuristics
+    if (u.includes("/g/")) {
+      const t = String(titleNorm || "");
+      if (
+        t.includes("ronaldo") || t.includes("messi") || t.includes("mourinho") ||
+        t.includes("arsenal") || t.includes("man city") || t.includes("man. city") ||
+        t.includes("premier") || t.includes("enska urvalsdeild") || t.includes("enski boltinn") ||
+        t.includes("olymp") || t.includes("darts") || t.includes("undanu r slit") || t.includes("undanurslit")
+      ) return "ithrottir";
+    }
+
+    if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
+    if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
 
   if (sourceId === "mbl") {
