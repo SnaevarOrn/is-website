@@ -323,7 +323,7 @@ function mapFromText(x) {
   ];
 
   const cultureWords = [
-    "menning", "verold", "gagnryni", "folk", lifid", "list", "tonlist", "kvikmynd", "bok",
+    "menning", "verold", "gagnryni", "folk", "lifid", "list", "tonlist", "kvikmynd", "bok",
     "leikhus", "sjonvarp", "utvarp", "svidslist",
     // celeb/lifestyle-ish
     "tattuin", "tattoo", "stjarna", "fyrirsaeta", "model", "fegurd"
