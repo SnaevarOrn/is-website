@@ -189,7 +189,7 @@ function extractTagValue(xml, tag) {
 
   // namespace-safe + CDATA-safe + captures inner text
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
@@ -287,7 +287,7 @@ function inferCategory({ sourceId, url, rssCategoryText, title }) {
 function mapFromText(x) {
   if (!x) return null;
 
-  // --- ÍÞRÓTTIR: víkkað til að grípa Vísir titla sem hafa enga /sport slóð né RSS category ---
+  // --- ÍÞRÓTTIR ---
   const sportWords = [
     // generic
     "sport", "ithrott", "fotbolti", "futbol", "bolti",
@@ -302,7 +302,7 @@ function mapFromText(x) {
     "premier league", "champions league", "europa league",
     "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
 
-    // Vísir-style “sports headlines” (names often appear without the word “fótbolti”)
+    // Vísir-style “sports headlines”
     "ronaldo", "messi", "mourinho", "pep", "guardiola", "klopp",
     "arsenal", "man city", "man. city", "manchester city", "manchester united",
     "fulham", "crystal palace", "sunderland", "liverpool", "chelsea",
@@ -310,48 +310,88 @@ function mapFromText(x) {
     "psg", "bayern", "dortmund", "juventus", "milan", "inter",
 
     // ísl. fótbolta orð
-    "mark", "markaskor", "jafnarmark", "raud spjald", "gult spjald", "vik", "tabadi",
+    "mark", "markaskor", "jafnarmark", "raud spjald", "gult spjald",
     "sigur", "tap", "jafntefli",
 
     // 433 / 4-3-3
     "433", "4-3-3", "4 3 3"
   ];
 
+  // --- VIÐSKIPTI ---
   const bizWords = [
     "vidskip", "business", "markad", "fjarmal", "kaupholl",
-    "verdbref", "gengi", "vext", "hagkerfi", "verdbolga"
+    "verdbref", "gengi", "vext", "vextir", "hagkerfi", "verdbolga",
+
+    // solid additions seen in oflokkad:
+    "eldsneyti", "bensin", "diesel", "oliu", "oliuverd", "bensinvert",
+    "laun", "kjar", "kjarasamning", "kjarasamningar",
+    "sedlabanki", "seðlabanki", "ecb", "evropski sedlabankinn",
+    "buffett", "warren buffett",
+    "lan", "lanas", "milljon", "milljona", "dali", "dollar", "usd"
   ];
 
+  // --- MENNING ---
   const cultureWords = [
     "menning", "lifid", "list", "tonlist", "kvikmynd", "bok",
     "leikhus", "sjonvarp", "utvarp", "svidslist",
+
+    // streaming/series — grípur „Stranger Things…“
+    "netflix", "stranger things",
+    "thattur", "thaettir", "thattaseria", "sjonvarpsthaettir", "seria", "seriu",
+
     // celeb/lifestyle-ish
-    "tattuin", "tattoo", "stjarna", "fyrirsaeta", "model", "fegurd"
+    "tattuin", "tattoo", "stjarna", "fyrirsaeta", "model", "fegurd",
+    "hatid", "hatidar", "festival", "tonleikar"
   ];
 
+  // --- SKOÐUN ---
   const opinionWords = [
     "skodun", "comment", "pistill", "leidari", "grein",
     "ummal", "dalkur", "vidtal", "kronika"
   ];
 
-  const foreignWords = ["erlent", "foreign", "world", "alheim", "althjod"];
-  const localWords = [
-    "innlent", "island", "reykjavik", "landid", "borgin",
-    // crime/courts – oft DV/Pressan
-    "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
+  // --- ERLENT ---
+  const foreignWords = [
+    "erlent", "foreign", "world", "alheim", "althjod",
+
+    // geopolitics (til að grípa „Trump…Íran…“ o.s.frv.)
+    "iran", "teheran", "klerkastjorn", "klerkastjornin",
+    "bandarik", "usa", "trump",
+    "russland", "ukrain", "putin",
+    "israel", "gaza", "palestin", "palestina",
+    "evropa", "esb", "nato", "sviss"
   ];
 
+  // --- INNLENT ---
+  const localWords = [
+    "innlent", "island", "reykjavik", "landid", "borgin",
+
+    // crime/courts – oft DV/Pressan
+    "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld",
+
+    // accidents/emergency – grípur „Banaslys…“, „Eldur í bíl…“, o.fl.
+    "banaslys", "slys", "umferdarslys", "umferd", "bila", "bilaplan",
+    "eldur", "bruni", "spreng", "sprenging",
+    "sjukrabil", "bradadeild", "bradamottaka", "slasa", "meiddist", "latinn", "lest",
+    "rannsakad sem slys"
+  ];
+
+  // --- TÆKNI ---
   const techWords = [
     "taekni", "tolva", "forrit", "forritun", "gervigreind", "ai",
     "netoryggi", "oryggi", "tolvuleikir", "leikjat", "simi", "snjallsimi",
     "apple", "google", "microsoft", "tesla", "raf", "rafmagn"
   ];
 
+  // --- HEILSA ---
   const healthWords = [
     "heilsa", "laekn", "sjuk", "sjukdom", "lyf", "spitali",
-    "naering", "mataraedi", "smit", "veira", "influenza"
+    "naering", "mataraedi", "smit", "veira", "influenza",
+    // emergency english (grapevine)
+    "emergency", "care", "hospital", "injur", "injury", "accident"
   ];
 
+  // --- UMHVERFI ---
   const envWords = [
     "umhverfi", "loftslag", "mengun", "natur", "jokull", "joklar",
     "eldgos", "skjalfti", "vedur", "haf", "fisk"
@@ -401,7 +441,6 @@ function mapFromUrl(sourceId, u, titleNorm) {
   // Vísir: many links are /g/<id>/<slug> => no section in URL.
   // We add a tiny safety net using title hints (already normalized)
   if (sourceId === "visir") {
-    // If Vísir URL has no section, use extra title heuristics
     if (u.includes("/g/")) {
       const t = String(titleNorm || "");
       if (
@@ -410,6 +449,7 @@ function mapFromUrl(sourceId, u, titleNorm) {
         t.includes("premier") || t.includes("enska urvalsdeild") || t.includes("enski boltinn") ||
         t.includes("olymp") || t.includes("darts") || t.includes("undanu r slit") || t.includes("undanurslit")
       ) return "ithrottir";
+      // (við látum text-mapFromText gera meginvinnuna fyrir innlent/viðskipti/menningu o.s.frv.)
     }
 
     if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
