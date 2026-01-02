@@ -293,10 +293,10 @@ function mapFromText(x) {
     "sport", "ithrott", "fotbolti", "futbol", "bolti",
     "handbolti", "korfubolti", "golf", "tennis", "motorsport", "formula",
     "ufc", "mma", "olymp", "olympi", "skid", "skidi", "hest", "hlaup", "marathon",
-    "darts", "pila", "pilu", "undanu r slit", "undanurslit", "urslit", "leikur", "stodutafla",
+    "darts", "littler", "ally pally", "pila", "pilu", "undanu r slit", "undanurslit", "urslit", "leikur", "stodutafla",
 
     // add
-    "hnefaleik", "skak", "chess",
+    "hnefaleik", "skak", "chess", "nfl",
 
     // competitions/leagues
     "premier league", "champions league", "europa league",
@@ -323,7 +323,7 @@ function mapFromText(x) {
   ];
 
   const cultureWords = [
-    "menning", "lifid", "list", "tonlist", "kvikmynd", "bok",
+    "menning", "verold", "gagnryni", "folk", lifid", "list", "tonlist", "kvikmynd", "bok",
     "leikhus", "sjonvarp", "utvarp", "svidslist",
     // celeb/lifestyle-ish
     "tattuin", "tattoo", "stjarna", "fyrirsaeta", "model", "fegurd"
@@ -334,9 +334,9 @@ function mapFromText(x) {
     "ummal", "dalkur", "vidtal", "kronika"
   ];
 
-  const foreignWords = ["erlent", "foreign", "usa", "byd", "tesla", "evra", "trump", "world", "alheim", "althjod"];
+  const foreignWords = ["erlent", "foreign", "bandarisk", "usa", "telegraph", "italia", "byd", "tesla", "evra", "trump", "world", "alheim", "althjod"];
   const localWords = [
-    "innlent", "island", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
+    "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
     // crime/courts – oft DV/Pressan
     "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
   ];
