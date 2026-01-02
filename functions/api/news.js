@@ -37,8 +37,8 @@ function labelFor(id) {
 export async function onRequestGet({ request }) {
   const { searchParams } = new URL(request.url);
 
-  const sources = (searchParams.get("sources") || "").split(",").filter(Boolean);
-  const catsParam = (searchParams.get("cats") || "").split(",").filter(Boolean);
+  const sources = (searchParams.get("sources") || "").split(",").map(s => s.trim()).filter(Boolean);
+  const catsParam = (searchParams.get("cats") || "").split(",").map(s => s.trim()).filter(Boolean);
   const limit = clampInt(searchParams.get("limit"), 1, 200, 50);
   const debug = searchParams.get("debug") === "1";
 
@@ -80,19 +80,21 @@ export async function onRequestGet({ request }) {
       if (!res.ok) {
         console.error("Feed HTTP error:", id, res.status);
         if (debug) {
-          debugStats[id] = { url: feed.url, status: res.status, ok: res.ok, length: xml.length, head: xml.slice(0, 220) };
+          debugStats[id] = {
+            url: feed.url,
+            status: res.status,
+            ok: res.ok,
+            length: xml.length,
+            head: xml.slice(0, 220),
+          };
         }
         continue;
       }
 
       const blocks = parseFeedBlocks(xml);
 
-      // Debug: show whether parsing works at all, and whether title/link extraction works
       if (debug) {
         const firstBlock = blocks[0] || "";
-        const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
-        const firstLink = firstBlock ? extractLink(firstBlock) : null;
-
         debugStats[id] = {
           url: feed.url,
           status: res.status,
@@ -101,8 +103,9 @@ export async function onRequestGet({ request }) {
           hasItem: xml.toLowerCase().includes("<item"),
           hasEntry: xml.toLowerCase().includes("<entry"),
           blocksCount: blocks.length,
-          firstTitle,
-          firstLink,
+          firstTitle: firstBlock ? extractTagValue(firstBlock, "title") : null,
+          firstLink: firstBlock ? extractLink(firstBlock) : null,
+          firstCats: firstBlock ? extractCategories(firstBlock) : [],
           head: xml.slice(0, 220),
           firstBlockHead: firstBlock.slice(0, 220),
         };
@@ -116,35 +119,49 @@ export async function onRequestGet({ request }) {
           extractTagValue(block, "pubDate") ||
           extractTagValue(block, "updated") ||
           extractTagValue(block, "published") ||
-          extractTagValue(block, "dc:date"); // some feeds
+          extractTagValue(block, "dc:date");
 
         if (!title || !link) continue;
 
         const cats = extractCategories(block);
         const catText = cats.join(" ").trim();
 
-        const { categoryId, categoryLabel } = inferCategory({
+        const inf = inferCategory({
           sourceId: id,
           url: link,
           rssCategoryText: catText,
-          title
+          title,
+          debug
         });
 
-        if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
+        if (activeCats.size > 0 && !activeCats.has(inf.categoryId)) continue;
 
-        items.push({
+        const item = {
           title,
           url: link,
           publishedAt: pubDate ? safeToIso(pubDate) : null,
           sourceId: id,
           sourceLabel: feed.label,
-          categoryId,
-          category: categoryLabel
-        });
+          categoryId: inf.categoryId,
+          category: inf.categoryLabel,
+        };
+
+        if (debug) {
+          item._debug = {
+            catText,
+            fromText: inf._fromText || null,
+            fromUrl: inf._fromUrl || null,
+            reason: inf._reason || null,
+          };
+        }
+
+        items.push(item);
       }
     } catch (err) {
       console.error("Feed error:", id, err);
-      if (debug) debugStats[id] = { url: feeds[id]?.url, error: String(err?.message || err) };
+      if (debug) {
+        debugStats[id] = { url: feeds[id]?.url, error: String(err?.message || err) };
+      }
     }
   }
 
@@ -163,7 +180,7 @@ export async function onRequestGet({ request }) {
   return new Response(JSON.stringify(payload), {
     headers: {
       "content-type": "application/json; charset=utf-8",
-      "cache-control": debug ? "no-store" : "public, max-age=300"
+      "cache-control": debug ? "no-store" : "public, max-age=300",
     }
   });
 }
@@ -173,21 +190,24 @@ export async function onRequestGet({ request }) {
    ========================= */
 
 function parseFeedBlocks(xml) {
-  // Match <item>, <rss:item>, <content:item>, etc.
+  const src = String(xml || "");
+  // <item> (RSS)
   const itemRe = /<(?:\w+:)?item\b[^>]*>[\s\S]*?<\/(?:\w+:)?item>/gi;
-  const items = [...String(xml || "").matchAll(itemRe)].map(m => m[0]);
+  const items = [...src.matchAll(itemRe)].map(m => m[0]);
   if (items.length) return items;
 
-  // Atom fallback: <entry> or <atom:entry>
+  // <entry> (Atom)
   const entryRe = /<(?:\w+:)?entry\b[^>]*>[\s\S]*?<\/(?:\w+:)?entry>/gi;
-  return [...String(xml || "").matchAll(entryRe)].map(m => m[0]);
+  return [...src.matchAll(entryRe)].map(m => m[0]);
 }
 
 function extractTagValue(xml, tag) {
+  // Robust: namespace-safe + CDATA-safe
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
-  // namespace-safe + CDATA-safe + captures inner text
+  // Allow optional namespace prefix on open/close tag:
+  // <dc:date>...</dc:date> OR <date>...</date>
   const re = new RegExp(
     `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
@@ -200,11 +220,11 @@ function extractTagValue(xml, tag) {
 function extractLink(block) {
   const src = String(block || "");
 
-  // 1) Atom style: <link href="..."/>
+  // Atom: <link href="..."/>
   const mHref = src.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
   if (mHref?.[1]) return decodeEntities(mHref[1]).trim();
 
-  // 2) RSS style: <link>...</link>
+  // RSS: <link>...</link>
   const m = src.match(/<link\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
   if (m?.[1]) return decodeEntities(m[1]).trim();
 
@@ -272,212 +292,147 @@ function normalizeText(s) {
     .replaceAll("ö", "o");
 }
 
-function inferCategory({ sourceId, url, rssCategoryText, title }) {
+function inferCategory({ sourceId, url, rssCategoryText, title, debug }) {
   const u = normalizeText(url);
   const c = normalizeText(rssCategoryText);
   const t = normalizeText(title);
 
-  // 1) RSS/Atom category text er oft “sterkasta” merkið.
+  // Text first (RSS category text is often best), then title
   const fromText = mapFromText(c) || mapFromText(t);
 
-  // 2) URL-heuristics (source-specific + generic)
+  // URL (and source-specific rules). We also allow title hints for Vísir /g/ links.
   const fromUrl = mapFromUrl(sourceId, u, t);
 
   const categoryId = fromText || fromUrl || "oflokkad";
-  return { categoryId, categoryLabel: labelFor(categoryId) };
+
+  const out = {
+    categoryId,
+    categoryLabel: labelFor(categoryId),
+  };
+
+  if (debug) {
+    out._fromText = fromText || null;
+    out._fromUrl = fromUrl || null;
+    out._reason = fromText ? "text" : (fromUrl ? "url" : "fallback");
+  }
+
+  return out;
 }
 
 function mapFromText(x) {
   if (!x) return null;
 
-  // =========================
-  // ÍÞRÓTTIR (yfirflokkur)
-  // =========================
-  //
-  // Þetta er skipulagt sem “undirflokkar” í athugasemdum til að þú getir
-  // seinna splittað í t.d. ithrottir_skak / ithrottir_korfa / ithrottir_bardagi.
-  //
-  // MIKILVÆGT:
-  // - Forðast stutt/hættuleg orð sem passa út um allt (t.d. "ehf", "hf", "var", "leik" eitt og sér).
-  // - Nota frekar “sterk” sport-orð og mynstur.
-  //
-  // Ef þú vilt seinna sundurflokka:
-  // - Láttu mapFromText skila t.d. "ithrottir_skak" fyrst, og mappa það yfir í "ithrottir" í response.
-
-  const SPORT = {
-    // Almenn sport-merki (nota sem fallback; samt reyni ég að hafa þau tiltölulega “sértæk”)
-    general: [
-      "sport", "ithrott", "ithrottir",
-      "stodutafla", "deild", "umferd", "urslit", "undanurslit",
-      "jafntefli", "vitaskot", "vitakeppni", "rangstada",
-      "raud spjald", "raudspjald", "gult spjald", "gultspjald"
-    ],
-
-    // Fótbolti
-    football: [
-      "fotbolti", "futbol", "bolti",
-      "premier league", "champions league", "europa league", "conference league",
-      "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
-      "besta deild", "lengjudeild", "urvalsdeild",
-      "landslid", "undankeppni", "kvalleikur",
-      "markaskor", "jafnarmark", "hornspyrna"
-    ],
-
-    // Handbolti (ATH: EKKI "ehf"!)
-    handball: [
-      "handbolti",
-      // Evrópukeppnir – notið þessi sem “sértæk” handbolta-merki
-      "meistaradeild", "evropudeild"
-    ],
-
-    // Körfubolti
-    basketball: [
-      "korfubolti", "korfuknattleik",
-      "dominos deild", "subway deild",
-      "nba", "euroleague", "euroliga",
-      "thristig", "frikast", "frikost", "rebound", "assist"
-    ],
-
-    // Skák
-    chess: [
-      "skak", "skakid", "stormeistari",
-      "fide", "elo", "heimsmeistari", "heimsmeistaramot", "candidates"
-    ],
-
-    // Bardagaíþróttir (fight news)
-    combat: [
-      "ufc", "mma", "bellator", "one championship", "pfl",
-      "hnefaleik", "boxing", "kickbox", "muay thai", "muaythai",
-      "taekwondo", "karate", "judo", "wrestling", "bjj", "jiu jitsu", "jiujitsu", "grappling"
-    ],
-
-    // Mótorsport
-    motorsport: [
-      "formula 1", "formula", "f1",
-      "rally", "ralli", "wrc",
-      "nascar", "indycar", "motocross"
-    ],
-
-    // Vetraríþróttir
-    winter: [
-      "skidi", "skidaganga", "snowboard",
-      "ishokk", "ishockey", "skautun", "biathlon"
-    ],
-
-    // Hlaup / úthald
-    endurance: [
-      "marathon", "half marathon", "ultra", "triathlon", "ironman"
-    ],
-
-    // Golf / Tennis / o.fl.
-    racket: [
-      "golf", "pga", "lpga",
-      "tennis", "atp", "wta", "wimbledon", "roland garros", "us open", "australian open",
-      "badminton", "squash", "padel"
-    ],
-
-    // Nafnabanki (Vísir notar oft nöfn/lið í sportfyrirsögnum)
-    // Nota sparlega. Þetta hjálpar /g/ titlum þar sem “fótbolti” stendur ekki.
-    footballNames: [
-      "ronaldo", "messi", "mourinho", "guardiola", "klopp",
-      "arsenal", "man city", "man. city", "manchester city", "manchester united",
-      "liverpool", "chelsea", "tottenham",
-      "barcelona", "real madrid", "atletico",
-      "psg", "bayern", "dortmund", "juventus", "milan", "inter"
-    ],
-
-    // Taktík/kerfi
-    tactics: ["433", "4-3-3", "4 3 3", "3-5-2", "4-4-2", "4-2-3-1"]
-  };
-
+  // --- ÍÞRÓTTIR ---
   const sportWords = [
-    ...SPORT.general,
-    ...SPORT.football,
-    ...SPORT.handball,
-    ...SPORT.basketball,
-    ...SPORT.chess,
-    ...SPORT.combat,
-    ...SPORT.motorsport,
-    ...SPORT.winter,
-    ...SPORT.endurance,
-    ...SPORT.racket,
-    ...SPORT.footballNames,
-    ...SPORT.tactics
+    "sport", "ithrott", "fotbolti", "futbol", "bolti",
+    "enski boltinn", "enskur boltinn", "enska urvalsdeild", "enskar urvalsdeild",
+    "premier league", "champions league", "europa league", "conference league",
+    "deild", "urslit", "urslitaleik", "urslitaleiknum", "undanurslit", "undanu r slit",
+    "undankeppni", "leiktid", "mark", "markaskor", "jafnarmark",
+    "stodutafla", "lid", "leikmadur", "studningsmenn", "studningsmadur",
+    "var", "raudspjald", "gultspjald", "hattrick",
+    "handbolti", "korfubolti", "golf", "tennis", "motorsport", "formula",
+    "ufc", "mma", "olymp", "olympi", "skid", "skidi", "hlaup", "marathon",
+    "darts", "pila",
+    // Vísir titles (oft bara nöfn/líð)
+    "ronaldo", "messi", "mourinho", "guardiola", "klopp",
+    "arsenal", "man city", "man. city", "manchester city", "manchester united",
+    "liverpool", "chelsea", "tottenham", "barcelona", "real madrid", "atletico",
+    "psg", "bayern", "dortmund", "juventus", "milan", "inter",
+    "schumacher" // oft sport-fréttir (F1)
   ];
 
+  // --- VIÐSKIPTI ---
   const bizWords = [
     "vidskip", "business", "markad", "fjarmal", "kaupholl",
     "verdbref", "gengi", "vext", "hagkerfi", "verdbolga",
-    "hagnadur", "taprekstur", "arsreikning", "uppgjor", "arsskyrsla",
-    "samruni", "yfirtek", "fjarmognun", "skuld", "virdisauk",
-    "hlutabr", "hlutabref", "arid", "fjarfest", "stefna"
+    "laun", "launahækkun", "felagaskipti", "samruni", "hlutabr",
+    "arð", "tekjur", "tap", "hagnadur", "reikningsskil"
   ];
 
+  // --- MENNING / AFÞREYING ---
   const cultureWords = [
     "menning", "lifid", "list", "tonlist", "kvikmynd", "bok",
     "leikhus", "sjonvarp", "utvarp", "svidslist",
-    "listamann", "safn", "syning", "utgafa"
+    "stjarna", "hollywood", "leikari", "leikkona", "fyrirs",
+    "tattuin", "tattoo", "tisku", "ahrifavald", "influencer",
+    "dottir", "sonur", "fannst latin", "andlat", "minning"
   ];
 
+  // --- SKOÐUN / GREINAR / RÁÐ ---
   const opinionWords = [
-    // Þetta minnkar “Óflokkað” fyrir pistla/áramóta- og hugleiðingargreinar
-    "skodun", "comment", "pistill", "leidari", "grein", "kronika",
-    "ummal", "dalkur", "vidhorf", "hugleid", "hugleiding",
-    "skrifar:", "ritstjornargrein",
-    "aramotaheit", "aramot", "nytt ar", "nyju ari", "kvedja 2025", "maeta 2026"
+    "skodun", "comment", "pistill", "leidari", "grein",
+    "ummal", "dalkur", "vidtal", "kronika",
+    "rad", "godh rad", "gott rad", "aramotaheit", "aramotaheitin",
+    "hvernig", "af hverju"
   ];
 
-  const foreignWords = ["erlent", "foreign", "world", "alheim", "althjod", "utanrikis"];
-  const localWords = [
-    "innlent", "island", "reykjavik", "landid",
-    // dómsmál / lögregla (oft innlent)
-    "logregl", "rettar", "daemd", "dom", "handtek", "sakfelld", "akra", "slys", "eldur i bil"
-  ];
-
-  const techWords = [
-    "taekni", "tolva", "forrit", "forritun", "gervigreind", "ai",
-    "netoryggi", "oryggi", "tolvuleikir", "leikjat", "simi", "snjallsimi",
-    "apple", "google", "microsoft", "tesla", "rafbil", "rafmagn"
-  ];
-
+  // --- HEILSA ---
   const healthWords = [
     "heilsa", "laekn", "sjuk", "sjukdom", "lyf", "spitali",
     "naering", "mataraedi", "smit", "veira", "influenza",
-    "ofnaemi", "megrun", "kviði", "thunglyndi"
+    "magnes", "magnesium", "magnyl", "verkjalyf", "bata",
+    "skammt", "skammtar", "taug", "kviði", "svefn", "streita"
   ];
 
+  // --- TÆKNI ---
+  const techWords = [
+    "taekni", "tolva", "forrit", "forritun", "gervigreind", "ai",
+    "netoryggi", "oryggi", "tolvuleikir", "leikjat", "simi", "snjallsimi",
+    "apple", "google", "microsoft", "tesla", "rafmagn", "rafbil",
+    "gagnalek", "hakk", "net", "internet"
+  ];
+
+  // --- UMGJÖRÐ / NÁTTÚRA ---
   const envWords = [
     "umhverfi", "loftslag", "mengun", "natur", "jokull", "joklar",
-    "eldgos", "skjalfti", "vedur", "haf", "fisk", "hval", "plast"
+    "eldgos", "skjalfti", "vedur", "haf", "fisk", "rusl", "plast",
+    "orkan", "jarðvarmi"
   ];
 
-  // IMPORTANT: removed "stjorn" to avoid matching "stjornmal" (politics).
+  // --- VÍSINDI ---
   const sciWords = [
-    "visindi", "rannsokn", "geim", "edlis",
-    "efna", "liffraedi", "stjornufraedi", "stjornus", "stjornukerfi",
-    "tungl", "sol", "reikistjarna", "svarthol", "gervihnottur"
+    "visindi", "rannsokn", "geim", "edlis", "efna", "liffraedi",
+    "stjornufraedi", "tungl", "sol", "gervitungl"
   ];
 
-  // Röðin skiptir máli: sport fyrst => minnka “Óflokkað” fyrir /g/ sporttitla.
+  // --- ERLENT / HEIMSFRÉTTIR ---
+  const foreignWords = [
+    "erlent", "foreign", "world", "althjod", "alheim",
+    "iran", "irak", "syria", "israel", "gaza", "ukraine", "russland",
+    "sviss", "norður-korea", "kina", "bandarikin", "evropa",
+    "thjodarsorg", "uppreisn", "mótmæli", "barist a gotum", "gotu",
+    "klerkastjorn"
+  ];
+
+  // --- INNLENT / LÖGREGLA / SLYS ---
+  const icelandWords = [
+    "innlent", "island", "reykjavik", "keflavik", "akureyri", "hafnarfjord",
+    "kopavog", "gardabae", "mosfells", "selfoss", "austurland", "vesturland",
+    "sudurland", "nordurland", "breidhella",
+    "logregl", "rettar", "dom", "daemd", "sakfelld", "handtek",
+    "eldur i bil", "eldur", "bruni", "sprenging", "slys"
+  ];
+
   if (sportWords.some(w => x.includes(w))) return "ithrottir";
   if (bizWords.some(w => x.includes(w))) return "vidskipti";
-  if (cultureWords.some(w => x.includes(w))) return "menning";
-  if (opinionWords.some(w => x.includes(w))) return "skodun";
-  if (techWords.some(w => x.includes(w))) return "taekni";
   if (healthWords.some(w => x.includes(w))) return "heilsa";
+  if (techWords.some(w => x.includes(w))) return "taekni";
   if (envWords.some(w => x.includes(w))) return "umhverfi";
   if (sciWords.some(w => x.includes(w))) return "visindi";
+  if (opinionWords.some(w => x.includes(w))) return "skodun";
+  if (cultureWords.some(w => x.includes(w))) return "menning";
   if (foreignWords.some(w => x.includes(w))) return "erlent";
-  if (localWords.some(w => x.includes(w))) return "innlent";
+  if (icelandWords.some(w => x.includes(w))) return "innlent";
 
   return null;
 }
 
 function mapFromUrl(sourceId, u, titleNorm) {
-  // Generic patterns
+  // Generic patterns (strong)
   if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
   if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
-  if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list")) return "menning";
+  if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list") || u.includes("/fokus")) return "menning";
   if (u.includes("/skodun") || u.includes("/pistill") || u.includes("/comment")) return "skodun";
   if (u.includes("/taekni") || u.includes("/tech")) return "taekni";
   if (u.includes("/heilsa") || u.includes("/health")) return "heilsa";
@@ -486,73 +441,53 @@ function mapFromUrl(sourceId, u, titleNorm) {
   if (u.includes("/erlent")) return "erlent";
   if (u.includes("/innlent")) return "innlent";
 
-  // DV: URL sections are strong signals
+  // DV sections
   if (sourceId === "dv") {
     if (u.includes("/pressan")) return "innlent";
     if (u.includes("/fokus")) return "menning";
     if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
-    if (u.includes("/skodun") || u.includes("/pistlar")) return "skodun";
   }
 
-  // Vísir: many links are /g/<id>/<slug> => no section in URL.
-  // We add a safety net using title hints (already normalized)
+  // Vísir: many links are /g/<id>/<slug> (no section). Add title heuristics.
   if (sourceId === "visir") {
+    const t = String(titleNorm || "");
+
+    // If it’s a Vísir /g/ link, lean on title keywords
     if (u.includes("/g/")) {
-      const t = String(titleNorm || "");
-
-      // Vísir /g/ er oft án greinilegs flokks í slóð.
-      // Því notum við titil-heuristics til að grípa sport.
-      // ATH: Forðast “stutt og hættuleg” orð. Nota frekar sértæk sport-merki.
       if (
-        // Fótbolti
-        t.includes("premier") || t.includes("champions") || t.includes("europa") ||
-        t.includes("enska urvalsdeild") || t.includes("enski boltinn") || t.includes("enskur boltinn") ||
-        t.includes("fotbolti") || t.includes("vitakeppni") || t.includes("rangstada") ||
-        t.includes("raudspjald") || t.includes("gultspjald") ||
-
-        // Körfubolti
-        t.includes("korfubolti") || t.includes("dominos deild") || t.includes("subway deild") || t.includes("nba") ||
-
-        // Handbolti
-        t.includes("handbolti") || t.includes("meistaradeild") || t.includes("evropudeild") ||
-
-        // Skák
-        t.includes("skak") || t.includes("fide") || t.includes("elo") || t.includes("stormeistari") ||
-
-        // Bardagaíþróttir
-        t.includes("ufc") || t.includes("mma") || t.includes("hnefaleik") || t.includes("kickbox") || t.includes("muay") ||
-
-        // Mótorsport
-        t.includes("formula") || t.includes("f1") || t.includes("rally") || t.includes("wrc") ||
-
-        // Úrslit/undanúrslit/stöðutöflur
-        t.includes("undanurslit") || t.includes("urslit") || t.includes("stodutafla") ||
-
-        // Nafnabanki
-        t.includes("ronaldo") || t.includes("messi") || t.includes("mourinho") ||
-        t.includes("arsenal") || t.includes("man city") || t.includes("manchester") ||
-        t.includes("liverpool") || t.includes("chelsea") || t.includes("tottenham") ||
-        t.includes("barcelona") || t.includes("real madrid") || t.includes("bayern")
+        t.includes("sport") || t.includes("fotbolti") || t.includes("enski boltinn") ||
+        t.includes("enska urvalsdeild") || t.includes("urslit") || t.includes("undanurslit") ||
+        t.includes("var") || t.includes("studnings") || t.includes("leikmadur") ||
+        t.includes("arsenal") || t.includes("man city") || t.includes("premier") ||
+        t.includes("ronaldo") || t.includes("mourinho") || t.includes("schumacher") ||
+        t.includes("darts") || t.includes("pila") || t.includes("olymp")
       ) return "ithrottir";
 
-      // Skoðun-heuristics fyrir /g/ (áramóta/pistlar)
       if (
-        t.includes("skrifar:") || t.includes("pistill") || t.includes("leidari") ||
-        t.includes("aramota") || t.includes("aramotaheit") || t.includes("kvedja 2025") || t.includes("maeta 2026")
-      ) return "skodun";
+        t.includes("iran") || t.includes("sviss") || t.includes("thjodarsorg") ||
+        t.includes("mótm") || t.includes("barist a gotum") || t.includes("gaza") || t.includes("ukraine")
+      ) return "erlent";
+
+      if (
+        t.includes("magnyl") || t.includes("magnes") || t.includes("skammt") ||
+        t.includes("heilsa") || t.includes("lyf") || t.includes("sjuk")
+      ) return "heilsa";
+
+      if (
+        t.includes("tommy lee") || t.includes("hollywood") || t.includes("leikari") ||
+        t.includes("tatt") || t.includes("tisku") || t.includes("ahrifavald")
+      ) return "menning";
     }
 
+    // Old rules still help:
     if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
-    if (u.includes("/korfubolti") || u.includes("/handbolti") || u.includes("/skak")) return "ithrottir";
-    if (u.includes("/skodun") || u.includes("/pistlar")) return "skodun";
+    if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
 
   if (sourceId === "mbl") {
     if (u.includes("/frettir/innlent")) return "innlent";
     if (u.includes("/frettir/erlent")) return "erlent";
     if (u.includes("/sport")) return "ithrottir";
-    if (u.includes("/vidskipti")) return "vidskipti";
-    if (u.includes("/menning")) return "menning";
   }
 
   if (sourceId === "ruv") {
@@ -561,7 +496,6 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/menning")) return "menning";
     if (u.includes("/erlent")) return "erlent";
     if (u.includes("/innlent")) return "innlent";
-    if (u.includes("/skodun")) return "skodun";
   }
 
   return null;
