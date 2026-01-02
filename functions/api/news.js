@@ -293,7 +293,7 @@ function mapFromText(x) {
     "sport", "ithrott", "fotbolti", "futbol", "bolti",
     "handbolti", "korfubolti", "golf", "tennis", "motorsport", "formula",
     "ufc", "mma", "olymp", "olympi", "skid", "skidi", "hest", "hlaup", "marathon",
-    "darts", "littler", "ally pally", "pila", "pilu", "undanu r slit", "undanurslit", "urslit", "leikur", "stodutafla",
+    "darts", "littler", "ally", "pally", "pila", "pilu", "undanu r slit", "undanurslit", "urslit", "leikur", "stodutafla",
 
     // add
     "hnefaleik", "skak", "chess", "nfl",
