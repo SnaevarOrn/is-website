@@ -626,7 +626,13 @@ html[data-theme="light"] .cell.is-today .dnum{ color:#ffffff; }
   align-items:baseline;
 }
 .hitem:first-of-type{ border-top:none; }
-.hleft{ font-weight: 900; letter-spacing:.2px; }
+/* HOLIDAYS LIST — title text (left, bold) */
+.hleft{
+  font-weight: 900;
+  letter-spacing: .1px;
+  line-height: 1.15;
+  font-size: clamp(14px, 3.6vw, 16px); /* smaller on mobile, sane on desktop */
+}
 
 .hright{
   display:flex;
