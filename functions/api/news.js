@@ -334,7 +334,7 @@ function mapFromText(x) {
     "ummal", "dalkur", "vidtal", "kronika"
   ];
 
-  const foreignWords = ["erlent", "foreign", "world", "alheim", "althjod"];
+  const foreignWords = ["erlent", "foreign", "usa", "trump", "world", "alheim", "althjod"];
   const localWords = [
     "innlent", "island", "reykjavik", "landid", "borgin",
     // crime/courts – oft DV/Pressan
