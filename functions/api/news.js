@@ -187,8 +187,9 @@ function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
+  // namespace-safe + CDATA-safe + captures inner text
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
