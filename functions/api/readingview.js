@@ -3,8 +3,9 @@
 //
 // Goals:
 //  - Pull clean article text (avoid nav/menu/footer/share/subscription dumps)
-//  - Work well for DV + RÚV (and others) with conservative heuristics
-//  - Decode HTML entities like &#8211; and &#xFA; so text renders correctly
+//  - DV + RÚV: extra defensive heuristics
+//  - Decode HTML entities like &#8211; and &#xFA;
+//  - If RÚV article text is not in DOM blocks, extract from JSON-LD / __NEXT_DATA__
 //
 // Output:
 // { ok, url, host, site, title, excerpt, wordCount, charCount, text, paragraphs[], debug? }
@@ -78,7 +79,6 @@ function normSpace(s) {
 }
 
 // Decode minimal set of HTML entities (numeric + common named)
-// Handles: &#8211;  &#xFA;  &amp; &quot; &apos; &lt; &gt; &nbsp;
 function decodeEntities(input) {
   let s = String(input || "");
   if (!s) return s;
@@ -110,9 +110,20 @@ function decodeEntities(input) {
   return s;
 }
 
+// Strip tags if we end up with HTML-ish blobs (from JSON fields sometimes)
+function stripTags(s) {
+  return decodeEntities(String(s || ""))
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p\s*>/gi, "\n\n")
+    .replace(/<\/li\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
 function isBadIdClass(idc) {
   const s = String(idc || "").toLowerCase();
-  // IMPORTANT: keep this conservative (avoid nuking legit content containers)
   return (
     s.includes("cookie") ||
     s.includes("consent") ||
@@ -139,12 +150,11 @@ function isBadIdClass(idc) {
   );
 }
 
-// Stronger “menu dump” detector (fixes DV/RÚV spill)
+// Strong “menu dump” detector (DV/RÚV)
 function looksLikeMenuNoise(txt) {
   const t0 = decodeEntities(normSpace(txt)).toLowerCase();
   if (!t0) return true;
 
-  // RÚV/DV typical UI crumbs
   const badPhrases = [
     "hoppa í aðalefni",
     "valmynd",
@@ -153,7 +163,6 @@ function looksLikeMenuNoise(txt) {
     "english",
     "pólski",
     "auðskilið",
-    "ruv",
     "efstaleiti",
     "sími:",
     "hafa samband",
@@ -170,25 +179,23 @@ function looksLikeMenuNoise(txt) {
     "helstu tíðindum",
     "í pósthólfið",
     "kynning",
-    "fasteignir",
     "uppskriftir",
+    "fasteignir",
+    "athugasemdir",
   ];
   let hits = 0;
   for (const p of badPhrases) if (t0.includes(p)) hits++;
   if (hits >= 2) return true;
 
-  // Many very short tokens => menu-like
   const tokens = t0.split(/\s+/).filter(Boolean);
   if (tokens.length >= 16) {
     const short = tokens.filter(w => w.length <= 3).length;
     if (short / tokens.length > 0.55) return true;
   }
 
-  // Lots of separators/arrow patterns typical in nav text
   const sepHits = (t0.match(/-->|\|\||»|›|·|•|\/|</g) || []).length;
   if (sepHits >= 3) return true;
 
-  // Looks like a "list of sections/categories"
   const navWords = [
     "fréttir", "íþróttir", "menning", "viðskipti", "erlent", "innlent",
     "fókus", "pressan", "eyjan", "tónlist", "sjónvarp", "útvarp",
@@ -201,6 +208,13 @@ function looksLikeMenuNoise(txt) {
   return false;
 }
 
+function splitToParagraphs(rawText) {
+  const t = normSpace(stripTags(rawText));
+  if (!t) return [];
+  const parts = t.split(/\n\s*\n/).map(p => normSpace(p)).filter(Boolean);
+  return parts.slice(0, 120);
+}
+
 /* =========================
    Extractor
    ========================= */
@@ -209,9 +223,8 @@ class Extractor {
   constructor() {
     this.title = "";
     this.site = "";
-
     this._inBad = 0;
-    this._inContent = 0; // only collect inside content zones
+    this._inContent = 0;
     this._buf = [];
     this._pushed = 0;
   }
@@ -219,12 +232,9 @@ class Extractor {
   push(txt) {
     let s = decodeEntities(normSpace(txt));
     if (!s) return;
-
-    // Kill obvious menu dumps early
     if (looksLikeMenuNoise(s)) return;
 
-    // Reduce “single-line megadumps”
-    // If it’s huge and has little punctuation, it’s usually nav
+    // Kill "megadumps"
     if (s.length > 600 && (s.match(/[.!?…]/g) || []).length < 2) return;
 
     this._buf.push(s);
@@ -232,7 +242,6 @@ class Extractor {
   }
 
   getParagraphs() {
-    // De-dupe adjacent duplicates + normalize
     const out = [];
     let prev = "";
     for (const p of this._buf) {
@@ -251,36 +260,156 @@ class Extractor {
 }
 
 /* =========================
-   Host-tuned selectors
+   Host selectors
    ========================= */
 
 function getSelectorsForHost(host) {
   const h = String(host || "").toLowerCase();
 
-  // Default: fairly broad but safe-ish.
+  // Default broad-ish, still safe
   let CONTENT_SELECTOR =
     "article, main, [role='main'], [itemprop='articleBody'], .entry-content, .post-content, .article-body, .article__body, .content__body, .story-body, .story__body, .news__content, .text";
 
-  // RÚV tends to have lots of “main” furniture; bias towards article-y containers.
+  // RÚV: avoid plain "main" (often contains nav furniture + sometimes JS-only body)
   if (h === "ruv.is" || h === "www.ruv.is") {
     CONTENT_SELECTOR =
       "article, [itemprop='articleBody'], .article, .article__body, .article__content, .story, .story__body, .news__content, main article";
   }
 
-  // DV sometimes has large navigation blocks; keep default but still ok.
+  // DV: bias toward article containers
   if (h === "dv.is" || h === "www.dv.is") {
     CONTENT_SELECTOR =
       "article, [itemprop='articleBody'], .entry-content, .post-content, .article-body, .article__body, .content__body, main article";
   }
 
-  // “bad zones” we never want
   const BAD_SELECTOR =
     "nav, header, footer, aside, form, button, script, style, noscript, svg, canvas";
 
-  // Collect blocks as paragraphs
   const BLOCK_SELECTOR = "p, li, h2, h3, blockquote";
 
   return { CONTENT_SELECTOR, BAD_SELECTOR, BLOCK_SELECTOR };
+}
+
+/* =========================
+   RÚV structured-data fallback
+   ========================= */
+
+function tryParseJsonSafe(s) {
+  try { return JSON.parse(s); } catch { return null; }
+}
+
+function* iterateJsonNodes(root, maxNodes = 4000) {
+  const stack = [root];
+  let seen = 0;
+  while (stack.length && seen < maxNodes) {
+    const node = stack.pop();
+    seen++;
+    yield node;
+    if (node && typeof node === "object") {
+      if (Array.isArray(node)) {
+        for (let i = node.length - 1; i >= 0; i--) stack.push(node[i]);
+      } else {
+        const keys = Object.keys(node);
+        for (let i = keys.length - 1; i >= 0; i--) stack.push(node[keys[i]]);
+      }
+    }
+  }
+}
+
+function pickBestLongText(strings) {
+  const candidates = [];
+  for (const s of strings) {
+    const t = normSpace(stripTags(s));
+    if (!t) continue;
+    if (t.length < 220) continue;
+    if (looksLikeMenuNoise(t)) continue;
+
+    // Prefer Icelandic-looking text with punctuation
+    const icelandic = (t.match(/[áðéíóúýþæö]/gi) || []).length;
+    const punct = (t.match(/[.!?…]/g) || []).length;
+
+    // Score: length + icelandic + punctuation
+    const score = t.length + icelandic * 8 + punct * 20;
+    candidates.push({ t, score });
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates.length ? candidates[0].t : "";
+}
+
+function extractRuvFromJsonLd(html) {
+  // Grab JSON-LD scripts
+  const scripts = [];
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = re.exec(html))) {
+    const raw = decodeEntities((m[1] || "").trim());
+    if (raw) scripts.push(raw);
+    if (scripts.length > 10) break;
+  }
+
+  let best = null;
+
+  for (const raw of scripts) {
+    const parsed = tryParseJsonSafe(raw);
+    if (!parsed) continue;
+
+    // Walk nodes and look for NewsArticle/Article with articleBody
+    for (const node of iterateJsonNodes(parsed)) {
+      if (!node || typeof node !== "object") continue;
+
+      const type = node["@type"];
+      const isArticleType =
+        (typeof type === "string" && /newsarticle|article/i.test(type)) ||
+        (Array.isArray(type) && type.some(x => typeof x === "string" && /newsarticle|article/i.test(x)));
+
+      if (!isArticleType) continue;
+
+      const body = node.articleBody || node.text || node.description;
+      const headline = node.headline || node.name;
+      const date = node.datePublished || node.dateModified;
+
+      const bodyStr = typeof body === "string" ? body : "";
+      const headStr = typeof headline === "string" ? headline : "";
+      const dateStr = typeof date === "string" ? date : "";
+
+      const cleanBody = normSpace(stripTags(bodyStr));
+      if (cleanBody.length < 220) continue;
+      if (looksLikeMenuNoise(cleanBody)) continue;
+
+      // Pick the longest body
+      const score = cleanBody.length;
+      if (!best || score > best.score) {
+        best = { body: cleanBody, title: headStr, date: dateStr, score };
+      }
+    }
+  }
+
+  return best; // {body,title,date,score} | null
+}
+
+function extractRuvFromNextData(html) {
+  const m = html.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
+  if (!m) return null;
+  const raw = decodeEntities((m[1] || "").trim());
+  const parsed = tryParseJsonSafe(raw);
+  if (!parsed) return null;
+
+  // Collect strings and pick best long text
+  const strings = [];
+  for (const node of iterateJsonNodes(parsed)) {
+    if (typeof node === "string") strings.push(node);
+    if (strings.length > 8000) break;
+  }
+  const bestText = pickBestLongText(strings);
+  if (!bestText) return null;
+
+  // Title: also try to pick a plausible headline
+  const titleCand = strings
+    .map(s => normSpace(stripTags(s)))
+    .filter(s => s && s.length > 10 && s.length < 220 && /[áðéíóúýþæö]/i.test(s))
+    .sort((a, b) => b.length - a.length)[0] || "";
+
+  return { body: bestText, title: titleCand, date: "" };
 }
 
 /* =========================
@@ -316,7 +445,6 @@ export async function onRequestGet({ request }) {
       signal: ac.signal,
       redirect: "follow",
       headers: {
-        // More browser-like UA helps with some sites
         "User-Agent":
           "Mozilla/5.0 (compatible; is.is readingview bot; +https://is.is) AppleWebKit/537.36 (KHTML, like Gecko)",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -374,7 +502,7 @@ export async function onRequestGet({ request }) {
         ex.title = decodeEntities(normSpace(ex.title));
       },
     })
-    // h1 is often best, but only outside bad subtree
+    // h1 best-effort
     .on("h1", {
       element(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
@@ -383,7 +511,7 @@ export async function onRequestGet({ request }) {
       text(t) {
         if (ex._inBad) return;
         const h1 = decodeEntities(normSpace(t.text));
-        if (h1 && h1.length > 4 && h1.length < 220) ex.title = h1;
+        if (h1 && h1.length > 4 && h1.length < 240) ex.title = h1;
       },
       end() {
         if (ex._inBad) ex._inBad--;
@@ -426,8 +554,6 @@ export async function onRequestGet({ request }) {
 
         const txt = decodeEntities(normSpace(t.text));
         if (!txt) return;
-
-        // Keep some short real lines, but drop tiny crumbs
         if (txt.length < 22) return;
 
         ex.push(txt);
@@ -438,11 +564,28 @@ export async function onRequestGet({ request }) {
     .transform(new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } }))
     .text();
 
-  // Primary extraction result
+  // Primary extraction
   let paragraphs = ex.getParagraphs();
   let text = ex.getText();
 
-  // Fallback ONLY if content zones failed (avoid bringing nav back)
+  // RÚV special fallback: JSON-LD / __NEXT_DATA__
+  if ((host === "ruv.is" || host === "www.ruv.is") && text.length < 220) {
+    const ld = extractRuvFromJsonLd(html);
+    if (ld && ld.body) {
+      paragraphs = splitToParagraphs(ld.body);
+      text = normSpace(paragraphs.join("\n\n"));
+      if (ld.title && (!ex.title || ex.title.length < 8)) ex.title = ld.title;
+    } else {
+      const nx = extractRuvFromNextData(html);
+      if (nx && nx.body) {
+        paragraphs = splitToParagraphs(nx.body);
+        text = normSpace(paragraphs.join("\n\n"));
+        if (nx.title && (!ex.title || ex.title.length < 8)) ex.title = nx.title;
+      }
+    }
+  }
+
+  // Generic fallback ONLY if still failed
   if (text.length < 220) {
     const stripped = decodeEntities(html)
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -458,32 +601,39 @@ export async function onRequestGet({ request }) {
 
     const kept = [];
     for (const line of lines) {
-      if (line.length < 80) continue;
+      if (line.length < 90) continue;
       if (looksLikeMenuNoise(line)) continue;
       kept.push(line);
       if (kept.join("\n\n").length > 12000) break;
     }
 
-    paragraphs = kept.slice(0, 80);
+    paragraphs = kept.slice(0, 120);
     text = normSpace(paragraphs.join("\n\n"));
   }
 
-  // Final clean + stats
-  text = clampText(text, 15000);
+  // Final cleanup
   const cleanTitle = clampText(decodeEntities(normSpace(ex.title)) || "Ónefnd frétt", 240);
   const site = clampText(decodeEntities(normSpace(ex.site)) || host, 120);
 
-  const finalParagraphs = paragraphs
+  const finalParagraphs = (paragraphs || [])
     .map(p => decodeEntities(normSpace(p)))
+    .map(p => stripTags(p))
+    .map(p => normSpace(p))
     .filter(Boolean)
     .filter(p => !looksLikeMenuNoise(p))
     .slice(0, 120);
 
-  // Rebuild text from cleaned paragraphs (keeps entities fixed)
   text = clampText(normSpace(finalParagraphs.join("\n\n")), 15000);
 
   const excerpt = clampText(text.replace(/\n+/g, " ").trim(), 240);
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
+
+  // If still basically nothing, return ok=false so UI shows your friendly message
+  if (text.length < 120) {
+    return err("Extraction too small (blocked or JS-only layout)", 502, {
+      host, status, contentType, got: text.length
+    });
+  }
 
   const payload = {
     ok: true,
@@ -503,17 +653,8 @@ export async function onRequestGet({ request }) {
       fetch: { status, contentType, htmlLen: html.length, host },
       selectors: { CONTENT_SELECTOR, BAD_SELECTOR, BLOCK_SELECTOR },
       extract: { pushed: ex._pushed, paraCount: finalParagraphs.length, finalLen: text.length },
+      ruvFallbackUsed: (host === "ruv.is" || host === "www.ruv.is") && ex._pushed === 0,
     };
-  }
-
-  // If still basically nothing, return ok=false so UI can show your friendly message
-  if (payload.charCount < 120) {
-    return err("Extraction too small (blocked or unusual layout)", 502, {
-      host,
-      status,
-      contentType,
-      got: payload.charCount,
-    });
   }
 
   return json(payload, 200, debug ? "no-store" : "public, max-age=300");
