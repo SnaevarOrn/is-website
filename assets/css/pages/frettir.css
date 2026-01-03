@@ -410,6 +410,40 @@ html[data-theme="dark"] .reading-body{
   flex-wrap:wrap;
 }
 
+/* Reading title: stronger + clean spacing */
+.reading-title{
+  margin: 2px 0 12px;
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.18;
+}
+
+/* Nice divider under title/actions */
+.reading-actions{
+  margin-bottom: 12px;
+}
+.reading-actions::after{
+  content:"";
+  display:block;
+  height:1px;
+  margin-top:12px;
+  background: color-mix(in srgb, var(--line) 85%, transparent);
+  border-radius:999px;
+}
+
+/* Body typography: more book-like */
+.reading-body{
+  font-size: 16px;
+}
+.reading-body p{
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+.reading-body p:first-child{
+  margin-top: 2px;
+}
+
 /* Small action button on each news item */
 .read-btn{
   margin-left:auto;
