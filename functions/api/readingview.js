@@ -1,26 +1,59 @@
 // /functions/api/readingview.js
-// ís.is — Reading View scraper (Cloudflare Pages Functions)
+// Reading View scraper for ís.is (Cloudflare Pages Functions)
+// - Scrapes readable text (title + article-ish body) from a news URL
+// - No ads/cookies: returns clean JSON for your own UI
 //
 // Usage:
-//   /api/readingview?url=https%3A%2F%2Fexample.com%2Farticle
+//   /api/readingview?url=https%3A%2F%2Fwww.dv.is%2F...&debug=1
 //
-// Returns JSON:
-//   { ok, url, title, site, text, excerpt, wordCount, charCount }
+// Returns:
+//   { ok, url, site, title, excerpt, wordCount, charCount, text, debug? }
 
 "use strict";
 
-function json(data, status = 200) {
+const ALLOWED_HOSTS = new Set([
+  // Your current sources (plus common variants)
+  "www.ruv.is",
+  "ruv.is",
+
+  "www.mbl.is",
+  "mbl.is",
+
+  "www.visir.is",
+  "visir.is",
+
+  "www.dv.is",
+  "dv.is",
+
+  "www.vb.is",
+  "vb.is",
+
+  "stundin.is",
+  "www.stundin.is",
+
+  "grapevine.is",
+  "www.grapevine.is",
+
+  // DV sports sometimes uses 433.is (you already map this in news.js)
+  "433.is",
+  "www.433.is",
+]);
+
+function json(data, status = 200, cacheControl = "public, max-age=300") {
   return new Response(JSON.stringify(data, null, 2), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      // CORS (still same-origin friendly)
+      "cache-control": cacheControl,
       "access-control-allow-origin": "*",
       "access-control-allow-methods": "GET, OPTIONS",
       "access-control-allow-headers": "content-type",
     },
   });
+}
+
+export async function onRequestOptions() {
+  return json({ ok: true }, 200, "no-store");
 }
 
 function isHttpUrl(s) {
@@ -32,176 +65,164 @@ function isHttpUrl(s) {
   }
 }
 
-// Basic SSRF guard: block localhost + obvious private hostnames.
-// Note: This does NOT fully resolve DNS-to-private tricks, but it blocks the common stuff.
-// If you want to be stricter, you can whitelist domains from your RSS sources instead.
-function isBlockedHost(host) {
-  const h = (host || "").toLowerCase().trim();
-
-  if (!h) return true;
-  if (h === "localhost" || h.endsWith(".localhost")) return true;
-  if (h === "127.0.0.1") return true;
-  if (h === "::1") return true;
-
-  // Block raw private IP literals (v4)
-  // 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16
-  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (m) {
-    const a = Number(m[1]), b = Number(m[2]);
-    if (a === 10) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 127) return true;
-    if (a === 0) return true;
-  }
-
-  return false;
+function clampText(s, maxChars) {
+  const t = String(s || "");
+  if (t.length <= maxChars) return t;
+  return t.slice(0, maxChars).trimEnd() + "…";
 }
 
 function normSpace(s) {
-  return (s || "")
+  return String(s || "")
     .replace(/\u00A0/g, " ")
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
-function clampText(s, maxChars) {
-  const t = s || "";
-  if (t.length <= maxChars) return t;
-  return t.slice(0, maxChars).trimEnd() + "…";
+function hostAllowed(host) {
+  const h = String(host || "").toLowerCase().trim();
+  if (!h) return false;
+  return ALLOWED_HOSTS.has(h);
 }
 
-// Heuristics: keep text from article-ish containers, and ignore obvious chrome/ads.
-function isBadContainerIdClass(idClass) {
-  const s = (idClass || "").toLowerCase();
+// crude “bad subtree” heuristic
+function isBadIdClass(idc) {
+  const s = String(idc || "").toLowerCase();
   return (
     s.includes("cookie") ||
     s.includes("consent") ||
+    s.includes("gdpr") ||
     s.includes("banner") ||
+    s.includes("paywall") ||
+    s.includes("subscribe") ||
+    s.includes("newsletter") ||
+    s.includes("modal") ||
+    s.includes("popup") ||
     s.includes("ad") ||
     s.includes("ads") ||
     s.includes("advert") ||
     s.includes("promo") ||
-    s.includes("subscribe") ||
-    s.includes("newsletter") ||
-    s.includes("paywall") ||
-    s.includes("modal") ||
+    s.includes("sponsor") ||
     s.includes("nav") ||
     s.includes("menu") ||
-    s.includes("footer") ||
     s.includes("header") ||
+    s.includes("footer") ||
     s.includes("sidebar") ||
     s.includes("related") ||
-    s.includes("comments")
+    s.includes("comment")
   );
 }
 
-class ReadingExtractor {
+class Extractor {
   constructor() {
     this.title = "";
     this.site = "";
-    this._inTitle = false;
-    this._inH1 = false;
-
-    this._inArticleish = 0; // nesting depth inside main/article
-    this._inBad = 0;        // nesting depth inside bad containers
-    this._collect = false;  // inside a text-y tag (p/li/h2 etc.)
-
+    this._inBad = 0;
+    this._inMain = 0;       // article/main depth
     this._buf = [];
+
+    // debug counters
+    this._pushed = 0;
+    this._pushedPreferred = 0;
+    this._pushedFallback = 0;
   }
 
-  push(text) {
-    const t = normSpace(text);
-    if (!t) return;
-    this._buf.push(t);
+  push(t, preferred) {
+    const s = normSpace(t);
+    if (!s) return;
+    this._buf.push(s);
+    this._pushed++;
+    if (preferred) this._pushedPreferred++;
+    else this._pushedFallback++;
   }
 
   getText() {
-    // Join paragraphs with blank line.
-    // Also de-dup accidental repeats a bit.
-    const joined = this._buf.join("\n\n");
-    return normSpace(joined);
+    return normSpace(this._buf.join("\n\n"));
   }
-}
-
-export async function onRequestOptions() {
-  return json({ ok: true });
 }
 
 export async function onRequestGet({ request }) {
   const { searchParams } = new URL(request.url);
-  const rawUrl = (searchParams.get("url") || "").trim();
 
-  if (!rawUrl) return json({ ok: false, error: "Missing ?url=" }, 400);
-  if (!isHttpUrl(rawUrl)) return json({ ok: false, error: "Invalid URL" }, 400);
+  const rawUrl = (searchParams.get("url") || "").trim();
+  const debug = searchParams.get("debug") === "1";
+
+  if (!rawUrl) return json({ ok: false, error: "Missing ?url=" }, 400, "no-store");
+  if (!isHttpUrl(rawUrl)) return json({ ok: false, error: "Invalid URL" }, 400, "no-store");
 
   let target;
   try {
     target = new URL(rawUrl);
   } catch {
-    return json({ ok: false, error: "Invalid URL" }, 400);
+    return json({ ok: false, error: "Invalid URL" }, 400, "no-store");
   }
 
-  if (isBlockedHost(target.hostname)) {
-    return json({ ok: false, error: "Blocked host" }, 403);
+  // whitelist = clean SSRF protection and predictable behavior
+  if (!hostAllowed(target.hostname)) {
+    return json(
+      { ok: false, error: "Host not allowed", host: target.hostname },
+      403,
+      "no-store"
+    );
   }
 
-  // Fetch with a short timeout
+  // Fetch with timeout
   const ac = new AbortController();
-  const t = setTimeout(() => ac.abort("timeout"), 8000);
+  const timer = setTimeout(() => ac.abort("timeout"), 8000);
 
   let html = "";
+  let status = 0;
+  let contentType = "";
   try {
     const res = await fetch(target.toString(), {
       signal: ac.signal,
-      headers: {
-        // Pretend to be a normal browser to avoid some dumb blocks
-        "user-agent":
-          "Mozilla/5.0 (compatible; is.is readingview; +https://is.is)",
-        "accept":
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "accept-language": "is-IS,is;q=0.9,en;q=0.7",
-      },
       redirect: "follow",
+      headers: {
+        "User-Agent": "is.is readingview bot",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
+      },
     });
 
-    const ct = res.headers.get("content-type") || "";
-    if (!ct.toLowerCase().includes("text/html")) {
-      clearTimeout(t);
-      return json({ ok: false, error: "URL did not return HTML" }, 415);
+    status = res.status;
+    contentType = res.headers.get("content-type") || "";
+
+    if (!res.ok) {
+      clearTimeout(timer);
+      return json(
+        { ok: false, error: "Fetch failed", status, contentType },
+        502,
+        "no-store"
+      );
     }
 
-    // Limit size (basic)
+    if (!contentType.toLowerCase().includes("text/html")) {
+      clearTimeout(timer);
+      return json(
+        { ok: false, error: "URL did not return HTML", status, contentType },
+        415,
+        "no-store"
+      );
+    }
+
     html = await res.text();
     if (html.length > 2_000_000) html = html.slice(0, 2_000_000);
   } catch (e) {
-    clearTimeout(t);
-    return json({ ok: false, error: "Fetch failed", details: String(e) }, 502);
+    clearTimeout(timer);
+    return json(
+      { ok: false, error: "Fetch exception", details: String(e?.message || e) },
+      502,
+      "no-store"
+    );
   } finally {
-    clearTimeout(t);
+    clearTimeout(timer);
   }
 
-  const ex = new ReadingExtractor();
+  const ex = new Extractor();
 
-  // HTMLRewriter runs in CF Workers runtime (Pages Functions too).
-  // We:
-  //  - grab <title> and <h1> if present
-  //  - collect text from <article>, <main> preferably
-  //  - skip obvious bad containers (cookie banners, ads, nav, etc.)
-  //  - collect from p/li/h2/h3/blockquote inside article-ish area
+  // Prefer content inside <article> or <main>.
+  // Collect from p/li/h2/h3/blockquote.
   const rewriter = new HTMLRewriter()
-    .on("title", {
-      text(t) {
-        ex._inTitle = true;
-        ex.title += t.text;
-      },
-      end() {
-        ex._inTitle = false;
-        ex.title = normSpace(ex.title);
-      },
-    })
     .on("meta[property='og:site_name']", {
       element(el) {
         const c = el.getAttribute("content");
@@ -214,31 +235,31 @@ export async function onRequestGet({ request }) {
         if (c && !ex.site) ex.site = normSpace(c);
       },
     })
-    .on("h1", {
-      element(el) {
-        ex._inH1 = true;
-        // treat bad container h1 as non-article
-        const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (isBadContainerIdClass(idc)) ex._inBad++;
-      },
+    .on("title", {
       text(t) {
-        if (!ex._inBad) ex.title = normSpace(ex.title || t.text);
+        ex.title += t.text;
       },
       end() {
-        ex._inH1 = false;
-        if (ex._inBad) ex._inBad--;
+        ex.title = normSpace(ex.title);
+      },
+    })
+    .on("h1", {
+      text(t) {
+        // If many sites have better <h1> than <title>, use as primary title
+        const h1 = normSpace(t.text);
+        if (h1 && h1.length > 4) ex.title = h1;
       },
     })
     .on("article, main", {
       element(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (isBadContainerIdClass(idc)) ex._inBad++;
-        else ex._inArticleish++;
+        if (isBadIdClass(idc)) ex._inBad++;
+        else ex._inMain++;
       },
       end(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (isBadContainerIdClass(idc)) ex._inBad--;
-        else ex._inArticleish--;
+        if (isBadIdClass(idc)) ex._inBad--;
+        else ex._inMain--;
       },
     })
     .on("nav, header, footer, aside, form, button, script, style, noscript", {
@@ -251,44 +272,43 @@ export async function onRequestGet({ request }) {
     })
     .on("[class], [id]", {
       element(el) {
-        // If something is clearly ad/cookie/etc, mark as bad subtree
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (isBadContainerIdClass(idc)) ex._inBad++;
+        if (isBadIdClass(idc)) ex._inBad++;
       },
       end(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (isBadContainerIdClass(idc)) ex._inBad--;
+        if (isBadIdClass(idc)) ex._inBad--;
       },
     })
     .on("p, li, h2, h3, blockquote", {
-      element() {
-        // Collect preferably inside article/main; but if site is messy, allow fallback later.
-        ex._collect = true;
-      },
       text(t) {
-        if (!ex._collect) return;
         if (ex._inBad) return;
 
-        // Prefer within article/main; but still allow if title exists and paragraph looks long.
         const txt = normSpace(t.text);
         if (!txt) return;
 
-        const inPreferred = ex._inArticleish > 0;
+        const preferred = ex._inMain > 0;
         const looksLikeContent = txt.length >= 40;
 
-        if (inPreferred || looksLikeContent) ex.push(txt);
-      },
-      end() {
-        ex._collect = false;
+        // Primary: inside article/main
+        if (preferred) {
+          ex.push(txt, true);
+          return;
+        }
+
+        // Secondary: allow long paragraphs even if page has weird markup
+        if (looksLikeContent) ex.push(txt, false);
       },
     });
 
-  // HTMLRewriter wants a Response input.
-  await rewriter.transform(new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } })).text();
+  // Feed HTMLRewriter a Response
+  await rewriter
+    .transform(new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } }))
+    .text();
 
   let text = ex.getText();
 
-  // Fallback: if we got almost nothing, just strip tags crudely and grab long-ish lines.
+  // Last-resort fallback: strip tags & keep long-ish sentences
   if (text.length < 200) {
     const stripped = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -299,35 +319,50 @@ export async function onRequestGet({ request }) {
       .replace(/\s+/g, " ")
       .trim();
 
-    // split to “sentences-ish” chunks
     const chunks = stripped.split(/(?<=[\.\!\?])\s+/).filter(Boolean);
     const kept = [];
     let acc = 0;
+
     for (const c of chunks) {
       const cc = c.trim();
-      if (cc.length < 60) continue;
+      if (cc.length < 70) continue;
       kept.push(cc);
       acc += cc.length;
-      if (acc > 8000) break;
+      if (acc > 9000) break;
     }
+
     text = normSpace(kept.join("\n\n"));
   }
 
+  // clamp output sizes
   text = clampText(text, 15000);
-  const title = clampText(normSpace(ex.title) || "", 240) || "Ónefnd frétt";
+  const title = clampText(normSpace(ex.title) || "Ónefnd frétt", 240);
   const site = clampText(normSpace(ex.site) || target.hostname, 120);
-
   const excerpt = clampText(text.replace(/\n+/g, " ").trim(), 240);
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
-  return json({
+  const payload = {
     ok: true,
     url: target.toString(),
-    title,
     site,
+    title,
     excerpt,
     wordCount,
     charCount: text.length,
     text,
-  });
+  };
+
+  if (debug) {
+    payload.debug = {
+      fetch: { status, contentType, htmlLen: html.length, host: target.hostname },
+      extract: {
+        pushed: ex._pushed,
+        pushedPreferred: ex._pushedPreferred,
+        pushedFallback: ex._pushedFallback,
+        finalLen: text.length,
+      },
+    };
+  }
+
+  return json(payload, 200, debug ? "no-store" : "public, max-age=300");
 }
