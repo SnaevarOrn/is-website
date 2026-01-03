@@ -73,6 +73,16 @@
     errorState: $("#errorState"),
     errorMsg: $("#errorMsg"),
     btnRetry: $("#btnRetry"),
+
+    // Reading view modal
+    readingDialog: $("#readingDialog"),
+    btnCloseReading: $("#btnCloseReading"),
+    readingSite: $("#readingSite"),
+    readingTitle: $("#readingTitle"),
+    readingBody: $("#readingBody"),
+    readingMeta: $("#readingMeta"),
+    readingOpenOriginal: $("#readingOpenOriginal"),
+    readingMarkRead: $("#readingMarkRead"),
   };
 
   const defaultPrefs = () => ({
@@ -364,6 +374,13 @@
             </span>
             ${catBadges}
             ${ageLine ? `<span class="item-age tiny">${escapeHtml(ageLine)}</span>` : ""}
+
+            <button class="read-btn"
+                    type="button"
+                    title="Leshamur"
+                    aria-label="Leshamur"
+                    data-readview="1"
+                    data-url="${escapeHtml(it.url)}">📖</button>
           </div>
         </article>
       `;
@@ -423,6 +440,107 @@
       setLoading(false);
       ptrDone();
     }
+  }
+
+  /* -----------------------
+     Reading view modal
+     ----------------------- */
+
+  let readingCurrentUrl = "";
+
+  function openReading() {
+    closeMenu();
+    if (!els.readingDialog) return;
+    if (typeof els.readingDialog.showModal === "function") els.readingDialog.showModal();
+    else els.readingDialog.setAttribute("open", "");
+  }
+
+  function closeReading() {
+    if (!els.readingDialog) return;
+    if (typeof els.readingDialog.close === "function") els.readingDialog.close();
+    else els.readingDialog.removeAttribute("open");
+  }
+
+  function setReadingLoading(url) {
+    readingCurrentUrl = url || "";
+    if (els.readingSite) els.readingSite.textContent = "Leshamur";
+    if (els.readingTitle) els.readingTitle.textContent = "Sæki texta…";
+    if (els.readingBody) els.readingBody.innerHTML = `<p class="muted">Sæki texta…</p>`;
+    if (els.readingMeta) els.readingMeta.textContent = "";
+    if (els.readingOpenOriginal) els.readingOpenOriginal.href = readingCurrentUrl || "#";
+  }
+
+  function paragraphsFromText(text) {
+    const t = String(text || "").trim();
+    if (!t) return [];
+    return t.split(/\n{2,}/g).map(s => s.trim()).filter(Boolean);
+  }
+
+  async function fetchReadingView(url) {
+    const qs = new URLSearchParams();
+    qs.set("url", url);
+
+    const res = await fetch(`/api/readingview?${qs.toString()}`, {
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  async function showReadingView(url) {
+    if (!url) return;
+
+    setReadingLoading(url);
+    openReading();
+
+    try {
+      const data = await fetchReadingView(url);
+      if (!data?.ok) throw new Error("Not ok");
+
+      const site = cleanText(data.site || "");
+      const title = cleanText(data.title || "");
+      const text = String(data.text || "");
+
+      if (els.readingSite) els.readingSite.textContent = site || "Frétt";
+      if (els.readingTitle) els.readingTitle.textContent = title || "Frétt";
+
+      const ps = paragraphsFromText(text);
+      if (els.readingBody) {
+        if (!ps.length) {
+          els.readingBody.innerHTML = `<p class="muted">Enginn texti fannst.</p>`;
+        } else {
+          els.readingBody.innerHTML = ps.map(p => `<p>${escapeHtml(p)}</p>`).join("");
+        }
+      }
+
+      const wc = Number(data.wordCount || 0);
+      const cc = Number(data.charCount || 0);
+      if (els.readingMeta) {
+        els.readingMeta.textContent =
+          `${wc ? wc + " orð" : ""}${wc && cc ? " • " : ""}${cc ? cc + " stafir" : ""}`;
+      }
+
+      if (els.readingOpenOriginal) els.readingOpenOriginal.href = url;
+    } catch (err) {
+      console.error("[frettir] readingview error", err);
+      if (els.readingTitle) els.readingTitle.textContent = "Gat ekki sótt texta";
+      if (els.readingBody) {
+        els.readingBody.innerHTML = `
+          <p class="muted">
+            Þessi miðill annaðhvort blokkar sækni, eða síðan er skrítin í uppsetningu.
+            Prófaðu að opna upprunalegu fréttina.
+          </p>
+        `;
+      }
+      if (els.readingMeta) els.readingMeta.textContent = "";
+    }
+  }
+
+  function escSelector(s) {
+    const val = String(s || "");
+    if (window.CSS && typeof CSS.escape === "function") return CSS.escape(val);
+    // minimal fallback: escape quotes and backslashes for attribute selector
+    return val.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   }
 
   /* -----------------------
@@ -501,6 +619,7 @@
   function onPtrStart(e) {
     if (isRefreshing) return;
     if (els.settingsDialog?.open) return;
+    if (els.readingDialog?.open) return;
     if (els.menuPanel?.classList.contains("open")) return;
     if (window.scrollY > 0) return;
 
@@ -518,6 +637,7 @@
   function onPtrMove(e) {
     if (isRefreshing) return;
     if (els.settingsDialog?.open) return;
+    if (els.readingDialog?.open) return;
     if (els.menuPanel?.classList.contains("open")) return;
     if (window.scrollY > 0) return;
 
@@ -598,8 +718,43 @@
     els.btnSaveSettings?.addEventListener("click", applySettingsAndClose);
     els.btnCloseSettings?.addEventListener("click", applySettingsAndClose);
 
-    // News links: mark read + FORCE open in new tab (incognito-like)
+    // Reading modal controls
+    els.btnCloseReading?.addEventListener("click", closeReading);
+
+    // Close reading on backdrop click (if user taps outside card)
+    els.readingDialog?.addEventListener("click", (e) => {
+      if (e.target === els.readingDialog) closeReading();
+    });
+
+    els.readingMarkRead?.addEventListener("click", () => {
+      if (!readingCurrentUrl) return;
+      markRead(readingCurrentUrl);
+
+      const art = els.newsList?.querySelector(`.item[data-url="${escSelector(readingCurrentUrl)}"]`);
+      if (art) art.classList.add("is-read");
+    });
+
+    // If user clicks "open original" inside modal: mark read too
+    els.readingOpenOriginal?.addEventListener("click", () => {
+      if (!readingCurrentUrl) return;
+      markRead(readingCurrentUrl);
+      const art = els.newsList?.querySelector(`.item[data-url="${escSelector(readingCurrentUrl)}"]`);
+      if (art) art.classList.add("is-read");
+    });
+
+    // News list click handling:
+    // - 📖 opens reading view modal
+    // - normal link opens in new tab and marks read
     els.newsList?.addEventListener("click", (e) => {
+      const readBtn = e.target.closest("button[data-readview='1']");
+      if (readBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const url = readBtn.getAttribute("data-url") || readBtn.closest(".item")?.getAttribute("data-url");
+        if (url) showReadingView(url);
+        return;
+      }
+
       const a = e.target.closest("a");
       if (!a) return;
 
@@ -612,10 +767,20 @@
 
       e.preventDefault();
       window.open(url, "_blank", "noopener,noreferrer");
-    });
+    }, true);
 
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeMenu();
+      if (e.key !== "Escape") return;
+
+      if (els.readingDialog?.open) {
+        closeReading();
+        return;
+      }
+      if (els.settingsDialog?.open) {
+        closeSettings();
+        return;
+      }
+      closeMenu();
     });
   }
 
