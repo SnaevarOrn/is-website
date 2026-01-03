@@ -1,4 +1,4 @@
-// /functions/api/news.js
+// /functions/api/news.js 
 // News RSS/Atom aggregator for ís.is (Cloudflare Pages Functions)
 
 "use strict";
