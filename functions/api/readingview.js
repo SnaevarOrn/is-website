@@ -2,18 +2,14 @@
 // Reading View scraper for ís.is (Cloudflare Pages Functions)
 //
 // Goals:
-//  - Kill menu/nav “dump” text (DV/mbl/Heimildin/Vísir etc.)
-//  - Decode HTML entities (&#8211;, &#xF0;, &amp; …) so text looks normal
-//  - Keep real short sentences (courts/press love those)
-//  - Return clean paragraphs[] + text
+//  - Pull clean article text (avoid nav/menu/footer/share/subscription dumps)
+//  - Work well for DV + RÚV (and others) with conservative heuristics
+//  - Decode HTML entities like &#8211; and &#xFA; so text renders correctly
 //
-// Output: { ok, url, host, title, byline, date, excerpt, text, paragraphs[], wordCount, charCount }
+// Output:
+// { ok, url, host, site, title, excerpt, wordCount, charCount, text, paragraphs[], debug? }
 
 "use strict";
-
-/* =========================
-   Allowlist
-   ========================= */
 
 const ALLOWED_HOSTS = new Set([
   "www.ruv.is", "ruv.is",
@@ -26,10 +22,6 @@ const ALLOWED_HOSTS = new Set([
   "grapevine.is", "www.grapevine.is",
   "433.is", "www.433.is",
 ]);
-
-/* =========================
-   Response helpers
-   ========================= */
 
 function json(data, status = 200, cacheControl = "public, max-age=300") {
   return new Response(JSON.stringify(data, null, 2), {
@@ -48,8 +40,8 @@ export async function onRequestOptions() {
   return json({ ok: true }, 200, "no-store");
 }
 
-function err(message, status = 400) {
-  return json({ ok: false, error: message }, status, "no-store");
+function err(message, status = 400, extra = undefined) {
+  return json({ ok: false, error: message, ...(extra ? extra : {}) }, status, "no-store");
 }
 
 function isHttpUrl(s) {
@@ -61,53 +53,14 @@ function isHttpUrl(s) {
   }
 }
 
+function hostAllowed(host) {
+  const h = String(host || "").toLowerCase().trim();
+  return !!h && ALLOWED_HOSTS.has(h);
+}
+
 /* =========================
-   Entity decoding + text utils
+   Text helpers
    ========================= */
-
-// Decode a practical subset of HTML entities (numeric + common named).
-function decodeHtmlEntities(input) {
-  let s = String(input || "");
-  if (!s || s.indexOf("&") === -1) return s;
-
-  // numeric: &#8211; and hex: &#x2014;
-  s = s.replace(/&#(\d+);/g, (_, d) => {
-    const n = Number(d);
-    return Number.isFinite(n) ? String.fromCodePoint(n) : _;
-  });
-  s = s.replace(/&#x([0-9a-fA-F]+);/g, (_, hx) => {
-    const n = parseInt(hx, 16);
-    return Number.isFinite(n) ? String.fromCodePoint(n) : _;
-  });
-
-  // common named
-  const map = {
-    "&nbsp;": " ",
-    "&amp;": "&",
-    "&lt;": "<",
-    "&gt;": ">",
-    "&quot;": "\"",
-    "&apos;": "'",
-    "&ndash;": "–",
-    "&mdash;": "—",
-    "&hellip;": "…",
-    "&shy;": "", // soft hyphen
-  };
-  s = s.replace(/&(nbsp|amp|lt|gt|quot|apos|ndash|mdash|hellip|shy);/g, (m) => map[m] ?? m);
-
-  return s;
-}
-
-function normalizeSpaces(input) {
-  return decodeHtmlEntities(input)
-    .replace(/\u00A0/g, " ")
-    .replace(/\u200B/g, "")            // zero-width space
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/\n[ \t]+/g, "\n")
-    .replace(/[ \t]{2,}/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
 
 function clampText(s, maxChars) {
   const t = String(s || "");
@@ -115,35 +68,51 @@ function clampText(s, maxChars) {
   return t.slice(0, maxChars).trimEnd() + "…";
 }
 
-/* =========================
-   Icelandic date ordinal protection
-   ========================= */
+function normSpace(s) {
+  return String(s || "")
+    .replace(/\u00A0/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
 
-const IS_MONTHS = [
-  "janúar", "febrúar", "mars", "apríl", "maí", "júní",
-  "júlí", "ágúst", "september", "október", "nóvember", "desember",
-];
-
-// Swap "." -> \u2024 inside “31. ágúst” so paragraph logic won’t split on it.
-function protectOrdinalDates(s) {
+// Decode minimal set of HTML entities (numeric + common named)
+// Handles: &#8211;  &#xFA;  &amp; &quot; &apos; &lt; &gt; &nbsp;
+function decodeEntities(input) {
+  let s = String(input || "");
   if (!s) return s;
-  const months = IS_MONTHS.join("|");
-  return s.replace(
-    new RegExp(`(\\b\\d{1,2})\\.\\s+(${months})(\\b)`, "gi"),
-    "$1\u2024 $2$3"
-  );
-}
-function unprotectOrdinalDates(s) {
-  return String(s || "").replace(/\u2024/g, ".");
+
+  // Common named
+  s = s
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+
+  // Numeric decimal
+  s = s.replace(/&#(\d+);/g, (_, n) => {
+    const code = Number(n);
+    if (!Number.isFinite(code)) return _;
+    try { return String.fromCodePoint(code); } catch { return _; }
+  });
+
+  // Numeric hex
+  s = s.replace(/&#x([0-9a-f]+);/gi, (_, hx) => {
+    const code = parseInt(hx, 16);
+    if (!Number.isFinite(code)) return _;
+    try { return String.fromCodePoint(code); } catch { return _; }
+  });
+
+  return s;
 }
 
-/* =========================
-   Junk detection
-   ========================= */
-
-function badIdClass(idc) {
+function isBadIdClass(idc) {
   const s = String(idc || "").toLowerCase();
-  if (!s) return false;
+  // IMPORTANT: keep this conservative (avoid nuking legit content containers)
   return (
     s.includes("cookie") ||
     s.includes("consent") ||
@@ -151,13 +120,9 @@ function badIdClass(idc) {
     s.includes("banner") ||
     s.includes("paywall") ||
     s.includes("subscribe") ||
-    s.includes("subscription") ||
     s.includes("newsletter") ||
     s.includes("modal") ||
     s.includes("popup") ||
-    s.includes("overlay") ||
-    s.includes("ad") ||
-    s.includes("ads") ||
     s.includes("advert") ||
     s.includes("promo") ||
     s.includes("sponsor") ||
@@ -167,286 +132,176 @@ function badIdClass(idc) {
     s.includes("footer") ||
     s.includes("sidebar") ||
     s.includes("related") ||
-    s.includes("recommend") ||
     s.includes("comment") ||
     s.includes("breadcrumbs") ||
     s.includes("search") ||
-    s.includes("share") ||
-    s.includes("social")
+    s.includes("share")
   );
 }
 
-// Strong “menu dump” detector (DV/mbl/Heimildin style).
-function looksLikeMenuDump(txt) {
-  const t = normalizeSpaces(txt).toLowerCase();
-  if (!t) return true;
+// Stronger “menu dump” detector (fixes DV/RÚV spill)
+function looksLikeMenuNoise(txt) {
+  const t0 = decodeEntities(normSpace(txt)).toLowerCase();
+  if (!t0) return true;
 
-  // Many short tokens => nav-ish
-  const tokens = t.split(/\s+/).filter(Boolean);
+  // RÚV/DV typical UI crumbs
+  const badPhrases = [
+    "hoppa í aðalefni",
+    "valmynd",
+    "leit",
+    "search for",
+    "english",
+    "pólski",
+    "auðskilið",
+    "ruv",
+    "efstaleiti",
+    "sími:",
+    "hafa samband",
+    "yfirlýsing um persónuvernd",
+    "skrá inn",
+    "styrkja",
+    "forsíða",
+    "um dv",
+    "upplýsingar",
+    "rekstur og stjórn",
+    "starfsfólk",
+    "lesa nánar",
+    "ekki missa af",
+    "helstu tíðindum",
+    "í pósthólfið",
+    "kynning",
+    "fasteignir",
+    "uppskriftir",
+  ];
+  let hits = 0;
+  for (const p of badPhrases) if (t0.includes(p)) hits++;
+  if (hits >= 2) return true;
+
+  // Many very short tokens => menu-like
+  const tokens = t0.split(/\s+/).filter(Boolean);
   if (tokens.length >= 16) {
     const short = tokens.filter(w => w.length <= 3).length;
     if (short / tokens.length > 0.55) return true;
   }
 
-  // “section list” vocabulary across Icelandic media
-  const navPhrases = [
-    "forsíða", "fréttir", "innlent", "erlent", "viðskipti", "menning",
-    "íþróttir", "sport", "fókus", "pressan", "eyjan", "tímavélin",
-    "skrá inn", "innskrá", "styrkja", "áskrift", "hafa samband",
-    "leita", "leit", "search for", "um okkur", "um dv", "persónuvernd",
-    "kvikmyndir", "fasteignir", "atvinna", "veður", "bílar", "hljóðvarp",
-    "kynning", "auglýsing", "uppskriftir", "korter í kvöldmat",
-    "starfsfólk", "rekstur og stjórn", "upplýsingar",
-  ];
-  let hits = 0;
-  for (const p of navPhrases) if (t.includes(p)) hits++;
-  if (hits >= 4) return true;
+  // Lots of separators/arrow patterns typical in nav text
+  const sepHits = (t0.match(/-->|\|\||»|›|·|•|\/|</g) || []).length;
+  if (sepHits >= 3) return true;
 
-  // Looks like “category strip”: lots of Titlecase-ish tokens
-  const capLike = tokens.filter(w => /^[a-záðéíóúýþæö]/i.test(w) && w.length <= 14)
-    .filter(w => w[0] === w[0].toUpperCase()).length;
-  if (tokens.length >= 12 && capLike / tokens.length > 0.65) return true;
+  // Looks like a "list of sections/categories"
+  const navWords = [
+    "fréttir", "íþróttir", "menning", "viðskipti", "erlent", "innlent",
+    "fókus", "pressan", "eyjan", "tónlist", "sjónvarp", "útvarp",
+    "rannsóknir", "umræða", "fólk", "lífið", "veður", "bílar",
+    "meira", "dagmál", "blaðamenn", "bókamerki"
+  ];
+  const navHits = navWords.reduce((acc, w) => acc + (t0.includes(w) ? 1 : 0), 0);
+  if (navHits >= 5) return true;
 
   return false;
-}
-
-// Conservative boilerplate line filter (still tries to keep real content).
-function isBoilerplateLine(line) {
-  const t = normalizeSpaces(line).toLowerCase();
-  if (!t) return true;
-
-  // pure UI/share/cookie/subscription junk
-  const bad = [
-    "vafrakök", "cookie", "samþykk", "persónuvernd",
-    "áskrift", "skráðu þig", "innskrá", "login",
-    "deila", "share", "facebook", "twitter", "instagram", "linkedin",
-    "auglýsing", "advertisement",
-  ];
-  if (bad.some(x => t.includes(x))) return true;
-
-  // explicit nav dump
-  if (looksLikeMenuDump(t)) return true;
-
-  return false;
-}
-
-// Keep short legit sentences; drop short crumbs.
-function keepLine(line) {
-  const t = normalizeSpaces(line);
-  if (!t) return false;
-  if (isBoilerplateLine(t)) return false;
-
-  // if very short, keep only if it looks sentence-like
-  if (t.length < 40) {
-    if (/[.!?…]$/.test(t)) return true;
-    if (/\b(dómur|ákæruvaldið|héraðsdómur|hæstiréttur|lögregla|samkvæmt|segir|sagði|í gær|í dag|nú)\b/i.test(t)) return true;
-    return false;
-  }
-
-  return true;
-}
-
-function joinParagraphsSmart(lines) {
-  const out = [];
-  let cur = "";
-
-  const lowerStart = (s) => /^[a-záðéíóúýþæö]/.test((s || "").trim());
-  const contToken = (s) => /^(og|en|því|þá|svo|enda|þar|sem|auk þess|hins vegar|annars vegar)\b/i.test((s || "").trim());
-
-  for (const raw of lines) {
-    const line = normalizeSpaces(raw);
-    if (!line) {
-      if (cur) out.push(cur.trim());
-      cur = "";
-      continue;
-    }
-
-    if (!cur) {
-      cur = line;
-      continue;
-    }
-
-    const endsHard = /[.!?…]$/.test(cur);
-    if (!endsHard) {
-      cur += " " + line;
-    } else if (lowerStart(line) || contToken(line)) {
-      cur += " " + line;
-    } else {
-      out.push(cur.trim());
-      cur = line;
-    }
-  }
-  if (cur) out.push(cur.trim());
-  return out;
-}
-
-function finalizeParagraphs(blocks) {
-  // Normalize + protect ordinals for joining heuristics
-  const cleaned = (blocks || [])
-    .map(b => protectOrdinalDates(normalizeSpaces(b)))
-    .filter(Boolean)
-    .filter(b => !isBoilerplateLine(b));
-
-  // If we have lots of small-ish blocks, rebuild paragraphs smartly.
-  const avgLen = cleaned.length ? cleaned.reduce((a, b) => a + b.length, 0) / cleaned.length : 0;
-  let paras = cleaned;
-
-  if (cleaned.length > 30 && avgLen < 90) {
-    paras = joinParagraphsSmart(cleaned);
-  }
-
-  // Final cleanup + keep/drop rules
-  paras = paras
-    .map(p => normalizeSpaces(unprotectOrdinalDates(p)))
-    .filter(p => keepLine(p));
-
-  // De-dupe adjacent duplicates
-  const out = [];
-  let prev = "";
-  for (const p of paras) {
-    const x = p.trim();
-    if (x && x !== prev) out.push(x);
-    prev = x;
-  }
-
-  const text = out.join("\n\n").trim();
-  const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
-
-  return { paragraphs: out, text, wordCount, charCount: text.length };
 }
 
 /* =========================
-   HTMLRewriter extraction
+   Extractor
    ========================= */
 
 class Extractor {
   constructor() {
     this.title = "";
-    this.byline = "";
-    this.date = "";
+    this.site = "";
 
-    this._inContent = 0;
-    this._inJunk = 0;
-
+    this._inBad = 0;
+    this._inContent = 0; // only collect inside content zones
     this._buf = [];
     this._pushed = 0;
   }
 
-  pushBlock(txt) {
-    const s = normalizeSpaces(txt);
+  push(txt) {
+    let s = decodeEntities(normSpace(txt));
     if (!s) return;
-    if (looksLikeMenuDump(s)) return;
+
+    // Kill obvious menu dumps early
+    if (looksLikeMenuNoise(s)) return;
+
+    // Reduce “single-line megadumps”
+    // If it’s huge and has little punctuation, it’s usually nav
+    if (s.length > 600 && (s.match(/[.!?…]/g) || []).length < 2) return;
+
     this._buf.push(s);
     this._pushed++;
   }
-}
 
-// Collect full text of a matched element (p/li/h2/blockquote...) into one block.
-class BlockCollector {
-  constructor(ex) {
-    this.ex = ex;
-    this.stack = [];
-    this.okStack = [];
+  getParagraphs() {
+    // De-dupe adjacent duplicates + normalize
+    const out = [];
+    let prev = "";
+    for (const p of this._buf) {
+      const s = decodeEntities(normSpace(p));
+      if (!s) continue;
+      if (s === prev) continue;
+      out.push(s);
+      prev = s;
+    }
+    return out;
   }
 
-  element(el) {
-    const ex = this.ex;
-
-    const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-    const selfBad = badIdClass(idc);
-
-    // Only collect if currently inside content AND not in junk
-    const ok = ex._inContent > 0 && ex._inJunk === 0 && !selfBad;
-    this.okStack.push(ok);
-    this.stack.push("");
-
-    el.onEndTag(() => {
-      const buf = this.stack.pop() || "";
-      const ok2 = this.okStack.pop();
-      if (!ok2) return;
-
-      const s = normalizeSpaces(buf);
-      if (!s) return;
-
-      // Don’t allow the classic “category wall” through.
-      if (looksLikeMenuDump(s)) return;
-
-      // Minimum substance unless sentence-like (keeps short legit lines)
-      if (s.length < 45 && !/[.!?…]$/.test(s)) return;
-
-      this.ex.pushBlock(s);
-    });
-  }
-
-  text(t) {
-    if (!this.stack.length) return;
-    const i = this.stack.length - 1;
-    // preserve spaces between streamed chunks
-    this.stack[i] += t.text;
+  getText() {
+    return normSpace(this.getParagraphs().join("\n\n"));
   }
 }
 
 /* =========================
-   Selectors
+   Host-tuned selectors
    ========================= */
 
-const CONTENT_SELECTORS = [
-  "article",
-  "main article",
-  "main",
-  "[role='main']",
-  "[itemprop='articleBody']",
-  ".entry-content",
-  ".post-content",
-  ".article-body",
-  ".article__body",
-  ".content__body",
-  ".story-body",
-  ".story__body",
-  ".news__content",
-  ".article-content",
-].join(", ");
+function getSelectorsForHost(host) {
+  const h = String(host || "").toLowerCase();
 
-const JUNK_SELECTORS = [
-  "nav", "header", "footer", "aside",
-  "form", "button",
-  "script", "style", "noscript",
-  "[aria-label*='menu' i]",
-  "[aria-label*='search' i]",
-  "[class*='cookie' i]", "[id*='cookie' i]",
-  "[class*='consent' i]", "[id*='consent' i]",
-  "[class*='paywall' i]", "[id*='paywall' i]",
-  "[class*='subscribe' i]", "[id*='subscribe' i]",
-  "[class*='newsletter' i]", "[id*='newsletter' i]",
-  "[class*='share' i]", "[id*='share' i]",
-  "[class*='social' i]", "[id*='social' i]",
-  "[class*='related' i]", "[id*='related' i]",
-  "[class*='comment' i]", "[id*='comment' i]",
-].join(", ");
+  // Default: fairly broad but safe-ish.
+  let CONTENT_SELECTOR =
+    "article, main, [role='main'], [itemprop='articleBody'], .entry-content, .post-content, .article-body, .article__body, .content__body, .story-body, .story__body, .news__content, .text";
 
-const BLOCK_SELECTORS = "p, li, blockquote, h2, h3";
+  // RÚV tends to have lots of “main” furniture; bias towards article-y containers.
+  if (h === "ruv.is" || h === "www.ruv.is") {
+    CONTENT_SELECTOR =
+      "article, [itemprop='articleBody'], .article, .article__body, .article__content, .story, .story__body, .news__content, main article";
+  }
+
+  // DV sometimes has large navigation blocks; keep default but still ok.
+  if (h === "dv.is" || h === "www.dv.is") {
+    CONTENT_SELECTOR =
+      "article, [itemprop='articleBody'], .entry-content, .post-content, .article-body, .article__body, .content__body, main article";
+  }
+
+  // “bad zones” we never want
+  const BAD_SELECTOR =
+    "nav, header, footer, aside, form, button, script, style, noscript, svg, canvas";
+
+  // Collect blocks as paragraphs
+  const BLOCK_SELECTOR = "p, li, h2, h3, blockquote";
+
+  return { CONTENT_SELECTOR, BAD_SELECTOR, BLOCK_SELECTOR };
+}
 
 /* =========================
    Main handler
    ========================= */
 
 export async function onRequestGet({ request }) {
-  const u = new URL(request.url);
-  const rawUrl = (u.searchParams.get("url") || "").trim();
-  const debug = u.searchParams.get("debug") === "1";
+  const { searchParams } = new URL(request.url);
+  const rawUrl = (searchParams.get("url") || "").trim();
+  const debug = searchParams.get("debug") === "1";
 
-  if (!rawUrl) return err('Missing "url" query param, e.g. ?url=https://dv.is/...');
-
+  if (!rawUrl) return err("Missing ?url=");
   if (!isHttpUrl(rawUrl)) return err("Invalid URL");
-  let targetUrl;
-  try {
-    targetUrl = new URL(rawUrl);
-  } catch {
-    return err("Invalid URL");
-  }
 
-  const host = targetUrl.hostname.toLowerCase();
-  if (!ALLOWED_HOSTS.has(host)) return err("Host not allowed", 403);
+  let target;
+  try { target = new URL(rawUrl); }
+  catch { return err("Invalid URL"); }
+
+  if (!hostAllowed(target.hostname)) {
+    return err("Host not allowed", 403, { host: target.hostname });
+  }
 
   // Fetch with timeout
   const ac = new AbortController();
@@ -457,166 +312,208 @@ export async function onRequestGet({ request }) {
   let contentType = "";
 
   try {
-    const res = await fetch(targetUrl.toString(), {
+    const res = await fetch(target.toString(), {
       signal: ac.signal,
       redirect: "follow",
       headers: {
-        "user-agent": "Mozilla/5.0 (compatible; is.is ReadingView/1.1)",
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "accept-language": "is,is-IS;q=0.9,en;q=0.7",
+        // More browser-like UA helps with some sites
+        "User-Agent":
+          "Mozilla/5.0 (compatible; is.is readingview bot; +https://is.is) AppleWebKit/537.36 (KHTML, like Gecko)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
       },
-      cf: { cacheTtl: 300, cacheEverything: true },
     });
 
     status = res.status;
     contentType = res.headers.get("content-type") || "";
 
-    if (!res.ok) return err(`Upstream fetch failed (${status})`, 502);
-    if (!contentType.toLowerCase().includes("text/html")) return err("URL did not return HTML", 415);
+    if (!res.ok) return err("Fetch failed", 502, { status, contentType });
+    if (!contentType.toLowerCase().includes("text/html")) {
+      return err("URL did not return HTML", 415, { status, contentType });
+    }
 
     html = await res.text();
     if (html.length > 2_000_000) html = html.slice(0, 2_000_000);
   } catch (e) {
-    return err(`Fetch exception: ${String(e?.message || e)}`, 502);
+    return err("Fetch exception", 502, { details: String(e?.message || e) });
   } finally {
     clearTimeout(timer);
   }
 
   const ex = new Extractor();
-  const blockCollector = new BlockCollector(ex);
+  const host = target.hostname.toLowerCase();
+  const { CONTENT_SELECTOR, BAD_SELECTOR, BLOCK_SELECTOR } = getSelectorsForHost(host);
 
   const rewriter = new HTMLRewriter()
-    // Better title sources
+    // Site name
+    .on("meta[property='og:site_name']", {
+      element(el) {
+        const c = el.getAttribute("content");
+        if (c && !ex.site) ex.site = decodeEntities(normSpace(c));
+      },
+    })
+    .on("meta[name='application-name']", {
+      element(el) {
+        const c = el.getAttribute("content");
+        if (c && !ex.site) ex.site = decodeEntities(normSpace(c));
+      },
+    })
+    // Best title: og:title if present
     .on("meta[property='og:title']", {
       element(el) {
         const c = el.getAttribute("content");
-        if (c) ex.title = normalizeSpaces(c);
+        if (c) ex.title = decodeEntities(normSpace(c));
       },
     })
-    .on("meta[name='author'], meta[property='article:author']", {
-      element(el) {
-        const c = el.getAttribute("content");
-        if (c && !ex.byline) ex.byline = normalizeSpaces(c);
-      },
-    })
-    .on("meta[property='article:published_time'], meta[name='date'], meta[name='pubdate']", {
-      element(el) {
-        const c = el.getAttribute("content");
-        if (c && !ex.date) ex.date = normalizeSpaces(c);
-      },
-    })
+    // fallback <title>
     .on("title", {
       text(t) {
         if (!ex.title) ex.title += t.text;
       },
       end() {
-        ex.title = normalizeSpaces(ex.title);
+        ex.title = decodeEntities(normSpace(ex.title));
       },
     })
-    // Prefer an in-article h1 if it exists
-    .on("article h1, main h1, h1", {
+    // h1 is often best, but only outside bad subtree
+    .on("h1", {
       element(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (badIdClass(idc)) ex._inJunk++;
-        el.onEndTag(() => {
-          if (badIdClass(idc)) ex._inJunk--;
-        });
+        if (isBadIdClass(idc)) ex._inBad++;
       },
       text(t) {
-        if (ex._inJunk) return;
-        const s = normalizeSpaces(t.text);
-        if (s && s.length > 4) ex.title = s;
+        if (ex._inBad) return;
+        const h1 = decodeEntities(normSpace(t.text));
+        if (h1 && h1.length > 4 && h1.length < 220) ex.title = h1;
+      },
+      end() {
+        if (ex._inBad) ex._inBad--;
       },
     })
-    // Content zone depth
-    .on(CONTENT_SELECTORS, {
+    // hard bad zones
+    .on(BAD_SELECTOR, {
+      element() { ex._inBad++; },
+      end() { ex._inBad--; },
+    })
+    // bad containers by id/class keywords
+    .on("[class], [id]", {
       element(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (badIdClass(idc)) ex._inJunk++;
-        else ex._inContent++;
-
-        el.onEndTag(() => {
-          if (badIdClass(idc)) ex._inJunk--;
-          else ex._inContent--;
-        });
+        if (isBadIdClass(idc)) ex._inBad++;
+      },
+      end(el) {
+        const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
+        if (isBadIdClass(idc)) ex._inBad--;
       },
     })
-    // Junk zone depth (hard exclude)
-    .on(JUNK_SELECTORS, {
+    // content zone depth
+    .on(CONTENT_SELECTOR, {
       element(el) {
-        ex._inJunk++;
-        el.onEndTag(() => ex._inJunk--);
+        const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
+        if (isBadIdClass(idc)) ex._inBad++;
+        else ex._inContent++;
+      },
+      end(el) {
+        const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
+        if (isBadIdClass(idc)) ex._inBad--;
+        else ex._inContent--;
       },
     })
-    // Collect blocks (only if inside content and not junk)
-    .on(BLOCK_SELECTORS, blockCollector);
+    // collect blocks inside content zones only
+    .on(BLOCK_SELECTOR, {
+      text(t) {
+        if (ex._inBad) return;
+        if (ex._inContent <= 0) return;
 
-  // Run transformer fully
-  await rewriter.transform(new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } })).arrayBuffer();
+        const txt = decodeEntities(normSpace(t.text));
+        if (!txt) return;
 
-  // If we still got basically nothing, do a safer global fallback (but stricter than before)
-  let blocks = ex._buf.slice();
-  const joinedLen = blocks.join(" ").length;
+        // Keep some short real lines, but drop tiny crumbs
+        if (txt.length < 22) return;
 
-  if (joinedLen < 350) {
-    // very conservative strip+chunk
-    const stripped = html
+        ex.push(txt);
+      },
+    });
+
+  await rewriter
+    .transform(new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } }))
+    .text();
+
+  // Primary extraction result
+  let paragraphs = ex.getParagraphs();
+  let text = ex.getText();
+
+  // Fallback ONLY if content zones failed (avoid bringing nav back)
+  if (text.length < 220) {
+    const stripped = decodeEntities(html)
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
       .replace(/<\/(p|div|br|li|h\d|blockquote)>/gi, "\n")
       .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
+      .replace(/\s+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
-    const chunks = stripped
-      .split(/(?<=[.!?…])\s+/)
-      .map(s => normalizeSpaces(s))
-      .filter(Boolean);
+    const lines = stripped.split(/\n+/).map(s => normSpace(s)).filter(Boolean);
 
     const kept = [];
-    let acc = 0;
-    for (const c of chunks) {
-      if (c.length < 120) continue;           // stronger than before (kills nav scraps)
-      if (looksLikeMenuDump(c)) continue;
-      if (isBoilerplateLine(c)) continue;
-      kept.push(c);
-      acc += c.length;
-      if (acc > 10_000) break;
+    for (const line of lines) {
+      if (line.length < 80) continue;
+      if (looksLikeMenuNoise(line)) continue;
+      kept.push(line);
+      if (kept.join("\n\n").length > 12000) break;
     }
-    blocks = kept;
+
+    paragraphs = kept.slice(0, 80);
+    text = normSpace(paragraphs.join("\n\n"));
   }
 
-  const fin = finalizeParagraphs(blocks);
+  // Final clean + stats
+  text = clampText(text, 15000);
+  const cleanTitle = clampText(decodeEntities(normSpace(ex.title)) || "Ónefnd frétt", 240);
+  const site = clampText(decodeEntities(normSpace(ex.site)) || host, 120);
 
-  // Final clamps
-  const text = clampText(fin.text, 15000);
-  const paragraphs = fin.paragraphs;
-  const title = clampText(normalizeSpaces(ex.title) || "Ónefnd frétt", 240);
-  const byline = clampText(normalizeSpaces(ex.byline) || "", 160);
-  const date = clampText(normalizeSpaces(ex.date) || "", 160);
-  const excerpt = clampText(text.replace(/\n+/g, " ").trim(), 280);
+  const finalParagraphs = paragraphs
+    .map(p => decodeEntities(normSpace(p)))
+    .filter(Boolean)
+    .filter(p => !looksLikeMenuNoise(p))
+    .slice(0, 120);
+
+  // Rebuild text from cleaned paragraphs (keeps entities fixed)
+  text = clampText(normSpace(finalParagraphs.join("\n\n")), 15000);
+
+  const excerpt = clampText(text.replace(/\n+/g, " ").trim(), 240);
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
   const payload = {
     ok: true,
-    url: targetUrl.toString(),
+    url: target.toString(),
     host,
-    title,
-    byline,
-    date,
+    site,
+    title: cleanTitle,
     excerpt,
-    text,
-    paragraphs,
     wordCount,
     charCount: text.length,
+    text,
+    paragraphs: finalParagraphs,
   };
 
   if (debug) {
     payload.debug = {
       fetch: { status, contentType, htmlLen: html.length, host },
-      extract: { pushed: ex._pushed, initialBlocks: ex._buf.length, finalParas: paragraphs.length },
+      selectors: { CONTENT_SELECTOR, BAD_SELECTOR, BLOCK_SELECTOR },
+      extract: { pushed: ex._pushed, paraCount: finalParagraphs.length, finalLen: text.length },
     };
+  }
+
+  // If still basically nothing, return ok=false so UI can show your friendly message
+  if (payload.charCount < 120) {
+    return err("Extraction too small (blocked or unusual layout)", 502, {
+      host,
+      status,
+      contentType,
+      got: payload.charCount,
+    });
   }
 
   return json(payload, 200, debug ? "no-store" : "public, max-age=300");
