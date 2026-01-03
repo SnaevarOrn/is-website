@@ -218,14 +218,26 @@ function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
-  // namespace-safe + CDATA-safe + captures inner text
-  const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
-    "i"
-  );
+  // Find opening tag (namespace-safe)
+  const openRe = new RegExp(`<(?:(?:\\w+:)?)${esc}\\b[^>]*>`, "i");
+  const mOpen = openRe.exec(src);
+  if (!mOpen) return null;
 
-  const m = src.match(re);
-  return m ? decodeEntities(m[1]).trim() : null;
+  const start = mOpen.index + mOpen[0].length;
+
+  // Find closing tag (namespace-safe)
+  const closeRe = new RegExp(`</(?:(?:\\w+:)?)${esc}>`, "i");
+  const mClose = closeRe.exec(src.slice(start));
+  if (!mClose) return null;
+
+  let inner = src.slice(start, start + mClose.index);
+
+  // Strip CDATA safely without using \[ \] (avoids LaTeX/copy corruption)
+  inner = inner
+    .replace(/<!\u005BCDATA\u005B/gi, "")
+    .replace(/\u005D\u005D>/g, "");
+
+  return decodeEntities(inner).trim() || null;
 }
 
 function extractLink(block) {
