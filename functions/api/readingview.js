@@ -1,42 +1,22 @@
 // /functions/api/readingview.js
 // Reading View scraper for ís.is (Cloudflare Pages Functions)
-// - Scrapes readable text (title + article-ish body) from a news URL
-// - No ads/cookies: returns clean JSON for your own UI
 //
-// Usage:
-//   /api/readingview?url=https%3A%2F%2Fwww.dv.is%2F...&debug=1
-//
-// Returns:
-//   { ok, url, site, title, excerpt, wordCount, charCount, text, debug? }
+// Key change (fixes DV noise):
+//  - Collect text ONLY inside "content zones" (article/main/articleBody/entry-content/etc.)
+//  - Global fallback runs ONLY if content zones yield almost nothing.
 
 "use strict";
 
 const ALLOWED_HOSTS = new Set([
-  // Your current sources (plus common variants)
-  "www.ruv.is",
-  "ruv.is",
-
-  "www.mbl.is",
-  "mbl.is",
-
-  "www.visir.is",
-  "visir.is",
-
-  "www.dv.is",
-  "dv.is",
-
-  "www.vb.is",
-  "vb.is",
-
-  "stundin.is",
-  "www.stundin.is",
-
-  "grapevine.is",
-  "www.grapevine.is",
-
-  // DV sports sometimes uses 433.is (you already map this in news.js)
-  "433.is",
-  "www.433.is",
+  "www.ruv.is", "ruv.is",
+  "www.mbl.is", "mbl.is",
+  "www.visir.is", "visir.is",
+  "www.dv.is", "dv.is",
+  "www.vb.is", "vb.is",
+  "stundin.is", "www.stundin.is",
+  "heimildin.is", "www.heimildin.is",
+  "grapevine.is", "www.grapevine.is",
+  "433.is", "www.433.is",
 ]);
 
 function json(data, status = 200, cacheControl = "public, max-age=300") {
@@ -65,6 +45,11 @@ function isHttpUrl(s) {
   }
 }
 
+function hostAllowed(host) {
+  const h = String(host || "").toLowerCase().trim();
+  return !!h && ALLOWED_HOSTS.has(h);
+}
+
 function clampText(s, maxChars) {
   const t = String(s || "");
   if (t.length <= maxChars) return t;
@@ -79,13 +64,6 @@ function normSpace(s) {
     .trim();
 }
 
-function hostAllowed(host) {
-  const h = String(host || "").toLowerCase().trim();
-  if (!h) return false;
-  return ALLOWED_HOSTS.has(h);
-}
-
-// crude “bad subtree” heuristic
 function isBadIdClass(idc) {
   const s = String(idc || "").toLowerCase();
   return (
@@ -109,41 +87,74 @@ function isBadIdClass(idc) {
     s.includes("footer") ||
     s.includes("sidebar") ||
     s.includes("related") ||
-    s.includes("comment")
+    s.includes("comment") ||
+    s.includes("breadcrumbs") ||
+    s.includes("search")
   );
+}
+
+// Light sanity filter against “menu dump” paragraphs
+function looksLikeMenuNoise(txt) {
+  const t = normSpace(txt).toLowerCase();
+  if (!t) return true;
+
+  // Too many very short tokens => menu-like
+  const tokens = t.split(/\s+/).filter(Boolean);
+  if (tokens.length >= 18) {
+    const short = tokens.filter(w => w.length <= 3).length;
+    if (short / tokens.length > 0.55) return true;
+  }
+
+  // Lots of separators/arrow patterns typical in scraped nav text
+  const sepHits = (t.match(/-->|\|\||»|›|</g) || []).length;
+  if (sepHits >= 2) return true;
+
+  // Looks like a "list of sections"
+  const navWords = [
+    "hafa samband", "um dv", "yfirlýsing um persónuvernd", "leit", "search for",
+    "fréttir", "fókus", "pressan", "eyjan", "433", "menning", "tónlist",
+    "uppskriftir", "fasteignir", "kynning"
+  ];
+  const hits = navWords.reduce((acc, w) => acc + (t.includes(w) ? 1 : 0), 0);
+  if (hits >= 4) return true;
+
+  return false;
 }
 
 class Extractor {
   constructor() {
     this.title = "";
     this.site = "";
+
     this._inBad = 0;
-    this._inMain = 0;       // article/main depth
+    this._inContent = 0;   // IMPORTANT: only collect inside content zones
     this._buf = [];
 
-    // debug counters
     this._pushed = 0;
-    this._pushedPreferred = 0;
-    this._pushedFallback = 0;
   }
 
-  push(t, preferred) {
-    const s = normSpace(t);
+  push(txt) {
+    const s = normSpace(txt);
     if (!s) return;
+    if (looksLikeMenuNoise(s)) return;
     this._buf.push(s);
     this._pushed++;
-    if (preferred) this._pushedPreferred++;
-    else this._pushedFallback++;
   }
 
   getText() {
-    return normSpace(this._buf.join("\n\n"));
+    // de-dupe adjacent duplicates a bit
+    const out = [];
+    let prev = "";
+    for (const p of this._buf) {
+      if (p && p !== prev) out.push(p);
+      prev = p;
+    }
+    return normSpace(out.join("\n\n"));
   }
 }
 
 export async function onRequestGet({ request }) {
   const { searchParams } = new URL(request.url);
-
   const rawUrl = (searchParams.get("url") || "").trim();
   const debug = searchParams.get("debug") === "1";
 
@@ -151,28 +162,20 @@ export async function onRequestGet({ request }) {
   if (!isHttpUrl(rawUrl)) return json({ ok: false, error: "Invalid URL" }, 400, "no-store");
 
   let target;
-  try {
-    target = new URL(rawUrl);
-  } catch {
-    return json({ ok: false, error: "Invalid URL" }, 400, "no-store");
-  }
+  try { target = new URL(rawUrl); }
+  catch { return json({ ok: false, error: "Invalid URL" }, 400, "no-store"); }
 
-  // whitelist = clean SSRF protection and predictable behavior
   if (!hostAllowed(target.hostname)) {
-    return json(
-      { ok: false, error: "Host not allowed", host: target.hostname },
-      403,
-      "no-store"
-    );
+    return json({ ok: false, error: "Host not allowed", host: target.hostname }, 403, "no-store");
   }
 
-  // Fetch with timeout
   const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort("timeout"), 8000);
+  const timer = setTimeout(() => ac.abort("timeout"), 9000);
 
   let html = "";
   let status = 0;
   let contentType = "";
+
   try {
     const res = await fetch(target.toString(), {
       signal: ac.signal,
@@ -189,39 +192,35 @@ export async function onRequestGet({ request }) {
 
     if (!res.ok) {
       clearTimeout(timer);
-      return json(
-        { ok: false, error: "Fetch failed", status, contentType },
-        502,
-        "no-store"
-      );
+      return json({ ok: false, error: "Fetch failed", status, contentType }, 502, "no-store");
     }
-
     if (!contentType.toLowerCase().includes("text/html")) {
       clearTimeout(timer);
-      return json(
-        { ok: false, error: "URL did not return HTML", status, contentType },
-        415,
-        "no-store"
-      );
+      return json({ ok: false, error: "URL did not return HTML", status, contentType }, 415, "no-store");
     }
 
     html = await res.text();
     if (html.length > 2_000_000) html = html.slice(0, 2_000_000);
   } catch (e) {
     clearTimeout(timer);
-    return json(
-      { ok: false, error: "Fetch exception", details: String(e?.message || e) },
-      502,
-      "no-store"
-    );
+    return json({ ok: false, error: "Fetch exception", details: String(e?.message || e) }, 502, "no-store");
   } finally {
     clearTimeout(timer);
   }
 
   const ex = new Extractor();
 
-  // Prefer content inside <article> or <main>.
-  // Collect from p/li/h2/h3/blockquote.
+  // CONTENT ZONES:
+  // - article/main
+  // - common WP content containers (entry-content/post-content/article-body)
+  // - schema.org articleBody
+  const CONTENT_SELECTOR =
+    "article, main, [itemprop='articleBody'], .entry-content, .post-content, .article-body, .article__body, .content__body";
+
+  // "bad zones" we never want
+  const BAD_SELECTOR =
+    "nav, header, footer, aside, form, button, script, style, noscript";
+
   const rewriter = new HTMLRewriter()
     .on("meta[property='og:site_name']", {
       element(el) {
@@ -235,41 +234,42 @@ export async function onRequestGet({ request }) {
         if (c && !ex.site) ex.site = normSpace(c);
       },
     })
+    // Better title: og:title if present
+    .on("meta[property='og:title']", {
+      element(el) {
+        const c = el.getAttribute("content");
+        if (c) ex.title = normSpace(c);
+      },
+    })
     .on("title", {
       text(t) {
-        ex.title += t.text;
+        // only use <title> if og:title hasn't filled it
+        if (!ex.title) ex.title += t.text;
       },
       end() {
         ex.title = normSpace(ex.title);
       },
     })
+    // h1 is often best, but only if it's not in a "bad subtree"
     .on("h1", {
-      text(t) {
-        // If many sites have better <h1> than <title>, use as primary title
-        const h1 = normSpace(t.text);
-        if (h1 && h1.length > 4) ex.title = h1;
-      },
-    })
-    .on("article, main", {
       element(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
         if (isBadIdClass(idc)) ex._inBad++;
-        else ex._inMain++;
       },
-      end(el) {
-        const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
-        if (isBadIdClass(idc)) ex._inBad--;
-        else ex._inMain--;
-      },
-    })
-    .on("nav, header, footer, aside, form, button, script, style, noscript", {
-      element() {
-        ex._inBad++;
+      text(t) {
+        if (ex._inBad) return;
+        const h1 = normSpace(t.text);
+        if (h1 && h1.length > 4) ex.title = h1;
       },
       end() {
-        ex._inBad--;
+        if (ex._inBad) ex._inBad--;
       },
     })
+    .on(BAD_SELECTOR, {
+      element() { ex._inBad++; },
+      end() { ex._inBad--; },
+    })
+    // mark obvious bad containers by id/class keywords
     .on("[class], [id]", {
       element(el) {
         const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
@@ -280,35 +280,42 @@ export async function onRequestGet({ request }) {
         if (isBadIdClass(idc)) ex._inBad--;
       },
     })
+    // content zone depth
+    .on(CONTENT_SELECTOR, {
+      element(el) {
+        const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
+        if (isBadIdClass(idc)) ex._inBad++;
+        else ex._inContent++;
+      },
+      end(el) {
+        const idc = (el.getAttribute("id") || "") + " " + (el.getAttribute("class") || "");
+        if (isBadIdClass(idc)) ex._inBad--;
+        else ex._inContent--;
+      },
+    })
+    // collect text only inside content zones
     .on("p, li, h2, h3, blockquote", {
       text(t) {
         if (ex._inBad) return;
+        if (ex._inContent <= 0) return;
 
         const txt = normSpace(t.text);
         if (!txt) return;
 
-        const preferred = ex._inMain > 0;
-        const looksLikeContent = txt.length >= 40;
+        // Require some substance (helps kill stray crumbs)
+        if (txt.length < 35) return;
 
-        // Primary: inside article/main
-        if (preferred) {
-          ex.push(txt, true);
-          return;
-        }
-
-        // Secondary: allow long paragraphs even if page has weird markup
-        if (looksLikeContent) ex.push(txt, false);
+        ex.push(txt);
       },
     });
 
-  // Feed HTMLRewriter a Response
   await rewriter
     .transform(new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } }))
     .text();
 
   let text = ex.getText();
 
-  // Last-resort fallback: strip tags & keep long-ish sentences
+  // Fallback ONLY if we got almost nothing from content zones
   if (text.length < 200) {
     const stripped = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -325,16 +332,16 @@ export async function onRequestGet({ request }) {
 
     for (const c of chunks) {
       const cc = c.trim();
-      if (cc.length < 70) continue;
+      if (cc.length < 90) continue;
+      if (looksLikeMenuNoise(cc)) continue;
       kept.push(cc);
       acc += cc.length;
-      if (acc > 9000) break;
+      if (acc > 8000) break;
     }
 
     text = normSpace(kept.join("\n\n"));
   }
 
-  // clamp output sizes
   text = clampText(text, 15000);
   const title = clampText(normSpace(ex.title) || "Ónefnd frétt", 240);
   const site = clampText(normSpace(ex.site) || target.hostname, 120);
@@ -355,12 +362,7 @@ export async function onRequestGet({ request }) {
   if (debug) {
     payload.debug = {
       fetch: { status, contentType, htmlLen: html.length, host: target.hostname },
-      extract: {
-        pushed: ex._pushed,
-        pushedPreferred: ex._pushedPreferred,
-        pushedFallback: ex._pushedFallback,
-        finalLen: text.length,
-      },
+      extract: { pushed: ex._pushed, finalLen: text.length },
     };
   }
 
