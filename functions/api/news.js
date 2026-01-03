@@ -59,6 +59,13 @@ export async function onRequestGet({ request }) {
     (catsParam.length ? catsParam : []).filter(id => VALID_CATEGORY_IDS.has(id))
   );
 
+  // How many we *want* to try to pull per feed.
+  // Rationale:
+  // - If user selects only 1 source (e.g., DV only), we want enough from that feed.
+  // - If multiple sources, we don't need a huge amount per feed.
+  const srcCount = Math.max(1, activeSources.filter(id => !!feeds[id]).length);
+  const perFeedWanted = clampInt(Math.ceil(limit / srcCount) + 12, 10, 120, 30);
+
   const items = [];
   const debugStats = {};
 
@@ -67,7 +74,9 @@ export async function onRequestGet({ request }) {
     if (!feed) continue;
 
     try {
-      const res = await fetch(feed.url, {
+      const fetchUrl = buildFeedUrl(feed.url, id, perFeedWanted);
+
+      const res = await fetch(fetchUrl, {
         headers: {
           "User-Agent": "is.is news bot",
           "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
@@ -80,7 +89,13 @@ export async function onRequestGet({ request }) {
       if (!res.ok) {
         console.error("Feed HTTP error:", id, res.status);
         if (debug) {
-          debugStats[id] = { url: feed.url, status: res.status, ok: res.ok, length: xml.length, head: xml.slice(0, 220) };
+          debugStats[id] = {
+            url: fetchUrl,
+            status: res.status,
+            ok: res.ok,
+            length: xml.length,
+            head: xml.slice(0, 220),
+          };
         }
         continue;
       }
@@ -94,7 +109,7 @@ export async function onRequestGet({ request }) {
         const firstLink = firstBlock ? extractLink(firstBlock) : null;
 
         debugStats[id] = {
-          url: feed.url,
+          url: fetchUrl,
           status: res.status,
           ok: res.ok,
           length: xml.length,
@@ -105,6 +120,9 @@ export async function onRequestGet({ request }) {
           firstLink,
           head: xml.slice(0, 220),
           firstBlockHead: firstBlock.slice(0, 220),
+          perFeedWanted,
+          limit,
+          srcCount,
         };
       }
 
@@ -169,6 +187,35 @@ export async function onRequestGet({ request }) {
 }
 
 /* =========================
+   Feed URL helper
+   ========================= */
+
+function buildFeedUrl(baseUrl, sourceId, perFeedWanted) {
+  // Many WP feeds accept `posts_per_page`.
+  // If ignored, it’s harmless. If supported, it fixes “only ~8-10 items” feeds.
+  const wpLikeSources = new Set(["dv", "grapevine", "stundin"]);
+
+  try {
+    const u = new URL(baseUrl);
+    if (wpLikeSources.has(sourceId)) {
+      // don’t override if already present
+      if (!u.searchParams.has("posts_per_page")) {
+        u.searchParams.set("posts_per_page", String(perFeedWanted));
+      }
+      // some WP installs also respect `paged`, but we keep it simple (page 1 only)
+    }
+    return u.toString();
+  } catch {
+    // fallback: naive append
+    if (wpLikeSources.has(sourceId)) {
+      const sep = baseUrl.includes("?") ? "&" : "?";
+      return `${baseUrl}${sep}posts_per_page=${encodeURIComponent(String(perFeedWanted))}`;
+    }
+    return baseUrl;
+  }
+}
+
+/* =========================
    Parsing helpers (RSS + Atom)
    ========================= */
 
@@ -189,7 +236,7 @@ function extractTagValue(xml, tag) {
 
   // namespace-safe + CDATA-safe + captures inner text
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
@@ -403,7 +450,6 @@ function mapFromUrl(sourceId, u, titleNorm) {
   // Vísir: many links are /g/<id>/<slug> => no section in URL.
   // We add a tiny safety net using title hints (already normalized)
   if (sourceId === "visir") {
-    // If Vísir URL has no section, use extra title heuristics
     if (u.includes("/g/")) {
       const t = String(titleNorm || "");
       if (
