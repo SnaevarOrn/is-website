@@ -1,4 +1,4 @@
-// /functions/api/news.js 
+// /functions/api/news.js
 // News RSS/Atom aggregator for ís.is (Cloudflare Pages Functions)
 
 "use strict";
@@ -189,7 +189,7 @@ function extractTagValue(xml, tag) {
 
   // namespace-safe + CDATA-safe + captures inner text
   const re = new RegExp(
-    <(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>,
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
