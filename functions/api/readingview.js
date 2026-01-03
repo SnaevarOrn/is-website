@@ -1,8 +1,10 @@
 // /functions/api/readingview.js
 // Reading View scraper for ís.is (Cloudflare Pages Functions)
 //
-// Key change (fixes DV noise):
+// Key changes (better DV + cleaner output):
 //  - Collect text ONLY inside "content zones" (article/main/articleBody/entry-content/etc.)
+//  - Remove common newsletter/social/disclaimer noise lines
+//  - Hard-stop when "related lists" start (Fleiri fréttir / Mest lesið / Rétt í þessu / Nýlegt ...)
 //  - Global fallback runs ONLY if content zones yield almost nothing.
 
 "use strict";
@@ -121,6 +123,72 @@ function looksLikeMenuNoise(txt) {
   return false;
 }
 
+// Lines that are not part of the article body (newsletter/social/disclaimer etc.)
+function isNoiseLine(s) {
+  const t = normSpace(s).toLowerCase();
+
+  // Keep these pretty strict: we only remove obvious boilerplate.
+  const badPhrases = [
+    "ekki missa af",
+    "helstu tíðindum dagsins",
+    "í pósthólfið",
+    "pósthólfið þitt",
+    "lesa nánar",
+    "skráðu þig",
+    "fáðu helstu",
+    "facebook",
+    "twitter",
+    "linkedin",
+    "athugasemdir eru á ábyrgð",
+    "áskilur sér rétt",
+    "rétt til að eyða ummælum",
+    "persónuvernd",
+  ];
+
+  if (badPhrases.some(p => t.includes(p))) return true;
+
+  // Pure social row / “share” crumbs
+  if (/^(facebook|twitter|linkedin)\b/.test(t)) return true;
+
+  return false;
+}
+
+// When these appear, the article is basically over and lists begin
+function isStopAnchor(s) {
+  const t = normSpace(s).toLowerCase();
+
+  const anchors = [
+    "fleiri fréttir",
+    "mest lesið",
+    "tengdar fréttir",
+    "rétt í þessu",
+    "nýlegt",
+  ];
+
+  // strict match or a very close start
+  return anchors.some(a => t === a || t.startsWith(a + " "));
+}
+
+// Reject tiny crumbs like "janúar 2026 12:00" etc.
+function isLikelyCrumb(txt) {
+  const s = normSpace(txt);
+  const low = s.toLowerCase();
+
+  // time-only or time-dominant
+  if (/\b\d{1,2}:\d{2}\b/.test(low) && s.length < 90) return true;
+
+  // date-ish lead with month name (Icelandic) and short length
+  if (
+    /^(janúar|febrúar|mars|apríl|maí|júní|júlí|ágúst|september|október|nóvember|desember)\b/.test(low) &&
+    s.length < 80
+  ) return true;
+
+  // "3. janúar" style
+  if (/^\d{1,2}\.\s*[a-záðéíóúýþæö]+/.test(low) && s.length < 70) return true;
+
+  return false;
+}
+
 class Extractor {
   constructor() {
     this.title = "";
@@ -131,12 +199,25 @@ class Extractor {
     this._buf = [];
 
     this._pushed = 0;
+    this._stop = false;    // hard stop after anchors
   }
 
   push(txt) {
+    if (this._stop) return;
+
     const s = normSpace(txt);
     if (!s) return;
+
+    // Stop when "related lists" begin
+    if (isStopAnchor(s)) {
+      this._stop = true;
+      return;
+    }
+
     if (looksLikeMenuNoise(s)) return;
+    if (isNoiseLine(s)) return;
+    if (isLikelyCrumb(s)) return;
+
     this._buf.push(s);
     this._pushed++;
   }
@@ -298,11 +379,12 @@ export async function onRequestGet({ request }) {
       text(t) {
         if (ex._inBad) return;
         if (ex._inContent <= 0) return;
+        if (ex._stop) return;
 
         const txt = normSpace(t.text);
         if (!txt) return;
 
-        // Require some substance (helps kill stray crumbs)
+        // Require some substance
         if (txt.length < 35) return;
 
         ex.push(txt);
@@ -334,6 +416,8 @@ export async function onRequestGet({ request }) {
       const cc = c.trim();
       if (cc.length < 90) continue;
       if (looksLikeMenuNoise(cc)) continue;
+      if (isNoiseLine(cc)) continue;
+      if (isStopAnchor(cc)) break; // if we meet anchors here, stop too
       kept.push(cc);
       acc += cc.length;
       if (acc > 8000) break;
@@ -362,7 +446,7 @@ export async function onRequestGet({ request }) {
   if (debug) {
     payload.debug = {
       fetch: { status, contentType, htmlLen: html.length, host: target.hostname },
-      extract: { pushed: ex._pushed, finalLen: text.length },
+      extract: { pushed: ex._pushed, finalLen: text.length, stopped: ex._stop },
     };
   }
 
