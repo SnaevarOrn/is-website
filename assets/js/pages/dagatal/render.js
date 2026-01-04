@@ -251,7 +251,7 @@
       const right = `${dd} ${monthShort(mm - 1)} — ${weekdayShort(date)}`;
 
       const item = document.createElement("div");
-      item.className = "hitem";
+      item.className = "hitem " + (it.kind === "holiday" ? "is-holiday" : "is-special");
 
       const left = document.createElement("div");
       left.className = "hleft";
