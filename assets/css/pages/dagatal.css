@@ -23,13 +23,14 @@
   --today:#ff3b3b;
   --today2: rgba(255,59,59,.16);
 
-  /* ↓ aðeins minna til að koma fleiri dögum fyrir */
+  /* ↓ þéttara til að koma fleiri dögum fyrir */
   --headerH: 132px;
-  --gap: 6px;
+  --gap: 5px;
   --padX: 14px;
 
-  --cellH: 38px;
-  --cellRadius: 11px;
+  /* ↓ ~75–82% af fyrri hæð, án þess að minnka letur */
+  --cellH: 31px;
+  --cellRadius: 10px;
 
   /* glimmer tónn (ekki æpandi rauður) */
   --glow: color-mix(in srgb, var(--ice) 30%, transparent);
@@ -255,6 +256,8 @@ body{
   gap:10px;
   padding-right: 2px;
 }
+
+/* ====== mini check ====== */
 .mini-check{
   display:inline-flex;
   align-items:center;
@@ -271,9 +274,9 @@ body{
 .toggle input{
   appearance:none;
   -webkit-appearance:none;
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
   border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
   background: color-mix(in srgb, var(--panel2) 88%, transparent);
   display:inline-grid;
@@ -297,12 +300,12 @@ body{
 .mini-check input:checked::after,
 .toggle input:checked::after{
   content:"";
-  width: 9px;
-  height: 5px;
-  border-left: 2px solid color-mix(in srgb, var(--ice) 92%, transparent);
-  border-bottom: 2px solid color-mix(in srgb, var(--ice) 92%, transparent);
+  width: 11px;
+  height: 7px;
+  border-left: 2.4px solid color-mix(in srgb, var(--ice) 92%, transparent);
+  border-bottom: 2.4px solid color-mix(in srgb, var(--ice) 92%, transparent);
   transform: rotate(-45deg);
-  margin-top: -1px;
+  margin-top: 0;
 }
 
 .dowwrap{
@@ -522,6 +525,9 @@ body{
   justify-content:center;
   transition: background .15s ease, border-color .15s ease, transform .08s ease;
   overflow:hidden;
+
+  /* hjálpar iOS/GPU með pseudo anims */
+  transform: translateZ(0);
 }
 .cell:hover{
   background: var(--cellHover);
@@ -532,15 +538,23 @@ body{
   border: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
   opacity:.22;
 }
-.dnum{ font-size: 15px; font-weight: 900; }
+.dnum{
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  position: relative;
+  z-index: 2; /* tryggir að shimmer/twinkle sé undir texta */
+}
 
-/* ✅ FRÍDAGAR: glimmer á boxinu sjálfu (engin rauður hringur, engin 🎉) */
+/* ✅ FRÍDAGAR: glimmer + shimmer á boxinu sjálfu (virkar í dagatali, vikum, ársýni o.s.frv. því allt notar .cell) */
 .cell.is-holiday{
   background:
     radial-gradient(120% 120% at 20% 10%, color-mix(in srgb, var(--glow) 60%, transparent), transparent 55%),
     linear-gradient(180deg, color-mix(in srgb, var(--cell) 70%, var(--ice) 10%), var(--cell));
   border-color: color-mix(in srgb, var(--ice) 26%, var(--border) 74%);
 }
+
+/* shimmer sweep */
 .cell.is-holiday::before{
   content:"";
   position:absolute;
@@ -548,19 +562,45 @@ body{
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--glow2) 75%, transparent),
+    color-mix(in srgb, var(--glow2) 78%, transparent),
     transparent
   );
   transform: rotate(18deg) translateX(-120%);
   animation: shimmerSoft 3.2s ease-in-out infinite;
   opacity:.55;
   pointer-events:none;
+  z-index: 0;
 }
+
+/* sparkle twinkles (létt, bætir “sparkling” feel) */
+.cell.is-holiday::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 22% 32%, color-mix(in srgb, var(--glow2) 95%, transparent) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 62%, color-mix(in srgb, var(--glow) 90%, transparent) 0 1.8px, transparent 3px),
+    radial-gradient(circle at 58% 26%, color-mix(in srgb, var(--glow2) 80%, transparent) 0 1.6px, transparent 3px);
+  opacity:0;
+  animation: sparkleTwinkle 4.6s ease-in-out infinite;
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
 @keyframes shimmerSoft{
   0%{ transform: rotate(18deg) translateX(-120%); opacity: 0; }
   20%{ opacity:.55; }
   55%{ opacity:.30; }
   100%{ transform: rotate(18deg) translateX(120%); opacity: 0; }
+}
+
+@keyframes sparkleTwinkle{
+  0%   { opacity: 0;   transform: scale(0.985); filter: blur(0px); }
+  18%  { opacity: .55; transform: scale(1.01); }
+  36%  { opacity: .10; transform: scale(0.995); }
+  62%  { opacity: .45; transform: scale(1.015); }
+  100% { opacity: 0;   transform: scale(0.985); }
 }
 
 /* Merkisdaga: subtle underline */
@@ -575,6 +615,7 @@ body{
   font-size: 13px;
   opacity: .95;
   pointer-events:none;
+  z-index: 2;
 }
 
 /* Today */
@@ -599,6 +640,7 @@ html[data-theme="light"] .cell.is-today .dnum{ color:#ffffff; }
   animation: shimmer 2.6s ease-in-out infinite;
   opacity:.9;
   pointer-events:none;
+  z-index: 1;
 }
 @keyframes shimmer{
   0%{ transform: rotate(18deg) translateX(-120%); opacity:.0; }
@@ -705,12 +747,14 @@ html[data-theme="light"] .cell.is-today .dnum{ color:#ffffff; }
   margin: 14px 0;
 }
 .hitem{
-  padding: 12px 14px;
+  padding: 10px 12px; /* aðeins þéttara */
   border-top:1px solid color-mix(in srgb, var(--border) 70%, transparent);
   display:flex;
   justify-content:space-between;
   gap:10px;
   align-items:baseline;
+  position: relative;
+  overflow: hidden; /* þarf fyrir shimmer */
 }
 .hitem:first-of-type{ border-top:none; }
 .hleft{
@@ -922,24 +966,8 @@ html[data-theme="light"] .c-send{ background: #111318; color: #fff; }
 }
 .i-sources a:hover{ opacity: .9; }
 
-/* MOBILE TWEAKS */
-@media (max-width: 520px){
-  :root{
-    --padX: 12px;
-    --gap: 5px;
-    --cellH: 36px;
-  }
-
-  .title-wrap{ min-width: 190px; }
-  .year-pop{ width: min(340px, 94vw); }
-  .sub-indicator{ min-width: 110px; }
-  .week-row{ grid-template-columns: 62px 1fr; }
-  .wn{ height: 42px; }
-}
 /* ===== Holiday list shimmer (því listinn notar ekki .cell) ===== */
 .hitem.is-holiday{
-  position: relative;
-  overflow: hidden;
   background:
     radial-gradient(140% 120% at 18% 10%, color-mix(in srgb, var(--glow) 55%, transparent), transparent 58%),
     linear-gradient(180deg, color-mix(in srgb, var(--panel) 90%, transparent), transparent);
@@ -960,6 +988,22 @@ html[data-theme="light"] .c-send{ background: #111318; color: #fff; }
   animation: shimmerSoftList 3.0s ease-in-out infinite;
   opacity:.55;
   pointer-events:none;
+  z-index: 0;
+}
+
+/* smá sparkle líka í listanum */
+.hitem.is-holiday::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 24% 36%, color-mix(in srgb, var(--glow2) 90%, transparent) 0 2px, transparent 3px),
+    radial-gradient(circle at 76% 58%, color-mix(in srgb, var(--glow) 85%, transparent) 0 1.8px, transparent 3px);
+  opacity:0;
+  animation: sparkleTwinkle 4.8s ease-in-out infinite;
+  mix-blend-mode: screen;
+  z-index: 1;
 }
 
 @keyframes shimmerSoftList{
@@ -981,4 +1025,30 @@ html[data-theme="light"] .c-send{ background: #111318; color: #fff; }
 }
 .dowwrap{
   flex-wrap: wrap; /* ef þröngt á mobile, þá brýtur þetta snyrtilega */
+}
+
+/* MOBILE TWEAKS */
+@media (max-width: 520px){
+  :root{
+    --padX: 12px;
+    --gap: 4px;
+    --cellH: 30px;
+  }
+
+  .title-wrap{ min-width: 190px; }
+  .year-pop{ width: min(340px, 94vw); }
+  .sub-indicator{ min-width: 110px; }
+  .week-row{ grid-template-columns: 62px 1fr; }
+  .wn{ height: 42px; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .cell.is-holiday::before,
+  .cell.is-holiday::after,
+  .cell.is-today::after,
+  .hitem.is-holiday::before,
+  .hitem.is-holiday::after{
+    animation: none !important;
+  }
 }
