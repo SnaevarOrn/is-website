@@ -40,7 +40,7 @@
     <div class="topbar-inner">
       <button class="btn" id="backBtn" title="Forsíða">← <span style="opacity:.9">Forsíða</span></button>
 
-      <!-- YEAR NAV: now centered in top header -->
+      <!-- YEAR NAV: centered -->
       <div class="year-nav title-wrap" id="titleWrap">
         <button class="btn" id="prevYear" title="Fyrra ár">‹</button>
         <div class="year" id="yearLabel" title="Velja ár">2025</div>
@@ -49,18 +49,18 @@
         <div class="year-pop" id="yearPop" aria-hidden="true">
           <div class="row">
             <input id="yearInput" type="number" inputmode="numeric" />
-            <button class="btn" id="goYearBtn">Fara</button>
+            <button class="btn" id="goYearBtn" type="button">Fara</button>
           </div>
           <div class="row" style="justify-content:space-between;">
-            <button class="chip" data-jump="-10">-10</button>
-            <button class="chip" data-jump="10">+10</button>
+            <button class="chip" type="button" data-jump="-10">-10</button>
+            <button class="chip" type="button" data-jump="10">+10</button>
           </div>
         </div>
       </div>
 
       <!-- Menu -->
       <div class="menu-wrap">
-        <button class="menu-btn" id="menuBtn" aria-label="Valmynd">
+        <button class="menu-btn" id="menuBtn" aria-label="Valmynd" type="button">
           <div class="burger" aria-hidden="true"><span></span><span></span><span></span></div>
         </button>
         <div class="menu-pop" id="menuPop" role="menu" aria-label="Valmynd">
@@ -75,18 +75,37 @@
       <div class="subbar-inner">
         <div class="subrow subrow--year">
           <div class="yr-left">
-            <button class="chip chip--ghost" id="layoutToggleChip" type="button" title="Breyta sýn">Mánuðir</button>
+            <!-- ✅ Dropdown for Months/Weeks/Year -->
+            <div class="view-select">
+              <select id="viewSelect" class="chip chip--ghost" aria-label="Sýn">
+                <option value="months">Mánuðir</option>
+                <option value="weeks">Vikur</option>
+                <option value="year">Ár</option>
+              </select>
+            </div>
+
             <button class="chip chip--ghost" id="todayChip" type="button" title="Í dag">Í dag</button>
           </div>
 
-          <!-- moved here: holidays/day calendar toggle, aligned right -->
           <div class="yr-right">
+            <!-- ✅ Holiday list filters (only shown in holidays view; JS toggles display) -->
+            <div class="holi-filters" id="holiFilters" aria-label="Síur frídaga" style="display:none;">
+              <label class="mini-check">
+                <input type="checkbox" id="filterHoliday" checked />
+                <span>Frídagar</span>
+              </label>
+              <label class="mini-check">
+                <input type="checkbox" id="filterOther" checked />
+                <span>Aðrir</span>
+              </label>
+            </div>
+
             <button class="btn btn--ghost" id="holidaysToggleBtn" type="button" title="Skoða frídaga">Skoða frídaga</button>
           </div>
         </div>
 
         <div class="dowwrap">
-          <button class="sub-indicator" id="monthLabel" type="button" title="Breyta sýn (mánuðir/vikur)">janúar</button>
+          <button class="sub-indicator" id="monthLabel" type="button" title="Sýn">janúar</button>
 
           <div class="dowbar" id="dowBar">
             <div>mán</div><div>þri</div><div>mið</div><div>fim</div><div>fös</div><div>lau</div><div>sun</div>
@@ -97,20 +116,25 @@
   </header>
 
   <div class="overlay" id="overlay"></div>
+
   <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Stillingar">
     <div class="sheet-header">
       <div class="sheet-title">Stillingar</div>
-      <button class="btn" id="closeSheet" title="Loka">✕</button>
+      <button class="btn" id="closeSheet" title="Loka" type="button">✕</button>
     </div>
+
     <div class="sheet-body">
       <div class="group">
         <h4>Merkingar</h4>
+
         <div class="toggle">
           <label><input type="checkbox" id="toggleHolidays" /> Lögbundnir frídagar</label>
         </div>
+
         <div class="toggle">
           <label><input type="checkbox" id="toggleSpecial" /> Merkisdagar (án emoji)</label>
         </div>
+
         <div class="toggle">
           <label><input type="checkbox" id="toggleMoon" /> Tungl (🌕 / 🌑)</label>
         </div>
@@ -128,7 +152,7 @@
     <div class="i-modal">
       <div class="i-modal-h">
         <b id="iTitle">Upplýsingar</b>
-        <button class="i-close" id="iCloseBtn" aria-label="Loka">✕</button>
+        <button class="i-close" id="iCloseBtn" aria-label="Loka" type="button">✕</button>
       </div>
 
       <div class="i-body">
@@ -142,12 +166,12 @@
     </div>
   </div>
 
-  <!-- Contact modal (óbreytt) -->
+  <!-- Contact modal -->
   <div class="c-overlay" id="cOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
     <div class="c-modal">
       <div class="c-modal-h">
         <b id="contactTitle">Hafa samband</b>
-        <button class="c-close" id="cCloseBtn" aria-label="Loka">✕</button>
+        <button class="c-close" id="cCloseBtn" aria-label="Loka" type="button">✕</button>
       </div>
 
       <form class="c-form" id="contactForm" autocomplete="on">
