@@ -936,3 +936,49 @@ html[data-theme="light"] .c-send{ background: #111318; color: #fff; }
   .week-row{ grid-template-columns: 62px 1fr; }
   .wn{ height: 42px; }
 }
+/* ===== Holiday list shimmer (því listinn notar ekki .cell) ===== */
+.hitem.is-holiday{
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(140% 120% at 18% 10%, color-mix(in srgb, var(--glow) 55%, transparent), transparent 58%),
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 90%, transparent), transparent);
+  border-left: 3px solid color-mix(in srgb, var(--ice) 22%, transparent);
+}
+
+.hitem.is-holiday::before{
+  content:"";
+  position:absolute;
+  inset:-45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--glow2) 85%, transparent),
+    transparent
+  );
+  transform: rotate(14deg) translateX(-120%);
+  animation: shimmerSoftList 3.0s ease-in-out infinite;
+  opacity:.55;
+  pointer-events:none;
+}
+
+@keyframes shimmerSoftList{
+  0%{ transform: rotate(14deg) translateX(-120%); opacity: 0; }
+  20%{ opacity:.58; }
+  55%{ opacity:.32; }
+  100%{ transform: rotate(14deg) translateX(120%); opacity: 0; }
+}
+
+/* aðrir dagar: aðeins subtle áhersla (engin shimmer) */
+.hitem.is-special{
+  border-left: 3px solid color-mix(in srgb, var(--ice) 10%, transparent);
+}
+
+/* ===== Filters in lower header: prevent squish/overlap on mobile ===== */
+.holi-filters{
+  flex: 0 0 auto;
+  margin-left: 6px;
+}
+.dowwrap{
+  flex-wrap: wrap; /* ef þröngt á mobile, þá brýtur þetta snyrtilega */
+}
