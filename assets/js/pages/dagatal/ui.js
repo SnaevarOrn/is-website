@@ -11,6 +11,7 @@
   const yearLabel = $("#yearLabel");
   const monthLabel = $("#monthLabel");
   const dowBar = $("#dowBar");
+  const headerEl = document.querySelector("header.topbar");
 
   // Info modal bits
   const iOverlay = $("#iOverlay");
@@ -26,8 +27,14 @@
     showHolidays: false,
     showSpecial: true,
     showMoon: false,
-    layout: "months",   // "months" | "weeks"
+
+    layout: "months",   // "months" | "weeks" | "year"
     view: "calendar",   // "calendar" | "holidays"
+
+    // holiday list filters (header checkboxes when view=holidays)
+    listShowHoliday: true,
+    listShowSpecial: true,
+
     holidayMap: new Map(),
     specialMap: new Map(),
     moonMarkers: new Map(),
@@ -35,11 +42,47 @@
     monthObserver: null,
   };
 
-  function syncLayoutChip() {
-    const chip = $("#layoutToggleChip");
-    if (!chip) return;
-    chip.textContent = state.layout === "months" ? "Mánuðir" : "Vikur";
-    chip.title = "Breyta sýn";
+  /* ============ header height (fix overlap) ============ */
+  function syncHeaderHeightVar() {
+    if (!headerEl) return;
+    const h = Math.ceil(headerEl.getBoundingClientRect().height);
+    document.documentElement.style.setProperty("--headerH", `${h}px`);
+  }
+  window.addEventListener("resize", () => syncHeaderHeightVar());
+
+  /* ============ “anchor” for scroll persistence ============ */
+  function getAnchorIso() {
+    // find a day cell near the visual center
+    const x = Math.floor(window.innerWidth * 0.5);
+    const y = Math.floor(window.innerHeight * 0.45);
+    const el = document.elementFromPoint(x, y);
+    const cell = el?.closest?.("[data-iso]");
+    return cell?.getAttribute?.("data-iso") || null;
+  }
+
+  function mmddFromIso(iso) {
+    if (!iso || typeof iso !== "string") return null;
+    const parts = iso.split("-");
+    if (parts.length !== 3) return null;
+    return parts.slice(1).join("-");
+  }
+
+  function isoFromYearAndMmdd(year, mmdd) {
+    if (!mmdd) return null;
+    return `${year}-${mmdd}`;
+  }
+
+  function scrollToIso(iso, behavior = "auto") {
+    if (!iso) return;
+    const el = document.querySelector(`[data-iso="${iso}"]`);
+    if (el) el.scrollIntoView({ block: "center", behavior });
+  }
+
+  /* ============ UI sync ============ */
+  function syncViewSelect() {
+    const sel = $("#viewSelect");
+    if (!sel) return;
+    sel.value = state.layout;
   }
 
   function syncHolidaysToggleBtn() {
@@ -56,7 +99,10 @@
 
   function setHeaderContext() {
     syncHolidaysToggleBtn();
-    syncLayoutChip();
+    syncViewSelect();
+
+    const filters = $("#holiFilters");
+    if (filters) filters.style.display = state.view === "holidays" ? "" : "none";
 
     if (state.view === "holidays") {
       setMonthLabelText("Frídagar");
@@ -68,6 +114,10 @@
 
     if (state.layout === "weeks") {
       setMonthLabelText("Vikur");
+      return;
+    }
+    if (state.layout === "year") {
+      setMonthLabelText("Ár");
       return;
     }
     // months view: monthLabel updated by observer
@@ -119,7 +169,9 @@
     }
   }
 
-  async function build() {
+  async function build(opts = {}) {
+    const { preserveScrollIso = null } = opts;
+
     yearLabel.textContent = state.year;
     const yi = $("#yearInput");
     if (yi) yi.value = state.year;
@@ -131,11 +183,16 @@
     if (ts) ts.checked = state.showSpecial;
     if (tm) tm.checked = state.showMoon;
 
+    const fh = $("#filterHoliday");
+    const fo = $("#filterOther");
+    if (fh) fh.checked = state.listShowHoliday !== false;
+    if (fo) fo.checked = state.listShowSpecial !== false;
+
     state.holidayMap = D.getIcelandHolidayMap(state.year);
     state.specialMap = D.getIcelandSpecialDays(state.year);
     state.moonMarkers = D.computeMoonMarkersForYear(state.year);
 
-    await rebuildInfoMap(); // <-- ⓘ map for this year
+    await rebuildInfoMap();
 
     calendarEl.innerHTML = "";
     disconnectMonthObserver();
@@ -143,37 +200,44 @@
 
     if (state.view === "holidays") {
       R.renderHolidayList(state, calendarEl);
-      return;
-    }
-    if (state.layout === "weeks") {
+    } else if (state.layout === "weeks") {
       R.renderWeeks(state, calendarEl);
-      return;
+    } else if (state.layout === "year") {
+      R.renderYear(state, calendarEl);
+    } else {
+      R.renderMonths(state, calendarEl);
+      setupMonthObserver();
     }
 
-    R.renderMonths(state, calendarEl);
-    setupMonthObserver();
+    // after DOM paint: sync header height + restore anchor scroll if requested
+    requestAnimationFrame(() => {
+      syncHeaderHeightVar();
+      if (preserveScrollIso) scrollToIso(preserveScrollIso, "auto");
+    });
   }
 
   function jumpToToday() {
     const now = new Date();
     state.year = now.getFullYear();
     state.view = "calendar";
+    state.layout = "months";
     build().then(() => {
-      const iso = D.isoDate(now);
-      const el = document.querySelector(`[data-iso="${iso}"]`);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      scrollToIso(D.isoDate(now), "smooth");
     });
   }
 
-  function toggleLayout() {
-    state.layout = state.layout === "months" ? "weeks" : "months";
-    state.view = "calendar";
-    build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  function toggleHolidaysView() {
+    // preserve current scroll anchor (so coming back to calendar stays sane too)
+    const anchor = getAnchorIso();
+    state.view = state.view === "holidays" ? "calendar" : "holidays";
+    build({ preserveScrollIso: anchor });
   }
 
-  function toggleHolidaysView() {
-    state.view = state.view === "holidays" ? "calendar" : "holidays";
-    build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  function setLayout(newLayout) {
+    // if in holiday view, keep it in holiday view (but header label still updates)
+    state.layout = newLayout;
+    if (state.view !== "holidays") state.view = "calendar";
+    build({ preserveScrollIso: getAnchorIso() });
   }
 
   /* YEAR DROPDOWN */
@@ -188,19 +252,22 @@
     if (show) $("#yearInput")?.focus();
   }
 
-  function setYear(y) {
+  // keep same MM-DD when changing year (best effort)
+  function setYear(y, opts = {}) {
     if (!Number.isFinite(y)) return;
+
+    const anchor = opts.anchorIso || getAnchorIso();
+    const mmdd = mmddFromIso(anchor);
     state.year = y;
-    build().then(() => {
-      togglePop(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+
+    const targetIso = mmdd ? isoFromYearAndMmdd(state.year, mmdd) : null;
+    build({ preserveScrollIso: targetIso });
+    togglePop(false);
   }
 
   document.addEventListener("click", (e) => {
     if (pop && pop.classList.contains("show") && titleWrap && !titleWrap.contains(e.target)) togglePop(false);
   });
-
   yearLabel?.addEventListener("click", () => togglePop());
 
   $("#goYearBtn")?.addEventListener("click", () => setYear(parseInt($("#yearInput")?.value, 10)));
@@ -234,43 +301,54 @@
 
   $("#toggleHolidays")?.addEventListener("change", (e) => {
     state.showHolidays = e.target.checked;
-    build();
+    build({ preserveScrollIso: getAnchorIso() });
   });
   $("#toggleSpecial")?.addEventListener("change", (e) => {
     state.showSpecial = e.target.checked;
-    build();
+    build({ preserveScrollIso: getAnchorIso() });
   });
   $("#toggleMoon")?.addEventListener("change", (e) => {
     state.showMoon = e.target.checked;
-    build();
+    build({ preserveScrollIso: getAnchorIso() });
+  });
+
+  $("#filterHoliday")?.addEventListener("change", (e) => {
+    state.listShowHoliday = e.target.checked;
+    if (state.view === "holidays") build();
+  });
+  $("#filterOther")?.addEventListener("change", (e) => {
+    state.listShowSpecial = e.target.checked;
+    if (state.view === "holidays") build();
   });
 
   /* HEADER BUTTONS */
   $("#holidaysToggleBtn")?.addEventListener("click", () => toggleHolidaysView());
   $("#todayChip")?.addEventListener("click", () => jumpToToday());
-  $("#layoutToggleChip")?.addEventListener("click", () => {
-    if (state.view === "holidays") {
-      state.view = "calendar";
-      build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
-      return;
-    }
-    toggleLayout();
+
+  $("#viewSelect")?.addEventListener("change", (e) => {
+    const v = e.target.value;
+    if (v === "weeks" || v === "months" || v === "year") setLayout(v);
   });
 
   monthLabel?.addEventListener("click", () => {
+    // clicking month label toggles between months/weeks (kept as your old shortcut)
     if (state.view === "holidays") {
       state.view = "calendar";
-      build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+      build({ preserveScrollIso: getAnchorIso() });
       return;
     }
-    toggleLayout();
+    state.layout = state.layout === "months" ? "weeks" : "months";
+    build({ preserveScrollIso: getAnchorIso() });
   });
 
   $("#backBtn")?.addEventListener("click", () => history.back());
 
   function bumpYear(delta) {
+    const anchor = getAnchorIso();
+    const mmdd = mmddFromIso(anchor);
     state.year += delta;
-    build().then(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+    const targetIso = mmdd ? isoFromYearAndMmdd(state.year, mmdd) : null;
+    build({ preserveScrollIso: targetIso });
   }
   $("#prevYear")?.addEventListener("click", () => bumpYear(-1));
   $("#nextYear")?.addEventListener("click", () => bumpYear(1));
@@ -345,14 +423,12 @@
     if (iSummary) iSummary.textContent = info.summary || "";
     if (iText) iText.textContent = info.text || "";
 
-    // meta (date label)
     if (iMeta) {
       const [y, m, d] = iso.split("-").map(Number);
       const dt = new Date(y, m - 1, d);
       iMeta.textContent = `${d} ${["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"][m-1]} — ${["mán","þri","mið","fim","fös","lau","sun"][D.monIndex(dt.getDay())]}`;
     }
 
-    // sources
     if (iSources) {
       iSources.innerHTML = "";
       const srcs = Array.isArray(info.sources) ? info.sources : [];
@@ -379,7 +455,6 @@
   iCloseBtn?.addEventListener("click", closeInfoModal);
   iOverlay?.addEventListener("click", (e) => { if (e.target === iOverlay) closeInfoModal(); });
 
-  // Event delegation for info buttons (works for calendar + list)
   document.addEventListener("click", (e) => {
     const btn = e.target.closest?.(".info-btn");
     if (!btn) return;
@@ -401,11 +476,18 @@
   (() => {
     const now = new Date();
     state.year = now.getFullYear();
+
+    // defaults for view select
+    state.layout = "months";
+    state.view = "calendar";
+
+    // first sync header var (prevents overlap flashes)
+    syncHeaderHeightVar();
+
     build().then(() => {
       requestAnimationFrame(() => {
-        const iso = D.isoDate(now);
-        const el = document.querySelector(`[data-iso="${iso}"]`);
-        if (el) el.scrollIntoView({ block: "center" });
+        syncHeaderHeightVar();
+        scrollToIso(D.isoDate(now), "auto");
       });
     });
   })();
