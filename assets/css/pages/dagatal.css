@@ -566,8 +566,8 @@ body{
     transparent
   );
   transform: rotate(18deg) translateX(-120%);
-  animation: shimmerSoft 3.2s ease-in-out infinite;
-  opacity:.55;
+  animation: shimmerSoft 2.6s ease-in-out infinite;
+  opacity:.75;
   pointer-events:none;
   z-index: 0;
 }
@@ -583,7 +583,7 @@ body{
     radial-gradient(circle at 72% 62%, color-mix(in srgb, var(--glow) 90%, transparent) 0 1.8px, transparent 3px),
     radial-gradient(circle at 58% 26%, color-mix(in srgb, var(--glow2) 80%, transparent) 0 1.6px, transparent 3px);
   opacity:0;
-  animation: sparkleTwinkle 4.6s ease-in-out infinite;
+  animation: sparkleTwinkle 3.8s ease-in-out infinite;
   mix-blend-mode: screen;
   z-index: 1;
 }
@@ -985,8 +985,8 @@ html[data-theme="light"] .c-send{ background: #111318; color: #fff; }
     transparent
   );
   transform: rotate(14deg) translateX(-120%);
-  animation: shimmerSoftList 3.0s ease-in-out infinite;
-  opacity:.55;
+  animation: shimmerSoftList 2.6s ease-in-out infinite;
+  opacity:.75;
   pointer-events:none;
   z-index: 0;
 }
@@ -1001,7 +1001,7 @@ html[data-theme="light"] .c-send{ background: #111318; color: #fff; }
     radial-gradient(circle at 24% 36%, color-mix(in srgb, var(--glow2) 90%, transparent) 0 2px, transparent 3px),
     radial-gradient(circle at 76% 58%, color-mix(in srgb, var(--glow) 85%, transparent) 0 1.8px, transparent 3px);
   opacity:0;
-  animation: sparkleTwinkle 4.8s ease-in-out infinite;
+  animation: sparkleTwinkle 4.0s ease-in-out infinite;
   mix-blend-mode: screen;
   z-index: 1;
 }
