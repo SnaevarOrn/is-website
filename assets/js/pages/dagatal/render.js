@@ -50,16 +50,12 @@
     const isHoliday = !!state?.holidayMap?.has?.(iso);
     const isSpecial = !!state?.specialMap?.has?.(iso) && !isHoliday;
 
-    // Lögbundnir frídagar (🇮🇸) -> 🎉 bara þegar showHolidays er ON
+    // Lögbundnir frídagar: glimmer á boxinu (engin 🎉)
     if (state.showHolidays && isHoliday) {
       cell.classList.add("is-holiday");
-      const ce = document.createElement("div");
-      ce.className = "cele";
-      ce.textContent = "🎉";
-      cell.appendChild(ce);
     }
 
-    // Merkisdaga highlight (án 🎉)
+    // Merkisdaga highlight (án emoji)
     if (state.showSpecial && isSpecial) {
       cell.classList.add("is-special");
     }
@@ -120,6 +116,44 @@
       monthBlock.appendChild(grid);
       calendarEl.appendChild(monthBlock);
     }
+  }
+
+  // Compact year view: 12 mini-months in a 4x3-ish grid
+  function renderYear(state, calendarEl) {
+    const gridWrap = document.createElement("section");
+    gridWrap.className = "yeargrid";
+
+    for (let m = 0; m < 12; m++) {
+      const card = document.createElement("div");
+      card.className = "mini-month";
+      card.dataset.month = String(m);
+
+      const head = document.createElement("div");
+      head.className = "mini-head";
+      head.innerHTML = `<b>${MONTHS_LONG[m]}</b><small>${state.year}</small>`;
+      card.appendChild(head);
+
+      const grid = document.createElement("div");
+      grid.className = "mini-grid";
+
+      const first = new Date(state.year, m, 1);
+      const offset = D.monIndex(first.getDay());
+      for (let i = 0; i < offset; i++) {
+        const empty = document.createElement("div");
+        empty.className = "cell is-empty";
+        grid.appendChild(empty);
+      }
+
+      const dim = D.daysInMonth(state.year, m);
+      for (let day = 1; day <= dim; day++) {
+        grid.appendChild(makeDayCell(state, new Date(state.year, m, day)));
+      }
+
+      card.appendChild(grid);
+      gridWrap.appendChild(card);
+    }
+
+    calendarEl.appendChild(gridWrap);
   }
 
   // Weeks view: V1 = week containing Jan 1
@@ -194,58 +228,58 @@
     calendarEl.appendChild(box);
   }
 
-  // Holiday list = lögbundnir frídagar (🇮🇸) úr holidayMap
   function renderHolidayList(state, calendarEl) {
-  const box = document.createElement("section");
-  box.className = "holidays";
+    const box = document.createElement("section");
+    box.className = "holidays";
 
-  const holidays = Array.from(state.holidayMap.entries()).map(([iso, name]) => ({
-    iso, name, kind: "holiday"
-  }));
+    const showHoliday = state.listShowHoliday !== false; // default true
+    const showSpecial = state.listShowSpecial !== false; // default true
 
-  const specials = Array.from(state.specialMap.entries()).map(([iso, name]) => ({
-    iso, name, kind: "special"
-  }));
+    const holidays = showHoliday
+      ? Array.from(state.holidayMap.entries()).map(([iso, name]) => ({ iso, name, kind: "holiday" }))
+      : [];
 
-  // sameina + raða eftir dagsetningu
-  const items = [...holidays, ...specials].sort((a, b) => a.iso.localeCompare(b.iso));
+    const specials = showSpecial
+      ? Array.from(state.specialMap.entries()).map(([iso, name]) => ({ iso, name, kind: "special" }))
+      : [];
 
-  for (const it of items) {
-    const [y, mm, dd] = it.iso.split("-").map(Number);
-    const date = new Date(y, mm - 1, dd);
-    const right = `${dd} ${monthShort(mm - 1)} — ${weekdayShort(date)}`;
+    const items = [...holidays, ...specials].sort((a, b) => a.iso.localeCompare(b.iso));
 
-    const item = document.createElement("div");
-    item.className = "hitem";
+    for (const it of items) {
+      const [y, mm, dd] = it.iso.split("-").map(Number);
+      const date = new Date(y, mm - 1, dd);
+      const right = `${dd} ${monthShort(mm - 1)} — ${weekdayShort(date)}`;
 
-    const left = document.createElement("div");
-    left.className = "hleft";
+      const item = document.createElement("div");
+      item.className = "hitem";
 
-    // 🎉 aðeins fyrir lögbundna
-    left.textContent = it.kind === "holiday" ? `🎉 ${it.name}` : it.name;
+      const left = document.createElement("div");
+      left.className = "hleft";
+      left.textContent = it.name; // ✅ engin 🎉
 
-    const rightWrap = document.createElement("div");
-    rightWrap.className = "hright";
+      const rightWrap = document.createElement("div");
+      rightWrap.className = "hright";
 
-    const meta = document.createElement("span");
-    meta.className = "hmeta";
-    meta.textContent = right;
+      const meta = document.createElement("span");
+      meta.className = "hmeta";
+      meta.textContent = right;
 
-    rightWrap.appendChild(meta);
-    maybeAddInfoButton(state, it.iso, rightWrap);
+      rightWrap.appendChild(meta);
+      maybeAddInfoButton(state, it.iso, rightWrap);
 
-    item.appendChild(left);
-    item.appendChild(rightWrap);
-    box.appendChild(item);
+      item.appendChild(left);
+      item.appendChild(rightWrap);
+      box.appendChild(item);
+    }
+
+    calendarEl.appendChild(box);
   }
-
-  calendarEl.appendChild(box);
-}
 
   NS.render = {
     MONTHS_LONG,
     renderMonths,
     renderWeeks,
+    renderYear,
     renderHolidayList,
   };
 })();
