@@ -25,12 +25,12 @@
 
   /* ↓ þéttara til að koma fleiri dögum fyrir */
   --headerH: 132px;
-  --gap: 5px;
+  --gap: 4px;
   --padX: 14px;
 
   /* ↓ ~75–82% af fyrri hæð, án þess að minnka letur */
-  --cellH: 31px;
-  --cellRadius: 10px;
+  --cellH: 26px;
+  --cellRadius: 9px;
 
   /* glimmer tónn (ekki æpandi rauður) */
   --glow: color-mix(in srgb, var(--ice) 30%, transparent);
@@ -300,12 +300,12 @@ body{
 .mini-check input:checked::after,
 .toggle input:checked::after{
   content:"";
-  width: 11px;
-  height: 7px;
-  border-left: 2.4px solid color-mix(in srgb, var(--ice) 92%, transparent);
-  border-bottom: 2.4px solid color-mix(in srgb, var(--ice) 92%, transparent);
+  width: 13px;
+  height: 8px;
+  border-left: 3px solid color-mix(in srgb, var(--ice) 92%, transparent);
+  border-bottom: 3px solid color-mix(in srgb, var(--ice) 92%, transparent);
   transform: rotate(-45deg);
-  margin-top: 0;
+  margin-top: 1;
 }
 
 .dowwrap{
