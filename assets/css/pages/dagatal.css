@@ -752,7 +752,7 @@ html[data-theme="light"] .cell.is-today .dnum{ color:#ffffff; }
   display:flex;
   justify-content:space-between;
   gap:10px;
-  align-items:baseline;
+  align-items:center;
   position: relative;
   overflow: hidden; /* þarf fyrir shimmer */
 }
