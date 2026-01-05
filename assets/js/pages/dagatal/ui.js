@@ -494,3 +494,124 @@
 
   NS._state = state;
 })();
+// --- Holiday explainer (header info bubble) ------------------------------
+(() => {
+  function qs(id){ return document.getElementById(id); }
+
+  function openInfoModal({ title, meta = "", summary = "", html = "", sources = [] }) {
+    const overlay = qs("iOverlay");
+    if (!overlay) return;
+
+    const iTitle = qs("iTitle");
+    const iMeta = qs("iMeta");
+    const iSummary = qs("iSummary");
+    const iText = qs("iText");
+    const iSources = qs("iSources");
+
+    if (iTitle) iTitle.textContent = title || "Upplýsingar";
+    if (iMeta) iMeta.textContent = meta;
+    if (iSummary) iSummary.textContent = summary;
+
+    // We deliberately use innerHTML here because we want red-marked spans.
+    if (iText) iText.innerHTML = html;
+
+    if (iSources) {
+      iSources.innerHTML = "";
+      for (const s of sources) {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = s.href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = s.label;
+        li.appendChild(a);
+        iSources.appendChild(li);
+      }
+    }
+
+    overlay.classList.add("open");
+  }
+
+  function closeInfoModal() {
+    const overlay = qs("iOverlay");
+    if (!overlay) return;
+    overlay.classList.remove("open");
+  }
+
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+
+    if (t && (t.id === "iCloseBtn" || t.id === "iOverlay")) {
+      // close button or click on dim overlay
+      if (t.id === "iOverlay" && e.target !== t) return;
+      closeInfoModal();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeInfoModal();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = qs("holidayInfoBtn");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      const title = "Frídagar og stórhátíðardagar (Ísland)";
+      const meta  = "16 lögbundnir frídagar (frídagar + stórhátíðardagar).";
+      const summary =
+        "Stórhátíðardagar eru rauðmerktir hér. Launakjör geta ráðist af kjarasamningi/vöktum — þetta er almenn samantekt.";
+
+      const html = `
+        <div class="note">
+          <b>Stórhátíðardagar</b> (rauðir) og <b>aðrir frídagar</b> eru skilgreindir í launamálum og frídögum.
+        </div>
+        <br>
+
+        <b>Stórhátíðardagar</b><br>
+        • <span class="major">Nýársdagur</span> (1. janúar)<br>
+        • <span class="major">Föstudagurinn langi</span><br>
+        • <span class="major">Páskadagur</span><br>
+        • <span class="major">Hvítasunnudagur</span><br>
+        • <span class="major">Þjóðhátíðardagur Íslendinga</span> (17. júní)<br>
+        • <span class="major">Aðfangadagur</span> (eftir kl. 12:00)<br>
+        • <span class="major">Jóladagur</span> (25. desember)<br>
+        • <span class="major">Gamlársdagur</span> (eftir kl. 12:00)<br>
+        <br>
+
+        <b>Aðrir frídagar</b><br>
+        • Skírdagur<br>
+        • Annar í páskum<br>
+        • Uppstigningardagur<br>
+        • Sumardagurinn fyrsti<br>
+        • Alþjóðlegur frídagur verkafólks (1. maí)<br>
+        • Annar í Hvítasunnu<br>
+        • Frídagur verslunarmanna (fyrsti mánudagur í ágúst)<br>
+        • Annar í jólum (26. desember)<br>
+        <br>
+
+        <b>Launakjör (almenn lýsing)</b><br>
+        • Aukavinna á <span class="major">stórhátíðardögum</span>: greitt með tímakaupi (tengt mánaðarlaunum).<br>
+        • Aukavinna á <b>öðrum frídögum</b>: greitt sem yfirvinna (yfirvinnukaup/álög).<br>
+        <br>
+
+        <div class="note">
+          Sjá nákvæmar reglur og dæmi hjá Eflingu:
+          <a href="https://efling.is/raudir-dagar-fridagar/" target="_blank" rel="noopener noreferrer">
+            efling.is — Rauðir dagar / frídagar
+          </a>
+        </div>
+      `;
+
+      openInfoModal({
+        title,
+        meta,
+        summary,
+        html,
+        sources: [
+          { label: "www.efling.is — Rauðir dagar / frídagar", href: "https://efling.is/raudir-dagar-fridagar/" }
+        ]
+      });
+    });
+  });
+})();
