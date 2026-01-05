@@ -163,7 +163,27 @@ function isBadIdClass(idc) {
     s.includes("share")
   );
 }
+// Footer / legal / subscription noise (drop paragraph only)
+function looksLikeFooterNoise(p) {
+  const t = String(p || "").toLowerCase();
 
+  // © / allur réttur áskilinn / notkun óheimil
+  const copyrightRe =
+    /©|\ballur\s+réttur\s+áskilinn\b|\bréttur\s+áskilinn\b|\bnotkun\s+á\s+efni\b|\bheimil\s+án\s+samþykkis\b/;
+
+  // áskrift / styrkir blaðamennsku / krónur á mánuði
+  const subscriptionRe =
+  /\báskrift\b|\bstyrk(?:ir|ur)\b|\bsjálfstæða\b|\brannsóknarblaðamennsku\b|\bfrá\s+aðeins\b|\bkr\.?\b|\bkrón(?:ur|um)\b|\bá\s+mánuði\b/;
+
+  // miðilsheiti + ehf
+  const publisherRe =
+  /\behf\b|\bútgáfufélag\b|\bmiðilsins\b|\bheimildin\b|\bheimildinni\b|\bdv\b/;
+
+  return (
+    copyrightRe.test(t) ||
+    (subscriptionRe.test(t) && publisherRe.test(t))
+  );
+}
 // Strong “menu dump” detector (DV/RÚV)
 function looksLikeMenuNoise(txt) {
   const t0 = decodeEntities(normSpace(txt)).toLowerCase();
@@ -206,27 +226,6 @@ function looksLikeMenuNoise(txt) {
     const short = tokens.filter(w => w.length <= 3).length;
     if (short / tokens.length > 0.55) return true;
   }
-// Footer / legal / subscription noise (drop paragraph only)
-function looksLikeFooterNoise(p) {
-  const t = p.toLowerCase();
-
-  // © / allur réttur áskilinn / notkun óheimil
-  const copyrightRe =
-    /©|\ballur\s+réttur\s+áskilinn\b|\bréttur\s+áskilinn\b|\bnotkun\s+á\s+efni\b|\bheimil\s+án\s+samþykkis\b/;
-
-  // áskrift / styrkir blaðamennsku / krónur á mánuði
-  const subscriptionRe =
-    /\báskrift\b|\bstyrkir\s+sjálfstæða\b|\brannsóknarblaðamennsku\b|\bkrón(?:ur|um)\b|\bá\s+mánuði\b/;
-
-  // miðilsheiti + ehf
-  const publisherRe =
-    /\behf\b|\bútgáfufélag\b|\bmiðilsins\b|\bheimildinni\b/;
-
-  return (
-    copyrightRe.test(t) ||
-    (subscriptionRe.test(t) && publisherRe.test(t))
-  );
-}
 
   const sepHits = (t0.match(/-->|\|\||»|›|·|•|\/|</g) || []).length;
   if (sepHits >= 3) return true;
