@@ -815,7 +815,25 @@ html[data-theme="light"] .cell.is-today .dnum{ color:#ffffff; }
   margin-left: 8px;
   flex: 0 0 auto;
 }
+/* Info bubble in lower header */
+.info-btn--header{
+  position: static;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: none;
+  margin-left: 6px;
+  flex: 0 0 auto;
+}
 
+/* keep the lower header nicely aligned */
+.dowwrap{
+  align-items: center;
+}
+.holi-filters{
+  align-items: center;
+}
 /* CONTACT + INFO MODALS (óbreytt, kept) */
 .c-overlay{
   position:fixed; inset:0;
@@ -967,7 +985,19 @@ html[data-theme="light"] .c-send{ background: #111318; color: #fff; }
   text-underline-offset: 3px;
 }
 .i-sources a:hover{ opacity: .9; }
-
+/* Major holiday highlighting inside the info modal */
+.i-text .major{
+  color: #ff3b3b;
+  font-weight: 900;
+}
+.i-text .note{
+  color: color-mix(in srgb, var(--muted) 92%, transparent);
+}
+.i-text a{
+  color: color-mix(in srgb, var(--ice) 90%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 /* ===== Holiday list shimmer (því listinn notar ekki .cell) ===== */
 .hitem.is-holiday{
   background:
