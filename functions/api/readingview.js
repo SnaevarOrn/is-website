@@ -5,6 +5,7 @@
 //  - Pull clean article text (avoid nav/menu/footer/share/subscription dumps)
 //  - DV + RÚV: extra defensive heuristics
 //  - Decode HTML entities like &#8211; and &#xFA;
+//  - Filter out &shy; (soft hyphen) and common zero-width chars
 //  - If RÚV article text is not in DOM blocks, extract from JSON-LD / __NEXT_DATA__
 //
 // Output:
@@ -69,8 +70,17 @@ function clampText(s, maxChars) {
   return t.slice(0, maxChars).trimEnd() + "…";
 }
 
-function normSpace(s) {
+// Remove soft hyphen + common zero-width chars.
+// Soft hyphen can arrive as entity (&shy;) or as decoded char (\u00AD).
+function stripSoftHyphens(s) {
   return String(s || "")
+    .replace(/&shy;/gi, "")      // entity form
+    .replace(/\u00AD/g, "")      // decoded soft hyphen char
+    .replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, ""); // zero-width junk
+}
+
+function normSpace(s) {
+  return stripSoftHyphens(String(s || ""))
     .replace(/\u00A0/g, " ")
     .replace(/[ \t]+/g, " ")
     .replace(/\n[ \t]+/g, "\n")
@@ -80,7 +90,8 @@ function normSpace(s) {
 
 // Decode minimal set of HTML entities (numeric + common named)
 function decodeEntities(input) {
-  let s = String(input || "");
+  // IMPORTANT: kill &shy; BEFORE decoding numerics
+  let s = stripSoftHyphens(String(input || ""));
   if (!s) return s;
 
   // Common named
@@ -107,12 +118,15 @@ function decodeEntities(input) {
     try { return String.fromCodePoint(code); } catch { return _; }
   });
 
+  // IMPORTANT: kill decoded soft hyphens AFTER decoding
+  s = stripSoftHyphens(s);
+
   return s;
 }
 
 // Strip tags if we end up with HTML-ish blobs (from JSON fields sometimes)
 function stripTags(s) {
-  return decodeEntities(String(s || ""))
+  return stripSoftHyphens(decodeEntities(String(s || "")))
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/p\s*>/gi, "\n\n")
     .replace(/<\/li\s*>/gi, "\n")
@@ -152,7 +166,7 @@ function isBadIdClass(idc) {
 
 // Strong “menu dump” detector (DV/RÚV)
 function looksLikeMenuNoise(txt) {
-  const t0 = decodeEntities(normSpace(txt)).toLowerCase();
+  const t0 = stripSoftHyphens(decodeEntities(normSpace(txt))).toLowerCase();
   if (!t0) return true;
 
   const badPhrases = [
@@ -230,7 +244,7 @@ class Extractor {
   }
 
   push(txt) {
-    let s = decodeEntities(normSpace(txt));
+    let s = stripSoftHyphens(decodeEntities(normSpace(txt)));
     if (!s) return;
     if (looksLikeMenuNoise(s)) return;
 
@@ -245,7 +259,7 @@ class Extractor {
     const out = [];
     let prev = "";
     for (const p of this._buf) {
-      const s = decodeEntities(normSpace(p));
+      const s = stripSoftHyphens(decodeEntities(normSpace(p)));
       if (!s) continue;
       if (s === prev) continue;
       out.push(s);
@@ -342,7 +356,7 @@ function extractRuvFromJsonLd(html) {
   const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let m;
   while ((m = re.exec(html))) {
-    const raw = decodeEntities((m[1] || "").trim());
+    const raw = stripSoftHyphens(decodeEntities((m[1] || "").trim()));
     if (raw) scripts.push(raw);
     if (scripts.length > 10) break;
   }
@@ -390,7 +404,7 @@ function extractRuvFromJsonLd(html) {
 function extractRuvFromNextData(html) {
   const m = html.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
   if (!m) return null;
-  const raw = decodeEntities((m[1] || "").trim());
+  const raw = stripSoftHyphens(decodeEntities((m[1] || "").trim()));
   const parsed = tryParseJsonSafe(raw);
   if (!parsed) return null;
 
@@ -477,20 +491,20 @@ export async function onRequestGet({ request }) {
     .on("meta[property='og:site_name']", {
       element(el) {
         const c = el.getAttribute("content");
-        if (c && !ex.site) ex.site = decodeEntities(normSpace(c));
+        if (c && !ex.site) ex.site = stripSoftHyphens(decodeEntities(normSpace(c)));
       },
     })
     .on("meta[name='application-name']", {
       element(el) {
         const c = el.getAttribute("content");
-        if (c && !ex.site) ex.site = decodeEntities(normSpace(c));
+        if (c && !ex.site) ex.site = stripSoftHyphens(decodeEntities(normSpace(c)));
       },
     })
     // Best title: og:title if present
     .on("meta[property='og:title']", {
       element(el) {
         const c = el.getAttribute("content");
-        if (c) ex.title = decodeEntities(normSpace(c));
+        if (c) ex.title = stripSoftHyphens(decodeEntities(normSpace(c)));
       },
     })
     // fallback <title>
@@ -499,7 +513,7 @@ export async function onRequestGet({ request }) {
         if (!ex.title) ex.title += t.text;
       },
       end() {
-        ex.title = decodeEntities(normSpace(ex.title));
+        ex.title = stripSoftHyphens(decodeEntities(normSpace(ex.title)));
       },
     })
     // h1 best-effort
@@ -510,7 +524,7 @@ export async function onRequestGet({ request }) {
       },
       text(t) {
         if (ex._inBad) return;
-        const h1 = decodeEntities(normSpace(t.text));
+        const h1 = stripSoftHyphens(decodeEntities(normSpace(t.text)));
         if (h1 && h1.length > 4 && h1.length < 240) ex.title = h1;
       },
       end() {
@@ -552,7 +566,7 @@ export async function onRequestGet({ request }) {
         if (ex._inBad) return;
         if (ex._inContent <= 0) return;
 
-        const txt = decodeEntities(normSpace(t.text));
+        const txt = stripSoftHyphens(decodeEntities(normSpace(t.text)));
         if (!txt) return;
         if (txt.length < 22) return;
 
@@ -587,7 +601,7 @@ export async function onRequestGet({ request }) {
 
   // Generic fallback ONLY if still failed
   if (text.length < 220) {
-    const stripped = decodeEntities(html)
+    const stripped = stripSoftHyphens(decodeEntities(html))
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
@@ -612,11 +626,11 @@ export async function onRequestGet({ request }) {
   }
 
   // Final cleanup
-  const cleanTitle = clampText(decodeEntities(normSpace(ex.title)) || "Ónefnd frétt", 240);
-  const site = clampText(decodeEntities(normSpace(ex.site)) || host, 120);
+  const cleanTitle = clampText(stripSoftHyphens(decodeEntities(normSpace(ex.title))) || "Ónefnd frétt", 240);
+  const site = clampText(stripSoftHyphens(decodeEntities(normSpace(ex.site))) || host, 120);
 
   const finalParagraphs = (paragraphs || [])
-    .map(p => decodeEntities(normSpace(p)))
+    .map(p => stripSoftHyphens(decodeEntities(normSpace(p))))
     .map(p => stripTags(p))
     .map(p => normSpace(p))
     .filter(Boolean)
