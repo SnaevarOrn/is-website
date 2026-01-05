@@ -338,7 +338,7 @@ function mapFromText(x) {
   const localWords = [
     "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
     "sjalfstaedisflokk", "framsokn", "samfylking", "vidreisn", "midflokk",
-    "hreggvidur", "stod",
+    "hreggvidur", "samherji", "reykjanes", "landeldi", "stod",
     // crime/courts – oft DV/Pressan
     "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
   ];
