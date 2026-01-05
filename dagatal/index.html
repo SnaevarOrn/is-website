@@ -93,24 +93,30 @@
         </div>
 
         <div class="dowwrap">
-          <button class="sub-indicator" id="monthLabel" type="button" title="Sýn">janúar</button>
+  <button class="sub-indicator" id="monthLabel" type="button" title="Sýn">janúar</button>
 
-          <!-- ✅ Holiday list filters moved DOWN here (next to “Frídagar”) -->
-          <div class="holi-filters" id="holiFilters" aria-label="Síur frídaga" style="display:none;">
-            <label class="mini-check">
-              <input type="checkbox" id="filterHoliday" checked />
-              <span>Frídagar</span>
-            </label>
-            <label class="mini-check">
-              <input type="checkbox" id="filterOther" checked />
-              <span>Aðrir</span>
-            </label>
-          </div>
+  <!-- ✅ Holiday list filters moved DOWN here (next to “Frídagar”) -->
+  <div class="holi-filters" id="holiFilters" aria-label="Síur frídaga" style="display:none;">
+    <label class="mini-check">
+      <input type="checkbox" id="filterHoliday" checked />
+      <span>Frídagar</span>
+    </label>
+    <label class="mini-check">
+      <input type="checkbox" id="filterOther" checked />
+      <span>Aðrir</span>
+    </label>
+  </div>
 
-          <div class="dowbar" id="dowBar">
-            <div>mán</div><div>þri</div><div>mið</div><div>fim</div><div>fös</div><div>lau</div><div>sun</div>
-          </div>
-        </div>
+  <!-- ✅ NEW: info bubble (right side of the checkmarks) -->
+  <button class="info-btn info-btn--header" id="holidayInfoBtn" type="button"
+          aria-label="Upplýsingar um frídaga og stórhátíðir" title="Upplýsingar">
+    i
+  </button>
+
+  <div class="dowbar" id="dowBar">
+    <div>mán</div><div>þri</div><div>mið</div><div>fim</div><div>fös</div><div>lau</div><div>sun</div>
+  </div>
+</div>
       </div>
     </div>
   </header>
