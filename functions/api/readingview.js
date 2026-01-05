@@ -206,6 +206,27 @@ function looksLikeMenuNoise(txt) {
     const short = tokens.filter(w => w.length <= 3).length;
     if (short / tokens.length > 0.55) return true;
   }
+// Footer / legal / subscription noise (drop paragraph only)
+function looksLikeFooterNoise(p) {
+  const t = p.toLowerCase();
+
+  // © / allur réttur áskilinn / notkun óheimil
+  const copyrightRe =
+    /©|\ballur\s+réttur\s+áskilinn\b|\bréttur\s+áskilinn\b|\bnotkun\s+á\s+efni\b|\bheimil\s+án\s+samþykkis\b/;
+
+  // áskrift / styrkir blaðamennsku / krónur á mánuði
+  const subscriptionRe =
+    /\báskrift\b|\bstyrkir\s+sjálfstæða\b|\brannsóknarblaðamennsku\b|\bkrón(?:ur|um)\b|\bá\s+mánuði\b/;
+
+  // miðilsheiti + ehf
+  const publisherRe =
+    /\behf\b|\bútgáfufélag\b|\bmiðilsins\b|\bheimildinni\b/;
+
+  return (
+    copyrightRe.test(t) ||
+    (subscriptionRe.test(t) && publisherRe.test(t))
+  );
+}
 
   const sepHits = (t0.match(/-->|\|\||»|›|·|•|\/|</g) || []).length;
   if (sepHits >= 3) return true;
@@ -688,6 +709,7 @@ let finalParagraphs = (paragraphs || [])
   .map(p => normSpace(p))
   .filter(Boolean)
   .filter(p => !looksLikeMenuNoise(p))
+  .filter(p => !looksLikeFooterNoise(p))
   .slice(0, 120);
 
 // 👇 cut-marker patch
