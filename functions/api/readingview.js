@@ -166,7 +166,7 @@ function isBadIdClass(idc) {
 
 // Strong “menu dump” detector (DV/RÚV)
 function looksLikeMenuNoise(txt) {
-  const t0 = stripSoftHyphens(decodeEntities(normSpace(txt))).toLowerCase();
+  const t0 = decodeEntities(normSpace(txt)).toLowerCase();
   if (!t0) return true;
 
   const badPhrases = [
@@ -220,6 +220,52 @@ function looksLikeMenuNoise(txt) {
   if (navHits >= 5) return true;
 
   return false;
+}
+// Comment-disclaimer "cut marker" — drop paragraph + everything after it
+function truncateFromCommentDisclaimer(paragraphs) {
+  const paras = Array.isArray(paragraphs) ? paragraphs.slice() : [];
+  if (!paras.length) return paras;
+
+  // Require "athugasemd" + (ábyrgð + rétt/áskilur) OR (ærumeið) OR (tilkynna/smelltu)
+  const markerRe = /\bathugasemd(?:ir|um|a)?\b/i;
+  const responsibilityRe = /\b(ábyrgð|á\s+ábyrgð)\b/i;
+  const rightsRe = /\b(áskilur|áskilja|rétt(?:\s+til)?|fjarlægja|eyða)\b/i;
+  const abuseRe = /\b(ærumeið|ósæmileg|óviðeigandi)\b/i;
+  const reportRe = /\b(tilkynna|smelltu\s+hér)\b/i;
+
+  const isCutMarker = (s) => {
+    const t = String(s || "");
+    if (!markerRe.test(t)) return false;
+
+    const a = responsibilityRe.test(t);
+    const r = rightsRe.test(t);
+    const b = abuseRe.test(t);
+    const p = reportRe.test(t);
+
+    // Strong enough combos (keeps false positives low)
+    return (a && r) || b || p;
+  };
+
+  for (let i = 0; i < paras.length; i++) {
+    const p = paras[i];
+
+    // If marker is the whole paragraph -> cut from here
+    if (isCutMarker(p)) return paras.slice(0, i);
+
+    // If marker starts mid-paragraph -> trim paragraph and cut rest
+    // (useful when the disclaimer is appended at bottom)
+    if (markerRe.test(p) && (abuseRe.test(p) || reportRe.test(p) || (responsibilityRe.test(p) && rightsRe.test(p)))) {
+      // crude but effective: cut at first "Athugasemd..." occurrence
+      const m = p.match(/\bathugasemd(?:ir|um|a)?\b/i);
+      if (m && typeof m.index === "number" && m.index > 0) {
+        const head = p.slice(0, m.index).trim();
+        return head ? paras.slice(0, i).concat([head]) : paras.slice(0, i);
+      }
+      return paras.slice(0, i);
+    }
+  }
+
+  return paras;
 }
 
 function splitToParagraphs(rawText) {
@@ -625,22 +671,35 @@ export async function onRequestGet({ request }) {
     text = normSpace(paragraphs.join("\n\n"));
   }
 
-  // Final cleanup
-  const cleanTitle = clampText(stripSoftHyphens(decodeEntities(normSpace(ex.title))) || "Ónefnd frétt", 240);
-  const site = clampText(stripSoftHyphens(decodeEntities(normSpace(ex.site))) || host, 120);
+ // Final cleanup
+const cleanTitle = clampText(
+  stripSoftHyphens(decodeEntities(normSpace(ex.title))) || "Ónefnd frétt",
+  240
+);
 
-  const finalParagraphs = (paragraphs || [])
-    .map(p => stripSoftHyphens(decodeEntities(normSpace(p))))
-    .map(p => stripTags(p))
-    .map(p => normSpace(p))
-    .filter(Boolean)
-    .filter(p => !looksLikeMenuNoise(p))
-    .slice(0, 120);
+const site = clampText(
+  stripSoftHyphens(decodeEntities(normSpace(ex.site))) || host,
+  120
+);
 
-  text = clampText(normSpace(finalParagraphs.join("\n\n")), 15000);
+let finalParagraphs = (paragraphs || [])
+  .map(p => stripSoftHyphens(decodeEntities(normSpace(p))))
+  .map(p => stripTags(p))
+  .map(p => normSpace(p))
+  .filter(Boolean)
+  .filter(p => !looksLikeMenuNoise(p))
+  .slice(0, 120);
 
-  const excerpt = clampText(text.replace(/\n+/g, " ").trim(), 240);
-  const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
+// 👇 cut-marker patch
+finalParagraphs = truncateFromCommentDisclaimer(finalParagraphs);
+
+// 👇 build final text ONCE
+const finalText = clampText(normSpace(finalParagraphs.join("\n\n")), 15000);
+const excerpt = clampText(finalText.replace(/\n+/g, " ").trim(), 240);
+const wordCount = finalText ? finalText.split(/\s+/).filter(Boolean).length : 0;
+
+// replace the old `text` variable used below
+text = finalText;
 
   // If still basically nothing, return ok=false so UI shows your friendly message
   if (text.length < 120) {
