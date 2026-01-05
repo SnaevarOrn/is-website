@@ -334,11 +334,13 @@ function mapFromText(x) {
     "ummal", "dalkur", "vidtal", "kronika"
   ];
 
-  const foreignWords = ["erlent", "foreign", "bandarisk", "usa", "telegraph", "italia", "byd", "tesla", "evra", "donald", "trump", "world", "alheim", "althjod"];
+  const foreignWords = ["erlent", "foreign", "bandarisk", "usa", "telegraph", "italia", "byd", "tesla", "evra", "donald", "trump", "world", "alheim", "althjod",
+    "venesuela", "pasta", "toyota", "heimsmarkad", "oliuverd",
+  ];
   const localWords = [
     "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
     "sjalfstaedisflokk", "framsokn", "samfylking", "vidreisn", "midflokk",
-    "hreggvidur", "samherji", "reykjanes", "landeldi", "stod",
+    "hreggvidur", "samherji", "reykjanes", "landeldi", "stod", "pipulagn",
     // crime/courts – oft DV/Pressan
     "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
   ];
