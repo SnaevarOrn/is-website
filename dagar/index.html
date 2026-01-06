@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — Dagar</title>
+
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/dagar.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button id="backBtn" class="btn btn--ghost" type="button" aria-label="Til baka">Til baka</button>
+
+      <div class="title-wrap" id="titleWrap">
+        <button id="prevYear" class="chip chip--ghost" type="button" aria-label="Fyrra ár">‹</button>
+        <button id="yearLabel" class="year" type="button" aria-label="Ár">2026</button>
+        <button id="nextYear" class="chip chip--ghost" type="button" aria-label="Næsta ár">›</button>
+      </div>
+
+      <div class="menu-wrap">
+        <button id="todayChip" class="chip chip--ghost" type="button">Í dag</button>
+      </div>
+    </div>
+
+    <div class="subbar">
+      <div class="subbar-inner">
+        <div class="subrow">
+          <div class="filters">
+            <label class="mini-check">
+              <input id="filterHoliday" type="checkbox" checked>
+              <span>Frídagar</span>
+            </label>
+
+            <label class="mini-check">
+              <input id="filterSpecial" type="checkbox" checked>
+              <span>Merkisdagar</span>
+            </label>
+
+            <label class="mini-check">
+              <input id="filterOnlyMajor" type="checkbox">
+              <span>Aðeins stórhátíð</span>
+            </label>
+          </div>
+
+          <button id="holidayInfoBtn" class="info-btn info-btn--header" type="button" title="Upplýsingar">i</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="list" id="list"></section>
+
+    <footer class="footer">
+      ís.is — dagar
+    </footer>
+  </main>
+
+  <!-- INFO MODAL (same IDs as dagatal) -->
+  <div id="iOverlay" class="i-overlay" aria-hidden="true">
+    <div class="i-modal" role="dialog" aria-modal="true" aria-labelledby="iTitle">
+      <div class="i-modal-h">
+        <div>
+          <b id="iTitle">Upplýsingar</b>
+          <div id="iMeta" class="i-muted"></div>
+        </div>
+        <button id="iCloseBtn" class="i-close" type="button">Loka</button>
+      </div>
+      <div class="i-body">
+        <div id="iSummary" class="i-summary"></div>
+        <div id="iText" class="i-text"></div>
+
+        <div id="iSourcesWrap">
+          <div class="i-muted">Heimildir</div>
+          <ul id="iSources" class="i-sources"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared JS (if you already use these globally, keep as-is) -->
+  <script src="/assets/js/utils.js"></script>
+  <script src="/assets/js/theme.js"></script>
+  <script src="/assets/js/site.js"></script>
+
+  <!-- Core (shared with dagatal) -->
+  <script src="/assets/js/dagatal/dates.js"></script>
+  <script src="/assets/js/dagatal/holidays.js"></script>
+
+  <!-- Page JS -->
+  <script src="/assets/js/pages/dagar.js"></script>
+
+</body>
+</html>
