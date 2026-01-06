@@ -50,6 +50,9 @@ export async function onRequestGet({ request }) {
     vb:    { url: "https://www.vb.is/rss",          label: "Viðskiptablaðið" },
     stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
+
+    bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta (bb.is)" },
+    nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
