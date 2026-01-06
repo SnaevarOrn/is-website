@@ -8,10 +8,12 @@
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
     { id: "stundin",   label: "Heimildin",       domain: "heimildin.is" },
-    { id: "nutiminn", label: "Nútíminn",       domain: "nutiminn.is" },
+      { id: "nutiminn", label: "Nútíminn",       domain: "nutiminn.is" },
     { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
     { id: "vb",        label: "Viðskiptablaðið", domain: "vb.is" },
     { id: "bb",        label: "Bæjarins Besta", domain: "bb.is" },
+    { id: "fiskifrettir", label: "Fiskifréttir",   domain: "fjolmidillinn.is" },
+    { id: "frjalsverslun", label: "Frjáls verslun",  domain: "fjolmidillinn.is" },
     { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
   ];
 
