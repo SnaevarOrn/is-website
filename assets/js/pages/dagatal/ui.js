@@ -190,6 +190,7 @@
 
     state.holidayMap = D.getIcelandHolidayMap(state.year);
     state.specialMap = D.getIcelandSpecialDays(state.year);
+    state.majorHolidayMap = D.getIcelandMajorHolidayMap(state.year);
     state.moonMarkers = D.computeMoonMarkersForYear(state.year);
 
     await rebuildInfoMap();
