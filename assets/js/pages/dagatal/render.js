@@ -48,11 +48,17 @@
     cell.appendChild(dnum);
 
     const isHoliday = !!state?.holidayMap?.has?.(iso);
+    const isMajor = !!state?.majorHolidayMap?.has?.(iso);
     const isSpecial = !!state?.specialMap?.has?.(iso) && !isHoliday;
 
-    // Lögbundnir frídagar: glimmer á boxinu (engin 🎉)
+    // Lögbundnir frídagar: glimmer á boxinu
     if (state.showHolidays && isHoliday) {
       cell.classList.add("is-holiday");
+    }
+
+    // Stórhátíðardagar: rauður titill
+    if (state.showHolidays && isMajor) {
+      cell.classList.add("is-major-holiday");
     }
 
     // Merkisdaga highlight (án emoji)
@@ -253,9 +259,19 @@
       const item = document.createElement("div");
       item.className = "hitem " + (it.kind === "holiday" ? "is-holiday" : "is-special");
 
+      // Major holidays: red title class
+      const isMajor = !!state?.majorHolidayMap?.has?.(it.iso);
+      if (isMajor) item.classList.add("is-major-holiday");
+
       const left = document.createElement("div");
       left.className = "hleft";
-      left.textContent = it.name; // ✅ engin 🎉
+
+      // ✅ Half-red “dagur” for Aðfangadagur / Gamlársdagur (major only)
+      if (isMajor && typeof D.formatHalfRedDagur === "function") {
+        left.innerHTML = D.formatHalfRedDagur(it.name);
+      } else {
+        left.textContent = it.name;
+      }
 
       const rightWrap = document.createElement("div");
       rightWrap.className = "hright";
