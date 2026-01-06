@@ -587,6 +587,27 @@ body{
   mix-blend-mode: screen;
   z-index: 1;
 }
+/* 🔴 Major holidays: red titles (calendar + list) */
+.cell.is-major-holiday .dnum{
+  color: #ff3b3b;
+  text-shadow: 0 0 18px color-mix(in srgb, #ff3b3b 22%, transparent);
+}
+
+/* do not fight "today" */
+.cell.is-today.is-major-holiday .dnum{
+  color: inherit;
+  text-shadow: none;
+}
+
+.hitem.is-major-holiday .hleft{
+  color: #ff3b3b;
+}
+
+.red-suffix{
+  color:#ff3b3b;
+  font-weight: 900;
+}
+
 
 @keyframes shimmerSoft{
   0%{ transform: rotate(18deg) translateX(-120%); opacity: 0; }
