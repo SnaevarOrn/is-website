@@ -51,7 +51,7 @@ export async function onRequestGet({ request }) {
     stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
 
-    bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta (bb.is)" },
+    bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
     nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
   };
 
