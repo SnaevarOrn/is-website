@@ -8,9 +8,11 @@
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
     { id: "stundin",   label: "Heimildin",       domain: "heimildin.is" },
-    { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
+    { id: "nutiminn", label: "Nútíminn",       domain: "nutiminn.is" },
     { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
     { id: "vb",        label: "Viðskiptablaðið", domain: "vb.is" },
+    { id: "bb",        label: "Bæjarins Besta", domain: "bb.is" },
+    { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
   ];
 
   const CATEGORIES = [
