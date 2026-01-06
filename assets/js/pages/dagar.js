@@ -1,4 +1,4 @@
-/* assets/js/dagar.js — list view for holidays/special days (no calendar grid) */
+/* /assets/js/pages/dagar.js — Dagar (frídagar/merkisdagar) list view */
 (() => {
   const NS = (window.dagatal = window.dagatal || {});
   const D = NS.date;
@@ -30,20 +30,29 @@
 
   const holidayInfoBtn = $("#holidayInfoBtn");
 
+  if (!D) {
+    console.error("[dagar] NS.date vantar. Athugaðu <script> röðina (dates.js á að load-a áður).");
+    return;
+  }
+  if (!listEl) {
+    console.error("[dagar] #list fannst ekki í DOM.");
+    return;
+  }
+
+  const MONTHS_SHORT = ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"];
+  const WEEKDAYS = ["mán","þri","mið","fim","fös","lau","sun"];
+
   const state = {
     year: new Date().getFullYear(),
+    showHoliday: true,
+    showSpecial: true,
+    onlyMajor: false,
+
     holidayMap: new Map(),
     majorHolidayMap: new Map(),
     specialMap: new Map(),
     holidayInfoMap: new Map(),
-
-    showHoliday: true,
-    showSpecial: true,
-    onlyMajor: false,
   };
-
-  const MONTHS_SHORT = ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"];
-  const WEEKDAYS = ["mán","þri","mið","fim","fös","lau","sun"];
 
   function fmtMetaFromIso(iso) {
     const [y, m, d] = iso.split("-").map(Number);
@@ -74,10 +83,8 @@
     if (iTitle) iTitle.textContent = info.title || info.name || "Upplýsingar";
     if (iSummary) iSummary.textContent = info.summary || "";
     if (iText) iText.textContent = info.text || "";
-
     if (iMeta) iMeta.textContent = fmtMetaFromIso(iso);
 
-    // sources
     const srcs = Array.isArray(info.sources) ? info.sources : [];
     if (iSources) iSources.innerHTML = "";
     if (iSourcesWrap) iSourcesWrap.style.display = srcs.length ? "" : "none";
@@ -101,8 +108,6 @@
   }
 
   function renderList() {
-    if (!listEl) return;
-
     const items = [];
 
     if (state.showHoliday) {
@@ -115,13 +120,11 @@
 
     if (state.showSpecial && !state.onlyMajor) {
       for (const [iso, name] of state.specialMap.entries()) {
-        // specials are never "major holidays"
         items.push({ iso, name, kind: "special", isMajor: false });
       }
     }
 
     items.sort((a, b) => a.iso.localeCompare(b.iso));
-
     listEl.innerHTML = "";
 
     for (const it of items) {
@@ -132,7 +135,7 @@
       const left = document.createElement("div");
       left.className = "hleft";
 
-      // half-red suffix for Aðfangadagur / Gamlársdagur if you want:
+      // Half-red suffix for Aðfangadagur / Gamlársdagur (if available)
       if (it.isMajor && typeof D.formatHalfRedDagur === "function") {
         left.innerHTML = D.formatHalfRedDagur(it.name);
       } else {
@@ -145,10 +148,8 @@
       const meta = document.createElement("span");
       meta.className = "hmeta";
       meta.textContent = fmtMetaFromIso(it.iso);
-
       right.appendChild(meta);
 
-      // info button only if we have info for that iso
       if (state.holidayInfoMap?.has?.(it.iso)) {
         const btn = document.createElement("button");
         btn.className = "info-btn";
@@ -169,7 +170,9 @@
     if (yearLabel) yearLabel.textContent = String(state.year);
 
     state.holidayMap = D.getIcelandHolidayMap(state.year);
-    state.majorHolidayMap = D.getIcelandMajorHolidayMap(state.year);
+    state.majorHolidayMap = typeof D.getIcelandMajorHolidayMap === "function"
+      ? D.getIcelandMajorHolidayMap(state.year)
+      : new Map();
     state.specialMap = D.getIcelandSpecialDays(state.year);
 
     await rebuildInfoMap();
@@ -182,33 +185,15 @@
     build();
   }
 
-  function bumpYear(delta) {
-    setYear(state.year + delta);
-  }
-
-  function jumpToToday() {
-    const now = new Date();
-    setYear(now.getFullYear());
-  }
-
   // Wiring
   backBtn?.addEventListener("click", () => history.back());
-  prevYear?.addEventListener("click", () => bumpYear(-1));
-  nextYear?.addEventListener("click", () => bumpYear(1));
-  todayChip?.addEventListener("click", () => jumpToToday());
+  prevYear?.addEventListener("click", () => setYear(state.year - 1));
+  nextYear?.addEventListener("click", () => setYear(state.year + 1));
+  todayChip?.addEventListener("click", () => setYear(new Date().getFullYear()));
 
-  filterHoliday?.addEventListener("change", (e) => {
-    state.showHoliday = !!e.target.checked;
-    renderList();
-  });
-  filterSpecial?.addEventListener("change", (e) => {
-    state.showSpecial = !!e.target.checked;
-    renderList();
-  });
-  filterOnlyMajor?.addEventListener("change", (e) => {
-    state.onlyMajor = !!e.target.checked;
-    renderList();
-  });
+  filterHoliday?.addEventListener("change", (e) => { state.showHoliday = !!e.target.checked; renderList(); });
+  filterSpecial?.addEventListener("change", (e) => { state.showSpecial = !!e.target.checked; renderList(); });
+  filterOnlyMajor?.addEventListener("change", (e) => { state.onlyMajor = !!e.target.checked; renderList(); });
 
   document.addEventListener("click", (e) => {
     const btn = e.target.closest?.(".info-btn");
@@ -219,22 +204,17 @@
 
   iCloseBtn?.addEventListener("click", closeInfoModal);
   iOverlay?.addEventListener("click", (e) => { if (e.target === iOverlay) closeInfoModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeInfoModal(); });
 
-  // Header explainer bubble (optional)
+  // Header info bubble (simple)
   holidayInfoBtn?.addEventListener("click", () => {
     if (!iOverlay) return;
-    if (iTitle) iTitle.textContent = "Frídagar og stórhátíðardagar (Ísland)";
+    if (iTitle) iTitle.textContent = "Dagar (Ísland)";
     if (iMeta) iMeta.textContent = "";
-    if (iSummary) iSummary.textContent = "Stórhátíðardagar eru rauðmerktir. Þetta er almenn samantekt.";
-    if (iText) iText.innerHTML = `
-      <div class="note"><b>Stórhátíðardagar</b> eru rauðir. Aðrir frídagar glitra (shimmer) ef CSS styður það.</div>
-    `;
+    if (iSummary) iSummary.textContent = "Frídagar glitra. Stórhátíð er rauðmerkt. Merkisdaga má sýna/fela.";
+    if (iText) iText.textContent = "";
     if (iSourcesWrap) iSourcesWrap.style.display = "none";
     iOverlay.classList.add("open");
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeInfoModal();
   });
 
   // Init
