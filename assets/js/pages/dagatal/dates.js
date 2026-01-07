@@ -253,7 +253,7 @@
     };
   }
 
-  // Export
+  // Export 
   NS.date = {
     pad2,
     isoDate,
