@@ -228,7 +228,61 @@
     }
     return markers;
   }
+/* =========================
+   📊 Year stats: holiday weekday vs weekend (equal weight)
+   Uses current holidayMap (all lögbundnir frídagar).
+   ========================= */
+function computeHolidayWeekdayWeekendStats(year) {
+  const holidayMap = getIcelandHolidayMap(year); // Map iso -> name
+  const items = Array.from(holidayMap.entries()).map(([iso, name]) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    const wd = dt.getDay(); // 0 Sun .. 6 Sat
+    const weekend = (wd === 0 || wd === 6);
+    return {
+      iso,
+      name,
+      weekday: wd,
+      weekend,
+      // Monday=0 index if you want it:
+      monIndex: monIndex(wd),
+    };
+  });
 
+  const total = items.length;
+  const weekendCount = items.filter(x => x.weekend).length;
+  const weekdayCount = total - weekendCount;
+
+  const weekdayPct = total ? Math.round((weekdayCount / total) * 100) : 0;
+  const weekendPct = 100 - weekdayPct;
+
+  // fun: distribution by weekday (Mon..Sun)
+  const byDow = Array(7).fill(0); // 0=Mon..6=Sun
+  for (const it of items) byDow[it.monIndex]++;
+
+  // score: -1..+1 mapped to 0..100 (50 = neutral)
+  // + means more on weekdays (worker-friendly)
+  const balance = total ? (weekdayCount - weekendCount) / total : 0;
+  const score100 = Math.round((balance + 1) * 50); // -1=>0, 0=>50, +1=>100
+
+  let verdict = "Jafnvægi";
+  if (score100 >= 70) verdict = "Starfsmannavænnt ✅";
+  else if (score100 <= 30) verdict = "Yfirmannavænnt 😈";
+
+  return {
+    year,
+    total,
+    weekdayCount,
+    weekendCount,
+    weekdayPct,
+    weekendPct,
+    balance,
+    score100,
+    verdict,
+    byDow, // [Mon..Sun]
+    items, // detail list if you want to show later
+  };
+}
   // Export
   NS.date = {
     pad2,
