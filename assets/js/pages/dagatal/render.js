@@ -51,22 +51,10 @@
     const isMajor = !!state?.majorHolidayMap?.has?.(iso);
     const isSpecial = !!state?.specialMap?.has?.(iso) && !isHoliday;
 
-    // Lögbundnir frídagar: glimmer á boxinu
-    if (state.showHolidays && isHoliday) {
-      cell.classList.add("is-holiday");
-    }
+    if (state.showHolidays && isHoliday) cell.classList.add("is-holiday");
+    if (state.showHolidays && isMajor) cell.classList.add("is-major-holiday");
+    if (state.showSpecial && isSpecial) cell.classList.add("is-special");
 
-    // Stórhátíðardagar: rauður titill
-    if (state.showHolidays && isMajor) {
-      cell.classList.add("is-major-holiday");
-    }
-
-    // Merkisdaga highlight (án emoji)
-    if (state.showSpecial && isSpecial) {
-      cell.classList.add("is-special");
-    }
-
-    // Moon
     if (state.showMoon) {
       const mk = state?.moonMarkers?.get?.(iso);
       if (mk) {
@@ -77,10 +65,8 @@
       }
     }
 
-    // ⓘ info bubble (only if we have info for this iso)
     maybeAddInfoButton(state, iso, cell);
 
-    // Today marker
     const today = new Date();
     if (iso === D.isoDate(today) && state.year === today.getFullYear()) {
       cell.classList.add("is-today");
@@ -124,7 +110,6 @@
     }
   }
 
-  // Compact year view: 12 mini-months in a 4x3-ish grid
   function renderYear(state, calendarEl) {
     const gridWrap = document.createElement("section");
     gridWrap.className = "yeargrid";
@@ -162,7 +147,6 @@
     calendarEl.appendChild(gridWrap);
   }
 
-  // Weeks view: V1 = week containing Jan 1
   function renderWeeks(state, calendarEl) {
     const box = document.createElement("section");
     box.className = "weeks";
@@ -238,8 +222,8 @@
     const box = document.createElement("section");
     box.className = "holidays";
 
-    const showHoliday = state.listShowHoliday !== false; // default true
-    const showSpecial = state.listShowSpecial !== false; // default true
+    const showHoliday = state.listShowHoliday !== false;
+    const showSpecial = state.listShowSpecial !== false;
 
     const holidays = showHoliday
       ? Array.from(state.holidayMap.entries()).map(([iso, name]) => ({ iso, name, kind: "holiday" }))
@@ -259,14 +243,12 @@
       const item = document.createElement("div");
       item.className = "hitem " + (it.kind === "holiday" ? "is-holiday" : "is-special");
 
-      // Major holidays: red title class
       const isMajor = !!state?.majorHolidayMap?.has?.(it.iso);
       if (isMajor) item.classList.add("is-major-holiday");
 
       const left = document.createElement("div");
       left.className = "hleft";
 
-      // ✅ Half-red “dagur” for Aðfangadagur / Gamlársdagur (major only)
       if (isMajor && typeof D.formatHalfRedDagur === "function") {
         left.innerHTML = D.formatHalfRedDagur(it.name);
       } else {
@@ -288,48 +270,47 @@
       box.appendChild(item);
     }
 
+    // --- Year stats (bottom of holiday list) ---
+    if (typeof D.computeSwingHolidayStats === "function") {
+      const s = D.computeSwingHolidayStats(state.year);
+
+      const panel = document.createElement("div");
+      panel.className = "year-score";
+
+      const cycleNote = "Mynstur vikudaga endurtaka sig oft í ~28 ára lotu (næstum alltaf).";
+
+      panel.innerHTML = `
+        <div class="ys-title">Árstölfræði sveiflu-frídaga</div>
+
+        <div class="ys-row">
+          <b>${s.year}</b>
+          <span class="ys-badge">${s.score100}/100</span>
+          <span class="ys-verd">${s.verdict}</span>
+        </div>
+
+        <div class="ys-meta">
+          Virkir dagar: <b>${s.weekdayCount}/${s.total}</b> (${s.weekdayPct}%)
+          &nbsp;•&nbsp;
+          Helgar: <b>${s.weekendCount}/${s.total}</b> (${s.weekendPct}%)
+        </div>
+
+        <div class="ys-dow">
+          <span><b>Mán</b> ${s.byDow[0]}</span>
+          <span><b>Þri</b> ${s.byDow[1]}</span>
+          <span><b>Mið</b> ${s.byDow[2]}</span>
+          <span><b>Fim</b> ${s.byDow[3]}</span>
+          <span><b>Fös</b> ${s.byDow[4]}</span>
+          <span><b>Lau</b> ${s.byDow[5]}</span>
+          <span><b>Sun</b> ${s.byDow[6]}</span>
+        </div>
+
+        <div class="ys-note">${cycleNote}</div>
+      `;
+      box.appendChild(panel);
+    }
+
     calendarEl.appendChild(box);
   }
-
-  // --- Year stats (bottom of holiday list) ---
-if (typeof D.computeSwingHolidayStats === "function") {
-  const s = D.computeSwingHolidayStats(state.year);
-}
-
-  const panel = document.createElement("div");
-  panel.className = "year-score";
-
-  // 28-year cycle hint: Gregorian weekday patterns repeat every 28 years (except century quirks)
-  const cycleNote = "Vikudagar endurtaka sig oft í ~28 ára lotu (næstum alltaf).";
-
-  panel.innerHTML = `
-    <div class="ys-title">Árstölfræði frídaga</div>
-    <div class="ys-row">
-      <b>${s.year}</b>
-      <span class="ys-badge">${s.score100}/100</span>
-      <span class="ys-verd">${s.verdict}</span>
-    </div>
-
-    <div class="ys-meta">
-      Virkir dagar: <b>${s.weekdayCount}/${s.total}</b> (${s.weekdayPct}%)
-      &nbsp;•&nbsp;
-      Helgar: <b>${s.weekendCount}/${s.total}</b> (${s.weekendPct}%)
-    </div>
-
-    <div class="ys-dow">
-      <span><b>Mán</b> ${s.byDow[0]}</span>
-      <span><b>Þri</b> ${s.byDow[1]}</span>
-      <span><b>Mið</b> ${s.byDow[2]}</span>
-      <span><b>Fim</b> ${s.byDow[3]}</span>
-      <span><b>Fös</b> ${s.byDow[4]}</span>
-      <span><b>Lau</b> ${s.byDow[5]}</span>
-      <span><b>Sun</b> ${s.byDow[6]}</span>
-    </div>
-
-    <div class="ys-note">${cycleNote}</div>
-  `;
-  box.appendChild(panel);
-}
 
   NS.render = {
     MONTHS_LONG,
