@@ -240,8 +240,8 @@
     const score100 = Math.round((balance + 1) * 50); // 0..100
 
     let verdict = "Jafnvægi";
-    if (score100 >= 70) verdict = "Starfsmannavænt ✅";
-    else if (score100 <= 30) verdict = "Yfirmannavænt 😈";
+    if (score100 >= 60) verdict = "Starfsmannavænt ✅";
+    else if (score100 <= 40) verdict = "Yfirmannavænt 😈";
 
     return {
       year, total,
