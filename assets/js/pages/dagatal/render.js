@@ -291,6 +291,45 @@
     calendarEl.appendChild(box);
   }
 
+  // --- Year stats (bottom of holiday list) ---
+if (typeof D.computeHolidayWeekdayWeekendStats === "function") {
+  const s = D.computeHolidayWeekdayWeekendStats(state.year);
+
+  const panel = document.createElement("div");
+  panel.className = "year-score";
+
+  // 28-year cycle hint: Gregorian weekday patterns repeat every 28 years (except century quirks)
+  const cycleNote = "Vikudagar endurtaka sig oft í ~28 ára lotu (næstum alltaf).";
+
+  panel.innerHTML = `
+    <div class="ys-title">Árstölfræði frídaga</div>
+    <div class="ys-row">
+      <b>${s.year}</b>
+      <span class="ys-badge">${s.score100}/100</span>
+      <span class="ys-verd">${s.verdict}</span>
+    </div>
+
+    <div class="ys-meta">
+      Virkir dagar: <b>${s.weekdayCount}/${s.total}</b> (${s.weekdayPct}%)
+      &nbsp;•&nbsp;
+      Helgar: <b>${s.weekendCount}/${s.total}</b> (${s.weekendPct}%)
+    </div>
+
+    <div class="ys-dow">
+      <span><b>Mán</b> ${s.byDow[0]}</span>
+      <span><b>Þri</b> ${s.byDow[1]}</span>
+      <span><b>Mið</b> ${s.byDow[2]}</span>
+      <span><b>Fim</b> ${s.byDow[3]}</span>
+      <span><b>Fös</b> ${s.byDow[4]}</span>
+      <span><b>Lau</b> ${s.byDow[5]}</span>
+      <span><b>Sun</b> ${s.byDow[6]}</span>
+    </div>
+
+    <div class="ys-note">${cycleNote}</div>
+  `;
+  box.appendChild(panel);
+}
+
   NS.render = {
     MONTHS_LONG,
     renderMonths,
