@@ -65,7 +65,6 @@
 
   /* =========================
      🇮🇸 LÖGBUNDNIR FRÍDAGAR (16)
-     - Þetta eru "frídagarnir" sem eiga að fá shimmer (.is-holiday) í UI.
      ========================= */
   function getIcelandHolidayMap(year) {
     const map = new Map(); // iso -> name
@@ -73,22 +72,19 @@
 
     const easter = easterSunday(year);
 
-    // Fastir lögbundnir frídagar
     add(1, 1, "Nýársdagur");
     add(5, 1, "Alþjóðlegur frídagur verkafólks");
     add(6, 17, "Þjóðhátíðardagur Íslendinga");
-    add(12, 24, "Aðfangadagur");  // (eftir kl. 12:00) merkt í major-map
+    add(12, 24, "Aðfangadagur");
     add(12, 25, "Jóladagur");
     add(12, 26, "Annar í jólum");
-    add(12, 31, "Gamlársdagur");  // (eftir kl. 12:00) merkt í major-map
+    add(12, 31, "Gamlársdagur");
 
-    // Páskar / hreyfanlegir frídagar
     map.set(isoDate(addDays(easter, -3)), "Skírdagur");
     map.set(isoDate(addDays(easter, -2)), "Föstudagurinn langi");
     map.set(isoDate(easter), "Páskadagur");
     map.set(isoDate(addDays(easter, 1)), "Annar í páskum");
 
-    // Aðrir hreyfanlegir frídagar
     map.set(isoDate(firstThursdayAfterApril18(year)), "Sumardagurinn fyrsti");
     map.set(isoDate(addDays(easter, 39)), "Uppstigningardagur");
     map.set(isoDate(addDays(easter, 49)), "Hvítasunnudagur");
@@ -100,8 +96,6 @@
 
   /* =========================
      🔴 STÓRHÁTÍÐARDAGAR (subset)
-     - Þetta er "rauða" lagið (.is-major-holiday) fyrir titla í UI.
-     - “eftir kl. 12:00” er sett í label hér til að UI geti sýnt það í info/lista ef vill.
      ========================= */
   function getIcelandMajorHolidayMap(year) {
     const map = new Map(); // iso -> label
@@ -121,10 +115,6 @@
     return map;
   }
 
-  /* =========================
-     ✂️ UI helper: half-red "dagur" fyrir Aðfangadag / Gamlársdag (og bara í texta)
-     - Render.js getur kallað þetta og notað innerHTML.
-     ========================= */
   function formatHalfRedDagur(name) {
     if (name === "Gamlársdagur") return 'Gamlárs<span class="red-suffix">dagur</span>';
     if (name === "Aðfangadagur") return 'Aðfanga<span class="red-suffix">dagur</span>';
@@ -132,50 +122,32 @@
   }
 
   /* =========================
-     ℹ️ MERKISDAGAR (ekki lögbundnir frídagar)
+     ℹ️ MERKISDAGAR
      ========================= */
   function getIcelandSpecialDays(year) {
-    const map = new Map(); // iso -> name
+    const map = new Map();
     const add = (m, d, name) => map.set(`${year}-${pad2(m)}-${pad2(d)}`, name);
 
-    // Fixed specials
     add(1, 6, "Þrettándinn");
     add(2, 14, "Valentínusardagurinn");
-    add(6, 24, "Jónsmessa");          // ✅ nýtt
+    add(6, 24, "Jónsmessa");
     add(10, 11, "Fæðingardagur forseta (HT)");
     add(11, 16, "Dagur íslenskrar tungu");
     add(12, 1, "Fullveldisdagurinn");
-    add(12, 21, "Vetrarsólstöður");   // ✅ nýtt (alltaf 21. des í þessu “merkisdagar” samhengi)
+    add(12, 21, "Vetrarsólstöður");
     add(10, 31, "Hrekkjavaka");
     add(12, 23, "Þorláksmessa");
 
-    // Bóndadagur (upphaf Þorra): first Friday on/after Jan 19
-    map.set(isoDate(weekdayOnOrAfter(year, 1, 19, 5 /* Fri */)), "Bóndadagur, upphaf Þorra");
-
-    // Konudagur (upphaf Góu): first Sunday on/after Feb 18
-    map.set(isoDate(weekdayOnOrAfter(year, 2, 18, 0 /* Sun */)), "Konudagur, upphaf Góu");
-
-    // Mæðradagurinn: second Sunday in May
-    map.set(isoDate(nthWeekdayOfMonth(year, 5, 0 /* Sun */, 2)), "Mæðradagurinn");
-
-    // Feðradagurinn: second Sunday in November
-    map.set(isoDate(nthWeekdayOfMonth(year, 11, 0 /* Sun */, 2)), "Feðradagurinn");
-
-    // Fyrsti vetrardagur: first Saturday on/after Oct 21
-    map.set(isoDate(weekdayOnOrAfter(year, 10, 21, 6 /* Sat */)), "Fyrsti vetrardagur");
-
-    // Sjómannadagurinn: first Sunday in June
-    map.set(isoDate(nthWeekdayOfMonth(year, 6, 0 /* Sun */, 1)), "Sjómannadagurinn");
-
-    // Menningarnótt í Reykjavík: fourth Saturday in August
-    map.set(isoDate(nthWeekdayOfMonth(year, 8, 6 /* Sat */, 4)), "Menningarnótt í Reykjavík");
+    map.set(isoDate(weekdayOnOrAfter(year, 1, 19, 5)), "Bóndadagur, upphaf Þorra");
+    map.set(isoDate(weekdayOnOrAfter(year, 2, 18, 0)), "Konudagur, upphaf Góu");
+    map.set(isoDate(nthWeekdayOfMonth(year, 5, 0, 2)), "Mæðradagurinn");
+    map.set(isoDate(nthWeekdayOfMonth(year, 11, 0, 2)), "Feðradagurinn");
+    map.set(isoDate(weekdayOnOrAfter(year, 10, 21, 6)), "Fyrsti vetrardagur");
+    map.set(isoDate(nthWeekdayOfMonth(year, 6, 0, 1)), "Sjómannadagurinn");
+    map.set(isoDate(nthWeekdayOfMonth(year, 8, 6, 4)), "Menningarnótt í Reykjavík");
 
     const easter = easterSunday(year);
-
-    // Moveable specials
     map.set(isoDate(addDays(easter, -7)), "Pálmasunnudagur");
-
-    // Bolludagur/Sprengidagur/Öskudagur
     map.set(isoDate(addDays(easter, -48)), "Bolludagur");
     map.set(isoDate(addDays(easter, -47)), "Sprengidagur");
     map.set(isoDate(addDays(easter, -46)), "Öskudagur");
@@ -199,7 +171,7 @@
   }
 
   function computeMoonMarkersForYear(year) {
-    const markers = new Map(); // iso -> "new" | "full"
+    const markers = new Map();
     const dates = [];
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31);
@@ -209,12 +181,8 @@
     const eps = 1.0;
 
     for (let i = 1; i < dates.length - 1; i++) {
-      const d = dates[i],
-        prev = dates[i - 1],
-        next = dates[i + 1];
-      const a = moonAgeDays(d),
-        ap = moonAgeDays(prev),
-        an = moonAgeDays(next);
+      const d = dates[i], prev = dates[i - 1], next = dates[i + 1];
+      const a = moonAgeDays(d), ap = moonAgeDays(prev), an = moonAgeDays(next);
 
       const dn = Math.min(a, SYNODIC - a);
       const dnp = Math.min(ap, SYNODIC - ap);
@@ -228,59 +196,62 @@
     }
     return markers;
   }
-/* =========================
-   📊 Year stats: holiday weekday vs weekend (equal weight)
-   Uses current holidayMap (all lögbundnir frídagar).
-   ========================= */
-function getSwingHolidayIsos(year) {
-  const easter = easterSunday(year);
 
-  const isos = [
-    `${year}-01-01`, // Nýársdagur
-    isoDate(firstThursdayAfterApril18(year)), // Sumardagurinn fyrsti (alltaf fim)
-    `${year}-05-01`, // 1. maí
-    `${year}-06-17`, // 17. júní
-    `${year}-12-24`, // Aðfangadagur (dagurinn sjálfur; þú getur merkt "eftir 12" í texta)
-    `${year}-12-25`, // Jóladagur
-    `${year}-12-26`, // Annar í jólum
-    `${year}-12-31`, // Gamlársdagur (eftir 12)
-  ];
+  /* =========================
+     📊 Swing-holiday stats (8 dagar sem “sveiflast” milli vikudaga)
+     ========================= */
+  function getSwingHolidayIsos(year) {
+    return [
+      `${year}-01-01`,                    // Nýársdagur
+      isoDate(firstThursdayAfterApril18(year)), // Sumardagurinn fyrsti
+      `${year}-05-01`,                    // 1. maí
+      `${year}-06-17`,                    // 17. júní
+      `${year}-12-24`,                    // Aðfangadagur
+      `${year}-12-25`,                    // Jóladagur
+      `${year}-12-26`,                    // Annar í jólum
+      `${year}-12-31`,                    // Gamlársdagur
+    ];
+  }
 
-  return isos;
-}
+  function computeSwingHolidayStats(year) {
+    const holidayMap = getIcelandHolidayMap(year);
+    const isos = getSwingHolidayIsos(year);
 
-function computeSwingHolidayStats(year) {
-  const holidayMap = getIcelandHolidayMap(year);
-  const isos = getSwingHolidayIsos(year);
+    const items = isos.map((iso) => {
+      const name = holidayMap.get(iso) || iso;
+      const [y, m, d] = iso.split("-").map(Number);
+      const dt = new Date(y, m - 1, d);
+      const wd = dt.getDay(); // 0 Sun .. 6 Sat
+      const weekend = (wd === 0 || wd === 6);
+      return { iso, name, weekend, monIndex: monIndex(wd) };
+    });
 
-  const items = isos.map((iso) => {
-    const name = holidayMap.get(iso) || iso; // fallback
-    const [y, m, d] = iso.split("-").map(Number);
-    const dt = new Date(y, m - 1, d);
-    const wd = dt.getDay(); // 0 Sun .. 6 Sat
-    const weekend = (wd === 0 || wd === 6);
-    return { iso, name, weekend, monIndex: monIndex(wd) };
-  });
+    const total = items.length;
+    const weekendCount = items.filter(x => x.weekend).length;
+    const weekdayCount = total - weekendCount;
 
-  const total = items.length;
-  const weekendCount = items.filter(x => x.weekend).length;
-  const weekdayCount = total - weekendCount;
+    const weekdayPct = total ? Math.round((weekdayCount / total) * 100) : 0;
+    const weekendPct = 100 - weekdayPct;
 
-  const weekdayPct = total ? Math.round((weekdayCount / total) * 100) : 0;
-  const weekendPct = 100 - weekdayPct;
+    const byDow = Array(7).fill(0); // Mon..Sun
+    for (const it of items) byDow[it.monIndex]++;
 
-  const byDow = Array(7).fill(0); // Mon..Sun
-  for (const it of items) byDow[it.monIndex]++;
+    const balance = total ? (weekdayCount - weekendCount) / total : 0;
+    const score100 = Math.round((balance + 1) * 50); // 0..100
 
-  const balance = total ? (weekdayCount - weekendCount) / total : 0;
-  const score100 = Math.round((balance + 1) * 50); // 0..100
+    let verdict = "Jafnvægi";
+    if (score100 >= 70) verdict = "Starfsmannavænt ✅";
+    else if (score100 <= 30) verdict = "Yfirmannavænt 😈";
 
-  let verdict = "Jafnvægi";
-  if (score100 >= 70) verdict = "Starfsmannavænnt ✅";
-  else if (score100 <= 30) verdict = "Yfirmannavænnt 😈";
-
-  return { year, total, weekdayCount, weekendCount, weekdayPct, weekendPct, score100, verdict, byDow, items };
-}
+    return {
+      year, total,
+      weekdayCount, weekendCount,
+      weekdayPct, weekendPct,
+      score100, verdict,
+      byDow,
+      items,
+    };
+  }
 
   // Export
   NS.date = {
