@@ -292,8 +292,9 @@
   }
 
   // --- Year stats (bottom of holiday list) ---
-if (typeof D.computeHolidayWeekdayWeekendStats === "function") {
-  const s = D.computeHolidayWeekdayWeekendStats(state.year);
+if (typeof D.computeSwingHolidayStats === "function") {
+  const s = D.computeSwingHolidayStats(state.year);
+}
 
   const panel = document.createElement("div");
   panel.className = "year-score";
