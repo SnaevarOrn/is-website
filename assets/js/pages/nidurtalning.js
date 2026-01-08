@@ -5,6 +5,40 @@
 
   const $ = (id) => document.getElementById(id);
 
+  // ---------------------------
+  // Storage (prefs.js first, fallback localStorage)
+  // ---------------------------
+  const STORE_KEY = "countdown.state.v1";
+
+  function hasPrefs(){
+    return !!(window.prefs && typeof prefs.get === "function" && typeof prefs.set === "function");
+  }
+
+  function storeGet(fallback = null){
+    try{
+      if (hasPrefs()) return prefs.get(STORE_KEY, fallback);
+    }catch(_){}
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(_){
+      return fallback;
+    }
+  }
+
+  function storeSet(val){
+    try{
+      if (hasPrefs()) { prefs.set(STORE_KEY, val); return; }
+    }catch(_){}
+    try{
+      localStorage.setItem(STORE_KEY, JSON.stringify(val));
+    }catch(_){}
+  }
+
+  // ---------------------------
+  // Elements
+  // ---------------------------
+
   // Display
   const timeEl  = $("time");
   const stateEl = $("state");
@@ -38,12 +72,19 @@
   const hintPrep = $("hintPrep");
   const hintMs = $("hintMs");
 
-  const ITEM_H = 52; // must match CSS li height
-  const PAD_ITEMS = 2; // visual context for "dim" styling
+  const ITEM_H = 52;      // must match CSS li height
+  const PAD_ITEMS = 2;    // visual context for "dim" styling
 
+  // ---------------------------
+  // State
+  // ---------------------------
   const status = {
     mode: "ready", // ready | prep | run | paused | done
+
+    // configured duration
     totalMs: 5 * 60 * 1000,
+
+    // runtime
     remainingMs: 5 * 60 * 1000,
 
     prepEnabled: false,
@@ -52,8 +93,12 @@
 
     showMs: false,
 
-    rafId: 0,
-    lastTs: 0
+    // "wall clock truth" for run state persistence
+    endAt: null,        // ms since epoch when run ends
+    prepEndAt: null,    // ms since epoch when prep ends
+    pausedPhase: null,  // 'prep' | 'run' | null
+
+    rafId: 0
   };
 
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
@@ -118,7 +163,6 @@
 
     resetBtn.disabled = !canReset();
 
-    // go button label follows state
     if (running) {
       goBtn.textContent = "⏸︎ Pása";
     } else if (paused) {
@@ -127,7 +171,6 @@
       goBtn.textContent = "▶︎ Start";
     }
 
-    // go is always usable (ready/done/start, running->pause, paused->resume)
     goBtn.disabled = false;
   }
 
@@ -136,12 +179,71 @@
     hintMs.textContent = `Millisec: ${status.showMs ? "á" : "af"}`;
   }
 
+  // ---------------------------
+  // Persistence
+  // ---------------------------
+  function readConfigMs(){
+    const h = clamp(Number(hoursEl.value || 0), 0, 23);
+    const m = clamp(Number(minsEl.value || 0), 0, 59);
+    const s = clamp(Number(secsEl.value || 0), 0, 59);
+    return partsToMs(h, m, s);
+  }
+
+  function snapshot(){
+    // Only store what we need to recover UI + run state
+    return {
+      v: 1,
+
+      // config
+      totalMs: Math.max(0, Math.floor(status.totalMs)),
+      prepEnabled: !!status.prepEnabled,
+      prepSeconds: clamp(Number(status.prepSeconds || 0), 0, 60),
+      showMs: !!status.showMs,
+
+      // run state
+      mode: status.mode,
+      endAt: (typeof status.endAt === "number") ? status.endAt : null,
+      prepEndAt: (typeof status.prepEndAt === "number") ? status.prepEndAt : null,
+      pausedPhase: status.pausedPhase || null,
+
+      // paused values (so we can resume exactly)
+      remainingMs: Math.max(0, Math.floor(status.remainingMs)),
+      prepRemainingMs: Math.max(0, Math.floor(status.prepRemainingMs)),
+
+      updatedAt: Date.now()
+    };
+  }
+
+  function persist(){
+    storeSet(snapshot());
+  }
+
+  // ---------------------------
+  // Render + loop (wall-clock accurate)
+  // ---------------------------
+  function stopLoop(){
+    if (status.rafId) cancelAnimationFrame(status.rafId);
+    status.rafId = 0;
+  }
+
+  function finish(){
+    stopLoop();
+    status.mode = "done";
+    status.endAt = null;
+    status.prepEndAt = null;
+    status.pausedPhase = null;
+    status.remainingMs = 0;
+    status.prepRemainingMs = 0;
+    persist();
+    render();
+  }
+
   function render(){
     updateActiveUI();
 
     if (status.mode === "prep") {
       const secLeft = Math.ceil(status.prepRemainingMs / 1000);
-      timeEl.textContent = String(secLeft);
+      timeEl.textContent = String(Math.max(0, secLeft));
     } else {
       timeEl.textContent = fmtTime(status.remainingMs);
     }
@@ -150,95 +252,61 @@
     setButtons();
   }
 
-  function stopLoop(){
-    if (status.rafId) cancelAnimationFrame(status.rafId);
-    status.rafId = 0;
-    status.lastTs = 0;
-  }
-
-  function finish(){
-    stopLoop();
-    status.mode = "done";
-    render();
-  }
-
-  function loop(ts){
-    if (!status.lastTs) status.lastTs = ts;
-    const dt = ts - status.lastTs;
-    status.lastTs = ts;
+  function tickFromWallClock(){
+    const now = Date.now();
 
     if (status.mode === "prep") {
-      status.prepRemainingMs -= dt;
-      if (status.prepRemainingMs <= 0) {
-        status.prepRemainingMs = 0;
-        status.mode = "run";
-        status.lastTs = ts;
+      if (typeof status.prepEndAt !== "number") {
+        // fallback safety
+        status.prepEndAt = now + status.prepRemainingMs;
       }
-      render();
-    } else if (status.mode === "run") {
-      status.remainingMs -= dt;
+      status.prepRemainingMs = Math.max(0, status.prepEndAt - now);
+
+      if (status.prepRemainingMs <= 0) {
+        // transition to RUN
+        status.prepRemainingMs = 0;
+        status.prepEndAt = null;
+
+        status.mode = "run";
+        status.endAt = now + status.remainingMs; // remainingMs should be configured total here
+        persist();
+      }
+    }
+
+    if (status.mode === "run") {
+      if (typeof status.endAt !== "number") {
+        status.endAt = now + status.remainingMs;
+      }
+      status.remainingMs = Math.max(0, status.endAt - now);
+
       if (status.remainingMs <= 0) {
         status.remainingMs = 0;
         render();
         finish();
         return;
       }
-      render();
-    }
-
-    status.rafId = requestAnimationFrame(loop);
-  }
-
-  function start(){
-    if (status.mode === "prep" || status.mode === "run") return;
-
-    if (status.mode === "done") {
-      status.remainingMs = status.totalMs;
-    }
-
-    if (status.prepEnabled && status.prepSeconds > 0) {
-      status.mode = "prep";
-      status.prepRemainingMs = status.prepSeconds * 1000;
-    } else {
-      status.mode = "run";
     }
 
     render();
-    stopLoop();
+  }
+
+  function loop(){
+    tickFromWallClock();
     status.rafId = requestAnimationFrame(loop);
   }
 
-  function pause(){
-    if (!(status.mode === "prep" || status.mode === "run")) return;
-    stopLoop();
-    status.mode = "paused";
-    render();
+  function ensureLoopRunning(){
+    if (!status.rafId && (status.mode === "prep" || status.mode === "run")) {
+      status.rafId = requestAnimationFrame(loop);
+    }
   }
 
-  function resume(){
-    if (status.mode !== "paused") return;
-    if (status.prepEnabled && status.prepRemainingMs > 0) status.mode = "prep";
-    else status.mode = "run";
-    render();
-    stopLoop();
-    status.rafId = requestAnimationFrame(loop);
-  }
-
-  function goAction(){
-    if (status.mode === "prep" || status.mode === "run") pause();
-    else if (status.mode === "paused") resume();
-    else start(); // ready or done
-  }
-
-  function readConfigMs(){
-    const h = clamp(Number(hoursEl.value || 0), 0, 23);
-    const m = clamp(Number(minsEl.value || 0), 0, 59);
-    const s = clamp(Number(secsEl.value || 0), 0, 59);
-    return partsToMs(h, m, s);
-  }
-
+  // ---------------------------
+  // Actions
+  // ---------------------------
   function applyConfigToReady(){
     const ms = readConfigMs();
+
     status.totalMs = ms;
     status.remainingMs = ms;
 
@@ -248,11 +316,95 @@
     status.showMs = !!showMsEl.checked;
 
     status.mode = "ready";
+    status.endAt = null;
+    status.prepEndAt = null;
+    status.pausedPhase = null;
+    status.prepRemainingMs = 0;
+
     renderHints();
 
     // keep picker aligned to config
     setPickerFromParts(msToParts(ms));
+
+    persist();
     render();
+  }
+
+  function start(){
+    if (status.mode === "prep" || status.mode === "run") return;
+
+    const now = Date.now();
+
+    // If done -> restart from configured value
+    if (status.mode === "done") {
+      status.remainingMs = status.totalMs;
+    }
+
+    // If ready (or paused resumed elsewhere) ensure remainingMs is sane
+    if (status.mode === "ready") {
+      status.remainingMs = status.totalMs;
+    }
+
+    if (status.prepEnabled && status.prepSeconds > 0) {
+      status.mode = "prep";
+      status.prepRemainingMs = status.prepSeconds * 1000;
+      status.prepEndAt = now + status.prepRemainingMs;
+      status.endAt = null;
+    } else {
+      status.mode = "run";
+      status.endAt = now + status.remainingMs;
+      status.prepEndAt = null;
+      status.prepRemainingMs = 0;
+    }
+
+    status.pausedPhase = null;
+
+    persist();
+    render();
+    stopLoop();
+    status.rafId = requestAnimationFrame(loop);
+  }
+
+  function pause(){
+    if (!(status.mode === "prep" || status.mode === "run")) return;
+
+    // freeze current remaining using wall-clock fields
+    tickFromWallClock();
+
+    status.pausedPhase = (status.mode === "prep") ? "prep" : "run";
+    status.mode = "paused";
+
+    status.endAt = null;
+    status.prepEndAt = null;
+
+    stopLoop();
+    persist();
+    render();
+  }
+
+  function resume(){
+    if (status.mode !== "paused") return;
+
+    const now = Date.now();
+
+    // resume from pausedPhase, default to run if unknown
+    if (status.pausedPhase === "prep" && status.prepRemainingMs > 0) {
+      status.mode = "prep";
+      status.prepEndAt = now + status.prepRemainingMs;
+      status.endAt = null;
+    } else {
+      status.mode = "run";
+      status.endAt = now + status.remainingMs;
+      status.prepEndAt = null;
+      status.prepRemainingMs = 0;
+    }
+
+    status.pausedPhase = null;
+
+    persist();
+    render();
+    stopLoop();
+    status.rafId = requestAnimationFrame(loop);
   }
 
   function reset(){
@@ -261,7 +413,15 @@
     applyConfigToReady();
   }
 
-  // ---------- iOS-like scroll picker ----------
+  function goAction(){
+    if (status.mode === "prep" || status.mode === "run") pause();
+    else if (status.mode === "paused") resume();
+    else start(); // ready or done
+  }
+
+  // ---------------------------
+  // iOS-like scroll picker
+  // ---------------------------
   function buildList(el, max){
     const frag = document.createDocumentFragment();
     for (let i = 0; i <= max; i++) {
@@ -275,7 +435,6 @@
   }
 
   function getCenteredValue(listEl){
-    // listEl has padding top/bottom; compute "nearest" by scrollTop
     const idx = Math.round(listEl.scrollTop / ITEM_H);
     return clamp(idx, 0, listEl.children.length - 1);
   }
@@ -307,14 +466,14 @@
     const m = getCenteredValue(listM);
     const s = getCenteredValue(listS);
     hoursEl.value = String(h);
-    minsEl.value = String(m);
-    secsEl.value = String(s);
+    minsEl.value  = String(m);
+    secsEl.value  = String(s);
   }
 
   function commitPickerToReady(){
     if (isActive()) return; // locked while active
     syncInputsFromPicker();
-    applyConfigToReady();
+    applyConfigToReady();   // persists
   }
 
   function attachPicker(listEl){
@@ -332,22 +491,21 @@
 
     listEl.addEventListener("scroll", onScroll, { passive: true });
 
-    // also support "tap to jump"
     listEl.addEventListener("click", (e) => {
       if (isActive()) return;
       const li = e.target.closest("li");
       if (!li) return;
       const idx = Number(li.dataset.value || 0);
       scrollToIndex(listEl, idx, true);
-      setTimeout(() => {
-        commitPickerToReady();
-      }, 120);
+      setTimeout(() => commitPickerToReady(), 120);
     });
   }
 
-  // ---------- Modal ----------
+  // ---------------------------
+  // Modal
+  // ---------------------------
   function openSettings(){
-    if (isActive()) return; // hidden anyway, but just in case
+    if (isActive()) return;
     settingsOverlay.classList.add("open");
     settingsOverlay.setAttribute("aria-hidden", "false");
   }
@@ -357,7 +515,9 @@
     settingsOverlay.setAttribute("aria-hidden", "true");
   }
 
-  // ---------- Events ----------
+  // ---------------------------
+  // Events
+  // ---------------------------
   goBtn.addEventListener("click", goAction);
   resetBtn.addEventListener("click", reset);
 
@@ -367,14 +527,13 @@
     secsEl.value  = String(clamp(Number(secsEl.value || 0), 0, 59));
     prepEl.value  = String(clamp(Number(prepEl.value || 0), 0, 60));
 
-    // sync picker to typed values
     setPickerFromParts({
       h: Number(hoursEl.value),
       m: Number(minsEl.value),
       s: Number(secsEl.value)
     });
 
-    applyConfigToReady();
+    applyConfigToReady(); // persists
     closeSettingsFn();
   });
 
@@ -382,11 +541,17 @@
   [hoursEl, minsEl, secsEl].forEach((el) => {
     el.addEventListener("input", () => {
       if (isActive()) return;
-      const ms = readConfigMs();
-      status.totalMs = ms;
-      status.remainingMs = ms;
+      status.totalMs = readConfigMs();
+      status.remainingMs = status.totalMs;
       status.mode = "ready";
-      setPickerFromParts(msToParts(ms));
+      status.endAt = null;
+      status.prepEndAt = null;
+      status.pausedPhase = null;
+      status.prepRemainingMs = 0;
+
+      setPickerFromParts(msToParts(status.totalMs));
+      renderHints();
+      persist();
       render();
     });
   });
@@ -394,16 +559,19 @@
   usePrepEl.addEventListener("change", () => {
     status.prepEnabled = !!usePrepEl.checked;
     renderHints();
+    persist();
   });
 
   showMsEl.addEventListener("change", () => {
     status.showMs = !!showMsEl.checked;
     renderHints();
+    persist();
     render();
   });
 
   prepEl.addEventListener("input", () => {
     status.prepSeconds = clamp(Number(prepEl.value || 0), 0, 60);
+    persist();
   });
 
   settingsBtn.addEventListener("click", openSettings);
@@ -417,7 +585,6 @@
   });
 
   document.addEventListener("keydown", (e) => {
-    // Escape closes settings
     if (e.key === "Escape" && settingsOverlay.classList.contains("open")) {
       closeSettingsFn();
       return;
@@ -441,7 +608,118 @@
     }
   });
 
-  // ---------- Init ----------
+  // Flush state on navigation/backgrounding
+  window.addEventListener("pagehide", () => persist());
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") persist();
+  });
+
+  // ---------------------------
+  // Init (restore from store)
+  // ---------------------------
+  function restoreFromStore(){
+    const saved = storeGet(null);
+    if (!saved || typeof saved !== "object") return false;
+
+    // config
+    const totalMs = Math.max(0, Number(saved.totalMs || 0));
+    status.totalMs = Number.isFinite(totalMs) ? totalMs : 0;
+
+    status.prepEnabled = !!saved.prepEnabled;
+    status.prepSeconds = clamp(Number(saved.prepSeconds || 0), 0, 60);
+    status.showMs = !!saved.showMs;
+
+    // apply to form controls
+    const parts = msToParts(status.totalMs);
+    hoursEl.value = String(clamp(parts.h, 0, 23));
+    minsEl.value  = String(clamp(parts.m, 0, 59));
+    secsEl.value  = String(clamp(parts.s, 0, 59));
+    usePrepEl.checked = status.prepEnabled;
+    prepEl.value = String(status.prepSeconds);
+    showMsEl.checked = status.showMs;
+
+    // runtime restore
+    const now = Date.now();
+    const mode = String(saved.mode || "ready");
+
+    status.remainingMs = Math.max(0, Number(saved.remainingMs ?? status.totalMs));
+    status.prepRemainingMs = Math.max(0, Number(saved.prepRemainingMs ?? 0));
+    status.endAt = (typeof saved.endAt === "number") ? saved.endAt : null;
+    status.prepEndAt = (typeof saved.prepEndAt === "number") ? saved.prepEndAt : null;
+    status.pausedPhase = (saved.pausedPhase === "prep" || saved.pausedPhase === "run") ? saved.pausedPhase : null;
+
+    if (mode === "run" && typeof status.endAt === "number") {
+      status.mode = "run";
+      status.remainingMs = Math.max(0, status.endAt - now);
+      if (status.remainingMs <= 0) {
+        finish();
+        return true;
+      }
+      renderHints();
+      setPickerFromParts(parts);
+      render();
+      stopLoop();
+      status.rafId = requestAnimationFrame(loop);
+      return true;
+    }
+
+    if (mode === "prep" && typeof status.prepEndAt === "number") {
+      status.mode = "prep";
+      status.prepRemainingMs = Math.max(0, status.prepEndAt - now);
+      if (status.prepRemainingMs <= 0) {
+        // If prep already elapsed while away, jump into run
+        status.prepRemainingMs = 0;
+        status.prepEndAt = null;
+        status.mode = "run";
+        status.endAt = now + status.totalMs;
+        status.remainingMs = status.totalMs;
+        persist();
+      }
+      renderHints();
+      setPickerFromParts(parts);
+      render();
+      stopLoop();
+      status.rafId = requestAnimationFrame(loop);
+      return true;
+    }
+
+    if (mode === "paused") {
+      status.mode = "paused";
+      // keep remainingMs/prepRemainingMs as stored
+      renderHints();
+      setPickerFromParts(parts);
+      render();
+      persist(); // normalize
+      return true;
+    }
+
+    if (mode === "done") {
+      status.mode = "done";
+      status.remainingMs = 0;
+      status.prepRemainingMs = 0;
+      status.endAt = null;
+      status.prepEndAt = null;
+      renderHints();
+      setPickerFromParts(parts);
+      render();
+      return true;
+    }
+
+    // default: ready
+    status.mode = "ready";
+    status.remainingMs = status.totalMs;
+    status.prepRemainingMs = 0;
+    status.endAt = null;
+    status.prepEndAt = null;
+    status.pausedPhase = null;
+
+    renderHints();
+    setPickerFromParts(parts);
+    render();
+    persist();
+    return true;
+  }
+
   function init(){
     // build lists
     buildList(listH, 23);
@@ -452,21 +730,27 @@
     attachPicker(listM);
     attachPicker(listS);
 
-    // defaults
-    hoursEl.value = "0";
-    minsEl.value = "5";
-    secsEl.value = "0";
+    // Try restore first
+    const restored = restoreFromStore();
+    if (!restored) {
+      // defaults (first visit)
+      hoursEl.value = "0";
+      minsEl.value = "5";
+      secsEl.value = "0";
 
-    usePrepEl.checked = false;
-    prepEl.value = "5";
+      usePrepEl.checked = false;
+      prepEl.value = "5";
+      showMsEl.checked = false;
 
-    showMsEl.checked = false;
+      status.prepEnabled = false;
+      status.prepSeconds = 5;
+      status.showMs = false;
 
-    status.prepEnabled = false;
-    status.prepSeconds = 5;
-    status.showMs = false;
+      applyConfigToReady(); // persists
+    }
 
-    applyConfigToReady(); // sets picker + renders + disables reset if already reset
+    // Ensure loop if needed
+    ensureLoopRunning();
   }
 
   init();
