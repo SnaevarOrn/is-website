@@ -10,8 +10,7 @@
   const stateEl = $("state");
 
   // Buttons
-  const startBtn = $("start");
-  const pauseBtn = $("pause");
+  const goBtn    = $("go");
   const resetBtn = $("reset");
 
   // Header/buttons
@@ -98,6 +97,7 @@
   }
 
   function isActive(){
+    // active means: user can't edit picker/settings normally
     return status.mode === "prep" || status.mode === "run" || status.mode === "paused";
   }
 
@@ -113,10 +113,22 @@
   }
 
   function setButtons(){
-    const activeRun = status.mode === "prep" || status.mode === "run";
-    startBtn.disabled = activeRun;
-    pauseBtn.disabled = !activeRun;
+    const running = (status.mode === "prep" || status.mode === "run");
+    const paused  = (status.mode === "paused");
+
     resetBtn.disabled = !canReset();
+
+    // go button label follows state
+    if (running) {
+      goBtn.textContent = "⏸︎ Pása";
+    } else if (paused) {
+      goBtn.textContent = "▶︎ Halda áfram";
+    } else {
+      goBtn.textContent = "▶︎ Start";
+    }
+
+    // go is always usable (ready/done/start, running->pause, paused->resume)
+    goBtn.disabled = false;
   }
 
   function renderHints(){
@@ -212,6 +224,12 @@
     status.rafId = requestAnimationFrame(loop);
   }
 
+  function goAction(){
+    if (status.mode === "prep" || status.mode === "run") pause();
+    else if (status.mode === "paused") resume();
+    else start(); // ready or done
+  }
+
   function readConfigMs(){
     const h = clamp(Number(hoursEl.value || 0), 0, 23);
     const m = clamp(Number(minsEl.value || 0), 0, 59);
@@ -231,6 +249,7 @@
 
     status.mode = "ready";
     renderHints();
+
     // keep picker aligned to config
     setPickerFromParts(msToParts(ms));
     render();
@@ -339,12 +358,7 @@
   }
 
   // ---------- Events ----------
-  startBtn.addEventListener("click", () => {
-    if (status.mode === "paused") resume();
-    else start();
-  });
-
-  pauseBtn.addEventListener("click", pause);
+  goBtn.addEventListener("click", goAction);
   resetBtn.addEventListener("click", reset);
 
   applyBtn.addEventListener("click", () => {
@@ -403,7 +417,28 @@
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && settingsOverlay.classList.contains("open")) closeSettingsFn();
+    // Escape closes settings
+    if (e.key === "Escape" && settingsOverlay.classList.contains("open")) {
+      closeSettingsFn();
+      return;
+    }
+
+    // Space toggles Start/Pause/Resume, but NOT while typing or in open settings
+    if (e.code === "Space" || e.key === " ") {
+      if (settingsOverlay.classList.contains("open")) return;
+
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+      const typing =
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        e.target?.isContentEditable;
+
+      if (typing) return;
+
+      e.preventDefault();
+      goAction();
+    }
   });
 
   // ---------- Init ----------
