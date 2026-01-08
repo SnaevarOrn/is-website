@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ís.is — Erlent</title>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Reuse news page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/frettir.css">
+
+  <script src="/assets/js/prefs.js"></script>
+  <script>
+    (function () {
+      const t = (window.prefs && prefs.getTheme) ? prefs.getTheme() : (localStorage.getItem('theme') || 'light');
+      const theme = (t === 'dark') ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+
+      const meta = document.getElementById('metaThemeColor');
+      if (meta) meta.setAttribute('content', theme === 'dark' ? '#0b0f14' : '#ffffff');
+    })();
+  </script>
+</head>
+
+<body>
+  <header class="page-header">
+    <div class="ph-left">
+      <button class="icon-btn" id="btnBack" aria-label="Til baka" title="Forsíða">←</button>
+      <div class="ph-title">
+        <div class="ph-kicker">ís.is</div>
+        <h1>Erlent</h1>
+      </div>
+    </div>
+
+    <div class="ph-right">
+      <button class="icon-btn" id="btnMenu" aria-label="Valmynd" title="Valmynd">☰</button>
+    </div>
+
+    <div class="ph-meta" aria-live="polite">
+      <span id="statusText">Tilbúið.</span>
+      <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
+      <span class="ph-dot">•</span>
+      <span id="lastUpdated"></span>
+    </div>
+
+    <div class="menu-panel" id="menuPanel" aria-hidden="true">
+      <div class="menu-card">
+        <button class="menu-action" id="btnThemeToggle" type="button">
+          <span class="ma-title">Þema</span>
+          <span class="ma-sub">Light / Dark</span>
+        </button>
+
+        <button class="menu-action" id="btnOpenSettings" type="button">
+          <span class="ma-title">Stillingar</span>
+          <span class="ma-sub">Miðlar + síur</span>
+        </button>
+
+        <button class="menu-action" id="btnRefresh" type="button">
+          <span class="ma-title">Endurhlaða</span>
+          <span class="ma-sub">Sækja nýjustu</span>
+        </button>
+
+        <div class="menu-row-last">
+          <a class="menu-link" href="/">Forsíða</a>
+          <span class="menu-dot">•</span>
+          <a class="menu-link" href="/frettir/">Fréttir</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <dialog class="settings" id="settingsDialog" aria-label="Stillingar">
+      <form method="dialog" class="settings-card" id="settingsForm">
+        <div class="settings-head">
+          <div>
+            <div class="settings-kicker">Erlent</div>
+            <h2>Stillingar</h2>
+          </div>
+          <button class="icon-btn" id="btnCloseSettings" type="button" aria-label="Loka" title="Loka">✕</button>
+        </div>
+
+        <div class="settings-grid">
+          <section class="settings-section">
+            <div class="sec-head">
+              <h3>Fjölmiðlar</h3>
+              <div class="sec-actions">
+                <button type="button" class="seg-btn" id="btnSourcesAll">Allt</button>
+                <button type="button" class="seg-btn" id="btnSourcesNone">Ekkert</button>
+              </div>
+            </div>
+            <div class="checklist" id="sourcesList"></div>
+          </section>
+
+          <section class="settings-section">
+            <div class="sec-head">
+              <h3>Sía</h3>
+              <div class="sec-actions">
+                <button type="button" class="seg-btn" id="btnCatsAll">Allt</button>
+                <button type="button" class="seg-btn" id="btnCatsNone">Ekkert</button>
+              </div>
+            </div>
+            <div class="checklist" id="catsList"></div>
+          </section>
+        </div>
+
+        <div class="settings-footer">
+          <button type="button" class="pill-btn primary" id="btnSaveSettings">Vista</button>
+          <button type="button" class="pill-btn" id="btnResetSettings">Endurstilla</button>
+        </div>
+      </form>
+    </dialog>
+
+    <section class="news-list" id="newsList" aria-label="Fréttalisti"></section>
+
+    <section class="empty" id="emptyState" hidden>
+      <h2>Ekkert fannst</h2>
+      <p class="muted">Veldu fleiri miðla eða slakaðu á síum.</p>
+      <button class="pill-btn primary" id="btnEmptyOpenSettings" type="button">Stillingar</button>
+    </section>
+
+    <section class="error" id="errorState" hidden>
+      <h2>Villa</h2>
+      <p class="muted" id="errorMsg">Gat ekki sótt fréttir.</p>
+      <button class="pill-btn primary" id="btnRetry" type="button">Reyna aftur</button>
+    </section>
+
+    <!-- Reading view modal -->
+    <dialog class="reading" id="readingDialog" aria-label="Leshamur">
+      <div class="reading-card" role="document">
+        <div class="reading-head">
+          <div class="reading-kicker" id="readingSite">Frétt</div>
+          <button class="icon-btn" id="btnCloseReading" type="button" aria-label="Loka" title="Loka">✕</button>
+        </div>
+
+        <h2 class="reading-title" id="readingTitle">Hleð…</h2>
+
+        <div class="reading-actions">
+          <a class="pill-btn" id="readingOpenOriginal" href="#" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
+            Opna upprunalega
+          </a>
+          <button class="pill-btn primary" id="readingMarkRead" type="button">
+            Merkja lesið
+          </button>
+        </div>
+
+        <div class="reading-body" id="readingBody">
+          <p class="muted">Sæki texta…</p>
+        </div>
+
+        <div class="reading-foot tiny muted" id="readingMeta"></div>
+      </div>
+    </dialog>
+  </main>
+
+  <script src="/assets/js/utils.js"></script>
+  <script src="/assets/js/theme.js"></script>
+  <script src="/assets/js/pages/erlent.js" defer></script>
+</body>
+</html>
