@@ -28,6 +28,7 @@
       "btn.random": "Slembiúrtak 🎲",
       "btn.timer": "Tími",
       "btn.news": "Fréttir",
+      "btn.umbreytir": "Umbreytir ⚖️"
 
       "footer.pill": "Vefur stofnaður 2025. Engar vafrakökur – bara ís.",
 
@@ -67,6 +68,7 @@
       "btn.random": "Random pick 🎲",
       "btn.timer": "Time",
       "btn.news": "News",
+      "btn.umbreytir": "Converter ⚖️"
 
       "footer.pill": "Site created 2025. No cookies — just ice.",
 
