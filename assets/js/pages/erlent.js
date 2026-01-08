@@ -499,7 +499,7 @@
     const qs = new URLSearchParams();
     qs.set("url", url);
 
-    const res = await fetch(`/api/readingview?${qs.toString()}`, {
+    const res = await fetch(`/api/readingview_world?${qs.toString()}`, {
       headers: { "Accept": "application/json" }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
