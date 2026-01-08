@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showDigital.checked = (localStorage.getItem('showDigital') !== 'false');
 
     handMode.value = localStorage.getItem('handMode') || 'smooth';
-    showHourNums.checked = (localStorage.getItem('showHourNums') !== 'false');
+    showHourNums.checked = (localStorage.getItem('showHourNums') === 'true');
     showMinNums.checked  = (localStorage.getItem('showMinNums') === 'true');
 
     sevenSeg.checked = (localStorage.getItem('sevenSeg') === 'true');
