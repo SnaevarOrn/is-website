@@ -428,6 +428,66 @@ html[data-theme="dark"] .settings-card{ background:var(--panel2); }
 }
 
 /* =========================
+   Header: news tabs (Ísland / Heimur)
+   ========================= */
+.ph-tabs{
+  display:flex;
+  gap:8px;
+  padding:6px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+html[data-theme="dark"] .ph-tabs{
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+}
+
+.ph-tab{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  height:36px;
+  padding:0 12px;
+  border-radius:999px;
+  border:1px solid transparent;
+
+  color:var(--text);
+  text-decoration:none;
+  font-size:13px;
+  font-weight:650;
+  opacity:.78;
+
+  -webkit-tap-highlight-color: transparent;
+  user-select:none;
+}
+
+.ph-tab:hover{
+  opacity:.95;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+html[data-theme="dark"] .ph-tab:hover{
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+}
+
+.ph-tab.is-active,
+.ph-tab[aria-current="page"]{
+  opacity:1;
+  border-color: color-mix(in srgb, var(--line) 92%, transparent);
+  background:var(--card);
+  box-shadow: 0 10px 24px rgba(2,6,23,.10);
+}
+
+html[data-theme="dark"] .ph-tab.is-active,
+html[data-theme="dark"] .ph-tab[aria-current="page"]{
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+}
+
+/* =========================
    Reading view modal
    ========================= */
 .reading::backdrop{ background:rgba(0,0,0,.22); }
