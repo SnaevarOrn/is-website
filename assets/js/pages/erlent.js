@@ -2,16 +2,18 @@
 (() => {
   "use strict";
 
-  // Foreign sources (RSS feeds configured in /functions/api/news.js)
+  // Foreign sources (RSS feeds configured in /functions/api/news_world.js)
   const SOURCES = [
-    { id: "reuters",   label: "Reuters",      domain: "reuters.com" },
-    { id: "bbc",       label: "BBC",          domain: "bbc.co.uk" },
-    { id: "guardian",  label: "The Guardian", domain: "theguardian.com" },
-    { id: "cnn",       label: "CNN",          domain: "cnn.com" },
-    { id: "fox",       label: "Fox News",     domain: "foxnews.com" },
-    { id: "nytimes",   label: "NY Times",     domain: "nytimes.com" },
-    { id: "aljazeera", label: "Al Jazeera",   domain: "aljazeera.com" },
-  ];
+  { id: "reuters",   label: "Reuters",       domain: "reuters.com" },
+  { id: "ap",        label: "AP News",       domain: "apnews.com" },
+  { id: "bbc",       label: "BBC",           domain: "bbc.co.uk" },
+  { id: "guardian",  label: "The Guardian",  domain: "theguardian.com" },
+  { id: "aljazeera", label: "Al Jazeera",    domain: "aljazeera.com" },
+  { id: "politico",  label: "POLITICO",      domain: "politico.com" },
+  { id: "verge",     label: "The Verge",     domain: "theverge.com" },
+  { id: "ars",       label: "Ars Technica",  domain: "arstechnica.com" },
+  { id: "wired",     label: "WIRED",         domain: "wired.com" },
+];
 
   // We reuse the same category ids as backend for simplicity
   const CATEGORIES = [
@@ -24,7 +26,6 @@
     { id: "visindi",   label: "Vísindi" },
     { id: "heilsa",    label: "Heilsa" },
     { id: "umhverfi",  label: "Umhverfi" },
-    { id: "innlent",   label: "Innlent (óvart innsláttur)" },
     { id: "oflokkad",  label: "Óflokkað" },
   ];
 
@@ -91,24 +92,9 @@
   };
 
   const defaultPrefs = () => ({
-    sources: Object.fromEntries(SOURCES.map(s => [s.id, true])),
-    categories: {
-      // default ON
-      erlent: true,
-      vidskipti: true,
-      taekni: true,
-      ithrottir: true,
-      menning: true,
-      skodun: true,
-      visindi: true,
-      heilsa: true,
-      umhverfi: true,
-      oflokkad: true,
-
-      // default OFF (shouldn't appear much on foreign page)
-      innlent: false,
-    }
-  });
+  sources: Object.fromEntries(SOURCES.map(s => [s.id, true])),
+  categories: Object.fromEntries(CATEGORIES.map(c => [c.id, true])),
+});
 
   function loadPrefs() {
     try {
@@ -421,7 +407,7 @@
     qs.set("cats", cats.join(","));
     qs.set("limit", "80");
 
-    const res = await fetch(`/api/news?${qs.toString()}`, {
+    const res = await fetch(`/api/news_world?${qs.toString()}`, {
       headers: { "Accept": "application/json" }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
