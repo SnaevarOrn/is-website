@@ -405,7 +405,7 @@
     const qs = new URLSearchParams();
     qs.set("sources", sources.join(","));
     qs.set("cats", cats.join(","));
-    qs.set("limit", "80");
+    qs.set("limit", "60");
 
     const res = await fetch(`/api/news_world?${qs.toString()}`, {
       headers: { "Accept": "application/json" }
