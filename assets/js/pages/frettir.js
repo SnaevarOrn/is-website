@@ -178,6 +178,19 @@
     else els.settingsDialog.removeAttribute("open");
   }
 
+  function setHeaderTabsActive() {
+  const path = (location.pathname || "/").toLowerCase();
+  const isWorld = path.startsWith("/erlent");
+  const current = isWorld ? "world" : "iceland";
+
+  document.querySelectorAll(".ph-tab[data-tab]").forEach(a => {
+    const on = a.getAttribute("data-tab") === current;
+    a.classList.toggle("is-active", on);
+    if (on) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+}
+
   function escapeHtml(s) {
     return String(s)
       .replaceAll("&", "&amp;")
@@ -789,13 +802,15 @@
   }
 
   function init() {
-    setTheme(getTheme());
-    const prefs = loadPrefs();
-    renderSettings(prefs);
-    wire();
-    wirePullToRefresh();
-    refresh();
-  }
+  setTheme(getTheme());
+  setHeaderTabsActive();   // ✅ virkir réttan tab
+
+  const prefs = loadPrefs();
+  renderSettings(prefs);
+  wire();
+  wirePullToRefresh();
+  refresh();
+}
 
   init();
 })();
