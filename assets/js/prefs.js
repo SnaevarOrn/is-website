@@ -31,7 +31,7 @@
 
   /* ---------- Defaults ---------- */
   const defaults = {
-    theme: 'light',      // 'light' | 'dark'
+    theme: 'dark',      // 'light' | 'dark'
     lang: 'is',          // 'is' | 'en'
     soundEnabled: true,
     soundVolume: 40,     // 0–100
