@@ -209,13 +209,15 @@ body[data-active="1"] #settingsBtn{ opacity:.35; pointer-events:none; }
   overscroll-behavior:contain;
   scroll-snap-type:y mandatory;
   -webkit-overflow-scrolling:touch;
-  padding: calc(95px - 26px) 0; /* centers 52px item */
+  padding-top: 69px;  /* (190 - 52)/2 */
+  padding-bottom: 69px;
   scrollbar-width:none;
 }
 
 .wheelList::-webkit-scrollbar{ display:none; }
 
 .wheelList li{
+  line-height: 52px; /* tryggir að talan sitji í miðju item */
   height:52px;
   display:flex;
   align-items:center;
@@ -265,6 +267,11 @@ body[data-active="1"] #settingsBtn{ opacity:.35; pointer-events:none; }
   display:grid;
   grid-template-columns:1fr 1fr 1fr;
   gap:10px;
+}
+
+.spacer{
+  pointer-events:none;
+  height: 1px; /* heldur grid-skiptingu en er “ósýnilegt” */
 }
 
 .btn{
