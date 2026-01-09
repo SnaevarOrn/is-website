@@ -8,6 +8,17 @@
   const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
   const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 
+  /* =========================
+     📜 Lögbundið frídagakerfi: 1972 breyting
+     - Sumardagurinn fyrsti
+     - Verkalýðsdagurinn (1. maí)
+     - 17. júní
+     - Frídagur verslunarmanna
+     Teljast aðeins með sem "lögbundnir frídagar" frá og með 1972.
+     ========================= */
+  const HOLIDAY_REFORM_YEAR = 1972;
+  const includePost1972FixedHolidays = (year) => year >= HOLIDAY_REFORM_YEAR;
+
   // Easter (Meeus/Jones/Butcher)
   function easterSunday(year) {
     const a = year % 19;
@@ -64,7 +75,7 @@
   }
 
   /* =========================
-     🇮🇸 LÖGBUNDNIR FRÍDAGAR (16)
+     🇮🇸 LÖGBUNDNIR FRÍDAGAR
      ========================= */
   function getIcelandHolidayMap(year) {
     const map = new Map(); // iso -> name
@@ -72,24 +83,36 @@
 
     const easter = easterSunday(year);
 
+    // Fastir
     add(1, 1, "Nýársdagur");
-    add(5, 1, "Alþjóðlegur frídagur verkafólks");
-    add(6, 17, "Þjóðhátíðardagur Íslendinga");
+
+    // Þessir urðu lögbundnir almennir frídagar 1972 (og síðar)
+    if (includePost1972FixedHolidays(year)) {
+      add(5, 1, "Alþjóðlegur frídagur verkafólks");
+      add(6, 17, "Þjóðhátíðardagur Íslendinga");
+    }
+
     add(12, 24, "Aðfangadagur");
     add(12, 25, "Jóladagur");
     add(12, 26, "Annar í jólum");
     add(12, 31, "Gamlársdagur");
 
+    // Páskar / hreyfanlegir frídagar (alltaf sömu vikudagar)
     map.set(isoDate(addDays(easter, -3)), "Skírdagur");
     map.set(isoDate(addDays(easter, -2)), "Föstudagurinn langi");
     map.set(isoDate(easter), "Páskadagur");
     map.set(isoDate(addDays(easter, 1)), "Annar í páskum");
 
-    map.set(isoDate(firstThursdayAfterApril18(year)), "Sumardagurinn fyrsti");
+    // Aðrir hreyfanlegir frídagar
+    // Sumardagurinn fyrsti + Frídagur verslunarmanna: aðeins frá 1972
+    if (includePost1972FixedHolidays(year)) {
+      map.set(isoDate(firstThursdayAfterApril18(year)), "Sumardagurinn fyrsti");
+      map.set(isoDate(firstMondayOfAugust(year)), "Frídagur verslunarmanna");
+    }
+
     map.set(isoDate(addDays(easter, 39)), "Uppstigningardagur");
     map.set(isoDate(addDays(easter, 49)), "Hvítasunnudagur");
     map.set(isoDate(addDays(easter, 50)), "Annar í Hvítasunnu");
-    map.set(isoDate(firstMondayOfAugust(year)), "Frídagur verslunarmanna");
 
     return map;
   }
@@ -106,7 +129,11 @@
     map.set(isoDate(addDays(easter, -2)), "Föstudagurinn langi");
     map.set(isoDate(easter), "Páskadagur");
     map.set(isoDate(addDays(easter, 49)), "Hvítasunnudagur");
-    add(6, 17, "Þjóðhátíðardagur Íslendinga");
+
+    // 17. júní: aðeins frá 1972
+    if (includePost1972FixedHolidays(year)) {
+      add(6, 17, "Þjóðhátíðardagur Íslendinga");
+    }
 
     add(12, 24, "Aðfangadagur (eftir kl. 12:00)");
     add(12, 25, "Jóladagur");
@@ -199,18 +226,25 @@
 
   /* =========================
      📊 Swing-holiday stats (8 dagar sem “sveiflast” milli vikudaga)
+     Ath: Verslunarmannadagur er VILJANDI ekki inni hér til að halda þessu í 8.
+     Og 3 af þessum 8 gilda bara frá 1972 (Sumardagur, 1. maí, 17. júní).
      ========================= */
   function getSwingHolidayIsos(year) {
-    return [
-      `${year}-01-01`,                    // Nýársdagur
-      isoDate(firstThursdayAfterApril18(year)), // Sumardagurinn fyrsti
-      `${year}-05-01`,                    // 1. maí
-      `${year}-06-17`,                    // 17. júní
-      `${year}-12-24`,                    // Aðfangadagur
-      `${year}-12-25`,                    // Jóladagur
-      `${year}-12-26`,                    // Annar í jólum
-      `${year}-12-31`,                    // Gamlársdagur
+    const isos = [
+      `${year}-01-01`, // Nýársdagur
+      `${year}-12-24`, // Aðfangadagur
+      `${year}-12-25`, // Jóladagur
+      `${year}-12-26`, // Annar í jólum
+      `${year}-12-31`, // Gamlársdagur
     ];
+
+    if (includePost1972FixedHolidays(year)) {
+      isos.push(isoDate(firstThursdayAfterApril18(year))); // Sumardagurinn fyrsti
+      isos.push(`${year}-05-01`); // 1. maí
+      isos.push(`${year}-06-17`); // 17. júní
+    }
+
+    return isos;
   }
 
   function computeSwingHolidayStats(year) {
@@ -253,7 +287,7 @@
     };
   }
 
-  // Export 
+  // Export
   NS.date = {
     pad2,
     isoDate,
