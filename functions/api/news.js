@@ -294,22 +294,22 @@ function mapFromText(x) {
   // --- ÍÞRÓTTIR: víkkað til að grípa Vísir titla sem hafa enga /sport slóð né RSS category ---
   const sportWords = [
     // generic
-    "sport", "ithrott", "fotbolti", "futbol", "bolti",
-    "handbolti", "korfubolti", "golf", "tennis", "motorsport", "formula",
+    "sport", "ithrott", "fotbolta", "fotbolti", "futbol", "bolti",
+    "handbolti", "nba", "korfubolti", "golf", "tennis", "motorsport", "formula",
     "ufc", "mma", "olymp", "olympi", "skid", "skidi", "hest", "hlaup", "marathon",
     "darts", "littler", "ally", "pally", "pila", "pilu", "undanu r slit", "undanurslit", "urslit", "leikur", "stodutafla",
 
     // add
-    "hnefaleik", "skak", "chess", "nfl",
+    "hnefaleik", "breidablik", "ka", "kr", "valur", "tindastoll", "skak", "chess", "nfl",
 
     // competitions/leagues
-    "premier league", "champions league", "europa league",
+    "hm", "em", "premier league", "champions league", "europa league",
     "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
 
     // Vísir-style “sports headlines” (names often appear without the word “fótbolti”)
     "ronaldo", "messi", "mourinho", "pep", "guardiola", "klopp",
-    "arsenal", "man city", "man. city", "manchester city", "manchester united",
-    "fulham", "crystal palace", "sunderland", "liverpool", "chelsea",
+    "arsenal", "man city", "man. city", "manchester city", "man utd", "manchester united",
+    "fulham", "crystal palace", "sunderland", "everton", "liverpool", "chelsea",
     "tottenham", "barcelona", "real madrid", "atletico",
     "psg", "bayern", "dortmund", "juventus", "milan", "inter",
 
