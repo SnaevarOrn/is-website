@@ -345,6 +345,7 @@ function mapFromText(x) {
     "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
     "sjalfstaedisflokk", "framsokn", "samfylking", "vidreisn", "midflokk",
     "hreggvidur", "samherji", "reykjanes", "landeldi", "stod", "pipulagn",
+    "ragnar", "magnus", "gudmundur", "ingi", "inga", "hilmar", "eyjolfur",
     // crime/courts – oft DV/Pressan
     "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
   ];
