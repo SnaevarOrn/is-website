@@ -49,9 +49,10 @@ function labelFor(id) {
 
 const FEEDS = {
   // Wire / global agencies
-  reuters:  { url: "https://feeds.reuters.com/reuters/topNews",          label: "Reuters" },
-  ap:       { url: "https://apnews.com/hub/ap-top-news?output=rss",      label: "AP News" },
-
+  // NOTE: Reuters/AP no longer provide reliable free RSS. Use RSSHub as a proxy.
+  reuters:  { url: "https://rsshub.app/reuters/world",             label: "Reuters" },
+  ap:       { url: "https://rsshub.app/apnews/topics/ap-top-news", label: "AP News" },
+  
   // Public service / large broadcasters
   bbc:      { url: "https://feeds.bbci.co.uk/news/rss.xml",             label: "BBC News" },
   npr:      { url: "https://feeds.npr.org/1001/rss.xml",                label: "NPR" },
