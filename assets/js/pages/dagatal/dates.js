@@ -88,7 +88,7 @@
 
     // Þessir urðu lögbundnir almennir frídagar 1972 (og síðar)
     if (includePost1972FixedHolidays(year)) {
-      add(5, 1, "Alþjóðlegur frídagur verkafólks");
+      add(5, 1, "Verkalýðsdagurinn");
       add(6, 17, "Þjóðhátíðardagur Íslendinga");
     }
 
