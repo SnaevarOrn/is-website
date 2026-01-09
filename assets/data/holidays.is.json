@@ -4,7 +4,7 @@
     "01-01": {
       "id": "new-years-day",
       "title": "🎆 Nýársdagur",
-      "summary": "Upphaf nýs árs samkvæmt gregoríska tímatalinu; lögbundinn almennur frídagur á Íslandi.",
+      "summary": "Hin stóra endursetning, allt byrjar aftur frá grunni. Táknrænn dagur endurnýjunar og stórtæktra áramótaheita sem flest deyja fyrir lok janúar. Lögbundinn frídagur á Íslandi.",
       "body": "Nýársdagur markar upphaf nýs árs samkvæmt gregoríska tímatalinu og hefur lengi haft táknræna merkingu um endurnýjun, upphaf og samfélagslega samveru.\n\nDagurinn er lögbundinn almennur frídagur á Íslandi og hluti af hefðbundnu frídagakerfi sem mótaðist á 20. öld í tengslum við þróun vinnuréttar og skipulag vinnuviku.\n\nÞótt ekki liggi fyrir ein nákvæm lagagrein um „stofnun“ nýársdags sem frídags, hefur hann verið fastur hluti af lögbundnum frídögum í íslenskum rétti í áratugi og telst sjálfsagður frídagur í samfélaginu í dag.\n\nNýársdagur þjónar því bæði félagslegum og hagnýtum tilgangi sem hvíldardagur eftir áramótahátíðir og sameiginleg byrjun nýs starfsárs.",
       "sources": [
         { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
@@ -14,7 +14,7 @@
     "01-06": {
       "id": "twelfth-night",
       "title": "✨ Þrettándinn",
-      "summary": "Hátíðisdagur í lok jólatímans (þrettándi dagur jóla); merkisdagur með sterkum menningarhefðum á Íslandi.",
+      "summary": "Þrettándinn er opinber lokun jóla – álfunum er hent út, jólatréð fer í ruslið og landið kveikir í risastórum bálum til að fagna (eða hræða huldufólkið í burtu, hvorugt er alveg ljóst). Kristileg Epiphany blandast íslenskri þjóðtrú um galdra og galdrakarla. Merkisdagur en ekki frídagur – því miður, engin lögleg afsökun fyrir að sofa fram yfir hádegið.",
       "body": "Þrettándinn er haldinn 6. janúar og markar hefðbundið lok jólatímans.\n\nÍ kristinni hefð tengist dagurinn birtingu Krists (Epiphany) og „þrettánda degi jóla“. Á Íslandi hefur dagurinn einnig sterka þjóðtrúar- og menningarlega vídd, þar sem sögur um huldufólk og álfabrennur hafa verið lifandi.\n\nÞrettándinn er almennt talinn merkisdagur í íslenskri hefð (ekki lögbundinn almennur frídagur fyrir allt launafólk).",
       "sources": [
         { "label": "Wikipedia (IS): Þrettándinn", "url": "https://is.wikipedia.org/wiki/%C3%9Erett%C3%A1ndinn" }
@@ -23,7 +23,7 @@
     "02-14": {
       "id": "valentines-day",
       "title": "💌 Valentínusardagurinn",
-      "summary": "Dagur sem tengist ást og vináttu; merkisdagur (ekki lögbundinn frídagur).",
+      "summary": "Dagurinn þegar allir verða skyndilega rómantískir og búðirnar selja rauðar rósir á verði sem gæti keypt bíl. Fullkominn til að sýna ást þína – eða minna maka þinn á að þú manst eftir honum einu sinni á ári.",
       "body": "Valentínusardagurinn er haldinn 14. febrúar og tengist í nútímahefð kveðjum, gjöfum og athöfnum sem snúa að ást og vináttu.\n\nDagurinn er víða haldinn hátíðlegur, en telst merkisdagur en ekki lögbundinn frídagur á Íslandi.",
       "sources": [
         { "label": "Wikipedia (IS): Valentínusardagur", "url": "https://is.wikipedia.org/wiki/Valent%C3%ADnusardagur" }
@@ -157,7 +157,7 @@
     {
       "id": "bun-day",
       "title": "🥯 Bolludagur",
-      "summary": "Mánudagur 48 dögum fyrir páskadag; merkisdagur.",
+      "summary": "Mánudagur 48 dögum fyrir páskadag; merkisdagur. Bolludagurinn er opinbert leyfi til að borða rjómabollur þar til maginn springur. Börn berja foreldra með bolluvendi – hefð sem er bæði sæt og ögn ofbeldisfull. Besti dagur ársins fyrir sælkera.",
       "body": "Bolludagur er hluti af þriggja daga röð fyrir föstu: Bolludagur, Sprengidagur og Öskudagur.\n\nÁ Íslandi tengist hann einkum rjómabollum og fjölskylduhefðum.",
       "rule": { "type": "easterOffset", "days": -48 },
       "sources": [
