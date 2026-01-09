@@ -32,7 +32,7 @@
     "05-01": {
       "id": "labour-day",
       "title": "✊ Verkalýðsdagurinn",
-      "summary": "Alþjóðlegur baráttudagur verkafólks; á Íslandi með fyrstu kröfugöngu 1923 og formfest frídagakerfi 1972.",
+      "summary": "Alþjóðlegur baráttudagur verkafólks; á Íslandi með fyrstu kröfugöngu 1923 og formfest frídagakerfi 1972. Heiðrar samstöðu og baráttu verkafólks fyrir réttindum um 8 stunda vinnudag.",
       "body": "Alþjóðlegur baráttudagur verkafólks (May Day / Labour Day) sem á rætur sínar að rekja til vinnu- og verkfallsbaráttu í Bandaríkjunum á síðari hluta 19. aldar, einkum kröfunnar um 8 stunda vinnudag.\n\nÁ Íslandi fór fyrsta kröfugangan fram 1. maí 1923 í Reykjavík, þar sem verkalýðshreyfingin setti fram kröfur um bætt kjör og vinnuréttindi.\n\nÞrátt fyrir langa hefð kröfuganga og samkomna varð 1. maí ekki almennur lögbundinn frídagur fyrr en árið 1972, þegar frídagakerfi launafólks var formfest.\n\nÍ dag er 1. maí bæði lögbundinn frídagur og virkur baráttudagur þar sem kröfugöngur, fundir og félagsleg umræða um stöðu launafólks eru í forgrunni.",
       "sources": [
         { "label": "IWW Ísland: The First May 1st in Iceland (1923)", "url": "https://iwwisland.org/2021/05/03/the-first-may-1st-in-iceland-1923/" },
@@ -59,7 +59,7 @@
     "10-31": {
       "id": "halloween",
       "title": "🎃 Hrekkjavaka",
-      "summary": "Merkisdagur sem hefur orðið algengari á Íslandi síðustu áratugi; ekki lögbundinn frídagur.",
+      "summary": "Dagur sem hefur orðið algengari á Íslandi síðustu áratugi. Börn í búningum ræna sælgæti – fullorðnir kaupa extra mikið „handa gestunum“ en éta það sjálfir.",
       "body": "Hrekkjavaka (Halloween) er 31. október og tengist búningum, skreytingum og leikjum.\n\nHún telst merkisdagur en ekki lögbundinn frídagur á Íslandi.",
       "sources": [
         { "label": "Wikipedia (IS): Hrekkjavaka", "url": "https://is.wikipedia.org/wiki/Hrekkjavaka" }
@@ -68,7 +68,7 @@
     "11-16": {
       "id": "icelandic-language-day",
       "title": "📚 Dagur íslenskrar tungu",
-      "summary": "Merkisdagur tileinkaður íslensku; haldinn á fæðingardegi Jónasar Hallgrímssonar. Ekki lögbundinn frídagur.",
+      "summary": "Merkisdagur tileinkaður íslensku; haldinn á fæðingardegi Jónasar Hallgrímssonar. Við minnumst Jónasar og lofum málið en förum svo því miður aftur að nota enskaslettur í setningum.",
       "body": "Dagur íslenskrar tungu er haldinn 16. nóvember og er tileinkaður íslenskri tungu og menningararfi.\n\nDagurinn er valinn vegna þess að hann er fæðingardagur Jónasar Hallgrímssonar.",
       "sources": [
         { "label": "Wikipedia (IS): Dagur íslenskrar tungu", "url": "https://is.wikipedia.org/wiki/Dagur_%C3%ADslenskrar_tungu" }
@@ -125,7 +125,7 @@
     "12-31": {
       "id": "new-years-eve",
       "title": "🎇 Gamlársdagur",
-      "summary": "Síðasti dagur ársins; áramótahátíð og kvöldsamvera. Hluti af frídagakerfi áramóta.",
+      "summary": "Síðasti dagur ársins; Flugeldar, áramótaskaup og uppgjör ársins – vonandi betra ár framundan!",
       "body": "Gamlársdagur er 31. desember og markar lok ársins. Á Íslandi er dagurinn sterkt tengdur áramótahátíð, fjölskyldusamveru og hefðum um áramótabrennur og flugelda.\n\nÍ frídagakerfinu myndar hann ásamt nýársdegi samhangandi hátíðartíma um áramót.",
       "sources": [
         { "label": "Wikipedia (EN): Public holidays in Iceland", "url": "https://en.wikipedia.org/wiki/Public_holidays_in_Iceland" },
@@ -167,7 +167,7 @@
     {
       "id": "sprengidagur",
       "title": "🍲 Sprengidagur",
-      "summary": "Þriðjudagur 47 dögum fyrir páskadag; merkisdagur.",
+      "summary": "Þriðjudagur 47 dögum fyrir páskadag. Sprengidagurinn: borða saltkjöt og baunir þar til þú getur varla hreyft þig. Nafnið er bókstaflega lýsandi – maginn „sprengist“. Fullkomin undirbúningur fyrir föstuna sem enginn heldur samt.",
       "body": "Sprengidagur er dagurinn á undan öskudegi og tengist hefð um saðningu fyrir föstu.\n\nÁ Íslandi tengist hann oft saltkjöti og baunum.",
       "rule": { "type": "easterOffset", "days": -47 },
       "sources": [
@@ -177,7 +177,7 @@
     {
       "id": "askudagur",
       "title": "🎭 Öskudagur",
-      "summary": "Miðvikudagur 46 dögum fyrir páskadag; upphaf föstu; merkisdagur.",
+      "summary": "Miðvikudagur 46 dögum fyrir páskadag; upphaf föstu. Börn í búningum ganga milli húsa, syngja og safna sælgæti í öskupoka. Fullorðnir þykjast vera að fást við „hefð“ en eru í raun að fá ókeypis nammi. Skemmtilegasti dagurinn fyrir alla undir 12 ára (og suma yfir).",
       "body": "Öskudagur markar upphaf löngu föstu í kristinni hefð.\n\nÁ Íslandi tengist dagurinn búningum, söngvum og „öskupokum“ hjá börnum.",
       "rule": { "type": "easterOffset", "days": -46 },
       "sources": [
@@ -219,7 +219,7 @@
     {
       "id": "easter-sunday",
       "title": "🐣 Páskadagur",
-      "summary": "Páskadagur; helsti hátíðisdagur kristni. Lögbundinn frídagur.",
+      "summary": "Páskadagur; helsti hátíðisdagur kristni. Upprisan, eggjaleit og mikið súkkulaðimagn. Lögbundinn frídagur.",
       "body": "Páskadagur er helsti hátíðisdagur kristni og tengist upprisuhátíðinni.\n\nÁ Íslandi er páskadagur lögbundinn frídagur og miðpunktur páskahátíðarinnar, sem einnig nær yfir fleiri frídaga í kring.",
       "rule": { "type": "easterOffset", "days": 0 },
       "sources": [
@@ -250,7 +250,7 @@
     {
       "id": "first-day-of-summer",
       "title": "🌱 Sumardagurinn fyrsti",
-      "summary": "Fyrsti fimmtudagur eftir 18. apríl. Lögbundinn frídagur og upphaf „sumars“ í fornu tímatalsskilningi.",
+      "summary": "Fyrsti fimmtudagur eftir 18. apríl. Við þykjumst fagna sumrinu þrátt fyrir að það snjói oft þennan dag. Lögbundinn frídagur fullur af bjartsýni og von um sól.",
       "body": "Sumardagurinn fyrsti á sér rætur í fornu íslensku misseristali, þar sem árinu var skipt í vetur og sumar.\n\nÁ nútímaformi er dagurinn skilgreindur sem fyrsti fimmtudagur eftir 18. apríl. Dagurinn er lögbundinn frídagur á Íslandi og tengist bæði menningarhefðum og tilfinningu fyrir árstíðaskiptum.",
       "rule": { "type": "firstThursdayAfterApril18" },
       "sources": [
@@ -261,7 +261,7 @@
     {
       "id": "ascension-day",
       "title": "⛪ Uppstigningardagur",
-      "summary": "Fimmtudagur, 39 dögum eftir páskadag. Lögbundinn frídagur.",
+      "summary": "Fimmtudagur, 39 dögum eftir páskadag. Kristur fer upp til himins og við fáum frídag niður á jörðu.",
       "body": "Uppstigningardagur er haldinn 39 dögum eftir páskadag (alltaf á fimmtudegi).\n\nÍ kristinni hefð minnir dagurinn á uppstigningu Krists. Dagurinn er lögbundinn frídagur á Íslandi.",
       "rule": { "type": "easterOffset", "days": 39 },
       "sources": [
@@ -305,7 +305,7 @@
     {
       "id": "commerce-day",
       "title": "🛍️ Frídagur verslunarmanna",
-      "summary": "Fyrsti mánudagur í ágúst. Lögbundinn frídagur (bank holiday).",
+      "summary": "Fyrsti mánudagur í ágúst. Landinn streymir í blaut tjöld á rokvotri eyju, drekkur dýran bjór, hlustar á sömu lögin og þykist eiga bestu stund lífsins – áður en fólk vaknar með hausverk, tapið tjald og dansminningar við ókunnuga.",
       "body": "Frídagur verslunarmanna er haldinn fyrsta mánudag í ágúst.\n\nDagurinn tengist upphafi verslunarmannahelgarinnar og sumarfríum. Hann er lögbundinn frídagur á Íslandi og hefur lengi verið einn af helstu „langhelgardögum“ sumarsins.",
       "rule": { "type": "firstMondayOfAugust" },
       "sources": [
