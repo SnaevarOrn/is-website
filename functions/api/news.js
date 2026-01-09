@@ -343,6 +343,7 @@ function mapFromText(x) {
   ];
   const localWords = [
     "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
+    "akureyr",
     "sjalfstaedisflokk", "framsokn", "samfylking", "vidreisn", "midflokk",
     "hreggvidur", "samherji", "reykjanes", "landeldi", "stod", "pipulagn",
     "ragnar", "magnus", "gudmundur", "ingi", "inga", "hilmar", "eyjolfur",
