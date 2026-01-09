@@ -4,7 +4,7 @@
 "use strict";
 
 /* =========================
-   Category model
+   Category model 
    ========================= */
 
 const CATEGORY_MAP = [
