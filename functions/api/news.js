@@ -339,7 +339,7 @@ function mapFromText(x) {
   ];
 
   const foreignWords = ["erlent", "foreign", "bandarisk", "usa", "telegraph", "iran", "italia", "byd", "tesla", "evra", "donald", "trump", "world", "alheim", "althjod",
-    "grænland", "granland", "russland", "kina", "japan", ukraina", "bresk", "bandarikin", "bandarikjunum", "portland",
+    "grænland", "granland", "russland", "kina", "japan", "ukraina", "bresk", "bandarikin", "bandarikjunum", "portland",
     "venesuela", "pasta", "toyota", "heimsmarkad", "oliuverd",
   ];
   const localWords = [
