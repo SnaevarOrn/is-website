@@ -344,10 +344,10 @@ function mapFromText(x) {
   ];
   const localWords = [
     "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
-    "akureyr",
+    "akureyri", "hveragerdi", "kopavogi", "hellisheidi",
     "sjalfstaedisflokk", "framsokn", "samfylking", "vidreisn", "midflokk",
     "hreggvidur", "samherji", "reykjanes", "landeldi", "stod", "pipulagn",
-    "ragnar", "magnus", "gudmundur", "ingi", "inga", "hilmar", "eyjolfur",
+    "ragnar", "vignir", "hilmar", "smari", "magnus", "gudmundur", "ingi", "inga", "hilmar", "eyjolfur",
     // crime/courts – oft DV/Pressan
     "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
   ];
