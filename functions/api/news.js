@@ -53,7 +53,7 @@ export async function onRequestGet({ request }) {
     bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
     nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
     frjalsverslun: { url: "https://www.fjolmidillinn.is/rss/frjalsverslun", label: "Frjáls verslun" },
-    fiskifrettir: { url: "https://www.fjolmidillinn.is/rss/fiskifrettir", label: "Fiskifréttir" },
+    fiskifrettir: { url: "https://fiskifrettir.vb.is/rss/", label: "Fiskifréttir" },
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
