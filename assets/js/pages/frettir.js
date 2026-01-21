@@ -12,7 +12,7 @@
     { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
     { id: "vb",        label: "Viðskiptablaðið", domain: "vb.is" },
     { id: "bb",        label: "Bæjarins Besta", domain: "bb.is" },
-    { id: "fiskifrettir", label: "Fiskifréttir",   domain: "fjolmidillinn.is" },
+    { id: "fiskifrettir", label: "Fiskifréttir",   domain: "fiskifrettir.is" },
     { id: "frjalsverslun", label: "Frjáls verslun",  domain: "fjolmidillinn.is" },
     { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
   ];
