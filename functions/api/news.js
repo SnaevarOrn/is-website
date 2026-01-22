@@ -47,21 +47,22 @@ export async function onRequestGet({ request }) {
     mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
-
-    // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
+    
+    frettin:   { url: "https://frettin.is/feed/",     label: "Fréttin" },
+    stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
+    grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
+    bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
+    nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
+     
+    frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
+     
+   // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb:    {
       url: "https://www.vb.is/rss",
       label: "Viðskiptablaðið",
       excludeLinkHosts: ["fiskifrettir.vb.is"]
     },
-
-    stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
-    grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
-    bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
-    nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
-    frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
-
-    // ✅ Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
+     // ✅ Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
     fiskifrettir: {
       url: "https://fiskifrettir.vb.is/rss/",
       label: "Fiskifréttir",
