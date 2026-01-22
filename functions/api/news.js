@@ -145,12 +145,18 @@ export async function onRequestGet({ request }) {
         const cats = extractCategories(block);
         const catText = cats.join(" ").trim();
 
-        const { categoryId, categoryLabel } = inferCategory({
-          sourceId: id,
-          url: link,
-          rssCategoryText: catText,
-          title
-        });
+        let { categoryId, categoryLabel } = inferCategory({
+           sourceId: id,
+           url: link,
+           rssCategoryText: catText,
+           title
+         });
+         
+         // 🔒 Hard override: Fiskifréttir eru alltaf innlent
+         if (id === "fiskifrettir") {
+           categoryId = "innlent";
+           categoryLabel = labelFor("innlent");
+         }
 
         if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
