@@ -371,16 +371,18 @@ function mapFromText(x) {
     "ummal", "dalkur", "vidtal", "kronika"
   ];
 
-  const foreignWords = ["erlent", "foreign", "bandarisk", "usa", "telegraph", "iran", "italia", "byd", "tesla", "evra", "donald", "trump", "world", "alheim", "althjod",
+  const foreignWords = ["erlent", "foreign", "bandarisk", "usa", "telegraph", "iran", "italia", "byd", "tesla", "evra", "evropa", "evropu", "prag",
+   "donald", "trump", "elon", "musk", "world", "alheim", "althjod", "texas", "graenland", "graenlands", "graenlandi",
     "grænland", "granland", "russland", "kina", "japan", "ukraina", "bresk", "bandarikin", "bandarikjunum", "portland",
-    "venesuela", "pasta", "toyota", "heimsmarkad", "oliuverd",
+    "venesuela", "pasta", "toyota", "heimsmarkad", "oliuverd", "wall", "street",
   ];
   const localWords = [
     "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
-    "akureyri", "hveragerdi", "kopavogi", "hellisheidi",
+    "akureyri", "hveragerdi", "kopavogi", "hellisheidi", "isafjord", "isafjordur", "breidholt", "breidholtid",
     "sjalfstaedisflokk", "framsokn", "samfylking", "vidreisn", "midflokk",
     "hreggvidur", "samherji", "reykjanes", "landeldi", "stod", "pipulagn",
-    "ragnar", "vignir", "hilmar", "smari", "magnus", "gudmundur", "ingi", "inga", "hilmar", "eyjolfur",
+    "ragnar", "vignir", "hilmar", "smari", "magnus", "gudmundur", "ingi", "inga", "hilmar", "eyjolfur", "freyr", "njordur", 
+     "dora", "bjort", "gudrun", "sigridur",
     // crime/courts – oft DV/Pressan
     "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
   ];
