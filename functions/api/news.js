@@ -59,7 +59,7 @@ export async function onRequestGet({ request }) {
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
     bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
     nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
-    frjalsverslun: { url: "https://www.fjolmidillinn.is/rss/frjalsverslun", label: "Frjáls verslun" },
+    frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
 
     // ✅ Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
     fiskifrettir: {
