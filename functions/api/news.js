@@ -53,7 +53,7 @@ export async function onRequestGet({ request }) {
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
     bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
     nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
-     
+    feykir: { url: "https://www.feykir.is/feed", label: "Feykir" },
     frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
      
    // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
