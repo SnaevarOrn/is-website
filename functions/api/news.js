@@ -47,13 +47,26 @@ export async function onRequestGet({ request }) {
     mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
-    vb:    { url: "https://www.vb.is/rss",          label: "Viðskiptablaðið" },
+
+    // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
+    vb:    {
+      url: "https://www.vb.is/rss",
+      label: "Viðskiptablaðið",
+      excludeLinkHosts: ["fiskifrettir.vb.is"]
+    },
+
     stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
     bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
     nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
     frjalsverslun: { url: "https://www.fjolmidillinn.is/rss/frjalsverslun", label: "Frjáls verslun" },
-    fiskifrettir: { url: "https://fiskifrettir.vb.is/rss/", label: "Fiskifréttir" },
+
+    // ✅ Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
+    fiskifrettir: {
+      url: "https://fiskifrettir.vb.is/rss/",
+      label: "Fiskifréttir",
+      includeLinkHosts: ["fiskifrettir.vb.is"]
+    },
   };
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
@@ -123,6 +136,11 @@ export async function onRequestGet({ request }) {
           extractTagValue(block, "dc:date"); // some feeds
 
         if (!title || !link) continue;
+
+        // ✅ Per-feed include/exclude (aðskilur VB vs Fiskifréttir)
+        const host = safeHost(link);
+        if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
+        if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
 
         const cats = extractCategories(block);
         const catText = cats.join(" ").trim();
@@ -240,6 +258,14 @@ function extractCategories(block) {
 function safeToIso(dateString) {
   const d = new Date(dateString);
   return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function safeHost(url) {
+  try {
+    return new URL(url).host.toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 function decodeEntities(s) {
