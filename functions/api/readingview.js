@@ -3,7 +3,7 @@
 //
 // Goals:
 //  - Pull clean article text (avoid nav/menu/footer/share/subscription dumps)
-//  - DV + RÚV: extra defensive heuristics
+//  - DV + RÚV: extra defensive heuristics 
 //  - Decode HTML entities like &#8211; and &#xFA;
 //  - Filter out &shy; (soft hyphen) and common zero-width chars
 //  - If RÚV article text is not in DOM blocks, extract from JSON-LD / __NEXT_DATA__
