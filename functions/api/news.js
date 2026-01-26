@@ -150,12 +150,20 @@ export async function onRequestGet({ request }) {
         const rssCats = extractCategories(block);
         const catText = rssCats.join(" ").trim();
 
+        // (optional) description helps source-hints, but output stays same
+        const description =
+          extractTagValue(block, "description") ||
+          extractTagValue(block, "summary") ||
+          extractTagValue(block, "content:encoded") ||
+          "";
+
         let inferred = inferCategory({
           sourceId: id,
           url: link,
           rssCategories: rssCats,
           rssCategoryText: catText,
-          title
+          title,
+          description
         });
 
         let { categoryId, categoryLabel, categoryFrom } = inferred;
@@ -336,7 +344,7 @@ function clampInt(value, min, max, fallback) {
 
 /* =========================
    Categorization
-   Priority: RSS category -> URL -> text keywords
+   Priority: Source-hints -> RSS category -> URL -> text keywords
    ========================= */
 
 function normalizeText(s) {
@@ -349,14 +357,29 @@ function normalizeText(s) {
     .replaceAll("ö", "o");
 }
 
-function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title }) {
+function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title, description }) {
+  const host = safeHost(url);
+
+  // 0) Source-specific hints (safe overrides, uses feed categories + obvious patterns)
+  const hinted = classifyWithSourceHints({
+    host,
+    url,
+    title,
+    description,
+    item: { categories: rssCategories }
+  });
+
+  if (hinted && VALID_CATEGORY_IDS.has(hinted)) {
+    return { categoryId: hinted, categoryLabel: labelFor(hinted), categoryFrom: "sourceHints" };
+  }
+
   const u = normalizeText(url);
   const t = normalizeText(title);
 
   const rssTermsNorm = (rssCategories || []).map(normalizeText).filter(Boolean);
   const rssNormJoined = normalizeText(rssCategoryText);
 
-  // 1) RSS category mapping (strongest)
+  // 1) RSS category mapping (strongest after source-hints)
   const fromRss = mapFromRssCategories(sourceId, rssTermsNorm, rssNormJoined);
   if (fromRss) {
     return { categoryId: fromRss, categoryLabel: labelFor(fromRss), categoryFrom: "rss" };
@@ -372,6 +395,183 @@ function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title })
   const fromText = mapFromText(rssNormJoined) || mapFromText(t);
   const categoryId = fromText || "oflokkad";
   return { categoryId, categoryLabel: labelFor(categoryId), categoryFrom: fromText ? "keywords" : "default" };
+}
+
+/* =========================
+   Source-specific category hints (Heimildin / BB / Feykir / BBL / Nútíminn)
+   Safe: uses explicit feed categories + obvious patterns
+   ========================= */
+
+function norm(s){
+  return String(s || "")
+    .replace(/&nbsp;|&#160;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function extractFeedCategories(item){
+  // rss-parser can give: item.categories (array) OR item.category (string) OR raw-ish
+  const cats = [];
+  if (Array.isArray(item?.categories)) cats.push(...item.categories);
+  if (typeof item?.category === "string") cats.push(item.category);
+
+  // de-dup + normalize (keep original letters too, we match via norm())
+  const out = [];
+  const seen = new Set();
+  for (const c of cats){
+    const cc = String(c || "").trim();
+    if (!cc) continue;
+    const key = norm(cc);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(cc);
+  }
+  return out;
+}
+
+function mapBbCategoryToBucket(feedCats){
+  // BB uses WP categories heavily; trust them.
+  const joined = norm(feedCats.join(" | "));
+  if (!joined) return null;
+
+  // Aðsendar greinar -> Skoðun (guest columns)
+  if (joined.includes("aðsendar greinar")) return "skodun";
+
+  // Menning -> Menning
+  if (joined.includes("menning")) return "menning";
+
+  // Samgöngur -> Innlent (avoid new bucket)
+  if (joined.includes("samgöngur")) return "innlent";
+
+  // Íþróttir
+  if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
+
+  // Vestfirðir / sveitarfélagstög -> Innlent
+  if (joined.includes("vestfir")) return "innlent";
+
+  // Default
+  return null;
+}
+
+function mapNutiminnCategoryToBucket(feedCats){
+  // Nútíminn: WordPress categories present; treat a few safely.
+  const joined = norm(feedCats.join(" | "));
+  if (!joined) return null;
+
+  if (joined.includes("aðsendar")) return "skodun";
+  if (joined.includes("brotkast")) return "menning"; // podcasts / shows / media
+  if (joined.includes("fréttir")) return "innlent";
+  if (joined.includes("forsíða")) return null; // not a category, ignore
+  if (joined.includes("í fókus") || joined.includes("i fokus")) return "menning";
+
+  // If sports ever appears
+  if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
+
+  return null;
+}
+
+function mapBblUrlToBucket(uNorm){
+  // Bændablaðið has strong section paths in the link URLs.
+  if (!uNorm) return null;
+  if (uNorm.includes("/skodun/")) return "skodun";
+  if (uNorm.includes("/folk/")) return "menning";
+  if (uNorm.includes("/frettir/")) return "innlent";
+  return null;
+}
+
+function classifyWithSourceHints({ host, url, title, description, item }){
+  const h = norm(host);
+  const u = norm(url);
+  const t = norm(title);
+  const d = norm(description);
+  const feedCats = extractFeedCategories(item);
+  const fcNorm = norm(feedCats.join(" | "));
+
+  /* ---- BB.is: trust feed categories first ---- */
+  if (h === "bb.is" || h.endsWith(".bb.is")){
+    const bb = mapBbCategoryToBucket(feedCats);
+    if (bb) return bb;
+
+    // fallback: Aðsendar greinar / "skrifar" in title often signals opinion
+    if (t.includes(" skrifar") || (t.includes("|") && t.includes("skrifar"))) return "skodun";
+    return null;
+  }
+
+  /* ---- Nútíminn: trust WP categories first ---- */
+  if (h === "www.nutiminn.is" || h === "nutiminn.is" || h.endsWith(".nutiminn.is")){
+    const nm = mapNutiminnCategoryToBucket(feedCats);
+    if (nm) return nm;
+
+    // obvious opinion markers
+    if (fcNorm.includes("aðsendar")) return "skodun";
+    if (t.includes(" pistill") || t.includes(" leiðari") || t.includes(" skrifar")) return "skodun";
+
+    return null;
+  }
+
+  /* ---- Bændablaðið: usually no <category>; use URL sections safely ---- */
+  if (h === "www.bbl.is" || h === "bbl.is" || h.endsWith(".bbl.is")){
+    const byUrl = mapBblUrlToBucket(u);
+    if (byUrl) return byUrl;
+
+    // if they ever add categories later
+    if (fcNorm.includes("skodun")) return "skodun";
+    if (fcNorm.includes("folk")) return "menning";
+    if (fcNorm.includes("frettir")) return "innlent";
+
+    return null;
+  }
+
+  /* ---- Heimildin.is: clear split between news vs essays/columns by phrasing ---- */
+  if (h === "heimildin.is" || h.endsWith(".heimildin.is") || h === "stundin.is" || h.endsWith(".stundin.is")){
+    // Strong opinion markers
+    if (t.includes(" skrifar") || t.includes(" pistill") || t.includes(" leiðari")) return "skodun";
+    if (d.includes(" kemur fram í pistli") || d.includes(" skrifar") || d.includes(" leiðari")) return "skodun";
+
+    // Culture/arts markers (very safe ones)
+    if (t.includes("kvikmynd") || t.includes("leikhús") || t.includes("listasafn") || t.includes("menning"))
+      return "menning";
+
+    // Science (safe-ish)
+    if (t.includes("homo ") || t.includes("neanderd") || t.includes("forn") || t.includes("vísind") || t.includes("rannsókn"))
+      return "visindi";
+
+    // Climate/environment (safe)
+    if (t.includes("loftslag") || t.includes("mengun") || t.includes("náttúru") || t.includes("umhverf"))
+      return "umhverfi";
+
+    return null;
+  }
+
+  /* ---- Feykir.is: lots of sports + local columns ---- */
+  if (h === "feykir.is" || h.endsWith(".feykir.is")){
+    // Opinion/columns
+    if (t.includes(" skrifar") || (t.includes("|") && t.includes("skrifar"))) return "skodun";
+
+    // Sports (very safe terms)
+    if (
+      t.includes("knattspyrn") || t.includes("körfu") || t.includes("bonus deild") ||
+      t.includes("leikur") || t.includes("jafntefli") || t.includes("sigur") ||
+      d.includes("knattspyrn") || d.includes("körfu") || d.includes("bonus deild")
+    ) return "ithrottir";
+
+    // Food/recipes -> Menning
+    if (t.includes("matgæð") || t.includes("uppskrift") || t.includes("mælir með") || d.includes("uppskrift"))
+      return "menning";
+
+    // Energy grid / infrastructure often local society/politics
+    if (t.includes("byggðalín") || t.includes("landsnet") || t.includes("raforku") || t.includes("flutningskerfi"))
+      return "innlent";
+
+    // Aquaculture / sea pens -> Umhverfi
+    if (t.includes("sjókvía") || t.includes("lagareldi") || t.includes("eldis") || d.includes("sjókvía"))
+      return "umhverfi";
+
+    return null;
+  }
+
+  return null;
 }
 
 /* =========================
@@ -401,17 +601,15 @@ function mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm) {
     if (has("íþróttir") || has("ithrottir")) return "ithrottir";
     if (has("viðskipti") || has("vidskipti")) return "vidskipti";
 
-    // MBL lifestyle/culture buckets (based on your sample)
+    // MBL lifestyle/culture buckets
     if (has("matur")) return "menning";
     if (has("smartland")) return "menning";
-    if (has("200 mílur") || has("200 milur")) return "innlent"; // you can change to "umhverfi" later if you want “sjór”
+    if (has("200 mílur") || has("200 milur")) return "innlent";
     return null;
   }
 
-  // VB: you told earlier (and it matches site structure): frettir/skodun/folk
-  // BUT: VB RSS often has no <category>, so most of this comes from URL mapping.
+  // BBL (Bændablaðið): if they add categories later, honor basic ones
   if (sourceId === "bbl") {
-    // Bændablaðið: frettir -> innlent, skodun -> skodun, folk -> menning
     if (has("frettir")) return "innlent";
     if (has("skodun")) return "skodun";
     if (has("folk")) return "menning";
@@ -460,7 +658,7 @@ function mapFromText(x) {
 
   const opinionWords = [
     "skodun", "comment", "pistill", "leidari", "grein",
-    "ummal", "dalkur", "kronika", "nedanmals"
+    "ummal", "dalkur", "kronika", "nedanmals", "adsendar", "aðsendar"
   ];
 
   const foreignWords = [
@@ -483,7 +681,8 @@ function mapFromText(x) {
   ];
 
   const envWords = [
-    "umhverfi", "loftslag", "mengun", "natur", "jokull", "eldgos", "skjalfti", "vedur", "haf", "fisk"
+    "umhverfi", "loftslag", "mengun", "natur", "jokull", "eldgos", "skjalfti", "vedur", "haf", "fisk",
+    "skograekt", "fornleif" // BBL/BBL-ish common
   ];
 
   const sciWords = [
@@ -575,6 +774,13 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/menning")) return "menning";
     if (u.includes("/erlent")) return "erlent";
     if (u.includes("/innlent")) return "innlent";
+  }
+
+  // BBL: section-driven URLs
+  if (sourceId === "bbl") {
+    if (u.includes("/skodun/")) return "skodun";
+    if (u.includes("/folk/")) return "menning";
+    if (u.includes("/frettir/")) return "innlent";
   }
 
   return null;
