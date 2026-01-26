@@ -631,8 +631,8 @@ function mapFromText(x) {
     "handbolti", "nba", "korfubolti", "tennis", "motorsport", "formula",
     "ufc", "olymp", "olympi", "marathon", "darts",
 
-    "hnefaleik", "breidablik", "ka", "kr", "valur", "tindastoll", "chess", "nfl",
-    "hm", "em", "premier league", "champions league", "europa league",
+    "hnefaleik", "breidablik", "valur", "tindastoll", "chess", "nfl",
+    "premier league", "champions league", "europa league",
     "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
 
     "ronaldo", "messi", "mourinho", "guardiola", "klopp",
