@@ -7,7 +7,7 @@
     { id: "mbl",       label: "mbl.is",          domain: "mbl.is" },
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
-    { id: "stundin",   label: "Heimildin",       domain: "heimildin.is" },
+    { id: "heimildin",   label: "Heimildin",       domain: "heimildin.is" },
     { id: "nutiminn", label: "Nútíminn",       domain: "nutiminn.is" },
     { id: "feykir", label: "Feykir",       domain: "feykir.is" },
     { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
