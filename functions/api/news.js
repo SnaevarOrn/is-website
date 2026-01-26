@@ -49,7 +49,7 @@ export async function onRequestGet({ request }) {
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
 
     frettin:   { url: "https://frettin.is/feed/",      label: "Fréttin" },
-    stundin:   { url: "https://stundin.is/rss/",       label: "Heimildin" },
+    heimildin:   { url: "https://heimildin.is/rss/",       label: "Heimildin" },
     grapevine: { url: "https://grapevine.is/feed/",    label: "Grapevine" },
     bb:        { url: "https://bb.is/feed/",           label: "Bæjarins Besta" },
     nutiminn:  { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
