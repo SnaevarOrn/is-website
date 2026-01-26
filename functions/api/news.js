@@ -4,7 +4,7 @@
 "use strict";
 
 /* =========================
-   Category model 
+   Category model
    ========================= */
 
 const CATEGORY_MAP = [
@@ -47,23 +47,25 @@ export async function onRequestGet({ request }) {
     mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
-    
-    frettin:   { url: "https://frettin.is/feed/",     label: "Fréttin" },
-    stundin:   { url: "https://stundin.is/rss/",     label: "Heimildin" },
-    grapevine: { url: "https://grapevine.is/feed/",  label: "Grapevine" },
-    bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
-    nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
-    feykir: { url: "https://www.feykir.is/feed", label: "Feykir" },
+
+    frettin:   { url: "https://frettin.is/feed/",      label: "Fréttin" },
+    stundin:   { url: "https://stundin.is/rss/",       label: "Heimildin" },
+    grapevine: { url: "https://grapevine.is/feed/",    label: "Grapevine" },
+    bb:        { url: "https://bb.is/feed/",           label: "Bæjarins Besta" },
+    nutiminn:  { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
+    feykir:    { url: "https://www.feykir.is/feed",    label: "Feykir" },
+
     frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
-    bbl: { url: "https://www.bbl.is/rss/", label: "Bændablaðið" },
-     
-   // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
-    vb:    {
+    bbl:           { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
+
+    // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
+    vb: {
       url: "https://www.vb.is/rss",
       label: "Viðskiptablaðið",
       excludeLinkHosts: ["fiskifrettir.vb.is"]
     },
-     // ✅ Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
+
+    // ✅ Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
     fiskifrettir: {
       url: "https://fiskifrettir.vb.is/rss/",
       label: "Fiskifréttir",
@@ -106,11 +108,11 @@ export async function onRequestGet({ request }) {
 
       const blocks = parseFeedBlocks(xml);
 
-      // Debug: show whether parsing works at all, and whether title/link extraction works
       if (debug) {
         const firstBlock = blocks[0] || "";
         const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
         const firstLink = firstBlock ? extractLink(firstBlock) : null;
+        const firstCats = firstBlock ? extractCategories(firstBlock) : [];
 
         debugStats[id] = {
           url: feed.url,
@@ -122,6 +124,7 @@ export async function onRequestGet({ request }) {
           blocksCount: blocks.length,
           firstTitle,
           firstLink,
+          firstCats,
           head: xml.slice(0, 220),
           firstBlockHead: firstBlock.slice(0, 220),
         };
@@ -135,7 +138,7 @@ export async function onRequestGet({ request }) {
           extractTagValue(block, "pubDate") ||
           extractTagValue(block, "updated") ||
           extractTagValue(block, "published") ||
-          extractTagValue(block, "dc:date"); // some feeds
+          extractTagValue(block, "dc:date");
 
         if (!title || !link) continue;
 
@@ -144,25 +147,29 @@ export async function onRequestGet({ request }) {
         if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
         if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
 
-        const cats = extractCategories(block);
-        const catText = cats.join(" ").trim();
+        const rssCats = extractCategories(block);
+        const catText = rssCats.join(" ").trim();
 
-        let { categoryId, categoryLabel } = inferCategory({
-           sourceId: id,
-           url: link,
-           rssCategoryText: catText,
-           title
-         });
-         
-         // 🔒 Hard override: Fiskifréttir eru alltaf innlent
-         if (id === "fiskifrettir") {
-           categoryId = "innlent";
-           categoryLabel = labelFor("innlent");
-         }
+        let inferred = inferCategory({
+          sourceId: id,
+          url: link,
+          rssCategories: rssCats,
+          rssCategoryText: catText,
+          title
+        });
+
+        let { categoryId, categoryLabel, categoryFrom } = inferred;
+
+        // 🔒 Hard override: Fiskifréttir eru alltaf innlent
+        if (id === "fiskifrettir") {
+          categoryId = "innlent";
+          categoryLabel = labelFor("innlent");
+          categoryFrom = "override:fiskifrettir";
+        }
 
         if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
-        items.push({
+        const item = {
           title,
           url: link,
           publishedAt: pubDate ? safeToIso(pubDate) : null,
@@ -170,7 +177,16 @@ export async function onRequestGet({ request }) {
           sourceLabel: feed.label,
           categoryId,
           category: categoryLabel
-        });
+        };
+
+        if (debug) {
+          item.debug = {
+            rssCats,
+            categoryFrom
+          };
+        }
+
+        items.push(item);
       }
     } catch (err) {
       console.error("Feed error:", id, err);
@@ -203,12 +219,10 @@ export async function onRequestGet({ request }) {
    ========================= */
 
 function parseFeedBlocks(xml) {
-  // Match <item>, <rss:item>, <content:item>, etc.
   const itemRe = /<(?:\w+:)?item\b[^>]*>[\s\S]*?<\/(?:\w+:)?item>/gi;
   const items = [...String(xml || "").matchAll(itemRe)].map(m => m[0]);
   if (items.length) return items;
 
-  // Atom fallback: <entry> or <atom:entry>
   const entryRe = /<(?:\w+:)?entry\b[^>]*>[\s\S]*?<\/(?:\w+:)?entry>/gi;
   return [...String(xml || "").matchAll(entryRe)].map(m => m[0]);
 }
@@ -217,7 +231,6 @@ function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
-  // namespace-safe + CDATA-safe + captures inner text
   const re = new RegExp(
     `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
@@ -276,14 +289,39 @@ function safeHost(url) {
   }
 }
 
+// Slightly beefed-up entity decoding (handles &amp;ndash; and numeric entities)
 function decodeEntities(s) {
-  return String(s || "")
+  let str = String(s || "");
+
+  // First pass: common named entities
+  str = str
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
     .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
-    .replaceAll("&apos;", "'");
+    .replaceAll("&apos;", "'")
+    .replaceAll("&nbsp;", " ")
+    .replaceAll("&ndash;", "–")
+    .replaceAll("&mdash;", "—");
+
+  // Second pass: if we had &amp;ndash; => now "&ndash;" exists, so convert again
+  str = str
+    .replaceAll("&ndash;", "–")
+    .replaceAll("&mdash;", "—");
+
+  // Numeric entities: &#8211; or &#x2013;
+  str = str.replace(/&#(\d+);/g, (_, n) => {
+    const code = Number(n);
+    return Number.isFinite(code) ? String.fromCodePoint(code) : _;
+  });
+
+  str = str.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+    const code = parseInt(hex, 16);
+    return Number.isFinite(code) ? String.fromCodePoint(code) : _;
+  });
+
+  return str;
 }
 
 function escapeRegExp(s) {
@@ -298,6 +336,7 @@ function clampInt(value, min, max, fallback) {
 
 /* =========================
    Categorization
+   Priority: RSS category -> URL -> text keywords
    ========================= */
 
 function normalizeText(s) {
@@ -310,47 +349,100 @@ function normalizeText(s) {
     .replaceAll("ö", "o");
 }
 
-function inferCategory({ sourceId, url, rssCategoryText, title }) {
+function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title }) {
   const u = normalizeText(url);
-  const c = normalizeText(rssCategoryText);
   const t = normalizeText(title);
 
-  const fromText = mapFromText(c) || mapFromText(t);
-  const fromUrl = mapFromUrl(sourceId, u, t);
+  const rssTermsNorm = (rssCategories || []).map(normalizeText).filter(Boolean);
+  const rssNormJoined = normalizeText(rssCategoryText);
 
-  const categoryId = fromText || fromUrl || "oflokkad";
-  return { categoryId, categoryLabel: labelFor(categoryId) };
+  // 1) RSS category mapping (strongest)
+  const fromRss = mapFromRssCategories(sourceId, rssTermsNorm, rssNormJoined);
+  if (fromRss) {
+    return { categoryId: fromRss, categoryLabel: labelFor(fromRss), categoryFrom: "rss" };
+  }
+
+  // 2) URL mapping (next best)
+  const fromUrl = mapFromUrl(sourceId, u, t);
+  if (fromUrl) {
+    return { categoryId: fromUrl, categoryLabel: labelFor(fromUrl), categoryFrom: "url" };
+  }
+
+  // 3) Keyword fallback (weakest)
+  const fromText = mapFromText(rssNormJoined) || mapFromText(t);
+  const categoryId = fromText || "oflokkad";
+  return { categoryId, categoryLabel: labelFor(categoryId), categoryFrom: fromText ? "keywords" : "default" };
 }
+
+/* =========================
+   RSS category mapping
+   ========================= */
+
+function mapFromRssCategories(sourceId, termsNorm, joinedNorm) {
+  // If no categories present, bail fast
+  if ((!termsNorm || termsNorm.length === 0) && !joinedNorm) return null;
+
+  // Source-specific rules first
+  const bySource = mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm);
+  if (bySource) return bySource;
+
+  // Then generic mapping (works for many feeds)
+  const generic = mapFromText(termsNorm.join(" ")) || mapFromText(joinedNorm);
+  return generic || null;
+}
+
+function mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm) {
+  const has = (needle) => termsNorm.includes(normalizeText(needle)) || String(joinedNorm || "").includes(normalizeText(needle));
+
+  // MBL: categories like "Innlent", "Íþróttir", "Matur", "Smartland", "200 mílur"
+  if (sourceId === "mbl") {
+    if (has("innlent")) return "innlent";
+    if (has("erlent")) return "erlent";
+    if (has("íþróttir") || has("ithrottir")) return "ithrottir";
+    if (has("viðskipti") || has("vidskipti")) return "vidskipti";
+
+    // MBL lifestyle/culture buckets (based on your sample)
+    if (has("matur")) return "menning";
+    if (has("smartland")) return "menning";
+    if (has("200 mílur") || has("200 milur")) return "innlent"; // you can change to "umhverfi" later if you want “sjór”
+    return null;
+  }
+
+  // VB: you told earlier (and it matches site structure): frettir/skodun/folk
+  // BUT: VB RSS often has no <category>, so most of this comes from URL mapping.
+  if (sourceId === "bbl") {
+    // Bændablaðið: frettir -> innlent, skodun -> skodun, folk -> menning
+    if (has("frettir")) return "innlent";
+    if (has("skodun")) return "skodun";
+    if (has("folk")) return "menning";
+    return null;
+  }
+
+  return null;
+}
+
+/* =========================
+   Keyword mapping (fallback)
+   ========================= */
 
 function mapFromText(x) {
   if (!x) return null;
 
-  // --- ÍÞRÓTTIR: víkkað til að grípa Vísir titla sem hafa enga /sport slóð né RSS category ---
   const sportWords = [
-    // generic
     "sport", "ithrott", "fotbolta", "fotbolti", "bolti",
     "handbolti", "nba", "korfubolti", "golf", "tennis", "motorsport", "formula",
     "ufc", "mma", "olymp", "olympi", "marathon",
-    "darts", "littler", "ally", "pally", "pila", "pilu", "undanurslit", "stodutafla",
+    "darts", "pila", "pilu", "undanurslit", "stodutafla",
 
-    // add
     "hnefaleik", "breidablik", "ka", "kr", "valur", "tindastoll", "skak", "chess", "nfl",
-
-    // competitions/leagues
     "hm", "em", "premier league", "champions league", "europa league",
     "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
 
-    // Vísir-style “sports headlines” (names often appear without the word “fótbolti”)
-    "ronaldo", "messi", "mourinho", "pep", "guardiola", "klopp",
-    "arsenal", "man city", "man. city", "manchester city", "man utd", "manchester united",
-    "fulham", "crystal palace", "sunderland", "everton", "liverpool", "chelsea",
-    "tottenham", "barcelona", "real madrid", "atletico",
+    "ronaldo", "messi", "mourinho", "guardiola", "klopp",
+    "arsenal", "man city", "manchester city", "man utd", "manchester united",
+    "liverpool", "chelsea", "tottenham", "barcelona", "real madrid", "atletico",
     "psg", "bayern", "dortmund", "juventus", "milan", "inter",
-
-    // ísl. fótbolta orð
     "markaskor", "jafnarmark", "raud spjald", "gult spjald",
-
-    // 433 / 4-3-3
     "433", "4-3-3", "4 3 3"
   ];
 
@@ -360,54 +452,43 @@ function mapFromText(x) {
   ];
 
   const cultureWords = [
-    "menning", "verold", "gagnryni", "folk", "lifid", "list", "tonlist", "kvikmynd", "bok",
+    "menning", "folk", "lifid", "list", "tonlist", "kvikmynd", "bok",
     "leikhus", "sjonvarp", "utvarp", "svidslist",
-    // celeb/lifestyle-ish
-    "tattuin", "tattoo", "stjarna", "fyrirsaeta", "model", "fegurd"
+    "matur", "kokte", "smartland", "samkvaem", "daisy", "tipsy",
+    "tattuin", "tattoo", "stjarna", "model", "fegurd", "afthrey"
   ];
 
   const opinionWords = [
     "skodun", "comment", "pistill", "leidari", "grein",
-    "ummal", "dalkur", "vidtal", "kronika"
+    "ummal", "dalkur", "kronika", "nedanmals"
   ];
 
-  const foreignWords = ["erlent", "foreign", "bandarisk", "usa", "telegraph", "iran", "italia", "byd", "tesla", "evra", "evropa", "evropu", "prag",
-   "donald", "trump", "elon", "musk", "world", "alheim", "althjod", "texas", "graenland", "graenlands", "graenlandi",
-    "grænland", "granland", "russland", "kina", "japan", "ukraina", "bresk", "bandarikin", "bandarikjunum", "portland",
-    "venesuela", "pasta", "toyota", "heimsmarkad", "oliuverd", "wall", "street",
+  const foreignWords = [
+    "erlent", "foreign", "bandarisk", "usa", "iran", "italia", "evropa", "world", "alheim", "althjod",
+    "trump", "musk", "russland", "kina", "japan", "ukraina", "bresk", "bandarikin"
   ];
+
   const localWords = [
-    "innlent", "island", "vestmannaeyja", "ruv", "vinnslustodin", "kvika", "kviku", "kopavog", "hafnarfjord", "reykjavik", "landid", "borgin",
-    "akureyri", "hveragerdi", "kopavogi", "hellisheidi", "isafjord", "isafjordur", "breidholt", "breidholtid",
-    "sjalfstaedisflokk", "framsokn", "samfylking", "vidreisn", "midflokk",
-    "hreggvidur", "samherji", "reykjanes", "landeldi", "stod", "pipulagn",
-    "ragnar", "vignir", "hilmar", "smari", "magnus", "gudmundur", "ingi", "inga", "hilmar", "eyjolfur", "freyr", "njordur", 
-     "dora", "bjort", "gudrun", "sigridur",
-    // crime/courts – oft DV/Pressan
-    "logregl", "rettar", "daemd", "dom", "mor", "radmor", "handtek", "sakfelld"
+    "innlent", "island", "reykjavik", "hafnarfjord", "akureyri", "reykjanes",
+    "logregl", "rettar", "daemd", "dom", "handtek", "sakfelld"
   ];
 
   const techWords = [
     "taekni", "tolva", "forrit", "forritun", "gervigreind", "ai",
-    "netoryggi", "oryggi", "tolvuleikir", "leikjat", "simi", "snjallsimi",
-    "apple", "google", "microsoft", "tesla", "raf", "rafmagn"
+    "netoryggi", "oryggi", "snjallsimi", "apple", "google", "microsoft", "raf"
   ];
 
   const healthWords = [
-    "heilsa", "laekn", "sjuk", "sjukdom", "lyf", "spitali",
-    "naering", "mataraedi", "smit", "veira", "influenza"
+    "heilsa", "laekn", "sjuk", "sjukdom", "lyf", "spitali", "naering", "smit", "veira"
   ];
 
   const envWords = [
-    "umhverfi", "loftslag", "mengun", "natur", "jokull", "joklar",
-    "eldgos", "skjalfti", "vedur", "haf", "fisk"
+    "umhverfi", "loftslag", "mengun", "natur", "jokull", "eldgos", "skjalfti", "vedur", "haf", "fisk"
   ];
 
-  // IMPORTANT: removed "stjorn" to avoid matching "stjornmal" (politics).
   const sciWords = [
-    "visindi", "rannsokn", "geim", "edlis",
-    "efna", "liffraedi", "stjornufraedi", "stjarna", "stjornus", "stjornukerfi",
-    "tungl", "sol"
+    "visindi", "rannsokn", "geim", "edlis", "efna", "liffraedi",
+    "stjornufraedi", "stjornukerfi", "tungl", "sol"
   ];
 
   if (sportWords.some(w => x.includes(w))) return "ithrottir";
@@ -424,11 +505,15 @@ function mapFromText(x) {
   return null;
 }
 
+/* =========================
+   URL mapping
+   ========================= */
+
 function mapFromUrl(sourceId, u, titleNorm) {
   // Generic patterns
   if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
   if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
-  if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list")) return "menning";
+  if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list") || u.includes("/folk")) return "menning";
   if (u.includes("/skodun") || u.includes("/pistill") || u.includes("/comment")) return "skodun";
   if (u.includes("/taekni") || u.includes("/tech")) return "taekni";
   if (u.includes("/heilsa") || u.includes("/health")) return "heilsa";
@@ -437,6 +522,21 @@ function mapFromUrl(sourceId, u, titleNorm) {
   if (u.includes("/erlent")) return "erlent";
   if (u.includes("/innlent")) return "innlent";
 
+  // VB: category-less RSS -> section is in URL path
+  if (sourceId === "vb") {
+    if (u.includes("/frettir/")) return "vidskipti";
+    if (u.includes("/skodun/")) return "skodun";
+    if (u.includes("/folk/")) return "menning";
+    if (u.includes("/eftir-vinnu/")) {
+      // some are tech-ish, many are lifestyle
+      const t = String(titleNorm || "");
+      if (t.includes("taekni") || t.includes("iphone") || t.includes("simi") || t.includes("ai") || t.includes("gervigreind")) {
+        return "taekni";
+      }
+      return "menning";
+    }
+  }
+
   // DV: URL sections are strong signals
   if (sourceId === "dv") {
     if (u.includes("/pressan")) return "innlent";
@@ -444,17 +544,14 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
   }
 
-  // Vísir: many links are /g/<id>/<slug> => no section in URL.
-  // We add a tiny safety net using title hints (already normalized)
+  // Vísir: many links are /g/<id>/<slug> => no section in URL
   if (sourceId === "visir") {
-    // If Vísir URL has no section, use extra title heuristics
     if (u.includes("/g/")) {
       const t = String(titleNorm || "");
       if (
         t.includes("ronaldo") || t.includes("messi") || t.includes("mourinho") ||
-        t.includes("arsenal") || t.includes("man city") || t.includes("man. city") ||
-        t.includes("premier") || t.includes("enska urvalsdeild") || t.includes("enski boltinn") ||
-        t.includes("olymp") || t.includes("darts") || t.includes("undanu r slit") || t.includes("undanurslit")
+        t.includes("arsenal") || t.includes("man city") || t.includes("premier") ||
+        t.includes("olymp") || t.includes("darts") || t.includes("undanurslit")
       ) return "ithrottir";
     }
 
@@ -462,10 +559,14 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
 
+  // MBL: URL sections are very consistent; use as fallback when RSS has none/odd buckets
   if (sourceId === "mbl") {
     if (u.includes("/frettir/innlent")) return "innlent";
     if (u.includes("/frettir/erlent")) return "erlent";
-    if (u.includes("/sport")) return "ithrottir";
+    if (u.includes("/sport/")) return "ithrottir";
+    if (u.includes("/matur/")) return "menning";
+    if (u.includes("/smartland/")) return "menning";
+    if (u.includes("/200milur/")) return "innlent";
   }
 
   if (sourceId === "ruv") {
