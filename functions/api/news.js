@@ -627,12 +627,11 @@ function mapFromText(x) {
   if (!x) return null;
 
   const sportWords = [
-    "sport", "ithrott", "fotbolta", "fotbolti", "bolti",
-    "handbolti", "nba", "korfubolti", "golf", "tennis", "motorsport", "formula",
-    "ufc", "mma", "olymp", "olympi", "marathon",
-    "darts", "pila", "pilu", "undanurslit", "stodutafla",
+    "sport", "ithrott", "fotbolta", "fotbolti",
+    "handbolti", "nba", "korfubolti", "tennis", "motorsport", "formula",
+    "ufc", "olymp", "olympi", "marathon", "darts",
 
-    "hnefaleik", "breidablik", "ka", "kr", "valur", "tindastoll", "skak", "chess", "nfl",
+    "hnefaleik", "breidablik", "ka", "kr", "valur", "tindastoll", "chess", "nfl",
     "hm", "em", "premier league", "champions league", "europa league",
     "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
 
@@ -640,7 +639,6 @@ function mapFromText(x) {
     "arsenal", "man city", "manchester city", "man utd", "manchester united",
     "liverpool", "chelsea", "tottenham", "barcelona", "real madrid", "atletico",
     "psg", "bayern", "dortmund", "juventus", "milan", "inter",
-    "markaskor", "jafnarmark", "raud spjald", "gult spjald",
     "433", "4-3-3", "4 3 3"
   ];
 
