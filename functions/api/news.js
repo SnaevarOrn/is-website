@@ -328,10 +328,10 @@ function mapFromText(x) {
   // --- ÍÞRÓTTIR: víkkað til að grípa Vísir titla sem hafa enga /sport slóð né RSS category ---
   const sportWords = [
     // generic
-    "sport", "ithrott", "fotbolta", "fotbolti", "futbol", "bolti",
+    "sport", "ithrott", "fotbolta", "fotbolti", "bolti",
     "handbolti", "nba", "korfubolti", "golf", "tennis", "motorsport", "formula",
-    "ufc", "mma", "olymp", "olympi", "skid", "skidi", "hest", "hlaup", "marathon",
-    "darts", "littler", "ally", "pally", "pila", "pilu", "undanu r slit", "undanurslit", "urslit", "leikur", "stodutafla",
+    "ufc", "mma", "olymp", "olympi", "marathon",
+    "darts", "littler", "ally", "pally", "pila", "pilu", "undanurslit", "stodutafla",
 
     // add
     "hnefaleik", "breidablik", "ka", "kr", "valur", "tindastoll", "skak", "chess", "nfl",
@@ -348,8 +348,7 @@ function mapFromText(x) {
     "psg", "bayern", "dortmund", "juventus", "milan", "inter",
 
     // ísl. fótbolta orð
-    "mark", "markaskor", "jafnarmark", "raud spjald", "gult spjald", "vik", "tabadi",
-    "sigur", "tap", "jafntefli",
+    "markaskor", "jafnarmark", "raud spjald", "gult spjald",
 
     // 433 / 4-3-3
     "433", "4-3-3", "4 3 3"
