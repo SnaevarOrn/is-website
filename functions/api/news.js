@@ -55,6 +55,7 @@ export async function onRequestGet({ request }) {
     nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
     feykir: { url: "https://www.feykir.is/feed", label: "Feykir" },
     frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
+    bbl: { url: "https://www.bbl.is/rss/", label: "Bændablaðið" },
      
    // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb:    {
