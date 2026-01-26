@@ -168,12 +168,12 @@ export async function onRequestGet({ request }) {
 
         let { categoryId, categoryLabel, categoryFrom } = inferred;
 
-        // 🔒 Hard override: Fiskifréttir eru alltaf innlent
-        if (id === "fiskifrettir") {
-          categoryId = "innlent";
-          categoryLabel = labelFor("innlent");
-          categoryFrom = "override:fiskifrettir";
-        }
+        // 🔒 Hard override: Fiskifréttir + Frjáls verslun eru alltaf innlent
+if (id === "fiskifrettir" || id === "frjalsverslun") {
+  categoryId = "innlent";
+  categoryLabel = labelFor("innlent");
+  categoryFrom = `override:${id}`;
+}
 
         if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
