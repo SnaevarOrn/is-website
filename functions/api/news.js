@@ -47,20 +47,17 @@ export async function onRequestGet({ request }) {
     mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
-
     frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
     heimildin:  { url: "https://heimildin.is/rss/",       label: "Heimildin" },
     grapevine:  { url: "https://grapevine.is/feed/",      label: "Grapevine" },
     bb:         { url: "https://bb.is/feed/",             label: "Bæjarins Besta" },
     nutiminn:   { url: "https://www.nutiminn.is/feed/",   label: "Nútíminn" },
-
     feykir:     { url: "https://www.feykir.is/feed",      label: "Feykir" },
     midjan:     { url: "http://www.midjan.is/feed/",      label: "Miðjan" },
     eyjafrettir: { url: "https://eyjafrettir.is/feed/",      label: "Eyjafréttir" },
-
+    fjardarfrettir: { url: "https://www.fjardarfrettir.is/feed",      label: "Fjarðarfréttir" },
     frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
     bbl:           { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
-
     // VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb: {
       url: "https://www.vb.is/rss",
