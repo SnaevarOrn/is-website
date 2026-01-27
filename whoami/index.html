@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ís.is — whoami</title>
+  <meta name="description" content="Sjáðu hvaða upplýsingar vefþjónninn sér um þig sem frjálsan gest — án cookies." />
+
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+
+<body>
+  <main class="whoami-page">
+    <header class="whoami-head">
+      <div class="whoami-title">
+        <h1>Hvað veit síðan um mig?</h1>
+        <p class="whoami-sub">
+          Þetta eru eingöngu upplýsingar sem berast sjálfkrafa með HTTP beiðninni (edge/server).
+          Engar cookies. Ekkert samþykki. Engin töfrabrögð.
+        </p>
+      </div>
+
+      <div class="whoami-actions">
+        <button class="whoami-btn" id="whoamiRefresh" type="button">Endurhlaða</button>
+        <button class="whoami-btn whoami-btn-ghost" id="whoamiCopy" type="button" disabled>Afrita JSON</button>
+      </div>
+    </header>
+
+    <section class="whoami-card" aria-live="polite">
+      <div class="whoami-status" id="whoamiStatus">
+        Sæki upplýsingar…
+      </div>
+
+      <div class="whoami-grid" id="whoamiGrid" hidden>
+        <!-- fyllt af JS -->
+      </div>
+
+      <details class="whoami-details" id="whoamiDetails" hidden>
+        <summary>Hrátt JSON</summary>
+        <pre class="whoami-pre" id="whoamiJson"></pre>
+      </details>
+
+      <div class="whoami-note">
+        <strong>Skýringar:</strong>
+        <ul>
+          <li>“Staðsetning” er áætluð út frá IP (ekki GPS).</li>
+          <li>IP er maskað sjálfgefið.</li>
+          <li>Sumir reitir geta verið <code>null</code> ef edge/hosting sendir þá ekki.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/js/pages/whoami.js" defer></script>
+</body>
+</html>
