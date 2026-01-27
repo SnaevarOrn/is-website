@@ -1,18 +1,35 @@
-/* maptest.css — page-only styles */
+/* maptest.css — page-only styles (fullscreen-ish, responsive) */
 
-.maptest-page{
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 18px 14px 28px;
+/* You can tweak these two safely */
+:root{
+  --maptest-gap: 12px;
+  --maptest-pad: 14px;
 }
 
-/* Header: text + actions live up top, map gets the space */
+/* Main container becomes a column layout that can fill the viewport */
+.maptest-page{
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 18px var(--maptest-pad) 22px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--maptest-gap);
+}
+
+/* Header sits on top; no wasted side-column */
 .maptest-head{
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 12px;
+  gap: 16px;
+}
+
+.maptest-head-left{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
 .maptest-head h1{
@@ -23,35 +40,55 @@
 }
 
 .maptest-sub{
-  margin: 6px 0 0;
+  margin: 0;
   color: var(--muted);
-  max-width: 80ch;
+  max-width: 88ch;
 }
 
+/* Actions act like a toolbar (no huge blocks) */
 .maptest-actions{
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
 }
 
-/* Card + map */
+/* Card should expand to fill remaining vertical space */
 .maptest-card{
   border: 1px solid var(--border);
   background: var(--panel);
   border-radius: 18px;
   box-shadow: 0 12px 28px var(--shadow);
   padding: 10px;
+
+  /* critical: take all remaining height */
+  flex: 1 1 auto;
+
+  /* card layout: map grows, footer stays below */
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* allows children to shrink properly */
 }
 
+/* Map grows to fill the card */
 .maptest-map{
-  height: min(82vh, 820px);
+  flex: 1 1 auto;
+  min-height: 0;
+
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--border);
+
+  /* smoothness: prevents layout jump when map loads */
+  background: rgba(0,0,0,.06);
 }
 
-/* Footer under map */
+html[data-theme="light"] .maptest-map{
+  background: rgba(0,0,0,.03);
+}
+
+/* Footer is pinned under map */
 .maptest-foot{
   display: flex;
   align-items: center;
@@ -80,6 +117,7 @@
   cursor: pointer;
   box-shadow: 0 6px 18px var(--shadow);
   transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  white-space: nowrap;
 }
 
 .maptest-btn:hover{
@@ -96,18 +134,38 @@
   box-shadow: none;
 }
 
-/* Mobile */
+/* Prevent MapLibre controls from getting clipped by rounded corners */
+.maptest-map .maplibregl-ctrl-top-right,
+.maptest-map .maplibregl-ctrl-top-left{
+  margin-top: 8px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+/* Mobile / narrow screens */
 @media (max-width: 720px){
+  .maptest-page{
+    padding: 14px var(--maptest-pad) 18px;
+  }
+
   .maptest-head{
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 10px;
   }
 
   .maptest-actions{
     justify-content: flex-start;
   }
 
-  .maptest-map{
-    height: min(75vh, 620px);
+  /* On mobile, keep map large but leave room for browser UI */
+  .maptest-page{
+    min-height: 100svh; /* better on mobile (safe viewport) */
   }
+}
+
+/* Very short viewports (landscape phones) — keep header compact */
+@media (max-height: 520px){
+  .maptest-sub{ display: none; }
+  .maptest-page{ padding-top: 10px; }
 }
