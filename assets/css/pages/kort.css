@@ -1,0 +1,220 @@
+/* kort.css — page-only styles (fullscreen-ish, responsive) */
+
+/* Stillanleg gildi */
+:root{
+  --kort-gap: 12px;
+  --kort-pad: 14px;
+}
+
+/* Heildaruppsetning: header + kort fylla viewport */
+.kort-page{
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 18px var(--kort-pad) 22px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--kort-gap);
+}
+
+/* =========================
+   Header / Toolbar
+   ========================= */
+
+.kort-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.kort-head-left{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kort-head h1{
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.kort-sub{
+  margin: 0;
+  color: var(--muted);
+  max-width: 88ch;
+}
+
+/* Toolbar */
+.kort-toolbar{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Search */
+.kort-search{
+  position: relative;
+}
+
+.kort-search input{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  min-width: 240px;
+  max-width: 42vw;
+  box-shadow: 0 6px 18px var(--shadow);
+}
+
+.kort-search input::placeholder{
+  color: var(--muted);
+}
+
+.kort-search input:focus{
+  outline: none;
+  border-color: rgba(255,255,255,.22);
+  background: var(--panel2);
+}
+
+/* =========================
+   Card + Map
+   ========================= */
+
+.kort-card{
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow: 0 12px 28px var(--shadow);
+  padding: 10px;
+
+  /* Fyllir restina af hæð */
+  flex: 1 1 auto;
+
+  /* Kort stækkar, footer helst niðri */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Kortið sjálft */
+.kort-map{
+  flex: 1 1 auto;
+  min-height: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+
+  /* Forðast hvítan flash á load */
+  background: rgba(0,0,0,.06);
+}
+
+html[data-theme="light"] .kort-map{
+  background: rgba(0,0,0,.03);
+}
+
+/* MapLibre controls – halda innan ramma */
+.kort-map .maplibregl-ctrl-top-right,
+.kort-map .maplibregl-ctrl-top-left{
+  margin-top: 8px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+/* =========================
+   Footer / State
+   ========================= */
+
+.kort-foot{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.kort-state{
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .95rem;
+}
+
+/* =========================
+   Buttons (page-local)
+   ========================= */
+
+.kort-btn{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px var(--shadow);
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  white-space: nowrap;
+}
+
+.kort-btn:hover{
+  background: var(--panel2);
+  border-color: rgba(255,255,255,.16);
+}
+
+.kort-btn:active{
+  transform: translateY(1px);
+}
+
+.kort-btn-ghost{
+  background: transparent;
+  box-shadow: none;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 900px){
+  .kort-search input{
+    min-width: 200px;
+    max-width: 60vw;
+  }
+}
+
+@media (max-width: 720px){
+  .kort-page{
+    padding: 14px var(--kort-pad) 18px;
+    min-height: 100svh; /* betra á mobile */
+  }
+
+  .kort-head{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .kort-toolbar{
+    justify-content: flex-start;
+  }
+
+  .kort-search input{
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Mjög lágar hæðir (landscape símar) */
+@media (max-height: 520px){
+  .kort-sub{ display: none; }
+  .kort-page{ padding-top: 10px; }
+}
