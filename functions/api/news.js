@@ -44,7 +44,7 @@ export async function onRequestGet({ request }) {
 
   const feeds = {
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
-    mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "mbl.is" },
+    mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "Morgunblaðið" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
     frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
@@ -57,7 +57,8 @@ export async function onRequestGet({ request }) {
     eyjafrettir: { url: "https://eyjafrettir.is/feed/",      label: "Eyjafréttir" },
     fjardarfrettir: { url: "https://www.fjardarfrettir.is/feed",      label: "Fjarðarfréttir" },
     frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
-    bbl:           { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
+   byggingar:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
+    bbl:           { url: "https://byggingar.is/feed",            label: "Byggingar" },
     // VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb: {
       url: "https://www.vb.is/rss",
