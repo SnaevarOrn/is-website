@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ís.is — Kort</title>
+  <meta name="description" content="Opinn, gagnsær og kökulaus kortaþjónusta byggð á OpenStreetMap." />
+
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="32x32">
+  <link rel="icon" href="/favicon.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/kort.css">
+
+  <!-- MapLibre CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+</head>
+
+<body>
+  <main class="kort-page">
+
+    <!-- Header / toolbar -->
+    <header class="kort-head">
+      <div class="kort-head-left">
+        <h1 id="kort-title">Kort</h1>
+        <p class="kort-sub">
+          Kort byggt á OpenStreetMap. Engar kökur. Engin rekning. Allt gerist í augnablikinu.
+        </p>
+      </div>
+
+      <div class="kort-toolbar" role="toolbar" aria-label="Kortatæki">
+        <button class="kort-btn" id="btnHome" type="button" title="Sýna allt Ísland">
+          🇮🇸
+        </button>
+
+        <button class="kort-btn" id="btnSatellite" type="button" title="Skipta um kortagerð">
+          🛰️
+        </button>
+
+        <button class="kort-btn" id="btnLocation" type="button" title="Nota staðsetningu">
+          📍
+        </button>
+
+        <div class="kort-search">
+          <input
+            id="kortSearch"
+            type="search"
+            placeholder="Leita að heimilisfangi eða stað…"
+            autocomplete="off"
+            aria-label="Leita á korti"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- Map container -->
+    <section class="kort-card" aria-labelledby="kort-title">
+      <div
+        id="kort-map"
+        class="kort-map"
+        role="application"
+        aria-label="Kort Íslands"
+      ></div>
+
+      <div class="kort-foot">
+        <span id="kortState" class="kort-state">
+          —
+        </span>
+
+        <button
+          class="kort-btn kort-btn-ghost"
+          id="btnCopyState"
+          type="button"
+          title="Afrita miðju korts"
+        >
+          Afrita staðsetningu
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MapLibre JS -->
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- Page JS (order matters) -->
+  <script src="/assets/js/pages/kort.js" defer></script>
+  <script src="/assets/js/pages/kort.controls.js" defer></script>
+  <script src="/assets/js/pages/kort.search.js" defer></script>
+</body>
+</html>
