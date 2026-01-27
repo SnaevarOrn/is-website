@@ -12,6 +12,7 @@
     { id: "feykir", label: "Feykir",       domain: "feykir.is" },
     { id: "midjan", label: "Miðjan",       domain: "midjan.is" },
     { id: "eyjafrettir", label: "Eyjafréttir",       domain: "eyjafrettir.is" },
+    { id: "fjardarfrettir", label: "Fjarðarfréttir",       domain: "fjardarfrettir.is" },
     { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
     { id: "vb",        label: "Viðskiptablaðið", domain: "vb.is" },
     { id: "bb",        label: "Bæjarins Besta", domain: "bb.is" },
