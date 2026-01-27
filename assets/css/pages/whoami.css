@@ -1,0 +1,170 @@
+/* =========================
+   WHOAMI PAGE (guest info)
+   ========================= */
+
+.whoami-page{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 14px 28px;
+}
+
+.whoami-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.whoami-title h1{
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.whoami-sub{
+  margin: 8px 0 0;
+  color: var(--muted);
+  max-width: 70ch;
+}
+
+.whoami-actions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.whoami-btn{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px var(--shadow);
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+
+.whoami-btn:hover{
+  background: var(--panel2);
+  border-color: rgba(255,255,255,.16);
+}
+
+.whoami-btn:active{
+  transform: translateY(1px);
+}
+
+.whoami-btn:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.whoami-btn-ghost{
+  background: transparent;
+  box-shadow: none;
+}
+
+.whoami-card{
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow: 0 12px 28px var(--shadow);
+  padding: 14px;
+}
+
+.whoami-status{
+  color: var(--muted);
+  padding: 4px 2px 10px;
+}
+
+.whoami-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 720px){
+  .whoami-head{ flex-direction: column; }
+  .whoami-actions{ justify-content: flex-start; }
+  .whoami-grid{ grid-template-columns: 1fr; }
+}
+
+.whoami-kv{
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  border-radius: 14px;
+  padding: 10px 12px;
+  overflow: hidden;
+}
+
+.whoami-k{
+  color: var(--muted);
+  font-size: .85rem;
+  margin-bottom: 4px;
+}
+
+.whoami-v{
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.whoami-kv--small .whoami-v{
+  font-size: .9rem;
+}
+
+.whoami-details{
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.whoami-details summary{
+  cursor: pointer;
+  color: var(--text);
+  user-select: none;
+}
+
+.whoami-pre{
+  margin: 10px 0 0;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  overflow: auto;
+  max-height: 46vh;
+}
+
+html[data-theme="light"] .whoami-pre{
+  background: rgba(0,0,0,.04);
+}
+
+.whoami-note{
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+.whoami-note ul{
+  margin: 8px 0 0 18px;
+}
+
+.whoami-note code{
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.14);
+  color: var(--text);
+}
+
+html[data-theme="light"] .whoami-note code{
+  background: rgba(0,0,0,.04);
+}
