@@ -24,6 +24,7 @@ const ALLOWED_HOSTS = new Set([
   "frjalsverslun.vb.is", "frjalsverslun.is",
   "www.bb.is", "bb.is",
   "www.bbl.is", "bbl.is",
+  "www.byggingar.is", "byggingar.is",
   "www.nutiminn.is", "nutiminn.is",
   "www.feykir.is", "feykir.is",
   "www.midjan.is", "midjan.is",
