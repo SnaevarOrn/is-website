@@ -57,8 +57,8 @@ export async function onRequestGet({ request }) {
     eyjafrettir: { url: "https://eyjafrettir.is/feed/",      label: "Eyjafréttir" },
     fjardarfrettir: { url: "https://www.fjardarfrettir.is/feed",      label: "Fjarðarfréttir" },
     frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
-   byggingar:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
-    bbl:           { url: "https://byggingar.is/feed",            label: "Byggingar" },
+    bbl:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
+    byggingar:   { url: "https://byggingar.is/feed",            label: "Byggingar" },
     // VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb: {
       url: "https://www.vb.is/rss",
