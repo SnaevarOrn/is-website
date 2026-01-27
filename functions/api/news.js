@@ -48,30 +48,38 @@ export async function onRequestGet({ request }) {
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
 
-    frettin:   { url: "https://frettin.is/feed/",      label: "Fréttin" },
-    heimildin:   { url: "https://heimildin.is/rss/",       label: "Heimildin" },
-    grapevine: { url: "https://grapevine.is/feed/",    label: "Grapevine" },
-    bb:        { url: "https://bb.is/feed/",           label: "Bæjarins Besta" },
-    nutiminn:  { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
-    feykir:    { url: "https://www.feykir.is/feed",    label: "Feykir" },
+    frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
+    heimildin:  { url: "https://heimildin.is/rss/",       label: "Heimildin" },
+    grapevine:  { url: "https://grapevine.is/feed/",      label: "Grapevine" },
+    bb:         { url: "https://bb.is/feed/",             label: "Bæjarins Besta" },
+    nutiminn:   { url: "https://www.nutiminn.is/feed/",   label: "Nútíminn" },
+
+    // ✅ Bætt við Feykir (eins og þú vildir)
+    feykir:     { url: "https://www.feykir.is/feed",      label: "Feykir" },
 
     frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
     bbl:           { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
 
-    // ✅ VB: útilokum allt sem bendir á fiskifrettir.vb.is
+    // VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb: {
       url: "https://www.vb.is/rss",
       label: "Viðskiptablaðið",
       excludeLinkHosts: ["fiskifrettir.vb.is"]
     },
-
-    // ✅ Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
+    // Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
     fiskifrettir: {
       url: "https://fiskifrettir.vb.is/rss/",
       label: "Fiskifréttir",
       includeLinkHosts: ["fiskifrettir.vb.is"]
     },
   };
+
+  // If classification fails for these sources, force into "innlent"
+  const FORCE_INNLENT_IF_UNCLASSIFIED = new Set([
+    "fiskifrettir",
+    "frjalsverslun",
+    "feykir",
+  ]);
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
 
@@ -150,7 +158,6 @@ export async function onRequestGet({ request }) {
         const rssCats = extractCategories(block);
         const catText = rssCats.join(" ").trim();
 
-        // (optional) description helps source-hints, but output stays same
         const description =
           extractTagValue(block, "description") ||
           extractTagValue(block, "summary") ||
@@ -168,12 +175,13 @@ export async function onRequestGet({ request }) {
 
         let { categoryId, categoryLabel, categoryFrom } = inferred;
 
-        // 🔒 Hard override: Fiskifréttir + Frjáls verslun eru alltaf innlent
-if (id === "fiskifrettir" || id === "frjalsverslun") {
-  categoryId = "innlent";
-  categoryLabel = labelFor("innlent");
-  categoryFrom = `override:${id}`;
-}
+        // ✅ Fallback override:
+        // Ef þessi miðill lendir í "oflokkad" => þvinga í "innlent"
+        if (FORCE_INNLENT_IF_UNCLASSIFIED.has(id) && categoryId === "oflokkad") {
+          categoryId = "innlent";
+          categoryLabel = labelFor("innlent");
+          categoryFrom = `fallbackOverride:${id}`;
+        }
 
         if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
@@ -680,7 +688,7 @@ function mapFromText(x) {
 
   const envWords = [
     "umhverfi", "loftslag", "mengun", "natur", "jokull", "eldgos", "skjalfti", "vedur", "haf", "fisk",
-    "skograekt", "fornleif" // BBL/BBL-ish common
+    "skograekt", "fornleif"
   ];
 
   const sciWords = [
@@ -725,7 +733,6 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/skodun/")) return "skodun";
     if (u.includes("/folk/")) return "menning";
     if (u.includes("/eftir-vinnu/")) {
-      // some are tech-ish, many are lifestyle
       const t = String(titleNorm || "");
       if (t.includes("taekni") || t.includes("iphone") || t.includes("simi") || t.includes("ai") || t.includes("gervigreind")) {
         return "taekni";
