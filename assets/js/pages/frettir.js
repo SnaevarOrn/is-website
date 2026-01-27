@@ -4,7 +4,7 @@
 
   const SOURCES = [
     { id: "ruv",       label: "RÚV",             domain: "ruv.is" },
-    { id: "mbl",       label: "mbl.is",          domain: "mbl.is" },
+    { id: "mbl",       label: "Morgunblaðið",          domain: "mbl.is" },
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
     { id: "heimildin",   label: "Heimildin",       domain: "heimildin.is" },
