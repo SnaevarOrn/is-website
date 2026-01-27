@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="is" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ís.is — Map test</title>
+  <meta name="description" content="OpenStreetMap + MapLibre demo" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/maptest.css">
+
+  <!-- MapLibre CSS (CDN) -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+</head>
+
+<body>
+  <main class="maptest-page">
+    <header class="maptest-head">
+      <div>
+        <h1>OpenStreetMap kort – demo</h1>
+        <p class="maptest-sub">
+          Þetta er MapLibre að teikna OSM “tiles”. Þú mátt ekki fjarlægja credit/attribution.
+        </p>
+      </div>
+
+      <div class="maptest-actions">
+        <button class="maptest-btn" id="btnReykjavik" type="button">Reykjavík</button>
+        <button class="maptest-btn" id="btnVatnajokull" type="button">Vatnajökull</button>
+      </div>
+    </header>
+
+    <section class="maptest-card">
+      <div id="map" class="maptest-map" role="application" aria-label="Kort"></div>
+
+      <div class="maptest-foot">
+        <span id="mapState" class="maptest-state">—</span>
+        <button class="maptest-btn maptest-btn-ghost" id="btnCopyState" type="button">Afrita staðsetningu</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- MapLibre JS (CDN) -->
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- Page JS -->
+  <script src="/assets/js/pages/maptest.js" defer></script>
+</body>
+</html>
