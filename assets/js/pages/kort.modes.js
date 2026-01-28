@@ -1,5 +1,6 @@
 // assets/js/pages/kort.modes.js
 // Kort — Mode system (extensible) + REAL "wrecks" mode
+// Build-safe: no optional chaining, no replaceAll
 
 "use strict";
 
@@ -15,21 +16,20 @@
   }
 
   async function setMode(id) {
-    if (current?.id === id) return;
+    if (current && current.id === id) return;
 
     // teardown current
-    if (current?.teardown) {
+    if (current && typeof current.teardown === "function") {
       try { await current.teardown({ map }); } catch (e) { console.warn(e); }
     }
 
     const next = modes.get(id) || modes.get("default");
-    current = { id, ...next };
+    current = Object.assign({ id }, next || {});
 
-    if (current?.setup) {
+    if (current && typeof current.setup === "function") {
       try { await current.setup({ map }); } catch (e) { console.warn(e); }
     }
 
-    // UI hint
     const elState = document.getElementById("kortState");
     if (elState) elState.textContent = `Hamur: ${id}`;
   }
@@ -58,7 +58,6 @@
   /* =========================
      WRECKS (real)
      ========================= */
-
   register("wrecks", (() => {
     const SOURCE_ID = "wrecks";
     const LAYER_ID = "wrecks-points";
@@ -75,19 +74,17 @@
         headers: { "accept": "application/json" },
         cache: "no-store"
       });
-      if (!res.ok) throw new Error(`skipsflok.json HTTP ${res.status}`);
+      if (!res.ok) throw new Error("skipsflok.json HTTP " + res.status);
       return res.json();
     }
 
     function ensureLayers(data) {
       // Source
       if (!map.getSource(SOURCE_ID)) {
-        map.addSource(SOURCE_ID, {
-          type: "geojson",
-          data
-        });
+        map.addSource(SOURCE_ID, { type: "geojson", data: data });
       } else {
-        map.getSource(SOURCE_ID).setData(data);
+        const src = map.getSource(SOURCE_ID);
+        if (src && typeof src.setData === "function") src.setData(data);
       }
 
       // Points layer
@@ -104,7 +101,7 @@
         });
       }
 
-      // Labels (optional, clean)
+      // Labels (readable)
       if (!map.getLayer(LAYER_LABEL_ID)) {
         map.addLayer({
           id: LAYER_LABEL_ID,
@@ -122,7 +119,6 @@
             "text-halo-color": "rgba(255,255,255,.9)",
             "text-halo-width": 2
           }
-          
         });
       }
     }
@@ -130,76 +126,93 @@
     function setPointerCursor() {
       map.getCanvas().style.cursor = "pointer";
     }
+
     function resetCursor() {
       map.getCanvas().style.cursor = "";
     }
 
+    function esc(s) {
+      const str = String(s);
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getCoords(feature) {
+      if (!feature || !feature.geometry || !feature.geometry.coordinates) return null;
+      const c = feature.geometry.coordinates;
+      if (!Array.isArray(c) || c.length < 2) return null;
+      const lng = Number(c[0]);
+      const lat = Number(c[1]);
+      if (!isFinite(lng) || !isFinite(lat)) return null;
+      return { lng, lat };
+    }
+
     function openPopup(feature) {
-      const p = feature.properties || {};
-      const coords = feature.geometry?.coordinates || [];
-      const lng = coords[0];
-      const lat = coords[1];
+      const p = (feature && feature.properties) ? feature.properties : {};
+      const c = getCoords(feature);
+      if (!c) return;
 
       const title = esc(p.name || "Skipsflak");
       const summary = p.summary ? `<div class="kort-popup-sub">${esc(p.summary)}</div>` : "";
-      const metaBits = [];
 
-      if (p.year) metaBits.push(`Ár: ${esc(String(p.year))}`);
-      if (p.type) metaBits.push(`Tegund: ${esc(String(p.type))}`);
-      if (p.source) metaBits.push(`Heimild: ${esc(String(p.source))}`);
+      const metaBits = [];
+      if (p.year) metaBits.push("Ár: " + esc(String(p.year)));
+      if (p.type) metaBits.push("Tegund: " + esc(String(p.type)));
+      if (p.source) metaBits.push("Heimild: " + esc(String(p.source)));
 
       const meta = metaBits.length
-        ? `<div class="kort-popup-meta">${metaBits.map(esc).join(" · ")}</div>`
+        ? `<div class="kort-popup-meta">${metaBits.join(" · ")}</div>`
         : "";
 
-      const img = p.image ? `<img class="kort-popup-img" src="${esc(p.image)}" alt="">` : "";
+      const img = p.image
+        ? `<img class="kort-popup-img" src="${esc(p.image)}" alt="">`
+        : "";
 
-      const sources = Array.isArray(p.sources) && p.sources.length
-      ? `<div class="kort-popup-sources">` + p.sources.map(s =>
-          `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label || "Heimild")}</a>`
-        ).join("") + `</div>`
-      : "";
+      const sources = (p.sources && Array.isArray(p.sources) && p.sources.length)
+        ? `<div class="kort-popup-sources">${
+            p.sources.map((s) => {
+              const url = s && s.url ? s.url : "";
+              const label = s && s.label ? s.label : "Heimild";
+              if (!url) return "";
+              return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(label)}</a>`;
+            }).join("")
+          }</div>`
+        : "";
 
-      const html = `
-        <div class="kort-popup">
-          <div class="kort-popup-title">${title}</div>
-          ${summary}
-          ${meta}
-          <div class="kort-popup-coord">${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
-        </div>
-      `;
+      const html =
+        `<div class="kort-popup">` +
+          `<div class="kort-popup-title">${title}</div>` +
+          summary +
+          img +
+          meta +
+          sources +
+          `<div class="kort-popup-coord">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</div>` +
+        `</div>`;
 
       if (popup) popup.remove();
-      popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: "340px" })
-        .setLngLat([lng, lat])
+      popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: "360px" })
+        .setLngLat([c.lng, c.lat])
         .setHTML(html)
         .addTo(map);
-    }
-
-    function esc(s) {
-      return String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
     }
 
     return {
       async setup() {
         const data = await loadGeoJSON();
 
-        // Ensure on current style
         if (!map.isStyleLoaded()) {
           await new Promise((r) => map.once("load", r));
         }
+
         ensureLayers(data);
 
         // Re-add after style change (satellite toggle resets layers)
         onStyleData = () => {
-          try {
-            ensureLayers(data);
-          } catch {}
+          try { ensureLayers(data); } catch (e) {}
         };
         map.on("styledata", onStyleData);
 
@@ -208,7 +221,7 @@
         onLeaveCursor = () => resetCursor();
 
         onClick = (e) => {
-          const f = e.features && e.features[0];
+          const f = e && e.features && e.features[0];
           if (!f) return;
           openPopup(f);
         };
@@ -217,36 +230,22 @@
         map.on("mouseleave", LAYER_ID, onLeaveCursor);
         map.on("click", LAYER_ID, onClick);
 
-        // Fit to Iceland + gentle hint
-        map.fitBounds(window.KORT_ICELAND_BOUNDS, { padding: 50, duration: 900, essential: true });
+        if (window.KORT_ICELAND_BOUNDS) {
+          map.fitBounds(window.KORT_ICELAND_BOUNDS, { padding: 50, duration: 900, essential: true });
+        }
 
         const elState = document.getElementById("kortState");
         if (elState) elState.textContent = "Skipsflök: smelltu á punkt til að sjá upplýsingar.";
       },
 
       async teardown() {
-        if (popup) {
-          popup.remove();
-          popup = null;
-        }
+        if (popup) { popup.remove(); popup = null; }
 
-        if (onStyleData) {
-          map.off("styledata", onStyleData);
-          onStyleData = null;
-        }
+        if (onStyleData) { map.off("styledata", onStyleData); onStyleData = null; }
 
-        if (onMoveCursor) {
-          map.off("mouseenter", LAYER_ID, onMoveCursor);
-          onMoveCursor = null;
-        }
-        if (onLeaveCursor) {
-          map.off("mouseleave", LAYER_ID, onLeaveCursor);
-          onLeaveCursor = null;
-        }
-        if (onClick) {
-          map.off("click", LAYER_ID, onClick);
-          onClick = null;
-        }
+        if (onMoveCursor) { map.off("mouseenter", LAYER_ID, onMoveCursor); onMoveCursor = null; }
+        if (onLeaveCursor) { map.off("mouseleave", LAYER_ID, onLeaveCursor); onLeaveCursor = null; }
+        if (onClick) { map.off("click", LAYER_ID, onClick); onClick = null; }
 
         // Remove layers + source if present
         if (map.getLayer(LAYER_LABEL_ID)) map.removeLayer(LAYER_LABEL_ID);
@@ -258,8 +257,11 @@
     };
   })());
 
-  window.kortModes = { register, setMode, getCurrent: () => current?.id || "default" };
+  window.kortModes = {
+    register,
+    setMode,
+    getCurrent: () => (current && current.id) ? current.id : "default"
+  };
 
-  // Start in default
   setMode("default");
 })();
