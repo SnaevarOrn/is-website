@@ -49,15 +49,19 @@
         <button class="kort-btn" id="btnLocation" type="button" title="Nota staðsetningu">📍</button>
         <button class="kort-btn" id="btnFullscreen" type="button" title="Fullscreen">⛶</button>
 
-        <div class="kort-search">
+        <form class="kort-search" id="kortSearchForm" role="search">
           <input
-            id="kortSearch"
-            type="search"
-            placeholder="Leita að heimilisfangi eða stað…"
-            autocomplete="off"
-            aria-label="Leita á korti"
-          />
-        </div>
+              id="kortSearch"
+              name="q"
+              type="search"
+              placeholder="Leita að heimilisfangi eða stað…"
+              autocomplete="off"
+              aria-label="Leita á korti"
+              enterkeyhint="search"
+              inputmode="search"
+            />
+          </form>
+
       </div>
     </header>
 
