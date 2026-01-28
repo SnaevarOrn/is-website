@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ís.is — Kort</title>
-  <meta name="description" content="Opinn, gagnsær og kökulaus kortaþjónusta byggð á OpenStreetMap." />
+  <meta name="description" content="Opinn, gagnsær og kökulaus kortavettvangur byggður á OpenStreetMap." />
 
   <!-- Favicons -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -34,35 +34,28 @@
 
   <main class="kort-page">
 
-    <!-- Header / toolbar -->
+    <!-- Header -->
     <header class="kort-head">
       <div class="kort-head-left">
         <h1 id="kort-title">Kort</h1>
         <p class="kort-sub">
-          Kort byggt á OpenStreetMap. Engar kökur. Engin rakning. Allt gerist í augnablikinu.
+          Kort byggt á OpenStreetMap. Engar kökur. Engin rekning. Allt gerist í augnablikinu.
         </p>
       </div>
 
-      <div class="kort-toolbar" role="toolbar" aria-label="Kortatæki">
-        <button class="kort-btn" id="btnHome" type="button" title="Sýna allt Ísland">🇮🇸</button>
-        <button class="kort-btn" id="btnSatellite" type="button" title="Skipta um kortagerð">🛰️</button>
-        <button class="kort-btn" id="btnLocation" type="button" title="Nota staðsetningu">📍</button>
-        <button class="kort-btn" id="btnFullscreen" type="button" title="Fullscreen">⛶</button>
-
-        <form class="kort-search" id="kortSearchForm" role="search">
-          <input
-              id="kortSearch"
-              name="q"
-              type="search"
-              placeholder="Leita að heimilisfangi eða stað…"
-              autocomplete="off"
-              aria-label="Leita á korti"
-              enterkeyhint="search"
-              inputmode="search"
-            />
-          </form>
-
-      </div>
+      <!-- Search (mobile-friendly: submit on “Search/Go”) -->
+      <form class="kort-search" id="kortSearchForm" role="search">
+        <input
+          id="kortSearch"
+          name="q"
+          type="search"
+          placeholder="Leita að heimilisfangi eða stað…"
+          autocomplete="off"
+          aria-label="Leita á korti"
+          enterkeyhint="search"
+          inputmode="search"
+        />
+      </form>
     </header>
 
     <!-- Map container -->
@@ -80,6 +73,34 @@
 
   </main>
 
+  <!-- Side panel (hamburger opens this) -->
+  <aside id="kortPanel" class="kort-panel" aria-hidden="true">
+    <div class="kort-panel-head">
+      <div class="kort-panel-title">Valmynd</div>
+      <button class="kort-panel-x" id="kortPanelClose" type="button" aria-label="Loka">×</button>
+    </div>
+
+    <div class="kort-panel-body">
+      <div class="kort-panel-group">
+        <div class="kort-panel-label">Hamur</div>
+        <button class="kort-panel-item" type="button" data-mode="default">Venjulegt</button>
+        <button class="kort-panel-item" type="button" data-mode="quiz_towns">Leikjahamur: giskaðu á bæi</button>
+        <button class="kort-panel-item" type="button" data-mode="quiz_glaciers">Leikjahamur: giskaðu á jökla</button>
+      </div>
+
+      <div class="kort-panel-group">
+        <div class="kort-panel-label">Viðmót</div>
+        <button class="kort-panel-item" type="button" data-mode="wrecks">Skipsflök</button>
+      </div>
+
+      <p class="kort-panel-note">
+        Hugmynd: allt hér er “modes”. Það gerir kerfið stækkanlegt án þess að rugla grunnkortið.
+      </p>
+    </div>
+  </aside>
+
+  <div id="kortPanelBackdrop" class="kort-panel-backdrop" hidden></div>
+
   <!-- MapLibre JS -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 
@@ -87,5 +108,7 @@
   <script src="/assets/js/pages/kort.js" defer></script>
   <script src="/assets/js/pages/kort.controls.js" defer></script>
   <script src="/assets/js/pages/kort.search.js" defer></script>
+  <script src="/assets/js/pages/kort.modes.js" defer></script>
+  <script src="/assets/js/pages/kort.menu.js" defer></script>
 </body>
 </html>
