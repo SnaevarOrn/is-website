@@ -1,5 +1,6 @@
 // assets/js/pages/kort.controls.js
-// Kort — Custom MapLibre controls (native look): Menu · Home · Satellite · Location
+// Custom MapLibre controls (native look): Menu · Home · Satellite · Location
+// + Style registry (street/light/dark/topo/satellite)
 
 "use strict";
 
@@ -8,27 +9,102 @@
   if (!map) return;
 
   /* =========================
-     Satellite style (demo)
+     Styles (raster) — easy to try
      ========================= */
-  if (!window.KORT_STYLE_SATELLITE) {
-    window.KORT_STYLE_SATELLITE = {
-      version: 8,
-      sources: {
-        satellite: {
-          type: "raster",
-          tiles: [
-            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          ],
-          tileSize: 256,
-          attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics"
-        }
-      },
-      layers: [{ id: "satellite", type: "raster", source: "satellite" }]
-    };
+
+  // Street (OSM) from kort.js
+  const STYLE_STREET = window.KORT_STYLE_MAP;
+
+  // CARTO basemaps (labels included) — good “views”
+  const styleCarto = (id, attribution) => ({
+    version: 8,
+    sources: {
+      carto: {
+        type: "raster",
+        tiles: [
+          `https://a.basemaps.cartocdn.com/${id}/{z}/{x}/{y}.png`,
+          `https://b.basemaps.cartocdn.com/${id}/{z}/{x}/{y}.png`,
+          `https://c.basemaps.cartocdn.com/${id}/{z}/{x}/{y}.png`,
+          `https://d.basemaps.cartocdn.com/${id}/{z}/{x}/{y}.png`
+        ],
+        tileSize: 256,
+        attribution
+      }
+    },
+    layers: [{ id: "carto", type: "raster", source: "carto" }]
+  });
+
+  const STYLE_LIGHT = styleCarto("light_all", "© OpenStreetMap contributors © CARTO");
+  const STYLE_DARK  = styleCarto("dark_all",  "© OpenStreetMap contributors © CARTO");
+
+  // Topo (OpenTopoMap)
+  const STYLE_TOPO = {
+    version: 8,
+    sources: {
+      topo: {
+        type: "raster",
+        tiles: ["https://a.tile.opentopomap.org/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        attribution: "© OpenStreetMap contributors · SRTM | OpenTopoMap"
+      }
+    },
+    layers: [{ id: "topo", type: "raster", source: "topo" }]
+  };
+
+  // Satellite (demo provider)
+  const STYLE_SATELLITE = {
+    version: 8,
+    sources: {
+      satellite: {
+        type: "raster",
+        tiles: [
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        ],
+        tileSize: 256,
+        attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics"
+      }
+    },
+    layers: [{ id: "satellite", type: "raster", source: "satellite" }]
+  };
+
+  const STYLE_REGISTRY = new Map([
+    ["street", STYLE_STREET],
+    ["light", STYLE_LIGHT],
+    ["dark", STYLE_DARK],
+    ["topo", STYLE_TOPO],
+    ["satellite", STYLE_SATELLITE]
+  ]);
+
+  let currentStyleId = "street";
+  let lastNonSatelliteId = "street";
+
+  function setStyleById(id) {
+    const style = STYLE_REGISTRY.get(id);
+    if (!style) return;
+
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    const bearing = map.getBearing();
+    const pitch = map.getPitch();
+
+    currentStyleId = id;
+    if (id !== "satellite") lastNonSatelliteId = id;
+
+    map.setStyle(style);
+    map.once("styledata", () => {
+      map.jumpTo({ center, zoom, bearing, pitch });
+    });
+
+    // Let modes re-apply their layers on style changes
+    window.kortModes?.setMode?.(window.kortModes?.getCurrent?.() || "default");
   }
 
+  // Expose for menu
+  window.kortSetStyle = setStyleById;
+  window.kortGetStyle = () => currentStyleId;
+
   /* =========================
-     Helpers
+     Helpers: native control group
      ========================= */
   function makeGroupControl(buttons) {
     return {
@@ -55,42 +131,20 @@
     btn.innerHTML = label;
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      onClick?.();
+      onClick?.(btn);
     });
     return btn;
   }
 
   /* =========================
-     Menu button (opens panel)
+     Menu
      ========================= */
-  const btnMenu = makeButton("☰", "Valmynd", () => {
-    window.kortMenu?.toggle?.();
-  });
-
-  // Put menu as its own single-button group (looks like built-in)
+  const btnMenu = makeButton("☰", "Valmynd", () => window.kortMenu?.toggle?.());
   map.addControl(makeGroupControl([btnMenu]), "top-left");
 
   /* =========================
-     Home / Satellite / Location group
+     Home / Satellite / Location
      ========================= */
-
-  let isSatellite = false;
-  const btnSat = makeButton("🛰️", "Satellite", () => {
-    const center = map.getCenter();
-    const zoom = map.getZoom();
-    const bearing = map.getBearing();
-    const pitch = map.getPitch();
-
-    isSatellite = !isSatellite;
-    map.setStyle(isSatellite ? window.KORT_STYLE_SATELLITE : window.KORT_STYLE_MAP);
-
-    map.once("styledata", () => {
-      map.jumpTo({ center, zoom, bearing, pitch });
-    });
-
-    // tiny visual hint: toggle pressed state
-    btnSat.classList.toggle("kort-ctrl-active", isSatellite);
-  });
 
   const btnHome = makeButton("🇮🇸", "Sýna allt Ísland", () => {
     const bounds = window.KORT_ICELAND_BOUNDS;
@@ -98,13 +152,19 @@
     map.fitBounds(bounds, { padding: 40, duration: 900, essential: true });
   });
 
-  const btnLoc = makeButton("📍", "Nota staðsetningu", () => {
+  const btnSat = makeButton("🛰️", "Satellite", (btn) => {
+    const next = (currentStyleId === "satellite") ? lastNonSatelliteId : "satellite";
+    setStyleById(next);
+    btn.classList.toggle("kort-ctrl-active", currentStyleId === "satellite");
+  });
+
+  const btnLoc = makeButton("📍", "Nota staðsetningu", (btn) => {
     if (!("geolocation" in navigator)) {
       alert("Vafrinn styður ekki staðsetningu.");
       return;
     }
 
-    btnLoc.disabled = true;
+    btn.disabled = true;
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -127,7 +187,7 @@
           window.__kortLocationMarker.setLngLat([lng, lat]);
         }
 
-        btnLoc.disabled = false;
+        btn.disabled = false;
       },
       (err) => {
         const msg =
@@ -137,13 +197,11 @@
           "Villa kom upp.";
 
         alert(`Staðsetning: ${msg}`);
-        btnLoc.disabled = false;
+        btn.disabled = false;
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   });
 
-  // Add as a group directly under menu (top-left)
   map.addControl(makeGroupControl([btnHome, btnSat, btnLoc]), "top-left");
-
 })();
