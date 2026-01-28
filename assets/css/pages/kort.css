@@ -1,11 +1,17 @@
-/* kort.css — page-only styles (fullscreen-ish, responsive) */
+/* kort.css — page-only styles (fullscreen-ish, responsive)
+   Includes: centered search, dropdown box, popup box (image+sources),
+   side panel, close button, and general layout tokens.
+*/
 
 :root{
   --kort-gap: 12px;
   --kort-pad: 14px;
 }
 
-/* Layout */
+/* =========================
+   Layout
+   ========================= */
+
 .kort-page{
   max-width: 1400px;
   margin: 0 auto;
@@ -16,11 +22,14 @@
   gap: var(--kort-gap);
 }
 
-/* Header */
+/* =========================
+   Header (title left, search centered)
+   ========================= */
+
 .kort-head{
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 520px) 1fr;
+  align-items: start;
   gap: 16px;
 }
 
@@ -47,22 +56,24 @@
 /* Search */
 .kort-search{
   position: relative;
-  flex: 0 1 auto;
+  justify-self: center;
+  width: 100%;
 }
 
 .kort-search input{
+  width: 100%;
   appearance: none;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
   padding: 10px 12px;
   border-radius: 12px;
-  min-width: 260px;
-  max-width: 46vw;
   box-shadow: 0 6px 18px var(--shadow);
 }
 
-.kort-search input::placeholder{ color: var(--muted); }
+.kort-search input::placeholder{
+  color: var(--muted);
+}
 
 .kort-search input:focus{
   outline: none;
@@ -70,14 +81,20 @@
   background: var(--panel2);
 }
 
-/* Card + Map */
+/* =========================
+   Card + Map
+   ========================= */
+
 .kort-card{
   border: 1px solid var(--border);
   background: var(--panel);
   border-radius: 18px;
   box-shadow: 0 12px 28px var(--shadow);
   padding: 10px;
+
+  /* Fill remaining height */
   flex: 1 1 auto;
+
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -89,12 +106,16 @@
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--border);
+
+  /* reduce white flash while loading tiles */
   background: rgba(0,0,0,.06);
 }
 
-html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
+html[data-theme="light"] .kort-map{
+  background: rgba(0,0,0,.03);
+}
 
-/* Keep MapLibre controls inside rounded frame */
+/* keep MapLibre controls inside rounded frame */
 .kort-map .maplibregl-ctrl-top-right,
 .kort-map .maplibregl-ctrl-top-left{
   margin-top: 8px;
@@ -102,7 +123,20 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   margin-right: 8px;
 }
 
-/* Footer */
+/* Optional: slightly separate stacked control groups (top-left) */
+.kort-map .maplibregl-ctrl-top-left .maplibregl-ctrl{
+  margin-bottom: 8px;
+}
+
+/* Active state for our custom MapLibre control buttons */
+.kort-map .maplibregl-ctrl-group button.kort-ctrl-active{
+  background: rgba(255,255,255,.10);
+}
+
+/* =========================
+   Footer
+   ========================= */
+
 .kort-foot{
   display: flex;
   align-items: center;
@@ -120,7 +154,7 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   font-size: .95rem;
 }
 
-/* Buttons (page-local) */
+/* Page-local buttons */
 .kort-btn{
   appearance: none;
   border: 1px solid var(--border);
@@ -139,28 +173,36 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   border-color: rgba(255,255,255,.16);
 }
 
-.kort-btn:active{ transform: translateY(1px); }
+.kort-btn:active{
+  transform: translateY(1px);
+}
 
 .kort-btn-ghost{
   background: transparent;
   box-shadow: none;
 }
 
-/* Close button (top-right) */
+/* =========================
+   Close button (top-right)
+   ========================= */
+
 .kort-close{
   position: fixed;
   top: 12px;
   right: 12px;
   z-index: 9999;
+
   width: 38px;
   height: 38px;
   display: grid;
   place-items: center;
+
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
   text-decoration: none;
+
   box-shadow: 0 10px 24px var(--shadow);
   transition: transform .08s ease, background .15s ease, border-color .15s ease;
 }
@@ -170,20 +212,29 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   border-color: rgba(255,255,255,.16);
 }
 
-.kort-close:active{ transform: translateY(1px); }
+.kort-close:active{
+  transform: translateY(1px);
+}
 
-/* Search dropdown (from earlier) */
+/* =========================
+   Search dropdown (boxed)
+   ========================= */
+
 .kort-search-dd{
   position: absolute;
   left: 0;
   right: 0;
   top: calc(100% + 8px);
-  z-index: 50;
+  z-index: 200;
+
   border: 1px solid var(--border);
   background: var(--panel);
   border-radius: 14px;
-  box-shadow: 0 12px 28px var(--shadow);
+  box-shadow: 0 16px 44px var(--shadow);
   overflow: hidden;
+
+  max-height: min(46vh, 340px);
+  overflow-y: auto;
 }
 
 .kort-search-item{
@@ -198,10 +249,18 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   cursor: pointer;
 }
 
-.kort-search-item:last-child{ border-bottom: 0; }
-.kort-search-item:hover{ background: var(--panel2); }
+.kort-search-item:hover{
+  background: var(--panel2);
+}
 
-/* Panel */
+.kort-search-item:last-child{
+  border-bottom: 0;
+}
+
+/* =========================
+   Side panel + backdrop
+   ========================= */
+
 .kort-panel-backdrop{
   position: fixed;
   inset: 0;
@@ -227,7 +286,9 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   overflow: hidden;
 }
 
-.kort-panel.is-open{ display: flex; }
+.kort-panel.is-open{
+  display: flex;
+}
 
 .kort-panel-head{
   display: flex;
@@ -253,7 +314,9 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   cursor: pointer;
 }
 
-.kort-panel-x:hover{ background: var(--panel2); }
+.kort-panel-x:hover{
+  background: var(--panel2);
+}
 
 .kort-panel-body{
   padding: 12px;
@@ -286,8 +349,13 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   cursor: pointer;
 }
 
-.kort-panel-item:last-child{ border-bottom: 0; }
-.kort-panel-item:hover{ background: var(--panel2); }
+.kort-panel-item:last-child{
+  border-bottom: 0;
+}
+
+.kort-panel-item:hover{
+  background: var(--panel2);
+}
 
 .kort-panel-note{
   color: var(--muted);
@@ -295,7 +363,76 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   line-height: 1.4;
 }
 
-/* Responsive */
+/* =========================
+   Popup styling (boxed + image + sources)
+   ========================= */
+
+.kort-map .maplibregl-popup-content{
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 16px 44px var(--shadow);
+  padding: 10px 12px;
+  max-width: 360px;
+}
+
+.kort-popup-title{
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+}
+
+.kort-popup-sub{
+  color: var(--muted);
+  margin: 0 0 10px;
+  line-height: 1.35;
+}
+
+.kort-popup-img{
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: block;
+  margin: 6px 0 10px;
+}
+
+.kort-popup-meta{
+  color: var(--muted);
+  font-size: .92rem;
+  margin: 0 0 8px;
+}
+
+.kort-popup-sources{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.kort-popup-sources a{
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  text-decoration: none;
+  color: var(--text);
+  background: rgba(255,255,255,.02);
+}
+
+.kort-popup-sources a:hover{
+  background: var(--panel2);
+}
+
+.kort-popup-coord{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .9rem;
+  color: var(--muted);
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
 @media (max-width: 720px){
   .kort-page{
     padding: 14px var(--kort-pad) 18px;
@@ -303,15 +440,12 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   }
 
   .kort-head{
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  .kort-search input{
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+  .kort-search{
+    justify-self: stretch;
   }
 }
 
@@ -319,37 +453,4 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
 @media (max-height: 520px){
   .kort-sub{ display: none; }
   .kort-page{ padding-top: 10px; }
-}
-/* Popup styling */
-.kort-map .maplibregl-popup-content{
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: 0 16px 40px var(--shadow);
-  padding: 10px 12px;
-}
-
-.kort-popup-title{
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin-bottom: 6px;
-}
-
-.kort-popup-sub{
-  color: var(--muted);
-  line-height: 1.35;
-  margin-bottom: 8px;
-}
-
-.kort-popup-meta{
-  color: var(--muted);
-  font-size: .92rem;
-  margin-bottom: 8px;
-}
-
-.kort-popup-coord{
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: .9rem;
-  color: var(--muted);
 }
