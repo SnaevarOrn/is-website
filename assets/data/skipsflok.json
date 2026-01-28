@@ -4,13 +4,17 @@
     {
       "type": "Feature",
       "properties": {
-        "id": "gardar-ba-64",
-        "name": "Garðar BA 64",
-        "type": "skip",
-        "year": 1912,
-        "summary": "Elsta stálskip á Íslandi (vinsælt flak við Patreksfjörð).",
-        "source": "westfjords.is"
-      },
+  "id": "gardar-ba-64",
+  "name": "Garðar BA 64",
+  "type": "skip",
+  "year": 1912,
+  "summary": "Elsta stálskip á Íslandi (vinsælt flak við Patreksfjörð).",
+  "image": "/assets/img/wrecks/gardar.jpg",
+  "sources": [
+    { "label": "Westfjords", "url": "https://www.westfjords.is/en/places/interesting-places/gardar-ba-64-shipwreck" }
+  ]
+}
+,
       "geometry": {
         "type": "Point",
         "coordinates": [-23.837033, 65.516836]
