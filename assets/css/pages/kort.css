@@ -248,3 +248,41 @@ html[data-theme="light"] .kort-map{
 .kort-close:active{
   transform: translateY(1px);
 }
+/* Search dropdown */
+.kort-search{
+  position: relative;
+}
+
+.kort-search-dd{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px var(--shadow);
+  overflow: hidden;
+}
+
+.kort-search-item{
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.kort-search-item:last-child{
+  border-bottom: 0;
+}
+
+.kort-search-item:hover{
+  background: var(--panel2);
+}
