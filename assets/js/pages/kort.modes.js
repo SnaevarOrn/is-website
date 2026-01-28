@@ -118,8 +118,11 @@
             "text-optional": true
           },
           paint: {
+            "text-color": "#111",
+            "text-halo-color": "rgba(255,255,255,.9)",
             "text-halo-width": 2
           }
+          
         });
       }
     }
@@ -148,6 +151,14 @@
       const meta = metaBits.length
         ? `<div class="kort-popup-meta">${metaBits.map(esc).join(" · ")}</div>`
         : "";
+
+      const img = p.image ? `<img class="kort-popup-img" src="${esc(p.image)}" alt="">` : "";
+
+      const sources = Array.isArray(p.sources) && p.sources.length
+      ? `<div class="kort-popup-sources">` + p.sources.map(s =>
+          `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label || "Heimild")}</a>`
+        ).join("") + `</div>`
+      : "";
 
       const html = `
         <div class="kort-popup">
