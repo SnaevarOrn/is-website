@@ -82,6 +82,8 @@
     new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }),
     "bottom-left"
   );
+  
+  map.addControl(new maplibregl.FullscreenControl(), "top-right");
 
   /* =========================
      Helpers
