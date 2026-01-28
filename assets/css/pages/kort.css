@@ -320,3 +320,36 @@ html[data-theme="light"] .kort-map{ background: rgba(0,0,0,.03); }
   .kort-sub{ display: none; }
   .kort-page{ padding-top: 10px; }
 }
+/* Popup styling */
+.kort-map .maplibregl-popup-content{
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 16px 40px var(--shadow);
+  padding: 10px 12px;
+}
+
+.kort-popup-title{
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.kort-popup-sub{
+  color: var(--muted);
+  line-height: 1.35;
+  margin-bottom: 8px;
+}
+
+.kort-popup-meta{
+  color: var(--muted);
+  font-size: .92rem;
+  margin-bottom: 8px;
+}
+
+.kort-popup-coord{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .9rem;
+  color: var(--muted);
+}
