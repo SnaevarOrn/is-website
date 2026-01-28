@@ -42,6 +42,23 @@
     window.kortModes?.setMode?.(id);
     close();
   });
+panel.addEventListener("click", (e) => {
+  const styleBtn = e.target.closest("[data-style]");
+  if (styleBtn) {
+    const id = styleBtn.getAttribute("data-style");
+    window.kortSetStyle?.(id);
+    close();
+    return;
+  }
+
+  const modeBtn = e.target.closest("[data-mode]");
+  if (modeBtn) {
+    const id = modeBtn.getAttribute("data-mode");
+    window.kortModes?.setMode?.(id);
+    close();
+    return;
+  }
+});
 
   // Expose for control button
   window.kortMenu = { open, close, toggle };
