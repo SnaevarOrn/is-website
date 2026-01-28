@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="is" data-theme="light">
+<html lang="is" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,7 +12,10 @@
   <link rel="icon" href="/favicon.png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <meta name="theme-color" content="#ffffff" id="metaThemeColor">
+  <meta name="theme-color" content="#0b0c0f" id="metaThemeColor">
+
+  <!-- prefs.js should run BEFORE paint (theme / prefs) -->
+  <script src="/assets/js/prefs.js"></script>
 
   <!-- Shared CSS -->
   <link rel="stylesheet" href="/assets/css/base.css">
@@ -26,6 +29,9 @@
 </head>
 
 <body>
+  <!-- Close / back to home -->
+  <a class="kort-close" href="/" aria-label="Til forsíðu" title="Til forsíðu">×</a>
+
   <main class="kort-page">
 
     <!-- Header / toolbar -->
@@ -38,17 +44,10 @@
       </div>
 
       <div class="kort-toolbar" role="toolbar" aria-label="Kortatæki">
-        <button class="kort-btn" id="btnHome" type="button" title="Sýna allt Ísland">
-          🇮🇸
-        </button>
-
-        <button class="kort-btn" id="btnSatellite" type="button" title="Skipta um kortagerð">
-          🛰️
-        </button>
-
-        <button class="kort-btn" id="btnLocation" type="button" title="Nota staðsetningu">
-          📍
-        </button>
+        <button class="kort-btn" id="btnHome" type="button" title="Sýna allt Ísland">🇮🇸</button>
+        <button class="kort-btn" id="btnSatellite" type="button" title="Skipta um kortagerð">🛰️</button>
+        <button class="kort-btn" id="btnLocation" type="button" title="Nota staðsetningu">📍</button>
+        <button class="kort-btn" id="btnFullscreen" type="button" title="Fullscreen">⛶</button>
 
         <div class="kort-search">
           <input
@@ -64,24 +63,12 @@
 
     <!-- Map container -->
     <section class="kort-card" aria-labelledby="kort-title">
-      <div
-        id="kort-map"
-        class="kort-map"
-        role="application"
-        aria-label="Kort Íslands"
-      ></div>
+      <div id="kort-map" class="kort-map" role="application" aria-label="Kort Íslands"></div>
 
       <div class="kort-foot">
-        <span id="kortState" class="kort-state">
-          —
-        </span>
+        <span id="kortState" class="kort-state">—</span>
 
-        <button
-          class="kort-btn kort-btn-ghost"
-          id="btnCopyState"
-          type="button"
-          title="Afrita miðju korts"
-        >
+        <button class="kort-btn kort-btn-ghost" id="btnCopyState" type="button" title="Afrita miðju korts">
           Afrita staðsetningu
         </button>
       </div>
