@@ -11,6 +11,7 @@
   const btnHome = document.getElementById("btnHome");
   const btnSatellite = document.getElementById("btnSatellite");
   const btnLocation = document.getElementById("btnLocation");
+  const btnFullscreen = document.getElementById("btnFullscreen");
 
   /* =========================
      HOME — fit Iceland bounds
@@ -147,3 +148,22 @@
   btnLocation?.addEventListener("click", requestLocation);
 
 })();
+/* =========================
+   FULLSCREEN — toggle
+   ========================= */
+
+function toggleFullscreen() {
+  const el = document.getElementById("kort-map");
+  if (!el) return;
+
+  // If already fullscreen -> exit
+  if (document.fullscreenElement) {
+    document.exitFullscreen?.();
+    return;
+  }
+
+  // Request fullscreen on the map container
+  el.requestFullscreen?.();
+}
+
+btnFullscreen?.addEventListener("click", toggleFullscreen);
