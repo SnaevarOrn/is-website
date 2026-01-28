@@ -218,3 +218,33 @@ html[data-theme="light"] .kort-map{
   .kort-sub{ display: none; }
   .kort-page{ padding-top: 10px; }
 }
+/* Close button (top-right) */
+.kort-close{
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9999;
+
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
+
+  box-shadow: 0 10px 24px var(--shadow);
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+
+.kort-close:hover{
+  background: var(--panel2);
+  border-color: rgba(255,255,255,.16);
+}
+
+.kort-close:active{
+  transform: translateY(1px);
+}
