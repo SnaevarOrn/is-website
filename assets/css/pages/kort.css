@@ -702,6 +702,11 @@ html[data-theme="light"] .kort-hud{
   background: transparent;
 }
 
+/* Ensure hidden attribute always wins (overlay must not show by default) */
+.kort-search-ov[hidden]{
+  display: none !important;
+}
+
 /* =========================
    Responsive
    ========================= */
