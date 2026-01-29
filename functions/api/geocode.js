@@ -7,14 +7,14 @@
 "use strict";
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const USER_AGENT = "is.is-kort/1.2 (contact: admin@is.is)"; // settu contact sem þú vilt
+const USER_AGENT = "is.is-kort/1.2 (contact: rokogstormur@gmail.com)"; // settu contact sem þú vilt
 
 // Best-effort per-IP cooldown (edge-scoped)
 const LAST_REQUEST = new Map();
 const MIN_INTERVAL_MS = 1200; // play nice with Nominatim
 
 // Dedupe threshold (meters) for "same place shown twice" cases
-const DEDUPE_EPS_M = 120;
+const DEDUPE_EPS_M = 2500;
 
 function rateLimit(key) {
   const now = Date.now();
