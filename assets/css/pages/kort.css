@@ -133,6 +133,16 @@ html[data-theme="light"] .kort-map{
   background: rgba(255,255,255,.10);
 }
 
+/* Make custom control buttons readable (dark icons/text like default controls) */
+.kort-map .maplibregl-ctrl-group button{
+  color: #111;
+}
+
+/* Hover state looks better */
+.kort-map .maplibregl-ctrl-group button:hover{
+  color: #111;
+}
+
 /* =========================
    Footer
    ========================= */
@@ -149,6 +159,19 @@ html[data-theme="light"] .kort-map{
 }
 
 .kort-state{
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .95rem;
+}
+
+.kort-foot-left{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kort-alt{
   color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: .95rem;
@@ -431,6 +454,43 @@ html[data-theme="light"] .kort-panel-item:hover{
   color: var(--muted);
   margin: 6px 2px 0;
   line-height: 1.4;
+}
+
+/* =========================
+   Crosshair
+   ========================= */
+.kort-map{
+  position: relative; /* needed for pseudo elements */
+}
+
+/* Crosshair when enabled */
+.kort-map.kort-crosshair-on::before,
+.kort-map.kort-crosshair-on::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  z-index: 20;
+  transform: translate(-50%, -50%);
+}
+
+/* vertical line */
+.kort-map.kort-crosshair-on::before{
+  width: 2px;
+  height: 22px;
+  background: rgba(0,0,0,.75);
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.65);
+}
+
+/* horizontal line */
+.kort-map.kort-crosshair-on::after{
+  height: 2px;
+  width: 22px;
+  background: rgba(0,0,0,.75);
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.65);
 }
 
 /* =========================
