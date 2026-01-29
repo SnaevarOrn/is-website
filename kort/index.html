@@ -135,6 +135,34 @@
   </div>
 </aside>
 
+  <!-- Search overlay (opened by 🔍 control) -->
+<div id="kortSearchOverlay" class="kort-search-ov" hidden aria-hidden="true">
+  <div class="kort-search-ov-card" role="dialog" aria-label="Leita á korti">
+    <div class="kort-search-ov-head">
+      <div class="kort-search-ov-title">Leit</div>
+      <button id="kortSearchOvClose" class="kort-search-ov-x" type="button" aria-label="Loka">×</button>
+    </div>
+
+    <form class="kort-search kort-search-ov-form" id="kortSearchFormOv" role="search">
+      <input
+        id="kortSearchOv"
+        name="q"
+        type="search"
+        placeholder="Leita að heimilisfangi eða stað…"
+        autocomplete="off"
+        aria-label="Leita á korti"
+        enterkeyhint="search"
+        inputmode="search"
+      />
+    </form>
+
+    <div class="kort-search-ov-hint">
+      Ýttu á Enter til að leita. Veldu niðurstöðu ef fleiri en ein.
+    </div>
+  </div>
+</div>
+
+
 <div id="kortPanelBackdrop" class="kort-panel-backdrop" hidden></div>
 
   <!-- MapLibre JS -->
