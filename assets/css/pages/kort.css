@@ -224,17 +224,26 @@ html[data-theme="light"] .kort-map{
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 8px);
-  z-index: 200;
+  top: calc(100% + 10px);
+  z-index: 600;
 
-  border: 1px solid var(--border);
-  background: var(--panel);
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(15,17,22,.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
   border-radius: 14px;
-  box-shadow: 0 16px 44px var(--shadow);
+  box-shadow: 0 22px 60px rgba(0,0,0,.55);
   overflow: hidden;
 
   max-height: min(46vh, 340px);
   overflow-y: auto;
+}
+
+html[data-theme="light"] .kort-search-dd{
+  background: rgba(255,255,255,.92);
+  border-color: rgba(0,0,0,.10);
+  box-shadow: 0 22px 60px rgba(0,0,0,.22);
 }
 
 .kort-search-item{
@@ -242,71 +251,93 @@ html[data-theme="light"] .kort-map{
   text-align: left;
   appearance: none;
   border: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,.08);
   background: transparent;
   color: var(--text);
-  padding: 10px 12px;
+  padding: 11px 12px;
   cursor: pointer;
 }
 
+html[data-theme="light"] .kort-search-item{
+  border-bottom-color: rgba(0,0,0,.08);
+}
+
 .kort-search-item:hover{
-  background: var(--panel2);
+  background: rgba(255,255,255,.06);
+}
+
+html[data-theme="light"] .kort-search-item:hover{
+  background: rgba(0,0,0,.04);
 }
 
 .kort-search-item:last-child{
   border-bottom: 0;
 }
 
+
 /* =========================
    Side panel + backdrop
    ========================= */
 
+/* Panel backdrop (dimmer) */
 .kort-panel-backdrop{
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.55);
+  background: rgba(0,0,0,.62);
   z-index: 9000;
 }
 
+/* Panel */
 .kort-panel{
   position: fixed;
   top: 12px;
   left: 12px;
   bottom: 12px;
-  width: min(360px, calc(100vw - 24px));
+  width: min(380px, calc(100vw - 24px));
   z-index: 9001;
 
-  border: 1px solid var(--border);
-  background: var(--panel);
-  border-radius: 18px;
-  box-shadow: 0 16px 44px var(--shadow);
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(12,13,16,.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 
-  display: none; /* toggled by JS */
+  border-radius: 18px;
+  box-shadow: 0 26px 80px rgba(0,0,0,.60);
+
+  display: none;
   flex-direction: column;
   overflow: hidden;
 }
 
-.kort-panel.is-open{
-  display: flex;
+html[data-theme="light"] .kort-panel{
+  background: rgba(255,255,255,.94);
+  border-color: rgba(0,0,0,.12);
+  box-shadow: 0 26px 80px rgba(0,0,0,.22);
 }
+
+.kort-panel.is-open{ display: flex; }
 
 .kort-panel-head{
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+html[data-theme="light"] .kort-panel-head{
+  border-bottom-color: rgba(0,0,0,.10);
 }
 
 .kort-panel-title{
-  font-weight: 650;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .kort-panel-x{
   appearance: none;
-  border: 1px solid var(--border);
-  background: transparent;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
   color: var(--text);
   width: 34px;
   height: 34px;
@@ -314,52 +345,91 @@ html[data-theme="light"] .kort-map{
   cursor: pointer;
 }
 
-.kort-panel-x:hover{
-  background: var(--panel2);
+html[data-theme="light"] .kort-panel-x{
+  border-color: rgba(0,0,0,.12);
+  background: rgba(0,0,0,.03);
 }
+
+.kort-panel-x:hover{ background: rgba(255,255,255,.08); }
+html[data-theme="light"] .kort-panel-x:hover{ background: rgba(0,0,0,.06); }
 
 .kort-panel-body{
   padding: 12px;
   overflow: auto;
 }
 
-.kort-panel-group{
-  border: 1px solid var(--border);
+/* Accordion */
+.kort-acc{
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 12px;
+  background: rgba(255,255,255,.03);
 }
 
-.kort-panel-label{
-  padding: 10px 12px;
+html[data-theme="light"] .kort-acc{
+  border-color: rgba(0,0,0,.10);
+  background: rgba(0,0,0,.02);
+}
+
+.kort-acc[open]{
+  background: rgba(255,255,255,.05);
+}
+
+.kort-acc-sum{
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 12px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.kort-acc-sum::-webkit-details-marker{ display:none; }
+
+.kort-acc-hint{
   color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  background: rgba(255,255,255,.02);
+  font-size: .95rem;
 }
 
+.kort-acc-box{
+  border-top: 1px solid rgba(255,255,255,.10);
+  padding: 6px;
+}
+
+html[data-theme="light"] .kort-acc-box{
+  border-top-color: rgba(0,0,0,.10);
+}
+
+/* Items inside accordion */
 .kort-panel-item{
   width: 100%;
   text-align: left;
   appearance: none;
-  border: 0;
-  border-bottom: 1px solid var(--border);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text);
-  padding: 11px 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
   cursor: pointer;
 }
 
-.kort-panel-item:last-child{
-  border-bottom: 0;
+.kort-panel-item:hover{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.10);
 }
 
-.kort-panel-item:hover{
-  background: var(--panel2);
+html[data-theme="light"] .kort-panel-item:hover{
+  background: rgba(0,0,0,.04);
+  border-color: rgba(0,0,0,.08);
 }
 
 .kort-panel-note{
   color: var(--muted);
-  margin: 8px 2px 0;
+  margin: 6px 2px 0;
   line-height: 1.4;
 }
 
