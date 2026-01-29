@@ -14,7 +14,7 @@ const LAST_REQUEST = new Map();
 const MIN_INTERVAL_MS = 1200; // play nice with Nominatim
 
 // Dedupe threshold (meters) for "same place shown twice" cases
-const DEDUPE_EPS_M = 2500;
+const DEDUPE_EPS_M = 3600;
 
 function rateLimit(key) {
   const now = Date.now();
