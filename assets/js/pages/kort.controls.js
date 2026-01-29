@@ -1,5 +1,5 @@
 // assets/js/pages/kort.controls.js
-// Kort — custom controls (menu + search + crosshair + measure + location)
+// Kort — custom controls (menu + search + crosshair + measure + home + location)
 // Fail-safe: one error must not kill the whole stack.
 
 "use strict";
@@ -49,7 +49,7 @@
     this._wrap = null;
   };
 
-  // Menu (hamburger) — calls your existing menu module if present
+  // Menu (hamburger)
   const btnMenu = makeBtn("≡", "Valmynd", () => {
     if (window.kortMenu && typeof window.kortMenu.toggle === "function") {
       window.kortMenu.toggle();
@@ -88,8 +88,21 @@
     }
   });
 
-  // Location (asks for permission only when pressed)
-  const btnLoc = makeBtn("📍", "Staðsetning", async () => {
+  // Iceland "Home" button (fit to bounds)
+  const btnHome = makeBtn("IS", "Ísland", () => {
+    const b = window.KORT_ICELAND_BOUNDS;
+    if (b && b.length === 2) {
+      map.fitBounds(b, { padding: 40, duration: 900, essential: true });
+      setStatus("Ísland ✓");
+      return;
+    }
+    // Fallback: fly to roughly centered
+    map.flyTo({ center: [-19.0, 64.9], zoom: 5.6, essential: true });
+    setStatus("Ísland ✓");
+  });
+
+  // Location
+  const btnLoc = makeBtn("📍", "Staðsetning", () => {
     if (!("geolocation" in navigator)) {
       setStatus("Staðsetning: ekki studd í vafra.");
       return;
@@ -107,9 +120,8 @@
     );
   });
 
-  // Add stack
   try {
-    map.addControl(new CustomStack([btnMenu, btnSearch, btnCross, btnMeasure, btnLoc]), "top-left");
+    map.addControl(new CustomStack([btnMenu, btnSearch, btnCross, btnMeasure, btnHome, btnLoc]), "top-left");
   } catch (e) {
     console.warn("kort.controls failed:", e);
   }
