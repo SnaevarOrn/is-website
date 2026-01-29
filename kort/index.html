@@ -75,40 +75,60 @@
 
   <!-- Side panel (hamburger opens this) -->
   <aside id="kortPanel" class="kort-panel" aria-hidden="true">
-    <div class="kort-panel-head">
-      <div class="kort-panel-title">Valmynd</div>
-      <button class="kort-panel-x" id="kortPanelClose" type="button" aria-label="Loka">×</button>
-    </div>
+  <div class="kort-panel-head">
+    <div class="kort-panel-title">Valmynd</div>
+    <button class="kort-panel-x" id="kortPanelClose" type="button" aria-label="Loka">×</button>
+  </div>
 
-    <div class="kort-panel-body">
-      <div class="kort-panel-group">
-        <div class="kort-panel-label">Hamur</div>
+  <div class="kort-panel-body">
+    <!-- Accordion: Hamur -->
+    <details class="kort-acc" data-acc>
+      <summary class="kort-acc-sum">
+        <span>Hamur</span>
+        <span class="kort-acc-hint" id="kortHintMode">Venjulegt</span>
+      </summary>
+      <div class="kort-acc-box">
         <button class="kort-panel-item" type="button" data-mode="default">Venjulegt</button>
         <button class="kort-panel-item" type="button" data-mode="quiz_towns">Leikjahamur: giskaðu á bæi</button>
         <button class="kort-panel-item" type="button" data-mode="quiz_glaciers">Leikjahamur: giskaðu á jökla</button>
-      </div>
-
-      <div class="kort-panel-group">
-        <div class="kort-panel-label">Viðmót</div>
         <button class="kort-panel-item" type="button" data-mode="wrecks">Skipsflök</button>
       </div>
+    </details>
 
-      <div class="kort-panel-group">
-  <div class="kort-panel-label">Kort-útlit</div>
-  <button class="kort-panel-item" type="button" data-style="street">Street (OSM)</button>
-  <button class="kort-panel-item" type="button" data-style="light">Light</button>
-  <button class="kort-panel-item" type="button" data-style="dark">Dark</button>
-  <button class="kort-panel-item" type="button" data-style="topo">Topo</button>
-  <button class="kort-panel-item" type="button" data-style="satellite">Satellite</button>
-</div>
+    <!-- Accordion: Viðmót -->
+    <details class="kort-acc" data-acc>
+      <summary class="kort-acc-sum">
+        <span>Viðmót</span>
+        <span class="kort-acc-hint">Stillingar</span>
+      </summary>
+      <div class="kort-acc-box">
+        <button class="kort-panel-item" type="button" id="kortGoHome">Sýna allt Ísland (home)</button>
+        <button class="kort-panel-item" type="button" id="kortUseLocation">Nota staðsetningu</button>
+      </div>
+    </details>
 
-      <p class="kort-panel-note">
-        Hugmynd: allt hér er “modes”. Það gerir kerfið stækkanlegt án þess að rugla grunnkortið.
-      </p>
-    </div>
-  </aside>
+    <!-- Accordion: Kort-útlit -->
+    <details class="kort-acc" data-acc>
+      <summary class="kort-acc-sum">
+        <span>Kort-útlit</span>
+        <span class="kort-acc-hint" id="kortHintStyle">Street</span>
+      </summary>
+      <div class="kort-acc-box">
+        <button class="kort-panel-item" type="button" data-style="street">Street (OSM)</button>
+        <button class="kort-panel-item" type="button" data-style="light">Light</button>
+        <button class="kort-panel-item" type="button" data-style="dark">Dark</button>
+        <button class="kort-panel-item" type="button" data-style="topo">Topo</button>
+        <button class="kort-panel-item" type="button" data-style="satellite">Satellite</button>
+      </div>
+    </details>
 
-  <div id="kortPanelBackdrop" class="kort-panel-backdrop" hidden></div>
+    <p class="kort-panel-note">
+      Minni hávaði, meiri stjórn. Þetta er bara UI; “modes” halda áfram að vera stækkanleg.
+    </p>
+  </div>
+</aside>
+
+<div id="kortPanelBackdrop" class="kort-panel-backdrop" hidden></div>
 
   <!-- MapLibre JS -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
