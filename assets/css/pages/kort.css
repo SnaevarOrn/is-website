@@ -593,6 +593,115 @@ html[data-theme="light"] .kort-panel-item:hover{
   justify-content: center;
 }
 
+.kort-search-ov{
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,.55);
+  display: grid;
+  place-items: start center;
+  padding: 18px 14px;
+}
+
+.kort-search-ov-card{
+  width: min(560px, 100%);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow: 0 22px 70px var(--shadow);
+  padding: 12px;
+  margin-top: 10vh;
+}
+
+.kort-search-ov-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 4px 10px;
+}
+
+.kort-search-ov-title{
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.kort-search-ov-x{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.kort-search-ov-x:hover{ background: var(--panel2); }
+
+.kort-search-ov-form{
+  margin: 0;
+}
+
+.kort-search-ov-hint{
+  margin: 10px 4px 0;
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+.kort-hud{
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 50;
+  pointer-events: none;
+
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(15,17,22,.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 8px 10px;
+
+  color: rgba(255,255,255,.92);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .86rem;
+  line-height: 1.25;
+  box-shadow: 0 16px 44px rgba(0,0,0,.55);
+}
+
+html[data-theme="light"] .kort-hud{
+  background: rgba(255,255,255,.88);
+  border-color: rgba(0,0,0,.12);
+  color: rgba(0,0,0,.82);
+  box-shadow: 0 16px 44px rgba(0,0,0,.18);
+}
+
+.kort-popup-actions{
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.kort-popup-actions .kort-mini-btn{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: .92rem;
+}
+
+.kort-popup-actions .kort-mini-btn:hover{
+  border-color: rgba(255,255,255,.16);
+}
+
+.kort-popup-actions .kort-mini-btn-ghost{
+  background: transparent;
+}
+
 /* =========================
    Responsive
    ========================= */
