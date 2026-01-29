@@ -711,3 +711,45 @@ html[data-theme="dark"] .kort-ctrl-active{ background: rgba(255,255,255,.14) !im
   .kort-sub{ display: none; }
   .kort-page{ padding-top: 10px; }
 }
+/* =========================
+   HARD FIX: popup + buttons always readable
+   (prevents white-on-white when map style is light)
+   ========================= */
+
+/* Popup box */
+.maplibregl-popup-content{
+  background: var(--panel) !important;
+  color: var(--text) !important;
+}
+
+/* Tip color (little arrow) */
+.maplibregl-popup-tip{
+  border-top-color: var(--panel) !important;
+  border-bottom-color: var(--panel) !important;
+}
+
+/* Anything inside popup inherits readable color */
+.maplibregl-popup-content *{
+  color: inherit;
+}
+
+/* Popup links look like links, but readable */
+.maplibregl-popup-content a{
+  color: inherit !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Popup action buttons */
+.maplibregl-popup-content .kort-mini-btn{
+  color: inherit !important;
+}
+
+/* Controls: match native (dark icons on light, light on dark) */
+.kort-map .maplibregl-ctrl-group button{
+  color: #111 !important;
+}
+
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button{
+  color: rgba(255,255,255,.92) !important;
+}
