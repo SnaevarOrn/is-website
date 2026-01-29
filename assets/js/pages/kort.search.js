@@ -1,6 +1,7 @@
 // assets/js/pages/kort.search.js
 // Kort — Search (geocoding via /api/geocode)
 // Mobile-friendly (form submit) + multiple results dropdown
+// Routing is OPT-IN via confirm box
 
 "use strict";
 
@@ -14,11 +15,16 @@
 
   let searchMarker = null;
   let dropdown = null;
+  let confirmBox = null;
 
   function setStatus(text) {
     const el = document.getElementById("kortState");
     if (el) el.textContent = text;
   }
+
+  /* =========================
+     Dropdown helpers
+     ========================= */
 
   function ensureDropdown() {
     if (dropdown) return dropdown;
@@ -46,6 +52,10 @@
     dropdown.innerHTML = "";
   }
 
+  /* =========================
+     Marker helpers
+     ========================= */
+
   function placeMarker(lng, lat) {
     if (!searchMarker) {
       searchMarker = new maplibregl.Marker({ color: "#3bb2d0" })
@@ -55,6 +65,10 @@
       searchMarker.setLngLat([lng, lat]);
     }
   }
+
+  /* =========================
+     Geocode
+     ========================= */
 
   async function geocode(query) {
     const url = `/api/geocode?q=${encodeURIComponent(query)}&limit=5`;
@@ -67,17 +81,53 @@
     return res.json();
   }
 
+  /* =========================
+     Routing confirmation UI
+     ========================= */
+
+  function removeConfirm() {
+    if (confirmBox) {
+      confirmBox.remove();
+      confirmBox = null;
+    }
+  }
+
+  function askRouteConfirm(label, onYes, onNo) {
+    removeConfirm();
+
+    confirmBox = document.createElement("div");
+    confirmBox.className = "kort-route-confirm";
+    confirmBox.innerHTML = `
+      <div class="kort-route-confirm-title">Teikna leið?</div>
+      <div class="kort-route-confirm-sub">${label || "Valin staðsetning"}</div>
+      <div class="kort-route-confirm-actions">
+        <button type="button" class="kort-btn">✓ Teikna leið</button>
+        <button type="button" class="kort-btn kort-btn-ghost">✕ Hafna</button>
+      </div>
+    `;
+
+    document.body.appendChild(confirmBox);
+
+    const btnYes = confirmBox.querySelectorAll("button")[0];
+    const btnNo  = confirmBox.querySelectorAll("button")[1];
+
+    btnYes.addEventListener("click", () => {
+      removeConfirm();
+      if (onYes) onYes();
+    });
+
+    btnNo.addEventListener("click", () => {
+      removeConfirm();
+      if (onNo) onNo();
+    });
+  }
+
+  /* =========================
+     Result handling
+     ========================= */
+
   function flyToResult(r) {
     placeMarker(r.lng, r.lat);
-
-    // ✅ ROUTING PATCH: set destination for live route (if routing module is loaded)
-    if (window.kortRouting && typeof window.kortRouting.setDestination === "function") {
-      window.kortRouting.setDestination(r.lng, r.lat, r.label || "");
-      // Start watching location only when a destination exists (good UX)
-      if (typeof window.kortRouting.startWatch === "function") {
-        window.kortRouting.startWatch();
-      }
-    }
 
     map.flyTo({
       center: [r.lng, r.lat],
@@ -90,6 +140,22 @@
     setStatus(r.label || `Staðsetning: ${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}`);
     hideDropdown();
     input.blur();
+
+    // OPT-IN routing
+    if (window.kortRouting && typeof window.kortRouting.setDestination === "function") {
+      askRouteConfirm(
+        r.label,
+        () => {
+          window.kortRouting.setDestination(r.lng, r.lat, r.label || "");
+          if (typeof window.kortRouting.startWatch === "function") {
+            window.kortRouting.startWatch();
+          }
+        },
+        () => {
+          // hafnað – ekkert routing
+        }
+      );
+    }
   }
 
   function renderResults(results) {
@@ -113,12 +179,17 @@
     dd.hidden = false;
   }
 
+  /* =========================
+     Search flow
+     ========================= */
+
   async function handleSearch() {
     const q = input.value.trim();
     if (!q) return;
 
     setStatus("Leita…");
     hideDropdown();
+    removeConfirm();
 
     try {
       const data = await geocode(q);
@@ -149,16 +220,23 @@
     }
   }
 
-  // Desktop fallback (still works)
+  /* =========================
+     Events
+     ========================= */
+
+  // Desktop fallback
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleSearch();
     }
-    if (e.key === "Escape") hideDropdown();
+    if (e.key === "Escape") {
+      hideDropdown();
+      removeConfirm();
+    }
   });
 
-  // Mobile/robust: form submit
+  // Mobile / robust
   if (form) {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
