@@ -1,5 +1,6 @@
 // assets/js/pages/kort.controls.js
 // Kort — custom controls (menu + search + crosshair + measure + satellite + home + location)
+// Uses kort.styles.js (window.kortStyles) for style switching.
 // Fail-safe: one error must not kill the whole stack.
 
 "use strict";
@@ -49,54 +50,6 @@
     this._wrap = null;
   };
 
-  /* =========================
-     Styles: Street <-> Satellite
-     ========================= */
-
-  // Persist across modules in the same page load
-  const KORT_STYLE = window.KORT_STYLE || (window.KORT_STYLE = { key: "street" });
-
-  // Default demo style (works without keys)
-  const STYLE_STREET = "https://demotiles.maplibre.org/style.json";
-
-  // Simple raster satellite (no key required; check provider terms/attribution)
-  const STYLE_SATELLITE = {
-    version: 8,
-    name: "Satellite",
-    sources: {
-      esri: {
-        type: "raster",
-        tiles: [
-          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        ],
-        tileSize: 256,
-        attribution: "© Esri"
-      }
-    },
-    layers: [{ id: "sat", type: "raster", source: "esri" }]
-  };
-
-  async function applyStyle(style) {
-    // setStyle nukes layers/sources; we must re-add after load
-    map.setStyle(style);
-    await new Promise((r) => map.once("load", r));
-
-    // Re-apply current mode (wrecks/quiz/etc.)
-    try {
-      const id = window.kortModes?.getCurrent?.() || "default";
-      window.kortModes?.setMode?.(id);
-    } catch (e) { console.warn(e); }
-
-    // Optional refresh hooks (safe if undefined)
-    try { window.kortRoute?.refresh?.(); } catch {}
-    try { window.kortMeasure?.refresh?.(); } catch {}
-    try { window.kortCrosshair?.refresh?.(); } catch {}
-  }
-
-  /* =========================
-     Buttons
-     ========================= */
-
   // Menu (hamburger)
   const btnMenu = makeBtn("≡", "Valmynd", () => {
     if (window.kortMenu && typeof window.kortMenu.toggle === "function") {
@@ -136,15 +89,27 @@
     }
   });
 
-  // Satellite toggle (Street <-> Satellite)
-  const btnSat = makeBtn("🛰️", "Satellite", async (b) => {
-    try {
-      const next = (KORT_STYLE.key === "sat") ? "street" : "sat";
-      KORT_STYLE.key = next;
+  // Satellite toggle (delegates to kort.styles.js)
+  const btnSat = makeBtn("🛰️", "Satellite", (b) => {
+    const ks = window.kortStyles;
 
-      await applyStyle(next === "sat" ? STYLE_SATELLITE : STYLE_STREET);
-      b.classList.toggle("kort-ctrl-active", next === "sat");
-      setStatus(next === "sat" ? "Kort-útlit: Satellite" : "Kort-útlit: Street");
+    if (!ks || typeof ks.toggle !== "function" || typeof ks.getCurrent !== "function") {
+      setStatus("Kort-útlit: kortStyles vantar.");
+      return;
+    }
+
+    try {
+      // Toggle satellite <-> street
+      ks.toggle("satellite");
+
+      // Best-effort: update active state shortly after (async style swap)
+      setTimeout(() => {
+        try {
+          const on = ks.getCurrent() === "satellite";
+          b.classList.toggle("kort-ctrl-active", on);
+          setStatus(on ? "Kort-útlit: Satellite" : "Kort-útlit: Street");
+        } catch {}
+      }, 400);
     } catch (e) {
       console.warn(e);
       setStatus("Gat ekki skipt um kort-útlit.");
@@ -159,7 +124,6 @@
       setStatus("Ísland ✓");
       return;
     }
-    // Fallback: fly to roughly centered
     map.flyTo({ center: [-19.0, 64.9], zoom: 5.6, essential: true });
     setStatus("Ísland ✓");
   });
@@ -189,6 +153,19 @@
 
   try {
     map.addControl(new CustomStack([btnMenu, btnSearch, btnCross, btnMeasure, btnSat, btnHome, btnLoc]), "top-left");
+
+    // Sync initial active states (e.g. when page loads in satellite)
+    setTimeout(() => {
+      try {
+        const ks = window.kortStyles;
+        if (ks && typeof ks.getCurrent === "function") {
+          btnSat.classList.toggle("kort-ctrl-active", ks.getCurrent() === "satellite");
+        }
+        if (window.kortCrosshair?.get) {
+          btnCross.classList.toggle("kort-ctrl-active", !!window.kortCrosshair.get());
+        }
+      } catch {}
+    }, 200);
   } catch (e) {
     console.warn("kort.controls failed:", e);
   }
