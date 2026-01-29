@@ -146,6 +146,13 @@
      Home / Satellite / Location
      ========================= */
 
+  
+const btnSearch = makeButton("🔍", "Leita", () => {
+  if (window.kortSearchOverlay && typeof window.kortSearchOverlay.open === "function") {
+    window.kortSearchOverlay.open();
+  }
+});
+  
   const btnHome = makeButton("🇮🇸", "Sýna allt Ísland", () => {
     const bounds = window.KORT_ICELAND_BOUNDS;
     if (!bounds) return;
@@ -163,6 +170,18 @@
       alert("Vafrinn styður ekki staðsetningu.");
       return;
     }
+    const btnCross = makeButton("⌖", "Crosshair", (btn) => {
+  if (window.kortCrosshair && typeof window.kortCrosshair.toggle === "function") {
+    window.kortCrosshair.toggle();
+    btn.classList.toggle("kort-ctrl-active", window.kortCrosshair.get && window.kortCrosshair.get());
+  }
+});
+    const btnMeasure = makeButton("📏", "Mæla", (btn) => {
+  if (window.kortMeasure && typeof window.kortMeasure.toggle === "function") {
+    const on = window.kortMeasure.toggle();
+    btn.classList.toggle("kort-ctrl-active", !!on);
+  }
+});
 
     btn.disabled = true;
 
@@ -203,5 +222,5 @@
     );
   });
 
-  map.addControl(makeGroupControl([btnHome, btnSat, btnLoc]), "top-left");
+ map.addControl(makeGroupControl([btnSearch, btnCross, btnMeasure, btnHome, btnSat, btnLoc]), "top-left");
 })();
