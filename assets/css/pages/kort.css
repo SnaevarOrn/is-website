@@ -707,6 +707,41 @@ html[data-theme="light"] .kort-hud{
   display: none !important;
 }
 
+.kort-ctrl-stack{
+  display: flex;
+  flex-direction: column;
+}
+
+.kort-ctrl-btn{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #111; /* important: dark icon/text like native controls */
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.kort-ctrl-btn:hover{
+  background: rgba(0,0,0,.06);
+}
+
+.kort-ctrl-active{
+  background: rgba(0,0,0,.10) !important;
+}
+
+html[data-theme="dark"] .kort-ctrl-btn{
+  color: rgba(255,255,255,.92);
+}
+html[data-theme="dark"] .kort-ctrl-btn:hover{
+  background: rgba(255,255,255,.08);
+}
+html[data-theme="dark"] .kort-ctrl-active{
+  background: rgba(255,255,255,.14) !important;
+}
+
 /* =========================
    Responsive
    ========================= */
