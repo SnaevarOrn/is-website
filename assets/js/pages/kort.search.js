@@ -2,6 +2,10 @@
 // Kort — Search (geocoding via /api/geocode)
 // Supports header search + overlay search
 // Route prompt is a popup next to destination marker (OPT-IN)
+//
+// Upgrade:
+// - If multiple results are "far apart": zoom out to show them all + clickable map markers.
+// - If multiple results are close: keep dropdown chooser (as before).
 
 "use strict";
 
@@ -21,12 +25,21 @@
   let dropdown = null;
   let routePopup = null;
 
+  // "Choose on map" mode
+  let chooseMarkers = [];
+  let chooseActiveInput = null;
+
+  // Heuristics: if results spread more than this, we prefer map chooser over dropdown
+  const MULTI_SPREAD_KM = 20;     // Lundey variants are far apart -> this triggers
+  const MULTI_MIN_RESULTS = 2;
+
   function setStatus(text) {
     const el = document.getElementById("kortState");
     if (el) el.textContent = text;
   }
 
   function ensureDropdown(forInput) {
+    // one dropdown at a time (good enough)
     if (dropdown) return dropdown;
 
     const wrap = forInput.closest(".kort-search") || forInput.parentElement;
@@ -79,10 +92,19 @@
     }
   }
 
+  function clearChooseOnMap() {
+    if (chooseMarkers && chooseMarkers.length) {
+      for (const m of chooseMarkers) {
+        try { m.remove(); } catch {}
+      }
+    }
+    chooseMarkers = [];
+    chooseActiveInput = null;
+  }
+
   function openRoutePrompt(lng, lat, label) {
     closeRoutePopup();
 
-    // Unique ids for buttons inside popup
     const token = String(Date.now()) + String(Math.floor(Math.random() * 10000));
     const idYes = "kortRouteYes_" + token;
     const idNo  = "kortRouteNo_" + token;
@@ -102,7 +124,6 @@
       .setHTML(html)
       .addTo(map);
 
-    // Attach handlers once popup is in DOM
     setTimeout(() => {
       const btnYes = document.getElementById(idYes);
       const btnNo = document.getElementById(idNo);
@@ -124,6 +145,8 @@
   }
 
   function flyToResult(r, activeInput) {
+    clearChooseOnMap();
+
     placeMarker(r.lng, r.lat);
 
     map.flyTo({
@@ -145,7 +168,7 @@
     }
   }
 
-  function renderResults(results, activeInput) {
+  function renderResultsDropdown(results, activeInput) {
     const dd = ensureDropdown(activeInput);
     dd.innerHTML = "";
 
@@ -167,6 +190,88 @@
     dd.hidden = false;
   }
 
+  function shouldUseMapChooser(results) {
+    if (!results || results.length < MULTI_MIN_RESULTS) return false;
+
+    const spreadKm = computeSpreadKm(results);
+    return spreadKm >= MULTI_SPREAD_KM;
+  }
+
+  function computeSpreadKm(results) {
+    // Use bounding box diagonal as a cheap "spread" estimator
+    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    for (const r of results) {
+      minLat = Math.min(minLat, r.lat);
+      maxLat = Math.max(maxLat, r.lat);
+      minLng = Math.min(minLng, r.lng);
+      maxLng = Math.max(maxLng, r.lng);
+    }
+    if (!isFinite(minLat) || !isFinite(minLng) || !isFinite(maxLat) || !isFinite(maxLng)) return 0;
+    const d = haversineKm(minLat, minLng, maxLat, maxLng);
+    return d;
+  }
+
+  function fitToResults(results) {
+    try {
+      const b = new maplibregl.LngLatBounds();
+      for (const r of results) b.extend([r.lng, r.lat]);
+      map.fitBounds(b, { padding: 60, duration: 900, essential: true });
+      return;
+    } catch {}
+    // Fallback: fly to average
+    let lat = 0, lng = 0;
+    for (const r of results) { lat += r.lat; lng += r.lng; }
+    lat /= results.length; lng /= results.length;
+    map.flyTo({ center: [lng, lat], zoom: 6, essential: true });
+  }
+
+  function showChooseOnMap(results, activeInput) {
+    clearChooseOnMap();
+    hideDropdown();
+    closeRoutePopup();
+
+    chooseActiveInput = activeInput || null;
+
+    // If overlay is open and blocks map clicks, close it (best-effort)
+    try { window.kortSearchOverlay?.close?.(); } catch {}
+
+    setStatus("Fann fleiri en eina staðsetningu — veldu punkt á kortinu.");
+
+    fitToResults(results);
+
+    // Add temporary clickable markers
+    for (const r of results) {
+      const m = new maplibregl.Marker({ color: "#111" })
+        .setLngLat([r.lng, r.lat])
+        .addTo(map);
+
+      // Make marker clickable: MapLibre marker element is DOM
+      const el = m.getElement();
+      el.style.cursor = "pointer";
+      el.setAttribute("aria-label", r.label || "Velja stað");
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        flyToResult(r, chooseActiveInput);
+      });
+
+      // Optional: small tooltip on hover (desktop)
+      el.title = r.label || "";
+
+      chooseMarkers.push(m);
+    }
+
+    // Escape cancels choose-on-map
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        document.removeEventListener("keydown", onKey);
+        clearChooseOnMap();
+        setStatus("Hætt við.");
+      }
+    };
+    document.addEventListener("keydown", onKey);
+  }
+
   async function handleSearch(activeInput) {
     const q = (activeInput.value || "").trim();
     if (!q) return;
@@ -174,6 +279,7 @@
     setStatus("Leita…");
     hideDropdown();
     closeRoutePopup();
+    clearChooseOnMap();
 
     try {
       const data = await geocode(q);
@@ -189,13 +295,22 @@
         return;
       }
 
+      // Single result -> go
       if (results.length === 1) {
         flyToResult(results[0], activeInput);
         return;
       }
 
+      // Many results:
+      // - If far apart: zoom out + clickable points on map
+      // - Else: dropdown chooser
+      if (shouldUseMapChooser(results)) {
+        showChooseOnMap(results, activeInput);
+        return;
+      }
+
       setStatus("Fann " + results.length + " niðurstöður — veldu rétta.");
-      renderResults(results, activeInput);
+      renderResultsDropdown(results, activeInput);
     } catch (err) {
       console.error("Search error:", err);
       setStatus("Villa við leit.");
@@ -213,6 +328,7 @@
       if (e.key === "Escape") {
         hideDropdown();
         closeRoutePopup();
+        clearChooseOnMap();
       }
     });
 
@@ -232,6 +348,22 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const toRad = (d) => (d * Math.PI) / 180;
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 
   wireInput(inputA, formA);
