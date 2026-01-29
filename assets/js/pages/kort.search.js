@@ -70,6 +70,15 @@
   function flyToResult(r) {
     placeMarker(r.lng, r.lat);
 
+    // ✅ ROUTING PATCH: set destination for live route (if routing module is loaded)
+    if (window.kortRouting && typeof window.kortRouting.setDestination === "function") {
+      window.kortRouting.setDestination(r.lng, r.lat, r.label || "");
+      // Start watching location only when a destination exists (good UX)
+      if (typeof window.kortRouting.startWatch === "function") {
+        window.kortRouting.startWatch();
+      }
+    }
+
     map.flyTo({
       center: [r.lng, r.lat],
       zoom: Math.max(map.getZoom(), 14),
@@ -150,9 +159,11 @@
   });
 
   // Mobile/robust: form submit
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleSearch();
-  });
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleSearch();
+    });
+  }
 
 })();
