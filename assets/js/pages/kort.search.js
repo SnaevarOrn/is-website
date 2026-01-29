@@ -1,7 +1,7 @@
 // assets/js/pages/kort.search.js
 // Kort — Search (geocoding via /api/geocode)
-// Mobile-friendly (form submit) + multiple results dropdown
-// Routing is OPT-IN via confirm box
+// Supports header search + overlay search
+// Route prompt is a popup next to destination marker (OPT-IN)
 
 "use strict";
 
@@ -9,36 +9,35 @@
   const map = window.kortMap;
   if (!map) return;
 
-  const input = document.getElementById("kortSearch");
-  const form = document.getElementById("kortSearchForm");
-  if (!input) return;
+  const inputA = document.getElementById("kortSearch");
+  const formA = document.getElementById("kortSearchForm");
+
+  const inputB = document.getElementById("kortSearchOv");
+  const formB = document.getElementById("kortSearchFormOv");
+
+  if (!inputA && !inputB) return;
 
   let searchMarker = null;
   let dropdown = null;
-  let confirmBox = null;
+  let routePopup = null;
 
   function setStatus(text) {
     const el = document.getElementById("kortState");
     if (el) el.textContent = text;
   }
 
-  /* =========================
-     Dropdown helpers
-     ========================= */
-
-  function ensureDropdown() {
+  function ensureDropdown(forInput) {
     if (dropdown) return dropdown;
 
-    const wrap = input.closest(".kort-search") || input.parentElement;
+    const wrap = forInput.closest(".kort-search") || forInput.parentElement;
     dropdown = document.createElement("div");
     dropdown.className = "kort-search-dd";
     dropdown.hidden = true;
     wrap.appendChild(dropdown);
 
-    // click outside closes
     document.addEventListener("click", (e) => {
       if (!dropdown) return;
-      if (e.target === input) return;
+      if (e.target === forInput) return;
       if (dropdown.contains(e.target)) return;
       hideDropdown();
     });
@@ -52,10 +51,6 @@
     dropdown.innerHTML = "";
   }
 
-  /* =========================
-     Marker helpers
-     ========================= */
-
   function placeMarker(lng, lat) {
     if (!searchMarker) {
       searchMarker = new maplibregl.Marker({ color: "#3bb2d0" })
@@ -66,67 +61,69 @@
     }
   }
 
-  /* =========================
-     Geocode
-     ========================= */
-
   async function geocode(query) {
-    const url = `/api/geocode?q=${encodeURIComponent(query)}&limit=5`;
+    const url = "/api/geocode?q=" + encodeURIComponent(query) + "&limit=5";
     const res = await fetch(url, {
       method: "GET",
       headers: { "accept": "application/json" },
       cache: "no-store"
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error("HTTP " + res.status);
     return res.json();
   }
 
-  /* =========================
-     Routing confirmation UI
-     ========================= */
-
-  function removeConfirm() {
-    if (confirmBox) {
-      confirmBox.remove();
-      confirmBox = null;
+  function closeRoutePopup() {
+    if (routePopup) {
+      routePopup.remove();
+      routePopup = null;
     }
   }
 
-  function askRouteConfirm(label, onYes, onNo) {
-    removeConfirm();
+  function openRoutePrompt(lng, lat, label) {
+    closeRoutePopup();
 
-    confirmBox = document.createElement("div");
-    confirmBox.className = "kort-route-confirm";
-    confirmBox.innerHTML = `
-      <div class="kort-route-confirm-title">Teikna leið?</div>
-      <div class="kort-route-confirm-sub">${label || "Valin staðsetning"}</div>
-      <div class="kort-route-confirm-actions">
-        <button type="button" class="kort-btn">✓ Teikna leið</button>
-        <button type="button" class="kort-btn kort-btn-ghost">✕ Hafna</button>
-      </div>
-    `;
+    // Unique ids for buttons inside popup
+    const token = String(Date.now()) + String(Math.floor(Math.random() * 10000));
+    const idYes = "kortRouteYes_" + token;
+    const idNo  = "kortRouteNo_" + token;
 
-    document.body.appendChild(confirmBox);
+    const html =
+      `<div class="kort-popup">` +
+        `<div class="kort-popup-title">Teikna leið?</div>` +
+        `<div class="kort-popup-sub">${esc(label || "Valin staðsetning")}</div>` +
+        `<div class="kort-popup-actions">` +
+          `<button id="${idYes}" class="kort-mini-btn" type="button">✓ Já</button>` +
+          `<button id="${idNo}" class="kort-mini-btn kort-mini-btn-ghost" type="button">✕ Loka</button>` +
+        `</div>` +
+      `</div>`;
 
-    const btnYes = confirmBox.querySelectorAll("button")[0];
-    const btnNo  = confirmBox.querySelectorAll("button")[1];
+    routePopup = new maplibregl.Popup({ closeButton: true, closeOnClick: false, maxWidth: "340px" })
+      .setLngLat([lng, lat])
+      .setHTML(html)
+      .addTo(map);
 
-    btnYes.addEventListener("click", () => {
-      removeConfirm();
-      if (onYes) onYes();
-    });
+    // Attach handlers once popup is in DOM
+    setTimeout(() => {
+      const btnYes = document.getElementById(idYes);
+      const btnNo = document.getElementById(idNo);
 
-    btnNo.addEventListener("click", () => {
-      removeConfirm();
-      if (onNo) onNo();
-    });
+      if (btnYes) {
+        btnYes.addEventListener("click", () => {
+          closeRoutePopup();
+          if (window.kortRouting && typeof window.kortRouting.setDestination === "function") {
+            window.kortRouting.setDestination(lng, lat, label || "");
+            if (typeof window.kortRouting.startWatch === "function") window.kortRouting.startWatch();
+          }
+        });
+      }
+
+      if (btnNo) {
+        btnNo.addEventListener("click", () => closeRoutePopup());
+      }
+    }, 0);
   }
 
-  /* =========================
-     Result handling
-     ========================= */
-
-  function flyToResult(r) {
+  function flyToResult(r, activeInput) {
     placeMarker(r.lng, r.lat);
 
     map.flyTo({
@@ -137,29 +134,19 @@
       essential: true
     });
 
-    setStatus(r.label || `Staðsetning: ${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}`);
+    setStatus(r.label || ("Staðsetning: " + r.lat.toFixed(5) + ", " + r.lng.toFixed(5)));
     hideDropdown();
-    input.blur();
 
-    // OPT-IN routing
+    if (activeInput) activeInput.blur();
+
+    // OPT-IN routing: show prompt by marker
     if (window.kortRouting && typeof window.kortRouting.setDestination === "function") {
-      askRouteConfirm(
-        r.label,
-        () => {
-          window.kortRouting.setDestination(r.lng, r.lat, r.label || "");
-          if (typeof window.kortRouting.startWatch === "function") {
-            window.kortRouting.startWatch();
-          }
-        },
-        () => {
-          // hafnað – ekkert routing
-        }
-      );
+      openRoutePrompt(r.lng, r.lat, r.label || "");
     }
   }
 
-  function renderResults(results) {
-    const dd = ensureDropdown();
+  function renderResults(results, activeInput) {
+    const dd = ensureDropdown(activeInput);
     dd.innerHTML = "";
 
     if (!results || results.length === 0) {
@@ -167,29 +154,26 @@
       return;
     }
 
-    results.forEach((r) => {
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "kort-search-item";
-      btn.textContent = r.label || `${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}`;
-      btn.addEventListener("click", () => flyToResult(r));
+      btn.textContent = r.label || (r.lat.toFixed(5) + ", " + r.lng.toFixed(5));
+      btn.addEventListener("click", () => flyToResult(r, activeInput));
       dd.appendChild(btn);
-    });
+    }
 
     dd.hidden = false;
   }
 
-  /* =========================
-     Search flow
-     ========================= */
-
-  async function handleSearch() {
-    const q = input.value.trim();
+  async function handleSearch(activeInput) {
+    const q = (activeInput.value || "").trim();
     if (!q) return;
 
     setStatus("Leita…");
     hideDropdown();
-    removeConfirm();
+    closeRoutePopup();
 
     try {
       const data = await geocode(q);
@@ -200,48 +184,56 @@
       }
 
       const results = data.results || (data.result ? [data.result] : []);
-
       if (!results.length) {
         setStatus("Engin niðurstaða fannst.");
         return;
       }
 
-      // If exactly one, go directly. If multiple, show chooser.
       if (results.length === 1) {
-        flyToResult(results[0]);
+        flyToResult(results[0], activeInput);
         return;
       }
 
-      setStatus(`Fann ${results.length} niðurstöður — veldu rétta.`);
-      renderResults(results);
+      setStatus("Fann " + results.length + " niðurstöður — veldu rétta.");
+      renderResults(results, activeInput);
     } catch (err) {
       console.error("Search error:", err);
       setStatus("Villa við leit.");
     }
   }
 
-  /* =========================
-     Events
-     ========================= */
+  function wireInput(input, form) {
+    if (!input) return;
 
-  // Desktop fallback
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSearch();
-    }
-    if (e.key === "Escape") {
-      hideDropdown();
-      removeConfirm();
-    }
-  });
-
-  // Mobile / robust
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      handleSearch();
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSearch(input);
+      }
+      if (e.key === "Escape") {
+        hideDropdown();
+        closeRoutePopup();
+      }
     });
+
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        handleSearch(input);
+      });
+    }
   }
 
+  function esc(s) {
+    const str = String(s);
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  wireInput(inputA, formA);
+  wireInput(inputB, formB);
 })();
