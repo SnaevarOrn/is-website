@@ -1,26 +1,24 @@
 // assets/js/pages/kort.js
-// Kort — Map init (OpenStreetMap + MapLibre) + crosshair toggle + optional elevation
+// Kort — Map init + crosshair + HUD + elevation lookup
 
 "use strict";
 
 (() => {
   const elMap = document.getElementById("kort-map");
   const elState = document.getElementById("kortState");
-  const elAlt = document.getElementById("kortAlt");
   const btnCopy = document.getElementById("btnCopyState");
-  const btnCross = document.getElementById("btnCrosshair");
+  const btnCrossFooter = document.getElementById("btnCrosshair");
   if (!elMap) return;
 
-  // Iceland bounds (lng,lat)
+  // Iceland bounds
   window.KORT_ICELAND_BOUNDS = [
-    [-24.546, 63.17],  // SW
-    [-13.495, 66.60]   // NE
+    [-24.546, 63.17],
+    [-13.495, 66.60]
   ];
 
   const START_CENTER = [-21.9426, 64.1466];
   const START_ZOOM = 10.8;
 
-  // Base raster OSM style
   window.KORT_STYLE_MAP = {
     version: 8,
     sources: {
@@ -38,9 +36,6 @@
     layers: [{ id: "osm", type: "raster", source: "osm" }]
   };
 
-  // Satellite style defined elsewhere
-  window.KORT_STYLE_SATELLITE = null;
-
   const map = new maplibregl.Map({
     container: elMap,
     style: window.KORT_STYLE_MAP,
@@ -52,10 +47,16 @@
 
   window.kortMap = map;
 
-  // Core controls
   map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
   map.addControl(new maplibregl.FullscreenControl(), "top-right");
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }), "bottom-left");
+
+  // HUD element inside map container
+  const hud = document.createElement("div");
+  hud.className = "kort-hud";
+  hud.hidden = true;
+  hud.textContent = "";
+  elMap.appendChild(hud);
 
   function fmt(n, d) {
     const p = Math.pow(10, d);
@@ -65,15 +66,10 @@
   let crosshairOn = false;
   let elevTimer = null;
   let lastElevKey = "";
-
-  function setAltText(text) {
-    if (!elAlt) return;
-    elAlt.textContent = text;
-  }
+  let lastElevText = "hæð: —";
 
   async function fetchElevation(lat, lng) {
-    // Optional endpoint. If you haven't created it yet, this will fail gracefully.
-    const url = `/api/elevation?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`;
+    const url = "/api/elevation?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng);
     try {
       const res = await fetch(url, { headers: { "accept": "application/json" }, cache: "no-store" });
       if (!res.ok) return null;
@@ -86,9 +82,23 @@
     }
   }
 
+  function updateHud() {
+    if (!crosshairOn) {
+      hud.hidden = true;
+      return;
+    }
+    const c = map.getCenter();
+    const lat = +fmt(c.lat, 5);
+    const lng = +fmt(c.lng, 5);
+
+    hud.hidden = false;
+    hud.textContent =
+      "miðja: " + fmt(lat, 5) + ", " + fmt(lng, 5) + "\n" +
+      lastElevText;
+  }
+
   function scheduleElevation() {
     if (!crosshairOn) return;
-    if (!elAlt) return;
 
     if (elevTimer) clearTimeout(elevTimer);
     elevTimer = setTimeout(async () => {
@@ -100,22 +110,21 @@
       if (key === lastElevKey) return;
       lastElevKey = key;
 
-      setAltText("hæð: —");
+      lastElevText = "hæð: —";
+      updateHud();
+
       const elev = await fetchElevation(lat, lng);
-      if (elev === null) {
-        // keep placeholder; we’ll plug in real service later
-        return;
-      }
-      setAltText(`hæð: ${Math.round(elev)} m`);
+      if (elev === null) return;
+
+      lastElevText = "hæð: " + Math.round(elev) + " m";
+      updateHud();
     }, 220);
   }
 
-  function updateState() {
+  function updateStateLine() {
     if (!elState) return;
     const c = map.getCenter();
-    elState.textContent = `miðja: ${fmt(c.lat, 5)}, ${fmt(c.lng, 5)} · zoom: ${fmt(map.getZoom(), 2)}`;
-
-    if (crosshairOn) scheduleElevation();
+    elState.textContent = "miðja: " + fmt(c.lat, 5) + ", " + fmt(c.lng, 5) + " · zoom: " + fmt(map.getZoom(), 2);
   }
 
   function setCrosshair(on) {
@@ -124,29 +133,42 @@
     if (crosshairOn) elMap.classList.add("kort-crosshair-on");
     else elMap.classList.remove("kort-crosshair-on");
 
-    if (btnCross) {
-      btnCross.setAttribute("aria-pressed", crosshairOn ? "true" : "false");
-      btnCross.textContent = crosshairOn ? "Crosshair ✓" : "Crosshair";
+    if (btnCrossFooter) {
+      btnCrossFooter.setAttribute("aria-pressed", crosshairOn ? "true" : "false");
+      btnCrossFooter.textContent = crosshairOn ? "Crosshair ✓" : "Crosshair";
     }
 
-    if (elAlt) {
-      elAlt.hidden = !crosshairOn;
-      if (crosshairOn) setAltText("hæð: —");
-    }
+    lastElevText = "hæð: —";
+    updateHud();
 
-    // refresh right away
-    updateState();
+    if (crosshairOn) scheduleElevation();
   }
 
+  function toggleCrosshair() {
+    setCrosshair(!crosshairOn);
+  }
+
+  // Expose for map controls
+  window.kortCrosshair = {
+    get: () => crosshairOn,
+    set: setCrosshair,
+    toggle: toggleCrosshair
+  };
+
   map.on("load", () => {
-    updateState();
+    updateStateLine();
     map.resize();
     setCrosshair(false); // default OFF
   });
 
-  map.on("move", updateState);
-  map.on("zoom", updateState);
-  map.on("rotate", updateState);
+  map.on("move", () => {
+    updateStateLine();
+    if (crosshairOn) updateHud();
+  });
+
+  map.on("moveend", () => {
+    if (crosshairOn) scheduleElevation();
+  });
 
   async function copyState() {
     const c = map.getCenter();
@@ -158,17 +180,16 @@
 
     try {
       await navigator.clipboard.writeText(payload);
-      const old = btnCopy ? btnCopy.textContent : "";
-      if (btnCopy) btnCopy.textContent = "Afritað ✓";
-      setTimeout(() => { if (btnCopy) btnCopy.textContent = old; }, 900);
+      if (btnCopy) {
+        const old = btnCopy.textContent;
+        btnCopy.textContent = "Afritað ✓";
+        setTimeout(() => { btnCopy.textContent = old; }, 900);
+      }
     } catch {}
   }
 
   if (btnCopy) btnCopy.addEventListener("click", copyState);
-
-  if (btnCross) {
-    btnCross.addEventListener("click", () => setCrosshair(!crosshairOn));
-  }
+  if (btnCrossFooter) btnCrossFooter.addEventListener("click", toggleCrosshair);
 
   window.addEventListener("resize", () => map.resize());
 })();
