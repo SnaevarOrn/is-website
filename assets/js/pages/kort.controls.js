@@ -1,5 +1,5 @@
 // assets/js/pages/kort.controls.js
-// Kort — custom controls (menu + search + crosshair + measure + home + location)
+// Kort — custom controls (menu + search + crosshair + measure + satellite + home + location)
 // Fail-safe: one error must not kill the whole stack.
 
 "use strict";
@@ -49,6 +49,54 @@
     this._wrap = null;
   };
 
+  /* =========================
+     Styles: Street <-> Satellite
+     ========================= */
+
+  // Persist across modules in the same page load
+  const KORT_STYLE = window.KORT_STYLE || (window.KORT_STYLE = { key: "street" });
+
+  // Default demo style (works without keys)
+  const STYLE_STREET = "https://demotiles.maplibre.org/style.json";
+
+  // Simple raster satellite (no key required; check provider terms/attribution)
+  const STYLE_SATELLITE = {
+    version: 8,
+    name: "Satellite",
+    sources: {
+      esri: {
+        type: "raster",
+        tiles: [
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        ],
+        tileSize: 256,
+        attribution: "© Esri"
+      }
+    },
+    layers: [{ id: "sat", type: "raster", source: "esri" }]
+  };
+
+  async function applyStyle(style) {
+    // setStyle nukes layers/sources; we must re-add after load
+    map.setStyle(style);
+    await new Promise((r) => map.once("load", r));
+
+    // Re-apply current mode (wrecks/quiz/etc.)
+    try {
+      const id = window.kortModes?.getCurrent?.() || "default";
+      window.kortModes?.setMode?.(id);
+    } catch (e) { console.warn(e); }
+
+    // Optional refresh hooks (safe if undefined)
+    try { window.kortRoute?.refresh?.(); } catch {}
+    try { window.kortMeasure?.refresh?.(); } catch {}
+    try { window.kortCrosshair?.refresh?.(); } catch {}
+  }
+
+  /* =========================
+     Buttons
+     ========================= */
+
   // Menu (hamburger)
   const btnMenu = makeBtn("≡", "Valmynd", () => {
     if (window.kortMenu && typeof window.kortMenu.toggle === "function") {
@@ -88,6 +136,21 @@
     }
   });
 
+  // Satellite toggle (Street <-> Satellite)
+  const btnSat = makeBtn("🛰️", "Satellite", async (b) => {
+    try {
+      const next = (KORT_STYLE.key === "sat") ? "street" : "sat";
+      KORT_STYLE.key = next;
+
+      await applyStyle(next === "sat" ? STYLE_SATELLITE : STYLE_STREET);
+      b.classList.toggle("kort-ctrl-active", next === "sat");
+      setStatus(next === "sat" ? "Kort-útlit: Satellite" : "Kort-útlit: Street");
+    } catch (e) {
+      console.warn(e);
+      setStatus("Gat ekki skipt um kort-útlit.");
+    }
+  });
+
   // Iceland "Home" button (fit to bounds)
   const btnHome = makeBtn("IS", "Ísland", () => {
     const b = window.KORT_ICELAND_BOUNDS;
@@ -120,8 +183,12 @@
     );
   });
 
+  /* =========================
+     Mount
+     ========================= */
+
   try {
-    map.addControl(new CustomStack([btnMenu, btnSearch, btnCross, btnMeasure, btnHome, btnLoc]), "top-left");
+    map.addControl(new CustomStack([btnMenu, btnSearch, btnCross, btnMeasure, btnSat, btnHome, btnLoc]), "top-left");
   } catch (e) {
     console.warn("kort.controls failed:", e);
   }
