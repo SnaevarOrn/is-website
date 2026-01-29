@@ -559,6 +559,40 @@ html[data-theme="light"] .kort-panel-item:hover{
   color: var(--muted);
 }
 
+.kort-route-confirm{
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 18px 48px var(--shadow);
+
+  min-width: 260px;
+  text-align: center;
+}
+
+.kort-route-confirm-title{
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.kort-route-confirm-sub{
+  color: var(--muted);
+  font-size: .95rem;
+  margin-bottom: 10px;
+}
+
+.kort-route-confirm-actions{
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
 /* =========================
    Responsive
    ========================= */
