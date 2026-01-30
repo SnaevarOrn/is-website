@@ -30,8 +30,6 @@
     if (!hintStyle) return;
     const map = {
       street: "Street",
-      light: "Light",
-      dark: "Dark",
       topo: "Topo",
       satellite: "Satellite"
     };
@@ -44,7 +42,7 @@
     backdrop.hidden = false;
 
     // close all accordions by default for less noise
-    details.forEach((d) => { d.open = false; });
+    for (let i = 0; i < details.length; i++) details[i].open = false;
   }
 
   function close() {
@@ -66,46 +64,76 @@
   });
 
   // One accordion open at a time
-  details.forEach((d) => {
+  for (let i = 0; i < details.length; i++) {
+    const d = details[i];
     d.addEventListener("toggle", () => {
       if (!d.open) return;
-      details.forEach((other) => {
+      for (let j = 0; j < details.length; j++) {
+        const other = details[j];
         if (other !== d) other.open = false;
-      });
+      }
     });
-  });
+  }
+
+  async function applyStyle(id) {
+    const ks = window.kortStyles;
+    if (!ks || typeof ks.set !== "function") return false;
+
+    try {
+      const key = await ks.set(id);
+      setHintStyle(key);
+      return true;
+    } catch (e) {
+      console.warn(e);
+      return false;
+    }
+  }
+
+  function applyMode(id) {
+    try {
+      if (window.kortModes && typeof window.kortModes.setMode === "function") {
+        window.kortModes.setMode(id);
+        setHintMode(id);
+        return true;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    return false;
+  }
 
   // Mode / style buttons
   panel.addEventListener("click", (e) => {
-    const styleBtn = e.target.closest("[data-style]");
+    const t = e.target;
+
+    const styleBtn = t && t.closest ? t.closest("[data-style]") : null;
     if (styleBtn) {
       const id = styleBtn.getAttribute("data-style");
-      if (window.kortSetStyle) window.kortSetStyle(id);
-      setHintStyle(id);
+
+      // Apply style (async), close panel immediately for snappy UX
       close();
+
+      // Best-effort; no await needed here
+      applyStyle(id);
       return;
     }
 
-    const modeBtn = e.target.closest("[data-mode]");
+    const modeBtn = t && t.closest ? t.closest("[data-mode]") : null;
     if (modeBtn) {
       const id = modeBtn.getAttribute("data-mode");
-      if (window.kortModes && window.kortModes.setMode) window.kortModes.setMode(id);
-      setHintMode(id);
+      applyMode(id);
       close();
       return;
     }
 
-    if (e.target && e.target.id === "kortGoHome") {
-      const map = window.kortMap;
-      const b = window.KORT_ICELAND_BOUNDS;
-      if (map && b) map.fitBounds(b, { padding: 50, duration: 900, essential: true });
+    if (t && t.id === "kortGoHome") {
+      if (typeof window.kortGoHome === "function") window.kortGoHome();
       close();
       return;
     }
 
-    if (e.target && e.target.id === "kortUseLocation") {
-      // trigger same behavior as control button if you want:
-      alert("Notaðu 📍 takkann á kortinu (eða við tengjum þetta við sama handler næst).");
+    if (t && t.id === "kortUseLocation") {
+      if (typeof window.kortUseLocation === "function") window.kortUseLocation();
       close();
       return;
     }
@@ -113,10 +141,14 @@
 
   // Initialize hints from current state (best effort)
   try {
-    if (window.kortModes && window.kortModes.getCurrent) setHintMode(window.kortModes.getCurrent());
+    if (window.kortModes && typeof window.kortModes.getCurrent === "function") {
+      setHintMode(window.kortModes.getCurrent());
+    }
   } catch {}
+
   try {
-    if (window.kortGetStyle) setHintStyle(window.kortGetStyle());
+    const ks = window.kortStyles;
+    if (ks && typeof ks.getCurrent === "function") setHintStyle(ks.getCurrent());
   } catch {}
 
   // Expose for the ☰ control
