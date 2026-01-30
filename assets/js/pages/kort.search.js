@@ -30,7 +30,7 @@
   let chooseActiveInput = null;
 
   // Heuristics: if results spread more than this, we prefer map chooser over dropdown
-  const MULTI_SPREAD_KM = 20;     // Lundey variants are far apart -> this triggers
+  const MULTI_SPREAD_KM = 20;
   const MULTI_MIN_RESULTS = 2;
 
   function setStatus(text) {
@@ -38,8 +38,15 @@
     if (el) el.textContent = text;
   }
 
+  function closeSearchOverlayIfOpen() {
+    try {
+      if (window.kortSearchOverlay && typeof window.kortSearchOverlay.close === "function") {
+        window.kortSearchOverlay.close();
+      }
+    } catch (e) {}
+  }
+
   function ensureDropdown(forInput) {
-    // one dropdown at a time (good enough)
     if (dropdown) return dropdown;
 
     const wrap = forInput.closest(".kort-search") || forInput.parentElement;
@@ -94,8 +101,8 @@
 
   function clearChooseOnMap() {
     if (chooseMarkers && chooseMarkers.length) {
-      for (const m of chooseMarkers) {
-        try { m.remove(); } catch {}
+      for (let i = 0; i < chooseMarkers.length; i++) {
+        try { chooseMarkers[i].remove(); } catch (e) {}
       }
     }
     chooseMarkers = [];
@@ -131,6 +138,8 @@
       if (btnYes) {
         btnYes.addEventListener("click", () => {
           closeRoutePopup();
+          closeSearchOverlayIfOpen();
+
           if (window.kortRouting && typeof window.kortRouting.setDestination === "function") {
             window.kortRouting.setDestination(lng, lat, label || "");
             if (typeof window.kortRouting.startWatch === "function") window.kortRouting.startWatch();
@@ -162,7 +171,9 @@
 
     if (activeInput) activeInput.blur();
 
-    // OPT-IN routing: show prompt by marker
+    // Key fix: if the overlay search was open, close it after success
+    closeSearchOverlayIfOpen();
+
     if (window.kortRouting && typeof window.kortRouting.setDestination === "function") {
       openRoutePrompt(r.lng, r.lat, r.label || "");
     }
@@ -192,35 +203,33 @@
 
   function shouldUseMapChooser(results) {
     if (!results || results.length < MULTI_MIN_RESULTS) return false;
-
     const spreadKm = computeSpreadKm(results);
     return spreadKm >= MULTI_SPREAD_KM;
   }
 
   function computeSpreadKm(results) {
-    // Use bounding box diagonal as a cheap "spread" estimator
     let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-    for (const r of results) {
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
       minLat = Math.min(minLat, r.lat);
       maxLat = Math.max(maxLat, r.lat);
       minLng = Math.min(minLng, r.lng);
       maxLng = Math.max(maxLng, r.lng);
     }
     if (!isFinite(minLat) || !isFinite(minLng) || !isFinite(maxLat) || !isFinite(maxLng)) return 0;
-    const d = haversineKm(minLat, minLng, maxLat, maxLng);
-    return d;
+    return haversineKm(minLat, minLng, maxLat, maxLng);
   }
 
   function fitToResults(results) {
     try {
       const b = new maplibregl.LngLatBounds();
-      for (const r of results) b.extend([r.lng, r.lat]);
+      for (let i = 0; i < results.length; i++) b.extend([results[i].lng, results[i].lat]);
       map.fitBounds(b, { padding: 60, duration: 900, essential: true });
       return;
-    } catch {}
-    // Fallback: fly to average
+    } catch (e) {}
+
     let lat = 0, lng = 0;
-    for (const r of results) { lat += r.lat; lng += r.lng; }
+    for (let i = 0; i < results.length; i++) { lat += results[i].lat; lng += results[i].lng; }
     lat /= results.length; lng /= results.length;
     map.flyTo({ center: [lng, lat], zoom: 6, essential: true });
   }
@@ -232,36 +241,33 @@
 
     chooseActiveInput = activeInput || null;
 
-    // If overlay is open and blocks map clicks, close it (best-effort)
-    try { window.kortSearchOverlay?.close?.(); } catch {}
+    // If overlay is open and blocks map clicks, close it
+    closeSearchOverlayIfOpen();
 
     setStatus("Fann fleiri en eina staðsetningu — veldu punkt á kortinu.");
-
     fitToResults(results);
 
-    // Add temporary clickable markers
-    for (const r of results) {
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+
       const m = new maplibregl.Marker({ color: "#111" })
         .setLngLat([r.lng, r.lat])
         .addTo(map);
 
-      // Make marker clickable: MapLibre marker element is DOM
-      const el = m.getElement();
-      el.style.cursor = "pointer";
-      el.setAttribute("aria-label", r.label || "Velja stað");
-      el.addEventListener("click", (e) => {
+      const dom = m.getElement();
+      dom.style.cursor = "pointer";
+      dom.setAttribute("aria-label", r.label || "Velja stað");
+      dom.title = r.label || "";
+
+      dom.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         flyToResult(r, chooseActiveInput);
       });
 
-      // Optional: small tooltip on hover (desktop)
-      el.title = r.label || "";
-
       chooseMarkers.push(m);
     }
 
-    // Escape cancels choose-on-map
     const onKey = (e) => {
       if (e.key === "Escape") {
         document.removeEventListener("keydown", onKey);
@@ -295,15 +301,11 @@
         return;
       }
 
-      // Single result -> go
       if (results.length === 1) {
         flyToResult(results[0], activeInput);
         return;
       }
 
-      // Many results:
-      // - If far apart: zoom out + clickable points on map
-      // - Else: dropdown chooser
       if (shouldUseMapChooser(results)) {
         showChooseOnMap(results, activeInput);
         return;
@@ -329,6 +331,7 @@
         hideDropdown();
         closeRoutePopup();
         clearChooseOnMap();
+        closeSearchOverlayIfOpen();
       }
     });
 
