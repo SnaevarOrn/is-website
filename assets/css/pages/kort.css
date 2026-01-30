@@ -1,6 +1,5 @@
-/* kort.css — page-only styles (fullscreen-ish, responsive)
-   Includes: centered search, dropdown box, popup box (image+sources),
-   side panel, close button, crosshair + HUD, and overlay search modal.
+/* kort.css — page-only styles (kort)
+   Includes: card+map, MapLibre controls, popups, side panel, HUD, overlay search, iOS fullscreen fallback.
 */
 
 :root{
@@ -22,17 +21,7 @@
   gap: var(--kort-gap);
 }
 
-/* =========================
-   Header (title left, search centered)
-   ========================= */
-
-.kort-head{
-  display: grid;
-  grid-template-columns: 1fr minmax(260px, 520px) 1fr;
-  align-items: start;
-  gap: 16px;
-}
-
+/* Optional header (title/subtitle only) */
 .kort-head-left{
   display: flex;
   flex-direction: column;
@@ -52,35 +41,6 @@
   color: var(--muted);
   max-width: 88ch;
 }
-
-/* =========================
-   Search (header)
-   ========================= 
-
-.kort-search{
-  position: relative;
-  justify-self: center;
-  width: 100%;
-}
-
-.kort-search input{
-  width: 100%;
-  appearance: none;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  padding: 10px 12px;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px var(--shadow);
-}
-
-.kort-search input::placeholder{ color: var(--muted); }
-
-.kort-search input:focus{
-  outline: none;
-  border-color: rgba(255,255,255,.22);
-  background: var(--panel2);
-}*/
 
 /* =========================
    Card + Map
@@ -106,30 +66,26 @@
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--border);
-
-  /* reduce white flash while loading tiles */
-  background: rgba(0,0,0,.06);
+  background: rgba(0,0,0,.06); /* reduce white flash while loading tiles */
 }
 
 html[data-theme="light"] .kort-map{
   background: rgba(0,0,0,.03);
 }
 
-/* keep MapLibre controls inside rounded frame */
+/* Keep MapLibre controls inside rounded frame */
 .kort-map .maplibregl-ctrl-top-right,
 .kort-map .maplibregl-ctrl-top-left{
-  margin-top: 8px;
-  margin-left: 8px;
-  margin-right: 8px;
+  margin: 8px;
 }
 
-/* Optional: slightly separate stacked control groups (top-left) */
+/* Slightly separate stacked control groups (top-left) */
 .kort-map .maplibregl-ctrl-top-left .maplibregl-ctrl{
   margin-bottom: 8px;
 }
 
 /* =========================
-   Footer
+   Footer (state line + copy button if you keep it)
    ========================= */
 
 .kort-foot{
@@ -140,13 +96,6 @@ html[data-theme="light"] .kort-map{
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
-  flex-wrap: wrap;
-}
-
-.kort-foot-left{
-  display: flex;
-  align-items: center;
-  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -178,11 +127,6 @@ html[data-theme="light"] .kort-map{
 
 .kort-btn:active{ transform: translateY(1px); }
 
-.kort-btn-ghost{
-  background: transparent;
-  box-shadow: none;
-}
-
 /* =========================
    Close button (top-right)
    ========================= */
@@ -191,7 +135,7 @@ html[data-theme="light"] .kort-map{
   position: fixed;
   top: 12px;
   right: 12px;
-  z-index: 9999;
+  z-index: 20070;
 
   width: 38px;
   height: 38px;
@@ -216,57 +160,6 @@ html[data-theme="light"] .kort-map{
 .kort-close:active{ transform: translateY(1px); }
 
 /* =========================
-   Search dropdown (boxed)
-   ========================= */
-
-.kort-search-dd{
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(100% + 10px);
-  z-index: 600;
-
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(15,17,22,.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  border-radius: 14px;
-  box-shadow: 0 22px 60px rgba(0,0,0,.55);
-  overflow: hidden;
-
-  max-height: min(46vh, 340px);
-  overflow-y: auto;
-}
-
-html[data-theme="light"] .kort-search-dd{
-  background: rgba(255,255,255,.92);
-  border-color: rgba(0,0,0,.10);
-  box-shadow: 0 22px 60px rgba(0,0,0,.22);
-}
-
-.kort-search-item{
-  width: 100%;
-  text-align: left;
-  appearance: none;
-  border: 0;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  background: transparent;
-  color: var(--text);
-  padding: 11px 12px;
-  cursor: pointer;
-}
-
-html[data-theme="light"] .kort-search-item{
-  border-bottom-color: rgba(0,0,0,.08);
-}
-
-.kort-search-item:hover{ background: rgba(255,255,255,.06); }
-html[data-theme="light"] .kort-search-item:hover{ background: rgba(0,0,0,.04); }
-
-.kort-search-item:last-child{ border-bottom: 0; }
-
-/* =========================
    Side panel + backdrop
    ========================= */
 
@@ -274,7 +167,7 @@ html[data-theme="light"] .kort-search-item:hover{ background: rgba(0,0,0,.04); }
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,.62);
-  z-index: 9000;
+  z-index: 20000;
 }
 
 .kort-panel{
@@ -283,7 +176,7 @@ html[data-theme="light"] .kort-search-item:hover{ background: rgba(0,0,0,.04); }
   left: 12px;
   bottom: 12px;
   width: min(380px, calc(100vw - 24px));
-  z-index: 9001;
+  z-index: 20010;
 
   border: 1px solid rgba(255,255,255,.14);
   background: rgba(12,13,16,.94);
@@ -310,7 +203,7 @@ html[data-theme="light"] .kort-panel{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 12px;
+  padding: 12px;
   border-bottom: 1px solid rgba(255,255,255,.10);
 }
 
@@ -369,7 +262,7 @@ html[data-theme="light"] .kort-acc{
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 12px 12px;
+  padding: 12px;
   cursor: pointer;
   user-select: none;
 }
@@ -397,7 +290,7 @@ html[data-theme="light"] .kort-acc-box{
   border: 1px solid transparent;
   background: transparent;
   color: var(--text);
-  padding: 10px 10px;
+  padding: 10px;
   border-radius: 12px;
   cursor: pointer;
 }
@@ -419,7 +312,7 @@ html[data-theme="light"] .kort-panel-item:hover{
 }
 
 /* =========================
-   Crosshair (enabled)
+   Crosshair overlay (when enabled)
    ========================= */
 
 .kort-map.kort-crosshair-on::before,
@@ -450,7 +343,7 @@ html[data-theme="light"] .kort-panel-item:hover{
 }
 
 /* =========================
-   HUD (coords + elevation) — shown when crosshair ON
+   HUD (coords + elevation)
    ========================= */
 
 .kort-hud{
@@ -461,7 +354,7 @@ html[data-theme="light"] .kort-panel-item:hover{
   pointer-events: none;
 
   border: 1px solid rgba(255,255,255,.14);
-  background: rgba(15,17,22,.92); /* var .82 */
+  background: rgba(15,17,22,.88);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 12px;
@@ -475,41 +368,51 @@ html[data-theme="light"] .kort-panel-item:hover{
 }
 
 html[data-theme="light"] .kort-hud{
-  background: rgba(255,255,255,.94); /* var .88 */
+  background: rgba(255,255,255,.90);
   border-color: rgba(0,0,0,.12);
   color: rgba(0,0,0,.82);
   box-shadow: 0 16px 44px rgba(0,0,0,.18);
 }
 
 /* =========================
-   MapLibre popup (NEW patch)
-   - Makes route prompt + measure popup readable on top of map
+   MapLibre popup (readable + consistent)
    ========================= */
 
-.maplibregl-popup{
-  z-index: 60;
-}
+.maplibregl-popup{ z-index: 60; }
 
-.maplibregl-popup-content{
-  border: 1px solid var(--border);
-  background: rgba(15,17,22,.94); /* dökkt, skýrt */
-  color: var(--text);
+.kort-map .maplibregl-popup-content{
   border-radius: 14px;
-  box-shadow: 0 18px 52px var(--shadow);
-  padding: 12px 12px 10px;
   max-width: 360px;
+  padding: 12px 12px 10px;
+  box-shadow: 0 18px 52px var(--shadow);
+
+  background: rgba(15,17,22,.92);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(255,255,255,.92);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-.maplibregl-popup-tip{
-  border-top-color: var(--panel) !important;
-  border-bottom-color: var(--panel) !important;
-}
-
-html[data-theme="light"] .maplibregl-popup-content{
+html[data-theme="light"] .kort-map .maplibregl-popup-content{
+  background: rgba(255,255,255,.96);
+  border-color: rgba(0,0,0,.12);
+  color: rgba(0,0,0,.88);
   box-shadow: 0 18px 52px rgba(0,0,0,.18);
 }
 
-/* Our popup content */
+/* popup arrow */
+.kort-map .maplibregl-popup-tip{
+  border-top-color: rgba(15,17,22,.92) !important;
+  border-bottom-color: rgba(15,17,22,.92) !important;
+}
+
+html[data-theme="light"] .kort-map .maplibregl-popup-tip{
+  border-top-color: rgba(255,255,255,.96) !important;
+  border-bottom-color: rgba(255,255,255,.96) !important;
+}
+
+/* Our popup content pieces */
 .kort-popup-title{
   font-weight: 750;
   letter-spacing: -0.01em;
@@ -517,50 +420,66 @@ html[data-theme="light"] .maplibregl-popup-content{
 }
 
 .kort-popup-sub{
-  color: var(--muted);
+  opacity: .82;
   margin: 0 0 10px;
   line-height: 1.35;
 }
 
-.kort-popup-img{
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  display: block;
-  margin: 6px 0 10px;
-}
-
 .kort-popup-meta{
-  color: var(--muted);
+  opacity: .78;
   font-size: .92rem;
   margin: 0 0 8px;
 }
 
-.kort-popup-sources{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 8px;
-}
-
-.kort-popup-sources a{
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 6px 10px;
-  text-decoration: none;
-  color: var(--text);
-  background: rgba(255,255,255,.02);
-}
-
-.kort-popup-sources a:hover{ background: var(--panel2); }
-
 .kort-popup-coord{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: .9rem;
-  color: var(--muted);
+  opacity: .78;
 }
 
-/* Buttons inside popup (route prompt, measure etc.) */
+/* Route distance mini popup (compact + slightly transparent) */
+.kort-map .maplibregl-popup-content:has(.kort-route-mini){
+  padding: 8px 10px;
+  max-width: 240px;
+  background: rgba(12,13,16,.78);
+}
+
+html[data-theme="light"] .kort-map .maplibregl-popup-content:has(.kort-route-mini){
+  background: rgba(255,255,255,.78);
+}
+
+.kort-route-mini-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin: 0 0 4px;
+}
+
+.kort-route-mini-title{
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  font-size: .95rem;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.kort-route-mini-x{
+  appearance:none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.kort-route-mini-x:hover{ background: rgba(255,255,255,.08); }
+html[data-theme="light"] .kort-route-mini-x:hover{ background: rgba(0,0,0,.06); }
+
+/* Buttons inside popup */
 .kort-popup-actions{
   display: flex;
   gap: 8px;
@@ -570,16 +489,16 @@ html[data-theme="light"] .maplibregl-popup-content{
 .kort-popup-actions .kort-mini-btn{
   appearance: none;
   border: 1px solid var(--border);
-  background: var(--panel2);
-  color: var(--text);
+  background: rgba(255,255,255,.06);
+  color: inherit;
   padding: 8px 10px;
   border-radius: 12px;
   cursor: pointer;
   font-size: .92rem;
 }
 
-.kort-popup-actions .kort-mini-btn:hover{
-  border-color: rgba(255,255,255,.16);
+html[data-theme="light"] .kort-popup-actions .kort-mini-btn{
+  background: rgba(0,0,0,.04);
 }
 
 .kort-popup-actions .kort-mini-btn-ghost{
@@ -593,17 +512,14 @@ html[data-theme="light"] .maplibregl-popup-content{
 .kort-search-ov{
   position: fixed;
   inset: 0;
-  z-index: 9998;
+  z-index: 20050;
   background: rgba(0,0,0,.55);
   display: grid;
   place-items: start center;
   padding: 18px 14px;
 }
 
-/* Ensure hidden attribute always wins */
-.kort-search-ov[hidden]{
-  display: none !important;
-}
+.kort-search-ov[hidden]{ display: none !important; }
 
 .kort-search-ov-card{
   width: min(560px, 100%);
@@ -641,13 +557,59 @@ html[data-theme="light"] .maplibregl-popup-content{
 
 .kort-search-ov-x:hover{ background: var(--panel2); }
 
-.kort-search-ov-form{ margin: 0; }
-
 .kort-search-ov-hint{
   margin: 10px 4px 0;
   color: var(--muted);
   font-size: .95rem;
 }
+
+/* Dropdown (used by overlay input too) */
+.kort-search-dd{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 600;
+
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(15,17,22,.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border-radius: 14px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.55);
+  overflow: hidden;
+
+  max-height: min(46vh, 340px);
+  overflow-y: auto;
+}
+
+html[data-theme="light"] .kort-search-dd{
+  background: rgba(255,255,255,.92);
+  border-color: rgba(0,0,0,.10);
+  box-shadow: 0 22px 60px rgba(0,0,0,.22);
+}
+
+.kort-search-item{
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: transparent;
+  color: var(--text);
+  padding: 11px 12px;
+  cursor: pointer;
+}
+
+html[data-theme="light"] .kort-search-item{
+  border-bottom-color: rgba(0,0,0,.08);
+}
+
+.kort-search-item:hover{ background: rgba(255,255,255,.06); }
+html[data-theme="light"] .kort-search-item:hover{ background: rgba(0,0,0,.04); }
+
+.kort-search-item:last-child{ border-bottom: 0; }
 
 /* =========================
    Custom control stack (top-left)
@@ -670,250 +632,35 @@ html[data-theme="light"] .maplibregl-popup-content{
 }
 
 .kort-ctrl-btn:hover{ background: rgba(0,0,0,.06); }
+.kort-ctrl-active{ background: rgba(0,0,0,.12) !important; }
 
-.kort-ctrl-active{
-  background: rgba(0,0,0,.10) !important;
-}
-
-/* Match MapLibre defaults: dark on light theme, light on dark theme */
-.kort-map .maplibregl-ctrl-group button{ color: #111; }
-.kort-map .maplibregl-ctrl-group button:hover{ color: #111; }
-
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button{
-  color: rgba(255,255,255,.92);
-}
-html[data-theme="dark"] .kort-ctrl-btn:hover{ background: rgba(255,255,255,.08); }
+html[data-theme="dark"] .kort-ctrl-btn:hover{ background: rgba(255,255,255,.10); }
 html[data-theme="dark"] .kort-ctrl-active{ background: rgba(255,255,255,.14) !important; }
 
 /* =========================
-   Responsive
+   ✅ FIX: MapLibre control icons/text (white-on-white bug)
    ========================= */
 
-@media (max-width: 720px){
-  .kort-page{
-    padding: 14px var(--kort-pad) 18px;
-    min-height: 100svh;
-  }
-
-  .kort-head{
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .kort-search{ justify-self: stretch; }
-
-  .maplibregl-popup-content{
-    padding: 12px 12px 12px;
-  }
-}
-
-@media (max-height: 520px){
-  .kort-sub{ display: none; }
-  .kort-page{ padding-top: 10px; }
-}
-/* =========================
-   HARD FIX: popup + buttons always readable
-   (prevents white-on-white when map style is light)
-   ========================= */
-
-/* Popup box */
-.maplibregl-popup-content{
-  background: var(--panel) !important;
-  color: var(--text) !important;
-}
-
-/* Tip color (little arrow) */
-.maplibregl-popup-tip{
-  border-top-color: var(--panel) !important;
-  border-bottom-color: var(--panel) !important;
-}
-
-/* Anything inside popup inherits readable color */
-.maplibregl-popup-content *{
-  color: inherit;
-}
-
-/* Popup links look like links, but readable */
-.maplibregl-popup-content a{
-  color: inherit !important;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-/* Popup action buttons */
-.maplibregl-popup-content .kort-mini-btn{
-  color: inherit !important;
-}
-
-/* Controls: match native (dark icons on light, light on dark) */
-.kort-map .maplibregl-ctrl-group button{
-  color: #111 !important;
-}
-
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button{
-  color: rgba(255,255,255,.92) !important;
-}
-/* --- MapLibre controls: ensure readable icons/text --- */
-
-/* Light theme: dark icons/text like native controls */
+/* Light theme: force dark icon/text everywhere inside control buttons */
 html[data-theme="light"] .kort-map .maplibregl-ctrl-group button,
-html[data-theme="light"] .kort-map .maplibregl-ctrl-group button span{
+html[data-theme="light"] .kort-map .maplibregl-ctrl-group button *{
   color: #111 !important;
+  fill: #111 !important;
+  stroke: #111 !important;
 }
 
-/* Dark theme: light icons/text */
+/* Dark theme: force light icon/text */
 html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button,
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button span{
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button *{
   color: rgba(255,255,255,.92) !important;
-}
-/* --- Popups: stronger background so text never blends into map --- */
-.kort-map .maplibregl-popup-content{
-  background: rgba(15,17,22,.94) !important;
-  border: 1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  fill: rgba(255,255,255,.92) !important;
+  stroke: rgba(255,255,255,.92) !important;
 }
 
-html[data-theme="light"] .kort-map .maplibregl-popup-content{
-  background: rgba(255,255,255,.96) !important;
-  border-color: rgba(0,0,0,.12);
-}
-.kort-hud{
-  background: rgba(15,17,22,.88) !important; /* var .82 */
-}
-html[data-theme="light"] .kort-hud{
-  background: rgba(255,255,255,.90) !important; /* var .88 */
-}
-/* --- Overlays must sit above MapLibre fullscreen container --- */
-.kort-search-ov{ z-index: 20050 !important; }
-.kort-panel-backdrop{ z-index: 20000 !important; }
-.kort-panel{ z-index: 20010 !important; }
-.kort-route-confirm{ z-index: 20060 !important; }
-.kort-close{ z-index: 20070 !important; }
-
-/* Route distance mini popup header */
-.kort-route-mini-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin: 0 0 6px;
-}
-
-.kort-route-mini-title{
-  font-weight: 750;
-  letter-spacing: -0.01em;
-}
-
-.kort-route-mini-x{
-  appearance:none;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.kort-route-mini-x:hover{
-  background: rgba(255,255,255,.08);
-}
-
-html[data-theme="light"] .kort-route-mini-x:hover{
-  background: rgba(0,0,0,.06);
-}
 /* =========================
-   Route distance popup (smaller + slightly transparent)
+   iOS fullscreen fallback (CSS)
    ========================= */
 
-/* Target ONLY our route popup */
-.kort-map .maplibregl-popup-content:has(.kort-route-mini){
-  padding: 8px 10px;              /* was ~10-12px */
-  border-radius: 14px;
-  max-width: 240px;               /* keep it compact */
-  background: rgba(12,13,16,.78); /* transparency */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* Light theme tweak */
-html[data-theme="light"] .kort-map .maplibregl-popup-content:has(.kort-route-mini){
-  background: rgba(255,255,255,.78);
-}
-
-/* Tighten internal spacing */
-.kort-route-mini-head{
-  margin: 0 0 4px;                /* less vertical space */
-}
-
-.kort-route-mini-title{
-  font-size: .95rem;
-  line-height: 1.1;
-  margin: 0;
-}
-
-.kort-map .kort-route-mini .kort-popup-sub{
-  margin: 0;                      /* kill extra bottom margin */
-  font-size: .92rem;
-  line-height: 1.25;
-}
-
-/* Smaller X button */
-.kort-route-mini-x{
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  padding: 0;
-}
-html.kort-fs,
-html.kort-fs body{
-  width:100%;
-  height:100%;
-  overflow:hidden;
-}
-
-html.kort-fs .kort-page{
-  padding:0;
-}
-
-html.kort-fs .kort-card{
-  position:fixed;
-  inset:0;
-  border-radius:0;
-  z-index:9999;
-}
-/* ===== MapLibre controls: always readable ===== */
-
-/* Buttons (zoom, fullscreen, custom stack) */
-.kort-map .maplibregl-ctrl-group button,
-.kort-map .maplibregl-ctrl-group button span{
-  color:#111 !important;
-  fill:#111 !important;
-}
-
-/* Hover */
-.kort-map .maplibregl-ctrl-group button:hover{
-  background:rgba(0,0,0,.06);
-}
-
-/* Active */
-.kort-map .maplibregl-ctrl-group button.kort-ctrl-active{
-  background:rgba(0,0,0,.12);
-}
-
-/* Dark theme safety */
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button,
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button span{
-  color:#fff !important;
-  fill:#fff !important;
-}
-
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button:hover{
-  background:rgba(255,255,255,.12);
-}
-/* CSS fullscreen fallback (iOS Safari) */
 html.kort-fs, html.kort-fs body{
   height: 100%;
   overflow: hidden;
@@ -937,4 +684,23 @@ html.kort-fs .kort-card{
 html.kort-fs .kort-map{
   border-radius: 0;
   border: 0;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 720px){
+  .kort-page{
+    padding: 14px var(--kort-pad) 18px;
+    min-height: 100svh;
+  }
+  .maplibregl-popup-content{
+    padding: 12px;
+  }
+}
+
+@media (max-height: 520px){
+  .kort-sub{ display: none; }
+  .kort-page{ padding-top: 10px; }
 }
