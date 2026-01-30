@@ -52,27 +52,20 @@
 
   // Menu (hamburger)
   const btnMenu = makeBtn("≡", "Valmynd", () => {
-    if (window.kortMenu && typeof window.kortMenu.toggle === "function") {
-      window.kortMenu.toggle();
-    } else {
-      setStatus("Valmynd: kortMenu vantar.");
-    }
+    if (window.kortMenu?.toggle) window.kortMenu.toggle();
+    else setStatus("Valmynd: kortMenu vantar.");
   });
 
   // Search overlay
   const btnSearch = makeBtn("🔍", "Leita", () => {
-    if (window.kortSearchOverlay && typeof window.kortSearchOverlay.open === "function") {
-      window.kortSearchOverlay.open();
-    } else {
-      setStatus("Leit: overlay vantar.");
-    }
+    if (window.kortSearchOverlay?.open) window.kortSearchOverlay.open();
+    else setStatus("Leit: overlay vantar.");
   });
 
   // Crosshair toggle
   const btnCross = makeBtn("⌖", "Crosshair", (b) => {
-    if (window.kortCrosshair && typeof window.kortCrosshair.toggle === "function") {
-      window.kortCrosshair.toggle();
-      const on = (window.kortCrosshair.get && window.kortCrosshair.get()) ? true : false;
+    if (window.kortCrosshair?.toggle) {
+      const on = !!window.kortCrosshair.toggle();
       b.classList.toggle("kort-ctrl-active", on);
     } else {
       setStatus("Crosshair: kortCrosshair vantar.");
@@ -81,35 +74,29 @@
 
   // Measure toggle
   const btnMeasure = makeBtn("📏", "Mæla", (b) => {
-    if (window.kortMeasure && typeof window.kortMeasure.toggle === "function") {
-      const on = window.kortMeasure.toggle();
-      b.classList.toggle("kort-ctrl-active", !!on);
+    if (window.kortMeasure?.toggle) {
+      const on = !!window.kortMeasure.toggle();
+      b.classList.toggle("kort-ctrl-active", on);
     } else {
       setStatus("Mæling: kortMeasure vantar.");
     }
   });
 
   // Satellite toggle (delegates to kort.styles.js)
-  const btnSat = makeBtn("🛰️", "Satellite", (b) => {
+  const btnSat = makeBtn("🛰️", "Satellite", async (b) => {
     const ks = window.kortStyles;
 
-    if (!ks || typeof ks.toggle !== "function" || typeof ks.getCurrent !== "function") {
+    if (!ks?.toggle || !ks?.getCurrent) {
       setStatus("Kort-útlit: kortStyles vantar.");
       return;
     }
 
     try {
-      // Toggle satellite <-> street
-      ks.toggle("satellite");
-
-      // Best-effort: update active state shortly after (async style swap)
-      setTimeout(() => {
-        try {
-          const on = ks.getCurrent() === "satellite";
-          b.classList.toggle("kort-ctrl-active", on);
-          setStatus(on ? "Kort-útlit: Satellite" : "Kort-útlit: Street");
-        } catch {}
-      }, 400);
+      setStatus("Skipti um kort-útlit…");
+      const key = await ks.toggle("satellite");
+      const on = key === "satellite";
+      b.classList.toggle("kort-ctrl-active", on);
+      setStatus(on ? "Kort-útlit: Satellite" : "Kort-útlit: Street");
     } catch (e) {
       console.warn(e);
       setStatus("Gat ekki skipt um kort-útlit.");
@@ -141,31 +128,30 @@
         const lat = pos.coords.latitude;
         map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 14), essential: true });
         setStatus("Staðsetning ✓");
+        try { window.kortRouting?.setOrigin?.(lng, lat); } catch {}
       },
       () => setStatus("Staðsetning hafnað eða mistókst."),
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
     );
   });
 
-  /* =========================
-     Mount
-     ========================= */
+  function syncInitialStates() {
+    try {
+      const ks = window.kortStyles;
+      if (ks?.getCurrent) btnSat.classList.toggle("kort-ctrl-active", ks.getCurrent() === "satellite");
+      if (window.kortCrosshair?.get) btnCross.classList.toggle("kort-ctrl-active", !!window.kortCrosshair.get());
+      if (window.kortMeasure?.isOn) btnMeasure.classList.toggle("kort-ctrl-active", !!window.kortMeasure.isOn());
+    } catch {}
+  }
 
   try {
     map.addControl(new CustomStack([btnMenu, btnSearch, btnCross, btnMeasure, btnSat, btnHome, btnLoc]), "top-left");
 
-    // Sync initial active states (e.g. when page loads in satellite)
-    setTimeout(() => {
-      try {
-        const ks = window.kortStyles;
-        if (ks && typeof ks.getCurrent === "function") {
-          btnSat.classList.toggle("kort-ctrl-active", ks.getCurrent() === "satellite");
-        }
-        if (window.kortCrosshair?.get) {
-          btnCross.classList.toggle("kort-ctrl-active", !!window.kortCrosshair.get());
-        }
-      } catch {}
-    }, 200);
+    // Sync initial active states
+    setTimeout(syncInitialStates, 250);
+
+    // Also resync after style swaps
+    map.on("style.load", () => setTimeout(syncInitialStates, 120));
   } catch (e) {
     console.warn("kort.controls failed:", e);
   }
