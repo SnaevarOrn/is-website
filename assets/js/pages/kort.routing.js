@@ -1,6 +1,7 @@
 // assets/js/pages/kort.routing.js
 // Live routing: from (watchPosition) -> to (destination from search)
 // Draws route line and updates occasionally.
+// Adds: distance popup with X that clears route + stops watch.
 // Build-safe: no optional chaining / no replaceAll.
 
 "use strict";
@@ -22,8 +23,15 @@
   let lastRouteAt = 0;
   let lastRouteFrom = null;
 
+  let distPopup = null;
+  let lastDistanceM = null;
+
   const MIN_RECALC_MS = 5000;    // don't spam
   const MIN_MOVE_M = 40;         // recalc after moving this much
+
+  function emptyFeature() {
+    return { type: "FeatureCollection", features: [] };
+  }
 
   function ensureRouteLayers() {
     if (!map.getSource(ROUTE_SOURCE)) {
@@ -51,17 +59,13 @@
     }
   }
 
-  function emptyFeature() {
-    return { type: "FeatureCollection", features: [] };
-  }
-
   function setRouteGeojson(feature) {
     ensureRouteLayers();
     const src = map.getSource(ROUTE_SOURCE);
     if (src && src.setData) src.setData({ type: "FeatureCollection", features: [feature] });
   }
 
-  function clearRoute() {
+  function clearRouteLineOnly() {
     ensureRouteLayers();
     const src = map.getSource(ROUTE_SOURCE);
     if (src && src.setData) src.setData(emptyFeature());
@@ -76,6 +80,74 @@
     const s2 = Math.sin(dLng / 2);
     const q = s1 * s1 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * s2 * s2;
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(q)));
+  }
+
+  function formatKm(distanceM) {
+    const km = distanceM / 1000;
+    let dec = 1;
+    if (km < 5) dec = 3;
+    else if (km < 10) dec = 2;
+    else dec = 1;
+    return km.toFixed(dec);
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function closeDistPopup() {
+    if (distPopup) {
+      try { distPopup.remove(); } catch (e) {}
+      distPopup = null;
+    }
+  }
+
+  function openOrUpdateDistPopup(distanceM) {
+    if (!to) return;
+
+    lastDistanceM = distanceM;
+
+    const kmStr = formatKm(distanceM);
+    const title = "Leið";
+    const sub = "Vegalengd: <b>" + esc(kmStr) + " km</b>";
+
+    // Build popup HTML with an X in top-right
+    const token = String(Date.now()) + String(Math.floor(Math.random() * 10000));
+    const idX = "kortRouteClear_" + token;
+
+    const html =
+      `<div class="kort-popup kort-route-mini">` +
+        `<div class="kort-route-mini-head">` +
+          `<div class="kort-route-mini-title">${title}</div>` +
+          `<button id="${idX}" class="kort-route-mini-x" type="button" aria-label="Loka">✕</button>` +
+        `</div>` +
+        `<div class="kort-popup-sub">${sub}</div>` +
+      `</div>`;
+
+    closeDistPopup();
+
+    distPopup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      maxWidth: "280px"
+    })
+      .setLngLat([to.lng, to.lat])
+      .setHTML(html)
+      .addTo(map);
+
+    setTimeout(() => {
+      const btn = document.getElementById(idX);
+      if (btn) {
+        btn.addEventListener("click", () => {
+          clearAll(true); // true => also stop watch
+        });
+      }
+    }, 0);
   }
 
   function setFrom(pos) {
@@ -93,8 +165,7 @@
       fromMarker.setLngLat([from.lng, from.lat]);
     }
 
-    // Try routing if we have destination
-    maybeRoute();
+    maybeRoute(false);
   }
 
   function setDestination(lng, lat, label) {
@@ -108,6 +179,7 @@
       toMarker.setLngLat([to.lng, to.lat]);
     }
 
+    // reset route throttles so we route immediately
     maybeRoute(true);
   }
 
@@ -133,16 +205,17 @@
     try {
       const res = await fetch(url, { headers: { "accept": "application/json" }, cache: "no-store" });
       if (!res.ok) return;
+
       const j = await res.json();
       if (!j || j.ok !== true || !j.geometry) return;
 
       setRouteGeojson(j.geometry);
 
-      // Optional: show a short hint in state line
-      const el = document.getElementById("kortState");
-      if (el && typeof j.distance_m === "number") {
-        const km = (j.distance_m / 1000);
-        el.textContent = el.textContent + " · leið: " + km.toFixed(2) + " km";
+      // Distance popup (preferred: use distance_m)
+      if (typeof j.distance_m === "number" && isFinite(j.distance_m)) {
+        openOrUpdateDistPopup(j.distance_m);
+      } else if (lastDistanceM !== null) {
+        // keep old popup if we had one
       }
     } catch (e) {
       // silent fail
@@ -176,11 +249,19 @@
     watchId = null;
   }
 
-  function clearAll() {
-    clearRoute();
-    if (toMarker) { toMarker.remove(); toMarker = null; }
+  // keepFromMarker: leave "you are here" marker visible
+  function clearAll(stop) {
+    clearRouteLineOnly();
+    closeDistPopup();
+    lastDistanceM = null;
+
+    if (toMarker) { try { toMarker.remove(); } catch (e) {} toMarker = null; }
     to = null;
-    // keep fromMarker if you want; leaving it is nice UX
+
+    lastRouteAt = 0;
+    lastRouteFrom = null;
+
+    if (stop) stopWatch();
   }
 
   // Re-add line after style changes (switching basemap resets custom layers)
@@ -188,14 +269,10 @@
     try { ensureRouteLayers(); } catch (e) {}
   });
 
-  // Public API for other modules:
   window.kortRouting = {
     startWatch: startWatch,
     stopWatch: stopWatch,
     setDestination: setDestination,
-    clear: clearAll
+    clear: function () { clearAll(true); }
   };
-
-  // Auto-start watching location once user has granted permission elsewhere (or just start now)
-  // Safer UX: start when user presses 📍, but we can keep it available here.
 })();
