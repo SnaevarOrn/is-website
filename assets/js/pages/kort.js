@@ -48,7 +48,10 @@
   window.kortMap = map;
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
-  map.addControl(new maplibregl.FullscreenControl(), "top-right");
+    // Fullscreen á *kort-card* svo overlay + panel sést líka
+  const fsTarget = document.querySelector(".kort-card") || document.documentElement;
+  map.addControl(new maplibregl.FullscreenControl({ container: fsTarget }), "top-right");
+
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }), "bottom-left");
 
   // HUD element inside map container
