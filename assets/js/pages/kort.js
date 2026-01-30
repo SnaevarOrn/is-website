@@ -1,5 +1,10 @@
 // assets/js/pages/kort.js
 // Kort — Map init + crosshair + HUD + elevation lookup
+//
+// Notes:
+// - Exposes window.KORT_STREET_STYLE so kort.styles.js can always return to your real street style
+// - Fullscreen uses documentElement so overlay/panel remain visible in fullscreen
+// - Footer crosshair button + top search bar can be removed safely; this file no longer depends on them
 
 "use strict";
 
@@ -7,7 +12,6 @@
   const elMap = document.getElementById("kort-map");
   const elState = document.getElementById("kortState");
   const btnCopy = document.getElementById("btnCopyState");
-  const btnCrossFooter = document.getElementById("btnCrosshair");
   if (!elMap) return;
 
   // Iceland bounds
@@ -19,6 +23,7 @@
   const START_CENTER = [-21.9426, 64.1466];
   const START_ZOOM = 10.8;
 
+  // Simple raster OSM base style (your "street" baseline)
   window.KORT_STYLE_MAP = {
     version: 8,
     sources: {
@@ -36,6 +41,9 @@
     layers: [{ id: "osm", type: "raster", source: "osm" }]
   };
 
+  // Let kort.styles.js know what "street" REALLY is for this page
+  window.KORT_STREET_STYLE = window.KORT_STYLE_MAP;
+
   const map = new maplibregl.Map({
     container: elMap,
     style: window.KORT_STYLE_MAP,
@@ -48,9 +56,10 @@
   window.kortMap = map;
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
-    // Fullscreen á *kort-card* svo overlay + panel sést líka
-  const fsTarget = document.querySelector(".kort-card") || document.documentElement;
-  map.addControl(new maplibregl.FullscreenControl({ container: fsTarget }), "top-right");
+
+  // Fullscreen should include overlays/panel. If you fullscreen only the map/card,
+  // fixed overlays outside that subtree won't render in fullscreen.
+  map.addControl(new maplibregl.FullscreenControl({ container: document.documentElement }), "top-right");
 
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }), "bottom-left");
 
@@ -74,7 +83,7 @@
   async function fetchElevation(lat, lng) {
     const url = "/api/elevation?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng);
     try {
-      const res = await fetch(url, { headers: { "accept": "application/json" }, cache: "no-store" });
+      const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
       if (!res.ok) return null;
       const j = await res.json();
       if (!j || j.ok !== true) return null;
@@ -95,9 +104,7 @@
     const lng = +fmt(c.lng, 5);
 
     hud.hidden = false;
-    hud.textContent =
-      "miðja: " + fmt(lat, 5) + ", " + fmt(lng, 5) + "\n" +
-      lastElevText;
+    hud.textContent = "miðja: " + fmt(lat, 5) + ", " + fmt(lng, 5) + "\n" + lastElevText;
   }
 
   function scheduleElevation() {
@@ -121,13 +128,14 @@
 
       lastElevText = "hæð: " + Math.round(elev) + " m";
       updateHud();
-    }, 220);
+    }, 260);
   }
 
   function updateStateLine() {
     if (!elState) return;
     const c = map.getCenter();
-    elState.textContent = "miðja: " + fmt(c.lat, 5) + ", " + fmt(c.lng, 5) + " · zoom: " + fmt(map.getZoom(), 2);
+    elState.textContent =
+      "miðja: " + fmt(c.lat, 5) + ", " + fmt(c.lng, 5) + " · zoom: " + fmt(map.getZoom(), 2);
   }
 
   function setCrosshair(on) {
@@ -135,11 +143,6 @@
 
     if (crosshairOn) elMap.classList.add("kort-crosshair-on");
     else elMap.classList.remove("kort-crosshair-on");
-
-    if (btnCrossFooter) {
-      btnCrossFooter.setAttribute("aria-pressed", crosshairOn ? "true" : "false");
-      btnCrossFooter.textContent = crosshairOn ? "Crosshair ✓" : "Crosshair";
-    }
 
     lastElevText = "hæð: —";
     updateHud();
@@ -153,9 +156,32 @@
 
   // Expose for map controls
   window.kortCrosshair = {
-    get: () => crosshairOn,
+    get: function () { return crosshairOn; },
     set: setCrosshair,
     toggle: toggleCrosshair
+  };
+
+  // Shared helpers for menu buttons
+  window.kortGoHome = function () {
+    const b = window.KORT_ICELAND_BOUNDS;
+    if (b && b.length === 2) {
+      map.fitBounds(b, { padding: 50, duration: 900, essential: true });
+      return;
+    }
+    map.flyTo({ center: [-19.0, 64.9], zoom: 5.6, essential: true });
+  };
+
+  window.kortUseLocation = function () {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        const lng = pos.coords.longitude;
+        const lat = pos.coords.latitude;
+        map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 14), essential: true });
+      },
+      function () {},
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
+    );
   };
 
   map.on("load", () => {
@@ -192,7 +218,6 @@
   }
 
   if (btnCopy) btnCopy.addEventListener("click", copyState);
-  if (btnCrossFooter) btnCrossFooter.addEventListener("click", toggleCrosshair);
 
   window.addEventListener("resize", () => map.resize());
 })();
