@@ -649,14 +649,6 @@ html[data-theme="light"] .kort-map .maplibregl-ctrl-group button *{
   stroke: #111 !important;
 }
 
-/* Dark theme: force light icon/text */
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button,
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button *{
-  color: rgba(255,255,255,.92) !important;
-  fill: rgba(255,255,255,.92) !important;
-  stroke: rgba(255,255,255,.92) !important;
-}
-
 /* =========================
    iOS fullscreen fallback (CSS)
    ========================= */
