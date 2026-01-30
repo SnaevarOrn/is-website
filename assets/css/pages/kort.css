@@ -713,13 +713,3 @@ html.kort-fs .kort-map{
 .kort-map .kort-ctrl-stack .kort-ctrl-btn{
   color: #111 !important;
 }
-/* Fullscreen icon is a background-image on .maplibregl-ctrl-icon,
-   so color/fill won't affect it. Force it readable. */
-.kort-map .maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon,
-.kort-map .maplibregl-ctrl-shrink .maplibregl-ctrl-icon{
-  filter: invert(1) !important;
-}
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon,
-html[data-theme="dark"] .kort-map .maplibregl-ctrl-shrink .maplibregl-ctrl-icon{
-  filter: invert(1) !important;
-}
