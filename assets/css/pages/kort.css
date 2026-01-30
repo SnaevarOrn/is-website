@@ -704,3 +704,20 @@ html.kort-fs .kort-map{
   .kort-sub{ display: none; }
   .kort-page{ padding-top: 10px; }
 }
+
+/* FORCE FIX: MapLibre controls are white background even in dark theme -> keep icons/text dark */
+.kort-map .maplibregl-ctrl-group button,
+.kort-map .maplibregl-ctrl-group button span{
+  color: #111 !important;
+}
+
+/* Some controls use SVG with currentColor */
+.kort-map .maplibregl-ctrl-group button svg{
+  fill: #111 !important;
+  stroke: #111 !important;
+}
+
+/* Your custom left stack specifically */
+.kort-map .kort-ctrl-stack .kort-ctrl-btn{
+  color: #111 !important;
+}
