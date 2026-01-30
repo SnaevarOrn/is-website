@@ -461,7 +461,7 @@ html[data-theme="light"] .kort-panel-item:hover{
   pointer-events: none;
 
   border: 1px solid rgba(255,255,255,.14);
-  background: rgba(15,17,22,.82);
+  background: rgba(15,17,22,.92); /* var .82 */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 12px;
@@ -475,7 +475,7 @@ html[data-theme="light"] .kort-panel-item:hover{
 }
 
 html[data-theme="light"] .kort-hud{
-  background: rgba(255,255,255,.88);
+  background: rgba(255,255,255,.94); /* var .88 */
   border-color: rgba(0,0,0,.12);
   color: rgba(0,0,0,.82);
   box-shadow: 0 16px 44px rgba(0,0,0,.18);
@@ -492,7 +492,7 @@ html[data-theme="light"] .kort-hud{
 
 .maplibregl-popup-content{
   border: 1px solid var(--border);
-  background: var(--panel);
+  background: rgba(15,17,22,.94); /* dökkt, skýrt */
   color: var(--text);
   border-radius: 14px;
   box-shadow: 0 18px 52px var(--shadow);
