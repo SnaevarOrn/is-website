@@ -753,3 +753,41 @@ html[data-theme="dark"] .kort-ctrl-active{ background: rgba(255,255,255,.14) !im
 html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button{
   color: rgba(255,255,255,.92) !important;
 }
+/* --- MapLibre controls: ensure readable icons/text --- */
+
+/* Light theme: dark icons/text like native controls */
+html[data-theme="light"] .kort-map .maplibregl-ctrl-group button,
+html[data-theme="light"] .kort-map .maplibregl-ctrl-group button span{
+  color: #111 !important;
+}
+
+/* Dark theme: light icons/text */
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button,
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button span{
+  color: rgba(255,255,255,.92) !important;
+}
+/* --- Popups: stronger background so text never blends into map --- */
+.kort-map .maplibregl-popup-content{
+  background: rgba(15,17,22,.94) !important;
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html[data-theme="light"] .kort-map .maplibregl-popup-content{
+  background: rgba(255,255,255,.96) !important;
+  border-color: rgba(0,0,0,.12);
+}
+.kort-hud{
+  background: rgba(15,17,22,.92) !important; /* var .82 */
+}
+html[data-theme="light"] .kort-hud{
+  background: rgba(255,255,255,.96) !important; /* var .88 */
+}
+/* --- Overlays must sit above MapLibre fullscreen container --- */
+.kort-search-ov{ z-index: 20050 !important; }
+.kort-panel-backdrop{ z-index: 20000 !important; }
+.kort-panel{ z-index: 20010 !important; }
+.kort-route-confirm{ z-index: 20060 !important; }
+.kort-close{ z-index: 20070 !important; }
+
