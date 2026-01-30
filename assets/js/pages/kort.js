@@ -59,7 +59,15 @@
 
   // Fullscreen should include overlays/panel. If you fullscreen only the map/card,
   // fixed overlays outside that subtree won't render in fullscreen.
-  map.addControl(new maplibregl.FullscreenControl({ container: document.documentElement }), "top-right");
+  // map.addControl(new maplibregl.FullscreenControl({ container: document.documentElement }), "top-right");
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    if (!isIOS) {
+      map.addControl(
+        new maplibregl.FullscreenControl({ container: document.documentElement }),
+        "top-right"
+      );
+    }
 
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }), "bottom-left");
 
