@@ -913,3 +913,28 @@ html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button span{
 html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button:hover{
   background:rgba(255,255,255,.12);
 }
+/* CSS fullscreen fallback (iOS Safari) */
+html.kort-fs, html.kort-fs body{
+  height: 100%;
+  overflow: hidden;
+}
+
+html.kort-fs .kort-page{
+  max-width: none;
+  padding: 0;
+}
+
+html.kort-fs .kort-card{
+  position: fixed;
+  inset: 0;
+  border-radius: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  z-index: 1000;
+}
+
+html.kort-fs .kort-map{
+  border-radius: 0;
+  border: 0;
+}
