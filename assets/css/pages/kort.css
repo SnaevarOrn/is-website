@@ -867,3 +867,49 @@ html[data-theme="light"] .kort-map .maplibregl-popup-content:has(.kort-route-min
   border-radius: 10px;
   padding: 0;
 }
+html.kort-fs,
+html.kort-fs body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+
+html.kort-fs .kort-page{
+  padding:0;
+}
+
+html.kort-fs .kort-card{
+  position:fixed;
+  inset:0;
+  border-radius:0;
+  z-index:9999;
+}
+/* ===== MapLibre controls: always readable ===== */
+
+/* Buttons (zoom, fullscreen, custom stack) */
+.kort-map .maplibregl-ctrl-group button,
+.kort-map .maplibregl-ctrl-group button span{
+  color:#111 !important;
+  fill:#111 !important;
+}
+
+/* Hover */
+.kort-map .maplibregl-ctrl-group button:hover{
+  background:rgba(0,0,0,.06);
+}
+
+/* Active */
+.kort-map .maplibregl-ctrl-group button.kort-ctrl-active{
+  background:rgba(0,0,0,.12);
+}
+
+/* Dark theme safety */
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button,
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button span{
+  color:#fff !important;
+  fill:#fff !important;
+}
+
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-group button:hover{
+  background:rgba(255,255,255,.12);
+}
