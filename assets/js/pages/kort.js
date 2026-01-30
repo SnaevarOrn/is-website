@@ -70,6 +70,11 @@
     }
 
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }), "bottom-left");
+// addedd with above +2
+  window.kortToggleFullscreen = function () {
+    document.documentElement.classList.toggle("kort-fs");
+    window.kortMap.resize();
+  };
 
   // HUD element inside map container
   const hud = document.createElement("div");
