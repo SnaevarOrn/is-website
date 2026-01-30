@@ -719,3 +719,7 @@ html.kort-fs .kort-map{
 .kort-map .maplibregl-ctrl-shrink .maplibregl-ctrl-icon{
   filter: invert(1) !important;
 }
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon,
+html[data-theme="dark"] .kort-map .maplibregl-ctrl-shrink .maplibregl-ctrl-icon{
+  filter: invert(1) !important;
+}
