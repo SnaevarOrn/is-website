@@ -779,10 +779,10 @@ html[data-theme="light"] .kort-map .maplibregl-popup-content{
   border-color: rgba(0,0,0,.12);
 }
 .kort-hud{
-  background: rgba(15,17,22,.92) !important; /* var .82 */
+  background: rgba(15,17,22,.88) !important; /* var .82 */
 }
 html[data-theme="light"] .kort-hud{
-  background: rgba(255,255,255,.96) !important; /* var .88 */
+  background: rgba(255,255,255,.90) !important; /* var .88 */
 }
 /* --- Overlays must sit above MapLibre fullscreen container --- */
 .kort-search-ov{ z-index: 20050 !important; }
@@ -791,3 +791,36 @@ html[data-theme="light"] .kort-hud{
 .kort-route-confirm{ z-index: 20060 !important; }
 .kort-close{ z-index: 20070 !important; }
 
+/* Route distance mini popup header */
+.kort-route-mini-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin: 0 0 6px;
+}
+
+.kort-route-mini-title{
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.kort-route-mini-x{
+  appearance:none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.kort-route-mini-x:hover{
+  background: rgba(255,255,255,.08);
+}
+
+html[data-theme="light"] .kort-route-mini-x:hover{
+  background: rgba(0,0,0,.06);
+}
