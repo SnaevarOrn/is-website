@@ -73,13 +73,12 @@
 
   function cssFsOn() {
     document.documentElement.classList.add(FS_CLASS);
-    // iOS needs a resize after layout changes
-    setTimeout(() => { try { map.resize(); } catch {} }, 60);
+    setTimeout(() => { try { map.resize(); } catch (e) {} }, 60);
   }
 
   function cssFsOff() {
     document.documentElement.classList.remove(FS_CLASS);
-    setTimeout(() => { try { map.resize(); } catch {} }, 60);
+    setTimeout(() => { try { map.resize(); } catch (e) {} }, 60);
   }
 
   function isCssFs() {
@@ -93,9 +92,9 @@
   async function enterNativeFs() {
     try {
       await fsTarget.requestFullscreen({ navigationUI: "hide" });
-      setTimeout(() => { try { map.resize(); } catch {} }, 60);
+      setTimeout(() => { try { map.resize(); } catch (e) {} }, 60);
       return true;
-    } catch {
+    } catch (e) {
       return false;
     }
   }
@@ -103,25 +102,31 @@
   async function exitNativeFs() {
     try {
       await document.exitFullscreen();
-      setTimeout(() => { try { map.resize(); } catch {} }, 60);
+      setTimeout(() => { try { map.resize(); } catch (e) {} }, 60);
       return true;
-    } catch {
+    } catch (e) {
       return false;
     }
   }
 
   async function toggleFullscreen() {
-    // Prefer native if supported; else CSS fallback (iOS)
     if (nativeFsEnabled) {
       if (isNativeFs()) await exitNativeFs();
-      else await enterNativeFs();
+      else {
+        const ok = await enterNativeFs();
+        if (!ok) {
+          // fallback to css if native fails (some iOS / iframe combos)
+          if (isCssFs()) cssFsOff();
+          else cssFsOn();
+        }
+      }
       return;
     }
+
     if (isCssFs()) cssFsOff();
     else cssFsOn();
   }
 
-  // Expose for other modules if needed
   window.kortToggleFullscreen = toggleFullscreen;
 
   function HybridFullscreenControl() {}
@@ -138,7 +143,6 @@
 
     const sync = () => {
       const on = nativeFsEnabled ? isNativeFs() : isCssFs();
-      // MapLibre uses this class to show “shrink” icon state
       btn.classList.toggle("maplibregl-ctrl-shrink", !!on);
     };
 
@@ -148,25 +152,21 @@
       toggleFullscreen().then(sync);
     });
 
-    // Keep button state correct
     document.addEventListener("fullscreenchange", sync);
     window.addEventListener("resize", sync);
 
     wrap.appendChild(btn);
+
     this._wrap = wrap;
-    this._btn = btn;
     this._sync = sync;
 
-    // Initial
     setTimeout(sync, 0);
-
     return wrap;
   };
 
   HybridFullscreenControl.prototype.onRemove = function () {
     if (this._wrap && this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);
     this._wrap = null;
-    this._btn = null;
     this._sync = null;
   };
 
@@ -188,20 +188,34 @@
   }
 
   let crosshairOn = false;
+
   let elevTimer = null;
+  let elevAbort = null;
   let lastElevKey = "";
   let lastElevText = "hæð: —";
+  let lastElevAt = 0;
 
-  async function fetchElevation(lat, lng) {
+  let elevFailCount = 0;
+  let elevCooldownUntil = 0;
+
+  const ELEV_MIN_INTERVAL_MS = 900;
+  const ELEV_DEBOUNCE_MS = 220;
+  const ELEV_COOLDOWN_MS = 8000;
+
+  async function fetchElevation(lat, lng, signal) {
     const url = "/api/elevation?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng);
     try {
-      const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
+      const res = await fetch(url, {
+        headers: { accept: "application/json" },
+        cache: "no-store",
+        signal: signal
+      });
       if (!res.ok) return null;
       const j = await res.json();
       if (!j || j.ok !== true) return null;
       if (typeof j.elevation_m !== "number") return null;
       return j.elevation_m;
-    } catch {
+    } catch (e) {
       return null;
     }
   }
@@ -219,11 +233,19 @@
     hud.textContent = "miðja: " + fmt(lat, 5) + ", " + fmt(lng, 5) + "\n" + lastElevText;
   }
 
-  function scheduleElevation() {
+  function scheduleElevation(reason) {
     if (!crosshairOn) return;
 
+    const now = Date.now();
+    if (now < elevCooldownUntil) return;
+
     if (elevTimer) clearTimeout(elevTimer);
+
     elevTimer = setTimeout(async () => {
+      const now2 = Date.now();
+      if (now2 - lastElevAt < ELEV_MIN_INTERVAL_MS) return;
+      lastElevAt = now2;
+
       const c = map.getCenter();
       const lat = +fmt(c.lat, 5);
       const lng = +fmt(c.lng, 5);
@@ -232,15 +254,30 @@
       if (key === lastElevKey) return;
       lastElevKey = key;
 
+      // cancel previous in-flight request
+      try { if (elevAbort) elevAbort.abort(); } catch (e) {}
+      elevAbort = new AbortController();
+
       lastElevText = "hæð: —";
       updateHud();
 
-      const elev = await fetchElevation(lat, lng);
-      if (elev === null) return;
+      const elev = await fetchElevation(lat, lng, elevAbort.signal);
 
+      if (elevAbort.signal.aborted) return;
+
+      if (elev === null) {
+        elevFailCount += 1;
+        if (elevFailCount >= 3) {
+          elevCooldownUntil = Date.now() + ELEV_COOLDOWN_MS;
+          elevFailCount = 0;
+        }
+        return;
+      }
+
+      elevFailCount = 0;
       lastElevText = "hæð: " + Math.round(elev) + " m";
       updateHud();
-    }, 260);
+    }, ELEV_DEBOUNCE_MS);
   }
 
   function updateStateLine() {
@@ -256,10 +293,15 @@
     if (crosshairOn) elMap.classList.add("kort-crosshair-on");
     else elMap.classList.remove("kort-crosshair-on");
 
+    // force refresh when enabling
+    lastElevKey = "";
+    elevCooldownUntil = 0;
+    elevFailCount = 0;
     lastElevText = "hæð: —";
+
     updateHud();
 
-    if (crosshairOn) scheduleElevation();
+    if (crosshairOn) scheduleElevation("enable");
   }
 
   function toggleCrosshair() {
@@ -305,9 +347,10 @@
     if (crosshairOn) updateHud();
   });
 
-  map.on("moveend", () => {
-    if (crosshairOn) scheduleElevation();
-  });
+  // Mobile-friendly triggers
+  map.on("moveend", () => { if (crosshairOn) scheduleElevation("moveend"); });
+  map.on("dragend", () => { if (crosshairOn) scheduleElevation("dragend"); });
+  map.on("zoomend", () => { if (crosshairOn) scheduleElevation("zoomend"); });
 
   async function copyState() {
     const c = map.getCenter();
@@ -324,12 +367,12 @@
         btnCopy.textContent = "Afritað ✓";
         setTimeout(() => { btnCopy.textContent = old; }, 900);
       }
-    } catch {}
+    } catch (e) {}
   }
 
   if (btnCopy) btnCopy.addEventListener("click", copyState);
 
   window.addEventListener("resize", () => {
-    try { map.resize(); } catch {}
+    try { map.resize(); } catch (e) {}
   });
 })();
