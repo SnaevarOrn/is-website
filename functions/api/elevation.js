@@ -2,11 +2,17 @@
 // Elevation lookup for ís.is (Cloudflare Pages Functions)
 // GET /api/elevation?lat=64.14&lng=-21.94
 // Response: { ok, lat, lng, elevation_m, source }
+//
+// Goals:
+// - Stable edge cache key (rounded coords)
+// - Cloudflare edge cache + upstream caching
+// - Safe CORS for testing
+// - Clear cache headers (s-maxage + stale-while-revalidate)
+// - Robust payload parsing
 
 export async function onRequest(context) {
   const request = context.request;
 
-  // Basic CORS (harmless same-origin, useful for testing)
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -23,7 +29,6 @@ export async function onRequest(context) {
 
   const url = new URL(request.url);
 
-  // Accept both: lat/lng OR latitude/longitude OR lon
   const latStr = url.searchParams.get("lat") || url.searchParams.get("latitude");
   const lngStr =
     url.searchParams.get("lng") ||
@@ -40,36 +45,45 @@ export async function onRequest(context) {
     return json({ ok: false, error: "lat_lng_out_of_range" }, 400, corsHeaders);
   }
 
-  // Normalize cache key
+  // Round to reduce cache fragmentation
   const latN = round(lat, 5);
   const lngN = round(lng, 5);
 
-  const cacheKey = new Request(
-    url.origin + "/api/elevation?lat=" + encodeURIComponent(latN) + "&lng=" + encodeURIComponent(lngN),
-    { method: "GET" }
-  );
+  // Stable cache key (same origin, normalized query)
+  const cacheKeyUrl =
+    url.origin +
+    "/api/elevation?lat=" + encodeURIComponent(String(latN)) +
+    "&lng=" + encodeURIComponent(String(lngN));
+
+  const cacheKey = new Request(cacheKeyUrl, { method: "GET" });
 
   const cache = caches.default;
-  const cached = await cache.match(cacheKey);
-  if (cached) return withCors(cached, corsHeaders);
 
-  // Open-Meteo elevation API
+  // Edge cache hit
+  try {
+    const cached = await cache.match(cacheKey);
+    if (cached) return withCors(cached, corsHeaders);
+  } catch (e) {
+    // ignore cache errors
+  }
+
+  // Upstream (Open-Meteo elevation)
   const upstream =
     "https://api.open-meteo.com/v1/elevation" +
-    "?latitude=" + encodeURIComponent(latN) +
-    "&longitude=" + encodeURIComponent(lngN);
+    "?latitude=" + encodeURIComponent(String(latN)) +
+    "&longitude=" + encodeURIComponent(String(lngN));
 
   let payload;
   try {
     const res = await fetch(upstream, {
-      headers: { "accept": "application/json" },
+      headers: { accept: "application/json" },
+      // Also cache upstream at the edge (belt + suspenders)
       cf: { cacheTtl: 86400, cacheEverything: true }
     });
 
     if (!res.ok) {
       return json({ ok: false, error: "upstream_http_" + res.status }, 502, corsHeaders);
     }
-
     payload = await res.json();
   } catch (e) {
     return json({ ok: false, error: "upstream_fetch_failed" }, 502, corsHeaders);
@@ -88,8 +102,11 @@ export async function onRequest(context) {
     source: "open-meteo"
   };
 
+  // Cache policy: 1 day + SWR 1 day
+  const cacheControl = "public, max-age=86400, s-maxage=86400, stale-while-revalidate=86400";
+
   const response = json(body, 200, Object.assign({}, corsHeaders, {
-    "Cache-Control": "public, max-age=86400"
+    "Cache-Control": cacheControl
   }));
 
   // Save to edge cache (best effort)
@@ -129,7 +146,9 @@ function json(obj, status, headers) {
 }
 
 function withCors(response, corsHeaders) {
-  const h = new Headers(response.headers);
+  // Clone so we don't consume the cached body stream
+  const r = response.clone();
+  const h = new Headers(r.headers);
   for (const k in corsHeaders) h.set(k, corsHeaders[k]);
-  return new Response(response.body, { status: response.status, headers: h });
+  return new Response(r.body, { status: r.status, headers: h });
 }
