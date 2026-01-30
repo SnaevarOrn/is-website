@@ -1,10 +1,10 @@
 // assets/js/pages/kort.js
 // Kort — Map init + crosshair + HUD + elevation lookup
 //
-// Notes:
-// - Exposes window.KORT_STREET_STYLE so kort.styles.js can always return to your real street style
-// - Fullscreen uses documentElement so overlay/panel remain visible in fullscreen
-// - Footer crosshair button + top search bar can be removed safely; this file no longer depends on them
+// Fullscreen:
+// - Uses native Fullscreen API when available
+// - Falls back to CSS fullscreen (works on iOS Safari)
+// - Fullscreens the page (documentElement) so overlay/panel stay visible
 
 "use strict";
 
@@ -56,28 +56,126 @@
   window.kortMap = map;
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
-
-  // Fullscreen should include overlays/panel. If you fullscreen only the map/card,
-  // fixed overlays outside that subtree won't render in fullscreen.
-  
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    if (!isIOS) {
-      map.addControl(
-        new maplibregl.FullscreenControl({ container: document.documentElement }),
-        "top-right"
-      );
-    }
-
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }), "bottom-left");
-// addedd with above +2
-  window.kortToggleFullscreen = function () {
-    document.documentElement.classList.toggle("kort-fs");
-    window.kortMap.resize();
+
+  /* =========================
+     Fullscreen (native + CSS fallback)
+     ========================= */
+
+  const FS_CLASS = "kort-fs";
+  const fsTarget = document.documentElement;
+
+  const nativeFsEnabled =
+    !!document.fullscreenEnabled &&
+    !!fsTarget &&
+    typeof fsTarget.requestFullscreen === "function" &&
+    typeof document.exitFullscreen === "function";
+
+  function cssFsOn() {
+    document.documentElement.classList.add(FS_CLASS);
+    // iOS needs a resize after layout changes
+    setTimeout(() => { try { map.resize(); } catch {} }, 60);
+  }
+
+  function cssFsOff() {
+    document.documentElement.classList.remove(FS_CLASS);
+    setTimeout(() => { try { map.resize(); } catch {} }, 60);
+  }
+
+  function isCssFs() {
+    return document.documentElement.classList.contains(FS_CLASS);
+  }
+
+  function isNativeFs() {
+    return !!document.fullscreenElement;
+  }
+
+  async function enterNativeFs() {
+    try {
+      await fsTarget.requestFullscreen({ navigationUI: "hide" });
+      setTimeout(() => { try { map.resize(); } catch {} }, 60);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function exitNativeFs() {
+    try {
+      await document.exitFullscreen();
+      setTimeout(() => { try { map.resize(); } catch {} }, 60);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function toggleFullscreen() {
+    // Prefer native if supported; else CSS fallback (iOS)
+    if (nativeFsEnabled) {
+      if (isNativeFs()) await exitNativeFs();
+      else await enterNativeFs();
+      return;
+    }
+    if (isCssFs()) cssFsOff();
+    else cssFsOn();
+  }
+
+  // Expose for other modules if needed
+  window.kortToggleFullscreen = toggleFullscreen;
+
+  function HybridFullscreenControl() {}
+
+  HybridFullscreenControl.prototype.onAdd = function () {
+    const wrap = document.createElement("div");
+    wrap.className = "maplibregl-ctrl maplibregl-ctrl-group";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "maplibregl-ctrl-icon maplibregl-ctrl-fullscreen";
+    btn.setAttribute("aria-label", "Fullscreen");
+    btn.title = "Fullscreen";
+
+    const sync = () => {
+      const on = nativeFsEnabled ? isNativeFs() : isCssFs();
+      // MapLibre uses this class to show “shrink” icon state
+      btn.classList.toggle("maplibregl-ctrl-shrink", !!on);
+    };
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFullscreen().then(sync);
+    });
+
+    // Keep button state correct
+    document.addEventListener("fullscreenchange", sync);
+    window.addEventListener("resize", sync);
+
+    wrap.appendChild(btn);
+    this._wrap = wrap;
+    this._btn = btn;
+    this._sync = sync;
+
+    // Initial
+    setTimeout(sync, 0);
+
+    return wrap;
   };
 
-  map.addControl(new maplibregl.FullscreenControl({ container: document.documentElement }), "top-right");
-  // HUD element inside map container
+  HybridFullscreenControl.prototype.onRemove = function () {
+    if (this._wrap && this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);
+    this._wrap = null;
+    this._btn = null;
+    this._sync = null;
+  };
+
+  map.addControl(new HybridFullscreenControl(), "top-right");
+
+  /* =========================
+     HUD + Crosshair elevation
+     ========================= */
+
   const hud = document.createElement("div");
   hud.className = "kort-hud";
   hud.hidden = true;
@@ -168,14 +266,12 @@
     setCrosshair(!crosshairOn);
   }
 
-  // Expose for map controls
   window.kortCrosshair = {
     get: function () { return crosshairOn; },
     set: setCrosshair,
     toggle: toggleCrosshair
   };
 
-  // Shared helpers for menu buttons
   window.kortGoHome = function () {
     const b = window.KORT_ICELAND_BOUNDS;
     if (b && b.length === 2) {
@@ -201,7 +297,7 @@
   map.on("load", () => {
     updateStateLine();
     map.resize();
-    setCrosshair(false); // default OFF
+    setCrosshair(false);
   });
 
   map.on("move", () => {
@@ -233,5 +329,7 @@
 
   if (btnCopy) btnCopy.addEventListener("click", copyState);
 
-  window.addEventListener("resize", () => map.resize());
+  window.addEventListener("resize", () => {
+    try { map.resize(); } catch {}
+  });
 })();
