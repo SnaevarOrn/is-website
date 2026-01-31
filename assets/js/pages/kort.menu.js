@@ -1,5 +1,5 @@
 // assets/js/pages/kort.menu.js
-// Kort — Hamburger panel UI + accordion + mode/style switching + addons
+// Kort — Hamburger panel UI + accordion + mode/style switching + addon toggles
 // Build-safe: no optional chaining
 
 "use strict";
@@ -14,9 +14,6 @@
   const details = Array.prototype.slice.call(panel.querySelectorAll("[data-acc]"));
   const hintMode = document.getElementById("kortHintMode");
   const hintStyle = document.getElementById("kortHintStyle");
-
-  // Optional: small hint area for addons (only if you add #kortHintAddons in HTML)
-  const hintAddons = document.getElementById("kortHintAddons");
 
   function setHintMode(id) {
     if (!hintMode) return;
@@ -39,21 +36,11 @@
     hintStyle.textContent = map[id] || id;
   }
 
-  function setHintAddons(list) {
-    if (!hintAddons) return;
-    if (!list || !list.length) {
-      hintAddons.textContent = "—";
-      return;
-    }
-    hintAddons.textContent = list.join(", ");
-  }
-
   function open() {
     panel.classList.add("is-open");
     panel.setAttribute("aria-hidden", "false");
     backdrop.hidden = false;
 
-    // close all accordions by default for less noise
     for (let i = 0; i < details.length; i++) details[i].open = false;
   }
 
@@ -114,41 +101,27 @@
     return false;
   }
 
-  function applyAddon(id, btn) {
+  function toggleAddon(id) {
+    const ka = window.kortAddons;
+    if (!ka || typeof ka.toggle !== "function") return false;
     try {
-      if (window.kortAddons && typeof window.kortAddons.toggle === "function") {
-        const on = window.kortAddons.toggle(id);
-
-        // If your addon API returns boolean, we can reflect state on the button.
-        if (btn && typeof on === "boolean") {
-          btn.classList.toggle("is-on", on);
-          btn.setAttribute("aria-pressed", on ? "true" : "false");
-        }
-
-        // Update hint if addon API supports listOn()
-        try {
-          if (window.kortAddons && typeof window.kortAddons.listOn === "function") {
-            setHintAddons(window.kortAddons.listOn());
-          }
-        } catch {}
-
-        return true;
-      }
+      ka.toggle(id);
+      return true;
     } catch (e) {
       console.warn(e);
+      return false;
     }
-    return false;
   }
 
-  // Mode / style / addon buttons (event delegation)
+  // Click delegation
   panel.addEventListener("click", (e) => {
     const t = e.target;
 
     const styleBtn = t && t.closest ? t.closest("[data-style]") : null;
     if (styleBtn) {
       const id = styleBtn.getAttribute("data-style");
-      close();           // close immediately for snappy UX
-      applyStyle(id);    // async best-effort
+      close();
+      applyStyle(id);
       return;
     }
 
@@ -163,8 +136,8 @@
     const addonBtn = t && t.closest ? t.closest("[data-addon]") : null;
     if (addonBtn) {
       const id = addonBtn.getAttribute("data-addon");
-      applyAddon(id, addonBtn);
       close();
+      toggleAddon(id);
       return;
     }
 
@@ -193,25 +166,5 @@
     if (ks && typeof ks.getCurrent === "function") setHintStyle(ks.getCurrent());
   } catch {}
 
-  // Init addons hint + button pressed states (best effort)
-  try {
-    if (window.kortAddons) {
-      if (typeof window.kortAddons.listOn === "function") {
-        setHintAddons(window.kortAddons.listOn());
-      }
-      if (typeof window.kortAddons.isOn === "function") {
-        const btns = panel.querySelectorAll("[data-addon]");
-        for (let i = 0; i < btns.length; i++) {
-          const b = btns[i];
-          const id = b.getAttribute("data-addon");
-          const on = !!window.kortAddons.isOn(id);
-          b.classList.toggle("is-on", on);
-          b.setAttribute("aria-pressed", on ? "true" : "false");
-        }
-      }
-    }
-  } catch {}
-
-  // Expose for the ☰ control
   window.kortMenu = { open, close, toggle };
 })();
