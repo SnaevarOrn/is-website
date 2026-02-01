@@ -15,11 +15,9 @@
   const hintMode = document.getElementById("kortHintMode");
   const hintStyle = document.getElementById("kortHintStyle");
 
-  // ⬇️ Stilltu þetta ef overpass module exportar öðru nafni
-  const getOverpass = () => window.kortOverpassAddons; // <-- BREYTTU EF ÞARF
-  const getLive = () => window.kortAddons;
-
-  const LIVE_KEYS = { flights: true, roads: true }; // live addons here
+  // ✅ Correct globals (separate namespaces)
+  const getOverpass = () => window.kortAddonsOverpass;
+  const getLive = () => window.kortAddonsLive;
 
   function setHintMode(id) {
     if (!hintMode) return;
@@ -34,7 +32,7 @@
 
   function setHintStyle(id) {
     if (!hintStyle) return;
-    const map = { street: "Street", topo: "Topo", satellite: "Satellite" };
+    const map = { street: "Street", topo: "Topo", satellite: "Satellite", light: "Light", dark: "Dark" };
     hintStyle.textContent = map[id] || id;
   }
 
@@ -42,8 +40,10 @@
     panel.classList.add("is-open");
     panel.setAttribute("aria-hidden", "false");
     backdrop.hidden = false;
+
     for (let i = 0; i < details.length; i++) details[i].open = false;
-    // sync checkmarks þegar opnað er
+
+    // sync ✓ when opened
     syncAddonChecks();
   }
 
@@ -62,6 +62,7 @@
   backdrop.addEventListener("click", close);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
+  // One accordion open at a time
   for (let i = 0; i < details.length; i++) {
     const d = details[i];
     d.addEventListener("toggle", () => {
@@ -76,11 +77,13 @@
   async function applyStyle(id) {
     const ks = window.kortStyles;
     if (!ks || typeof ks.set !== "function") return false;
+
     try {
       const key = await ks.set(id);
       setHintStyle(key);
-      // styleswap: addons layers/sources detta út -> sync
-      setTimeout(syncAddonChecks, 200);
+
+      // Style swap nukes layers -> give addons a moment then resync UI
+      setTimeout(syncAddonChecks, 250);
       return true;
     } catch (e) {
       console.warn(e);
@@ -99,53 +102,56 @@
     return false;
   }
 
-  function isAddonOn(id) {
-    const live = getLive();
-    const over = getOverpass();
-
-    if (LIVE_KEYS[id]) {
-      return !!(live && typeof live.isOn === "function" && live.isOn(id));
-    }
-    // overpass
-    return !!(over && typeof over.isOn === "function" && over.isOn(id));
-  }
-
-  function setAddonButtonState(btn, on) {
-    // class fyrir CSS ✓ / highlight
+  function setBtnState(btn, on) {
     btn.classList.toggle("is-on", !!on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   }
 
+  function isOverpassOn(id) {
+    const over = getOverpass();
+    if (!over || typeof over.isOn !== "function") return false;
+    try { return !!over.isOn(id); } catch { return false; }
+  }
+
+  function isLiveOn(id) {
+    const live = getLive();
+    if (!live || typeof live.isOn !== "function") return false;
+    try { return !!live.isOn(id); } catch { return false; }
+  }
+
   function syncAddonChecks() {
-    const btns = panel.querySelectorAll("[data-addon]");
-    for (let i = 0; i < btns.length; i++) {
-      const b = btns[i];
+    // Overpass buttons
+    const opBtns = panel.querySelectorAll("[data-addon]");
+    for (let i = 0; i < opBtns.length; i++) {
+      const b = opBtns[i];
       const id = b.getAttribute("data-addon");
       if (!id) continue;
-      setAddonButtonState(b, isAddonOn(id));
+      setBtnState(b, isOverpassOn(id));
+    }
+
+    // Live buttons (optional)
+    const liveBtns = panel.querySelectorAll("[data-live]");
+    for (let i = 0; i < liveBtns.length; i++) {
+      const b = liveBtns[i];
+      const id = b.getAttribute("data-live");
+      if (!id) continue;
+      setBtnState(b, isLiveOn(id));
     }
   }
 
-  function toggleAddon(id) {
-    const live = getLive();
+  function toggleOverpass(id) {
     const over = getOverpass();
-
-    try {
-      if (LIVE_KEYS[id]) {
-        if (!live || typeof live.toggle !== "function") return false;
-        live.toggle(id);
-        return true;
-      }
-      // overpass
-      if (!over || typeof over.toggle !== "function") return false;
-      over.toggle(id);
-      return true;
-    } catch (e) {
-      console.warn(e);
-      return false;
-    }
+    if (!over || typeof over.toggle !== "function") return false;
+    try { over.toggle(id); return true; } catch (e) { console.warn(e); return false; }
   }
 
+  function toggleLive(id) {
+    const live = getLive();
+    if (!live || typeof live.toggle !== "function") return false;
+    try { live.toggle(id); return true; } catch (e) { console.warn(e); return false; }
+  }
+
+  // Click delegation
   panel.addEventListener("click", (e) => {
     const t = e.target;
 
@@ -165,14 +171,25 @@
       return;
     }
 
+    // Overpass addons
     const addonBtn = t && t.closest ? t.closest("[data-addon]") : null;
     if (addonBtn) {
       const id = addonBtn.getAttribute("data-addon");
       if (!id) return;
 
-      // ✅ ekki loka panel — leyfir multi-toggle + sjá checkmark
-      const ok = toggleAddon(id);
-      if (ok) setAddonButtonState(addonBtn, isAddonOn(id));
+      const ok = toggleOverpass(id);
+      if (ok) setBtnState(addonBtn, isOverpassOn(id));
+      return;
+    }
+
+    // Live addons (optional)
+    const liveBtn = t && t.closest ? t.closest("[data-live]") : null;
+    if (liveBtn) {
+      const id = liveBtn.getAttribute("data-live");
+      if (!id) return;
+
+      const ok = toggleLive(id);
+      if (ok) setBtnState(liveBtn, isLiveOn(id));
       return;
     }
 
@@ -201,9 +218,10 @@
     if (ks && typeof ks.getCurrent === "function") setHintStyle(ks.getCurrent());
   } catch {}
 
-  // Expose
+  // Expose for ☰ control
   window.kortMenu = { open, close, toggle };
 
-  // Best-effort: keep checks updated if something changes outside menu
+  // Best-effort initial sync
   setTimeout(syncAddonChecks, 0);
+  setTimeout(syncAddonChecks, 350);
 })();
