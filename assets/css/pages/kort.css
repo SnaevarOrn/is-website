@@ -299,6 +299,40 @@ html[data-theme="light"] .kort-acc-box{
   background: rgba(255,255,255,.06);
   border-color: rgba(255,255,255,.10);
 }
+/* =========================
+   ✅ Panel selection (checkmark for active toggles)
+   Place: right after .kort-panel-item hover rules
+   ========================= */
+
+.kort-panel-item{
+  position: relative;           /* needed for ::after checkmark */
+  padding-right: 38px;          /* room for checkmark */
+}
+
+/* active state via aria-pressed OR class */
+.kort-panel-item[aria-pressed="true"],
+.kort-panel-item.is-on{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.16);
+}
+
+html[data-theme="light"] .kort-panel-item[aria-pressed="true"],
+html[data-theme="light"] .kort-panel-item.is-on{
+  background: rgba(0,0,0,.06);
+  border-color: rgba(0,0,0,.14);
+}
+
+/* the checkmark */
+.kort-panel-item[aria-pressed="true"]::after,
+.kort-panel-item.is-on::after{
+  content: "✓";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 800;
+  opacity: .9;
+}
 
 html[data-theme="light"] .kort-panel-item:hover{
   background: rgba(0,0,0,.04);
