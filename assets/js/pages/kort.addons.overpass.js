@@ -4,12 +4,16 @@
 // Requires:
 // - window.kortMap
 // - /api/overpass (Cloudflare function)
+//
 // Exposes:
-// - window.kortAddons.toggle(id)
-// - window.kortAddons.set(id, on)
-// - window.kortAddons.isOn(id)
-// - window.kortAddons.refresh()
-// - window.kortAddons.list()
+// - window.kortAddonsOverpass.toggle(id)
+// - window.kortAddonsOverpass.set(id, on)
+// - window.kortAddonsOverpass.isOn(id)
+// - window.kortAddonsOverpass.refresh()
+// - window.kortAddonsOverpass.list()
+//
+// Also ensures a shared router exists at:
+// - window.kortAddons  (toggle/set/isOn/refresh/list across ALL addon backends)
 
 "use strict";
 
@@ -27,13 +31,12 @@
     roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" }
   };
 
-  const state = {};
+  const state = {};      // id -> boolean
   const inflight = {};   // id -> AbortController
   const lastKey = {};    // id -> cache key for bbox+zoom
   let moveHandlerAttached = false;
   let refreshTimer = null;
 
-  // Create stable source/layer ids
   function sid(id) { return "op-" + id; }
   function lidPoint(id) { return "op-" + id + "-pt"; }
   function lidLine(id)  { return "op-" + id + "-ln"; }
@@ -47,13 +50,9 @@
     return false;
   }
 
-  function setStatus(text) {
-    const el = document.getElementById("kortState");
-    if (el) el.textContent = text;
-  }
-
   function ensureLayers(id) {
     const sourceId = sid(id);
+
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
         type: "geojson",
@@ -75,14 +74,16 @@
             12, 5,
             15, 7
           ],
+          "circle-color": "#111",
           "circle-stroke-width": 1.2,
+          "circle-stroke-color": "#fff",
           "circle-opacity": 0.85,
           "circle-stroke-opacity": 0.9
         }
       });
     }
 
-    // Lines (roads, piers, etc.)
+    // Lines
     if (!map.getLayer(lidLine(id))) {
       map.addLayer({
         id: lidLine(id),
@@ -91,6 +92,7 @@
         filter: ["==", ["geometry-type"], "LineString"],
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
+          "line-color": "#111",
           "line-width": [
             "interpolate", ["linear"], ["zoom"],
             10, 1.2,
@@ -102,22 +104,26 @@
       });
     }
 
-    // Simple label popup on click (optional, safe)
+    // One-time click popup (safe)
     if (!map.__opClickBound) {
       map.__opClickBound = true;
+
       map.on("click", (e) => {
-        const features = map.queryRenderedFeatures(e.point, {
-          layers: Object.keys(CFG).reduce((acc, k) => {
-            acc.push(lidPoint(k), lidLine(k));
-            return acc;
-          }, [])
-        });
+        const layers = [];
+        const keys = Object.keys(CFG);
+        for (let i = 0; i < keys.length; i++) {
+          layers.push(lidPoint(keys[i]), lidLine(keys[i]));
+        }
+
+        const features = map.queryRenderedFeatures(e.point, { layers });
         if (!features || !features.length) return;
 
         const f = features[0];
         const p = f.properties || {};
         const name = p.name || p.osm_id || "Staður";
-        const kind = p.amenity || p.tourism || p.aeroway || p.highway || p.harbour || p.man_made || p.natural || p.leisure || "";
+        const kind =
+          p.amenity || p.tourism || p.aeroway || p.highway || p.harbour ||
+          p.man_made || p.natural || p.leisure || "";
 
         const html =
           `<div class="kort-popup">` +
@@ -139,17 +145,15 @@
   }
 
   function removeLayers(id) {
-    // Keep source, remove layers so queryRenderedFeatures list stays ok? — we remove both layers and source.
     const lp = lidPoint(id);
     const ll = lidLine(id);
-    if (map.getLayer(lp)) map.removeLayer(lp);
-    if (map.getLayer(ll)) map.removeLayer(ll);
+    try { if (map.getLayer(lp)) map.removeLayer(lp); } catch {}
+    try { if (map.getLayer(ll)) map.removeLayer(ll); } catch {}
     const s = sid(id);
-    if (map.getSource(s)) map.removeSource(s);
+    try { if (map.getSource(s)) map.removeSource(s); } catch {}
   }
 
   function bboxKey(bounds, z) {
-    // Reduce churn: round bounds to 3 decimals (~100m-200m), keep z int
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
     const minLng = round(sw.lng, 3);
@@ -177,14 +181,15 @@
 
     const bounds = map.getBounds();
     const key = bboxKey(bounds, z);
-    if (lastKey[id] === key) return; // no change
+    if (lastKey[id] === key) return;
     lastKey[id] = key;
 
-    // Abort previous request
+    // Abort previous
     if (inflight[id]) {
       try { inflight[id].abort(); } catch {}
       inflight[id] = null;
     }
+
     const ac = new AbortController();
     inflight[id] = ac;
 
@@ -209,7 +214,7 @@
       const src = map.getSource(sid(id));
       if (src && src.setData) src.setData(j.geojson);
     } catch {
-      // silent fail
+      // silent
     } finally {
       if (inflight[id] === ac) inflight[id] = null;
     }
@@ -234,9 +239,9 @@
   function attachMoveHandler() {
     if (moveHandlerAttached) return;
     moveHandlerAttached = true;
+
     map.on("moveend", refreshSoon);
 
-    // Base style swap nukes layers; re-add if toggled on
     map.on("styledata", () => {
       const ids = list();
       for (let i = 0; i < ids.length; i++) {
@@ -264,17 +269,14 @@
     if (next) {
       try { ensureLayers(id); } catch {}
       attachMoveHandler();
-      setStatus("Kveikt: " + CFG[id].label);
       refreshSoon();
     } else {
-      // stop inflight
       if (inflight[id]) {
         try { inflight[id].abort(); } catch {}
         inflight[id] = null;
       }
       lastKey[id] = "";
       try { removeLayers(id); } catch {}
-      setStatus("Slökkt: " + CFG[id].label);
       detachMoveHandlerIfNone();
     }
 
@@ -300,5 +302,99 @@
     return Math.round(n * p) / p;
   }
 
-  window.kortAddons = { toggle, set, isOn, refresh, list };
+  // ✅ Export Overpass backend under its own name
+  window.kortAddonsOverpass = { toggle, set, isOn, refresh, list };
+
+  /* =========================
+     ✅ Shared router: window.kortAddons
+     - merges live + overpass so menu can call ONE thing
+     - avoids "overwriting" when multiple addon modules load
+     ========================= */
+
+  function ensureRouter() {
+    if (window.kortAddons && window.kortAddons.__isRouter) return;
+
+    window.kortAddons = {
+      __isRouter: true,
+
+      toggle: function (id) {
+        const live = window.kortAddonsLive;
+        const over = window.kortAddonsOverpass;
+
+        if (live && typeof live.list === "function") {
+          const keys = live.list();
+          for (let i = 0; i < keys.length; i++) if (keys[i] === id) return live.toggle(id);
+        }
+        if (over && typeof over.list === "function") {
+          const keys = over.list();
+          for (let i = 0; i < keys.length; i++) if (keys[i] === id) return over.toggle(id);
+        }
+        return false;
+      },
+
+      set: function (id, on) {
+        const live = window.kortAddonsLive;
+        const over = window.kortAddonsOverpass;
+
+        if (live && typeof live.list === "function") {
+          const keys = live.list();
+          for (let i = 0; i < keys.length; i++) if (keys[i] === id) return live.set(id, on);
+        }
+        if (over && typeof over.list === "function") {
+          const keys = over.list();
+          for (let i = 0; i < keys.length; i++) if (keys[i] === id) return over.set(id, on);
+        }
+        return false;
+      },
+
+      isOn: function (id) {
+        const live = window.kortAddonsLive;
+        const over = window.kortAddonsOverpass;
+
+        if (live && typeof live.isOn === "function") {
+          if (typeof live.list === "function") {
+            const keys = live.list();
+            for (let i = 0; i < keys.length; i++) if (keys[i] === id) return !!live.isOn(id);
+          }
+        }
+
+        if (over && typeof over.isOn === "function") {
+          if (typeof over.list === "function") {
+            const keys = over.list();
+            for (let i = 0; i < keys.length; i++) if (keys[i] === id) return !!over.isOn(id);
+          }
+        }
+
+        return false;
+      },
+
+      refresh: function () {
+        const live = window.kortAddonsLive;
+        const over = window.kortAddonsOverpass;
+        try { if (live && typeof live.refresh === "function") live.refresh(); } catch {}
+        try { if (over && typeof over.refresh === "function") over.refresh(); } catch {}
+      },
+
+      list: function () {
+        const out = [];
+        const pushUnique = (arr) => {
+          for (let i = 0; i < arr.length; i++) {
+            const v = arr[i];
+            let exists = false;
+            for (let j = 0; j < out.length; j++) if (out[j] === v) { exists = true; break; }
+            if (!exists) out.push(v);
+          }
+        };
+
+        const live = window.kortAddonsLive;
+        const over = window.kortAddonsOverpass;
+
+        if (live && typeof live.list === "function") pushUnique(live.list());
+        if (over && typeof over.list === "function") pushUnique(over.list());
+        return out;
+      }
+    };
+  }
+
+  ensureRouter();
 })();
