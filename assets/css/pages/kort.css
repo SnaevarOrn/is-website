@@ -747,3 +747,63 @@ html.kort-fs .kort-map{
 .kort-map .kort-ctrl-stack .kort-ctrl-btn{
   color: #111 !important;
 }
+/* =========================
+   Addon checkmarks (panel)
+   - Works with aria-pressed="true" OR .is-on
+   ========================= */
+
+.kort-panel-item[data-addon]{
+  position: relative;
+  padding-left: 34px; /* pláss fyrir ✓ */
+}
+
+/* checkmark */
+.kort-panel-item[data-addon]::before{
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.04);
+}
+
+/* ON state: show ✓ + aðeins meira contrast */
+.kort-panel-item[data-addon][aria-pressed="true"],
+.kort-panel-item[data-addon].is-on{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.14);
+}
+
+.kort-panel-item[data-addon][aria-pressed="true"]::before,
+.kort-panel-item[data-addon].is-on::before{
+  content: "✓";
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 13px;
+  color: rgba(255,255,255,.92);
+  border-color: rgba(255,255,255,.30);
+  background: rgba(255,255,255,.10);
+}
+
+html[data-theme="light"] .kort-panel-item[data-addon]::before{
+  border-color: rgba(0,0,0,.16);
+  background: rgba(0,0,0,.03);
+}
+
+html[data-theme="light"] .kort-panel-item[data-addon][aria-pressed="true"],
+html[data-theme="light"] .kort-panel-item[data-addon].is-on{
+  background: rgba(0,0,0,.05);
+  border-color: rgba(0,0,0,.12);
+}
+
+html[data-theme="light"] .kort-panel-item[data-addon][aria-pressed="true"]::before,
+html[data-theme="light"] .kort-panel-item[data-addon].is-on::before{
+  color: rgba(0,0,0,.92);
+  border-color: rgba(0,0,0,.22);
+  background: rgba(0,0,0,.06);
+}
