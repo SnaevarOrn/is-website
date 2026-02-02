@@ -87,24 +87,23 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   // Nota JSON svo við fáum alltaf structured svar.
   // Ath: Horizons setur ephemeris-útgáfuna í "result" streng.
   const params = new URLSearchParams({
-    format: "json",
-    MAKE_EPHEM: "YES",
-    TABLE_TYPE: "VEC",
-    VEC_TABLE: "1",
-    CSV_FORMAT: "YES",
-    VEC_LABELS: "NO",
-    OUT_UNITS: "AU-D",
-    REF_PLANE: "ECLIPTIC",
-    REF_SYSTEM: "ICRF",
-    OBJ_DATA: "NO",
+  format: "json",
+  MAKE_EPHEM: "YES",
+  TABLE_TYPE: "VEC",
+  VEC_TABLE: "1",
+  CSV_FORMAT: "YES",
+  VEC_LABELS: "NO",
+  OUT_UNITS: "AU-D",
+  REF_PLANE: "ECLIPTIC",
+  REF_SYSTEM: "ICRF",
+  OBJ_DATA: "NO",
 
-    // Horizons vill venjulega gildin með apostrophe:
-    CENTER: `\'${center}\'`,
-    COMMAND: `\'${command}\'`,
-    START_TIME: `\'${start}\'`,
-    STOP_TIME: `\'${stop}\'`,
-    STEP_SIZE: `\'${step}\'`,
-  });
+  CENTER: `'${center}'`,
+  COMMAND: `'${command}'`,
+  START_TIME: `'${start} 00:00'`,
+  STOP_TIME: `'${stop} 00:00'`,
+  STEP_SIZE: `'${step}'`,
+});
 
   const u = `${base}?${params.toString()}`;
   const resp = await fetch(u, { headers: { "User-Agent": "is.is-solar/1.0" } });
