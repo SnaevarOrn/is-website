@@ -1,9 +1,9 @@
 # Redirect & rewrite rules for ís.is (Cloudflare Pages)
 # IMPORTANT:
-# - Pages Functions are served automatically under /api/*
-# - SPA fallback MUST be last
+# - Pages Functions live under /api/*
+# - API rules MUST come before SPA fallback
 
-/functions/*   /functions/:splat   200
+/api/*         /api/:splat         200
 
 /dagatal       /dagatal/index.html 200
 /dagatal/*     /dagatal/index.html 200
