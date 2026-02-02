@@ -4,22 +4,22 @@
 
   const SOURCES = [
     { id: "ruv",       label: "RÚV",             domain: "ruv.is" },
-    { id: "mbl",       label: "Morgunblaðið",          domain: "mbl.is" },
+    { id: "mbl",       label: "Morgunblaðið",    domain: "mbl.is" },
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
-    { id: "heimildin",   label: "Heimildin",       domain: "heimildin.is" },
-    { id: "nutiminn", label: "Nútíminn",       domain: "nutiminn.is" },
-    { id: "feykir", label: "Feykir",       domain: "feykir.is" },
-    { id: "midjan", label: "Miðjan",       domain: "midjan.is" },
-    { id: "eyjafrettir", label: "Eyjafréttir",       domain: "eyjafrettir.is" },
-    { id: "fjardarfrettir", label: "Fjarðarfréttir",       domain: "fjardarfrettir.is" },
+    { id: "heimildin", label: "Heimildin",       domain: "heimildin.is" },
+    { id: "nutiminn",  label: "Nútíminn",        domain: "nutiminn.is" },
+    { id: "feykir",    label: "Feykir",          domain: "feykir.is" },
+    { id: "midjan",    label: "Miðjan",          domain: "midjan.is" },
+    { id: "eyjafrettir", label: "Eyjafréttir",   domain: "eyjafrettir.is" },
+    { id: "fjardarfrettir", label: "Fjarðarfréttir", domain: "fjardarfrettir.is" },
     { id: "frettin",   label: "Fréttin",         domain: "frettin.is" },
     { id: "vb",        label: "Viðskiptablaðið", domain: "vb.is" },
-    { id: "bb",        label: "Bæjarins Besta", domain: "bb.is" },
-    { id: "bbl",        label: "Bændablaðið", domain: "bbl.is" },
-    { id: "byggingar",        label: "Byggingar", domain: "byggingar.is" },
-    { id: "fiskifrettir", label: "Fiskifréttir",   domain: "fiskifrettir.is" },
-    { id: "frjalsverslun", label: "Frjáls verslun",  domain: "frjalsverslun.is" },
+    { id: "bb",        label: "Bæjarins Besta",  domain: "bb.is" },
+    { id: "bbl",       label: "Bændablaðið",     domain: "bbl.is" },
+    { id: "byggingar", label: "Byggingar",       domain: "byggingar.is" },
+    { id: "fiskifrettir", label: "Fiskifréttir", domain: "fiskifrettir.is" },
+    { id: "frjalsverslun", label: "Frjáls verslun", domain: "frjalsverslun.is" },
     { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
   ];
 
@@ -34,6 +34,13 @@
   ];
 
   const STORAGE_KEY = "is_news_prefs_v1";
+
+  // Progressive loading config
+  const CORE_SOURCES = ["ruv", "mbl", "visir", "dv"];
+
+  // Tweak limits if you want:
+  const LIMIT_CORE = 50;
+  const LIMIT_REST = 60;
 
   // Read/visited tracking
   const READ_KEY = "is_news_read_v1";
@@ -83,6 +90,11 @@
     errorState: $("#errorState"),
     errorMsg: $("#errorMsg"),
     btnRetry: $("#btnRetry"),
+
+    // Loading bar
+    loadProgress: $("#loadProgress"),
+    loadProgressBar: $("#loadProgressBar"),
+    loadProgressText: $("#loadProgressText"),
 
     // Reading view modal
     readingDialog: $("#readingDialog"),
@@ -147,6 +159,21 @@
     els.statusSpinner.hidden = !on;
   }
 
+  function setProgress(pct, msg) {
+    const v = Math.max(0, Math.min(100, Math.round(pct)));
+    if (els.loadProgress) els.loadProgress.hidden = false;
+    if (els.loadProgressText) els.loadProgressText.hidden = false;
+    if (els.loadProgressBar) els.loadProgressBar.style.width = v + "%";
+    if (els.loadProgressText) els.loadProgressText.textContent = v + "%";
+    if (msg) setStatus(msg);
+  }
+
+  function hideProgress() {
+    if (els.loadProgress) els.loadProgress.hidden = true;
+    if (els.loadProgressText) els.loadProgressText.hidden = true;
+    if (els.loadProgressBar) els.loadProgressBar.style.width = "0%";
+  }
+
   function setLastUpdated() {
     const d = new Date();
     const hh = String(d.getHours()).padStart(2, "0");
@@ -185,17 +212,17 @@
   }
 
   function setHeaderTabsActive() {
-  const path = (location.pathname || "/").toLowerCase();
-  const isWorld = path.startsWith("/erlent");
-  const current = isWorld ? "world" : "iceland";
+    const path = (location.pathname || "/").toLowerCase();
+    const isWorld = path.startsWith("/erlent");
+    const current = isWorld ? "world" : "iceland";
 
-  document.querySelectorAll(".ph-tab[data-tab]").forEach(a => {
-    const on = a.getAttribute("data-tab") === current;
-    a.classList.toggle("is-active", on);
-    if (on) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
-  });
-}
+    document.querySelectorAll(".ph-tab[data-tab]").forEach(a => {
+      const on = a.getAttribute("data-tab") === current;
+      a.classList.toggle("is-active", on);
+      if (on) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+  }
 
   function escapeHtml(s) {
     return String(s)
@@ -414,15 +441,37 @@
     return Object.entries(mapObj).filter(([, v]) => !!v).map(([k]) => k);
   }
 
-  async function fetchNewsFromBackend(prefs) {
-    const sources = selectedIds(prefs.sources);
+  function mergeItemsUnique(base, extra) {
+    const out = [];
+    const seen = new Set();
+
+    for (const it of (base || [])) {
+      if (!it?.url) continue;
+      if (seen.has(it.url)) continue;
+      seen.add(it.url);
+      out.push(it);
+    }
+
+    for (const it of (extra || [])) {
+      if (!it?.url) continue;
+      if (seen.has(it.url)) continue;
+      seen.add(it.url);
+      out.push(it);
+    }
+
+    out.sort((a, b) => Date.parse(b.publishedAt || 0) - Date.parse(a.publishedAt || 0));
+    return out;
+  }
+
+  async function fetchNewsFromBackend(prefs, sourceIdsOverride, limitOverride) {
+    const sources = Array.isArray(sourceIdsOverride) ? sourceIdsOverride : selectedIds(prefs.sources);
     const cats = selectedIds(prefs.categories);
     if (sources.length === 0 || cats.length === 0) return { items: [] };
 
     const qs = new URLSearchParams();
     qs.set("sources", sources.join(","));
     qs.set("cats", cats.join(","));
-    qs.set("limit", "60");
+    qs.set("limit", String(limitOverride || 60));
 
     const res = await fetch(`/api/news?${qs.toString()}`, {
       headers: { "Accept": "application/json" }
@@ -432,6 +481,7 @@
   }
 
   let isRefreshing = false;
+
   async function refresh() {
     if (isRefreshing) return;
     isRefreshing = true;
@@ -439,21 +489,82 @@
     const prefs = loadPrefs();
     showError(false);
     showEmpty(false);
-    setStatus("Sæki fréttir…");
+
     setLoading(true);
+    // progressbar sýnir framvindu, spinner sýnir að “eitthvað er í gangi”
+    hideProgress();
+    setStatus("Sæki fréttir…");
+
+    const selected = selectedIds(prefs.sources);
+    const selectedCats = selectedIds(prefs.categories);
+
+    // Engar stillingar => sýna empty strax
+    if (selected.length === 0 || selectedCats.length === 0) {
+      renderNews([]);
+      showEmpty(true);
+      setStatus("Veldu miðla og/eða flokka.");
+      setLoading(false);
+      hideProgress();
+      isRefreshing = false;
+      ptrDone();
+      return;
+    }
+
+    const selectedSet = new Set(selected);
+    const coreSources = CORE_SOURCES.filter(id => selectedSet.has(id));
+    const restSources = selected.filter(id => !CORE_SOURCES.includes(id));
+
+    const total = selected.length || 1;
+    const coreCount = coreSources.length;
+    const restCount = restSources.length;
+
+    let combined = [];
 
     try {
-      const data = await fetchNewsFromBackend(prefs);
-      const items = Array.isArray(data?.items) ? data.items : [];
-      renderNews(items);
-      setLastUpdated();
+      // 1) Core first (ef eitthvað af þeim er valið)
+      if (coreCount > 0) {
+        setProgress((coreCount / total) * 100, `Sæki helstu miðla… (${coreCount}/${total})`);
 
-      if (items.length === 0) {
+        const coreData = await fetchNewsFromBackend(prefs, coreSources, LIMIT_CORE);
+        const coreItems = Array.isArray(coreData?.items) ? coreData.items : [];
+
+        combined = mergeItemsUnique([], coreItems);
+        renderNews(combined);
+        setLastUpdated();
+
+        if (combined.length) setStatus(`Sýni ${combined.length} fréttir (helstu miðlar).`);
+        else setStatus("Engar fréttir enn — prófa fleiri miðla…");
+      } else {
+        // Enginn core miðill valinn => byrja strax á rest (sem er þá “allt”)
+        setProgress(0, `Sæki miðla… (0/${total})`);
+      }
+
+      // 2) Rest afterwards
+      if (restCount > 0) {
+        // hér er % “fjöldi miðla sem eru að verða sóttir” — við höfum nú þegar lokið core requestinu
+        const basePct = (coreCount / total) * 100;
+        setProgress(basePct, `Sæki fleiri miðla… (${coreCount}/${total})`);
+
+        const restData = await fetchNewsFromBackend(prefs, restSources, LIMIT_REST);
+        const restItems = Array.isArray(restData?.items) ? restData.items : [];
+
+        combined = mergeItemsUnique(combined, restItems);
+        renderNews(combined);
+        setLastUpdated();
+
+        setProgress(100, `Sýni ${combined.length} fréttir.`);
+      } else {
+        // bara core valið
+        setProgress(100, combined.length ? `Sýni ${combined.length} fréttir.` : "Ekkert fannst.");
+      }
+
+      if (combined.length === 0) {
         showEmpty(true);
         setStatus("Ekkert fannst með þessum stillingum.");
       } else {
-        setStatus(`Sýni ${items.length} fréttir.`);
+        showEmpty(false);
       }
+
     } catch (err) {
       console.error("[frettir] refresh error", err);
       showError(true, "Gat ekki sótt fréttir.");
@@ -461,6 +572,8 @@
     } finally {
       isRefreshing = false;
       setLoading(false);
+      // Láta progress ná 100% augnablik, svo fela
+      setTimeout(hideProgress, 700);
       ptrDone();
     }
   }
@@ -562,7 +675,6 @@
   function escSelector(s) {
     const val = String(s || "");
     if (window.CSS && typeof CSS.escape === "function") return CSS.escape(val);
-    // minimal fallback: escape quotes and backslashes for attribute selector
     return val.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   }
 
@@ -808,15 +920,15 @@
   }
 
   function init() {
-  setTheme(getTheme());
-  setHeaderTabsActive();   // ✅ virkir réttan tab
+    setTheme(getTheme());
+    setHeaderTabsActive();
 
-  const prefs = loadPrefs();
-  renderSettings(prefs);
-  wire();
-  wirePullToRefresh();
-  refresh();
-}
+    const prefs = loadPrefs();
+    renderSettings(prefs);
+    wire();
+    wirePullToRefresh();
+    refresh();
+  }
 
   init();
 })();
