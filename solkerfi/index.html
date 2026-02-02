@@ -279,37 +279,63 @@
   // Default window: 365 days from today (UTC-ish). You can change start=YYYY-MM-DD.
   const todayISO = new Date().toISOString().slice(0,10);
 
-  async function loadAll() {
-    el.status.textContent = "sæki ephemeris…";
-    const bodies = PLANETS.map(p=>p.id).join(",");
-    const url1 = `/api/ephemeris?start=${encodeURIComponent(todayISO)}&days=365&step=1d&bodies=${encodeURIComponent(bodies)}`;
-    const url2 = `/api/moon?start=${encodeURIComponent(todayISO)}&days=365&step=1d`;
+  const todayISO = new Date().toISOString().slice(0,10);
 
-    const [a,b] = await Promise.all([
-      fetch(url1).then(r=>r.json()),
-      fetch(url2).then(r=>r.json()),
-    ]);
+async function fetchJSON(url){
+  const r = await fetch(url, { headers: { "accept": "application/json" } });
+  const ct = (r.headers.get("content-type") || "").toLowerCase();
+  const txt = await r.text();
 
-    if (!a.ok) throw new Error(a.error || "ephemeris failed");
-    if (!b.ok) throw new Error(b.error || "moon failed");
-
-    data = a;
-    moon = b;
-
-    // find max radius for scaling
-    maxR = 0.1;
-    for (const pid of Object.keys(data.series)) {
-      for (const pt of data.series[pid]) {
-        const r = Math.hypot(pt.x, pt.y);
-        if (r > maxR) maxR = r;
-      }
-    }
-
-    el.status.textContent = "ok ✅";
-    el.timelineInfo.textContent = `${data.start} → ${data.end} (N=${data.count})`;
-    el.scrub.max = String(data.count - 1);
-    simDay = 0;
+  if (!ct.includes("application/json")) {
+    throw new Error(
+      `API skilaði ekki JSON (${r.status}). Fekk: ${ct || "unknown"}\n` +
+      `URL: ${url}\n` +
+      `Byrjun: ${txt.slice(0, 160).replace(/\s+/g," ")}…`
+    );
   }
+
+  let j;
+  try { j = JSON.parse(txt); }
+  catch { throw new Error(`Ógilt JSON frá ${url}\nByrjun: ${txt.slice(0, 160)}…`); }
+
+  if (!r.ok || j?.ok === false) {
+    throw new Error(j?.error ? `API villa: ${j.error}` : `HTTP ${r.status}`);
+  }
+  return j;
+}
+
+async function loadAll() {
+  el.status.textContent = "sæki ephemeris…";
+
+  if (!location.origin || location.origin === "null") {
+    throw new Error("Opnað sem file://. Notaðu vefslóð (t.d. https://ís.is/solkerfi/) eða keyrðu local server, annars virkar /api ekki.");
+  }
+
+  const bodies = PLANETS.map(p=>p.id).join(",");
+  const API = `${location.origin}/api`;
+
+  const url1 = `${API}/ephemeris?start=${encodeURIComponent(todayISO)}&days=365&step=1d&bodies=${encodeURIComponent(bodies)}`;
+  const url2 = `${API}/moon?start=${encodeURIComponent(todayISO)}&days=365&step=1d`;
+
+  const [a, b] = await Promise.all([ fetchJSON(url1), fetchJSON(url2) ]);
+
+  data = a;
+  moon = b;
+
+  // find max radius for scaling (guard: missing series)
+  maxR = 0.1;
+  for (const pid of Object.keys(data.series || {})) {
+    for (const pt of (data.series[pid] || [])) {
+      const r = Math.hypot(pt.x, pt.y);
+      if (r > maxR) maxR = r;
+    }
+  }
+
+  el.status.textContent = "ok ✅";
+  el.timelineInfo.textContent = `${data.start} → ${data.end} (N=${data.count})`;
+  el.scrub.max = String((data.count || 365) - 1);
+  simDay = 0;
+}
 
   // ---- drawing ----
   function worldToScreen(p, center, scale){
