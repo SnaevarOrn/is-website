@@ -88,7 +88,7 @@
         source: "addon-weather",
         paint: { "circle-radius": 0 }
   })
-}
+},
 
   };
 
