@@ -9,12 +9,14 @@
     .wrap{max-width:900px; margin:0 auto; padding:18px; display:grid; gap:12px;}
     .card{border:1px solid rgba(255,255,255,.14); border-radius:16px; overflow:hidden;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));}
-    .hd{padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.14); color:rgba(255,255,255,.75); font-size:12px; letter-spacing:.35px; text-transform:uppercase; display:flex; justify-content:space-between; gap:10px;}
+    .hd{padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.14); color:rgba(255,255,255,.75);
+      font-size:12px; letter-spacing:.35px; text-transform:uppercase; display:flex; justify-content:space-between; gap:10px;}
     .bd{padding:14px; display:grid; gap:10px;}
     canvas{width:100%; height:520px; display:block; border-radius:14px; border:1px solid rgba(255,255,255,.14);
       background:radial-gradient(700px 340px at 50% 45%, rgba(255,255,255,.06), transparent 60%), rgba(0,0,0,.18);}
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
-    .chip{border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); border-radius:999px; padding:6px 10px; font-size:12px; color:rgba(255,255,255,.75);}
+    .chip{border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); border-radius:999px;
+      padding:6px 10px; font-size:12px; color:rgba(255,255,255,.75);}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     .err{display:none; border:1px solid rgba(251,113,133,.35); background:rgba(251,113,133,.08); border-radius:14px; padding:12px;}
     .err pre{white-space:pre-wrap; word-break:break-word; font-size:12px; margin:8px 0 0;}
@@ -32,15 +34,16 @@
 
       <div class="row">
         <span class="chip">Dagur: <b id="day">—</b></span>
-        <span class="chip">Moon (geo AU): <span class="mono" id="moonvec">—</span></span>
-        <span class="chip">Illum: <b id="illum">—</b></span>
+        <span class="chip">Moon geo (AU): <span class="mono" id="moonvec">—</span></span>
+        <span class="chip">d(E→M): <b id="dist">—</b></span>
+        <span class="chip">Illum: <b id="illum">—</b> <span id="phase" style="opacity:.85"></span></span>
       </div>
 
       <canvas id="cv"></canvas>
 
       <div class="chip">
         Við lesum: <span class="mono">EarthHelio(x,y)</span>, <span class="mono">MarsHelio(x,y)</span>, <span class="mono">MoonGeo(x,y)</span>.
-        Síðan: <span class="mono">MoonHelio = EarthHelio + MoonGeo</span>.
+        Síðan: <span class="mono">MoonHelio = EarthHelio + MoonGeo</span>. (MoonGeo er örlítið — þannig að við “stækkuðum” það í teikningu.)
       </div>
     </div>
   </div>
@@ -57,7 +60,9 @@
     errtxt: document.getElementById("errtxt"),
     day: document.getElementById("day"),
     moonvec: document.getElementById("moonvec"),
+    dist: document.getElementById("dist"),
     illum: document.getElementById("illum"),
+    phase: document.getElementById("phase"),
   };
 
   function resize(){
@@ -71,11 +76,20 @@
 
   const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
   const vAdd = (a,b)=>({x:a.x+b.x, y:a.y+b.y});
+  const vSub = (a,b)=>({x:a.x-b.x, y:a.y-b.y});
   const vMul = (a,s)=>({x:a.x*s, y:a.y*s});
   const vLen = (a)=>Math.hypot(a.x,a.y);
   const vNorm = (a)=>{ const L=vLen(a)||1; return {x:a.x/L,y:a.y/L}; };
   const vDot = (a,b)=>a.x*b.x + a.y*b.y;
   const vAngle = (a,b)=>Math.acos(clamp(vDot(vNorm(a),vNorm(b)),-1,1));
+
+  function phaseName(illum){
+    if (illum < 0.05) return "— Nýtt";
+    if (illum < 0.45) return "— Sigð";
+    if (illum < 0.55) return "— Kvartil";
+    if (illum < 0.95) return "— Gibbous";
+    return "— Fullt";
+  }
 
   async function fetchJSON(url){
     const r = await fetch(url, { headers:{accept:"application/json"}, cache:"no-store" });
@@ -88,21 +102,21 @@
   }
 
   function drawSun(center){
-    const glow = ctx.createRadialGradient(center.x,center.y,0, center.x,center.y,110);
+    const glow = ctx.createRadialGradient(center.x,center.y,0, center.x,center.y,120);
     glow.addColorStop(0,"rgba(251,191,36,0.35)");
     glow.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(center.x,center.y,100,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(center.x,center.y,110,0,Math.PI*2); ctx.fill();
 
     ctx.fillStyle = "rgba(251,191,36,0.9)";
     ctx.beginPath(); ctx.arc(center.x,center.y,10,0,Math.PI*2); ctx.fill();
   }
 
-  function drawBody(p, center, scale, r, fill, label){
+  function drawDot(p, center, scale, r, fill, label){
     const s = { x:center.x + p.x*scale, y:center.y + p.y*scale };
     ctx.fillStyle = fill;
     ctx.beginPath(); ctx.arc(s.x,s.y,r,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.strokeStyle = "rgba(255,255,255,0.22)";
     ctx.stroke();
 
     if (label){
@@ -115,7 +129,7 @@
 
   function drawMoonDisk(moonS, lightDir, illum){
     const L = vNorm(lightDir);
-    const r = 6;
+    const r = 7;
 
     ctx.save();
     ctx.beginPath(); ctx.arc(moonS.x, moonS.y, r, 0, Math.PI*2);
@@ -127,8 +141,8 @@
     ctx.fillStyle=g;
     ctx.fillRect(moonS.x-r, moonS.y-r, r*2, r*2);
 
-    const phase = 2*illum - 1;      // -1..+1
-    const offset = -phase * r;      // shift shadow
+    const phase = 2*illum - 1;    // -1..+1
+    const offset = -phase * r;
     ctx.fillStyle="rgba(0,0,0,0.60)";
     ctx.beginPath();
     ctx.arc(moonS.x + L.x*offset, moonS.y + L.y*offset, r, 0, Math.PI*2);
@@ -139,18 +153,65 @@
     ctx.beginPath(); ctx.arc(moonS.x, moonS.y, r, 0, Math.PI*2); ctx.stroke();
   }
 
+  function drawEarthMoonInset(earthS, moonS_screenScaled){
+    // litla “zoom bungu” neðst til vinstri
+    const pad = 14;
+    const bx = pad, by = cv.getBoundingClientRect().height - 140 - pad;
+    const bw = 220, bh = 140;
+    const rx = 14;
+
+    // box
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.strokeStyle = "rgba(255,255,255,0.14)";
+    ctx.lineWidth = 1;
+    roundRect(bx,by,bw,bh,rx); ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = "rgba(234,240,255,0.65)";
+    ctx.font = "600 11px system-ui";
+    ctx.fillText("Earth–Moon (skalað upp)", bx+12, by+18);
+
+    // local coords inside box
+    const cx = bx + bw*0.50;
+    const cy = by + bh*0.62;
+
+    // earth fixed at center in inset
+    ctx.fillStyle = "rgba(34,211,238,0.95)";
+    ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill();
+
+    // draw moon relative vector (already screen-scaled vector around earth)
+    const dx = moonS_screenScaled.x - earthS.x;
+    const dy = moonS_screenScaled.y - earthS.y;
+
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+dx, cy+dy); ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath(); ctx.arc(cx+dx, cy+dy, 4, 0, Math.PI*2); ctx.fill();
+  }
+
+  function roundRect(x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y, x+w,y+h, rr);
+    ctx.arcTo(x+w,y+h, x,y+h, rr);
+    ctx.arcTo(x,y+h, x,y, rr);
+    ctx.arcTo(x,y, x+w,y, rr);
+    ctx.closePath();
+  }
+
   async function main(){
     try{
       el.status.textContent = "sæki…";
       el.err.style.display = "none";
 
-      const start = new Date().toISOString().slice(0,10);
+      // þú getur alveg hard-codað start ef þú vilt stöðugt demo:
+      const start = "2026-02-02";
       const epUrl = `/api/ephemeris?start=${encodeURIComponent(start)}&days=1&step=1d&bodies=earth,mars`;
       const moUrl = `/api/moon?start=${encodeURIComponent(start)}&days=1&step=1d`;
 
       const [ep, mo] = await Promise.all([ fetchJSON(epUrl), fetchJSON(moUrl) ]);
 
-      // N = min(counts/dates) — tryggir að við lesum ekki út fyrir
       const N = Math.min(ep.count||0, (ep.dates||[]).length, mo.count||0);
       if (N < 1) throw new Error(`Of lítil gögn: ep.count=${ep.count}, moon.count=${mo.count}`);
 
@@ -161,37 +222,58 @@
 
       el.day.textContent = ep.dates[0] || ep.start || start;
       el.moonvec.textContent = `${moonGeo.x.toFixed(6)}, ${moonGeo.y.toFixed(6)}`;
+      el.dist.textContent = `${vLen(moonGeo).toFixed(6)} AU`;
 
-      // illumination (0..1): angle at Moon between (moon->sun) and (moon->earth)
+      // illumination (0..1)
       const moonToSun   = vMul(moonHelio, -1); // Sun at origin
       const moonToEarth = vMul(moonGeo, -1);   // Earth relative to Moon
       const alpha = vAngle(moonToSun, moonToEarth);
       const illum = (1 - Math.cos(alpha)) / 2;
-      el.illum.textContent = `${(illum*100).toFixed(0)}%`;
 
-      // Draw
+      el.illum.textContent = `${(illum*100).toFixed(1)}%`;
+      el.phase.textContent = phaseName(illum);
+
+      // --- draw ---
       const w = cv.getBoundingClientRect().width;
       const h = cv.getBoundingClientRect().height;
       ctx.clearRect(0,0,w,h);
+
       const center = { x:w*0.52, y:h*0.52 };
 
-      // scale: show Mars if present
+      // base scale: show Mars nicely
       const maxR = Math.max(vLen(earth), vLen(mars), vLen(moonHelio));
       const scale = (Math.min(w,h)*0.42) / (maxR*1.05);
 
       drawSun(center);
 
-      const earthS = drawBody(earth, center, scale, 5, "rgba(34,211,238,0.9)", "Jörð");
-      drawBody(mars,  center, scale, 5, "rgba(74,222,128,0.9)", "Mars");
+      const earthS = drawDot(earth, center, scale, 5, "rgba(34,211,238,0.9)", "Jörð");
+      drawDot(mars,  center, scale, 5, "rgba(74,222,128,0.9)", "Mars");
 
-      // line Earth->Moon
-      const moonS = { x:center.x + moonHelio.x*scale, y:center.y + moonHelio.y*scale };
-      ctx.strokeStyle="rgba(255,255,255,0.12)";
-      ctx.beginPath(); ctx.moveTo(earthS.x,earthS.y); ctx.lineTo(moonS.x,moonS.y); ctx.stroke();
+      // Moon on heliocentric plot (it will be almost on top of Earth at this scale)
+      // So: we also draw a “screen-scaled moon offset” so it is always visible.
+      const moonS_true = { x:center.x + moonHelio.x*scale, y:center.y + moonHelio.y*scale };
 
-      // light direction: from Moon to Sun on screen
-      const lightDir = { x:center.x - moonS.x, y:center.y - moonS.y };
-      drawMoonDisk(moonS, lightDir, illum);
+      // “Make moon visible”: exaggerate Earth→Moon vector on screen
+      const exaggeration = 9000; // purely visual (MoonGeo ~ 0.002 AU)
+      const moonS_vis = {
+        x: earthS.x + moonGeo.x*scale*exaggeration,
+        y: earthS.y + moonGeo.y*scale*exaggeration
+      };
+
+      // line Earth->Moon (visible version)
+      ctx.strokeStyle="rgba(255,255,255,0.14)";
+      ctx.beginPath(); ctx.moveTo(earthS.x,earthS.y); ctx.lineTo(moonS_vis.x,moonS_vis.y); ctx.stroke();
+
+      // light direction for phase: from Moon towards Sun on screen
+      const lightDir = vSub(center, moonS_true); // use true heliocentric direction for lighting
+      drawMoonDisk(moonS_vis, lightDir, illum);
+
+      // inset mini-system
+      drawEarthMoonInset(earthS, moonS_vis);
+
+      // tiny marker for “true” moon location (optional, subtle)
+      ctx.fillStyle="rgba(255,255,255,0.25)";
+      ctx.beginPath(); ctx.arc(moonS_true.x, moonS_true.y, 2, 0, Math.PI*2); ctx.fill();
 
       el.status.textContent = "ok ✅";
     } catch (e){
