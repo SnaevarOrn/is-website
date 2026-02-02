@@ -28,7 +28,13 @@
     huts:    { label: "Skálar + skjól",           minZoom: 9, type: "points" },
     lights:  { label: "Vitar",                    minZoom: 4, type: "points" },
     peaks:   { label: "Fjallatindar",             minZoom: 8,  type: "points" },
-    roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" }
+    roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" },
+    waterfalls: { label: "Fossar", minZoom: 9, type: "points" },
+    caves:      { label: "Hellar", minZoom: 10, type: "points" },
+    viewpoints: { label: "Útsýnispunktar", minZoom: 10, type: "points" },
+    hotsprings: { label: "Heitar laugar / uppsprettur", minZoom: 10, type: "points" },
+
+    
   };
 
   const state = {};      // id -> boolean
