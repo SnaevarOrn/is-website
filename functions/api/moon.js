@@ -6,9 +6,11 @@ export async function onRequestGet({ request }) {
   try {
     const url = new URL(request.url);
 
-    const start = (url.searchParams.get("start") || new Date().toISOString().slice(0,10)).trim();
+    const start = (url.searchParams.get("start") || new Date().toISOString().slice(0, 10)).trim();
     const days = clampInt(url.searchParams.get("days"), 1, 1461, 365);
     const step = (url.searchParams.get("step") || "1d").trim();
+
+    // stop = start + (days-1). Note: days=1 => stop==start (Horizons dislikes).
     const stop = addDaysISO(start, days - 1);
 
     const res = await fetchHorizonsVectors({
@@ -19,7 +21,7 @@ export async function onRequestGet({ request }) {
       step,
     });
 
-    if (!res.ok) return json({ ok:false, error:res.error, debug: res.debug }, 500);
+    if (!res.ok) return json({ ok: false, error: res.error, debug: res.debug }, 500);
 
     const out = {
       ok: true,
@@ -31,7 +33,7 @@ export async function onRequestGet({ request }) {
       step,
       count: res.points.length,
       series: {
-        moon: res.points.map(p => ({ x:p.x, y:p.y }))
+        moon: res.points.map(p => ({ x: p.x, y: p.y }))
       }
     };
 
@@ -40,15 +42,21 @@ export async function onRequestGet({ request }) {
     });
 
   } catch (err) {
-    return json({ ok:false, error:String(err?.message || err) }, 500);
+    return json({ ok: false, error: String(err?.message || err) }, 500);
   }
 }
 
 async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   const base = "https://ssd.jpl.nasa.gov/api/horizons.api";
 
-  // Nota JSON svo við fáum alltaf structured svar.
-  // Ath: Horizons setur ephemeris-útgáfuna í "result" streng.
+  // Horizons wants STOP_TIME strictly later than START_TIME.
+  const startT = `${start} 00:00`;
+  let stopT = `${stop} 00:00`;
+  if (stop === start) {
+    stopT = `${addDaysISO(stop, 1)} 00:00`; // safety for days=1
+  }
+
+  // Note: In JSON mode, don't over-quote with extra apostrophes.
   const params = new URLSearchParams({
     format: "json",
     MAKE_EPHEM: "YES",
@@ -61,29 +69,26 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
     REF_SYSTEM: "ICRF",
     OBJ_DATA: "NO",
 
-    // Horizons vill venjulega gildin með apostrophe:
-    CENTER: `'${center}'`,
-    COMMAND: `'${command}'`,
-    START_TIME: `'${start} 00:00'`,
-    STOP_TIME: `'${stop} 00:00'`,
-    STEP_SIZE: `'${step}'`,
-    
-      });
+    CENTER: center,
+    COMMAND: command,
+    START_TIME: startT,
+    STOP_TIME: stopT,
+    STEP_SIZE: step,
+  });
 
   const u = `${base}?${params.toString()}`;
   const resp = await fetch(u, { headers: { "User-Agent": "is.is-solar/1.0" } });
   const raw = await resp.text();
 
   if (!resp.ok) {
-    return { ok: false, error: `Horizons HTTP ${resp.status}`, debug: raw.slice(0, 600) };
+    return { ok: false, error: `Horizons HTTP ${resp.status}`, debug: raw.slice(0, 900) };
   }
 
   let j;
   try {
     j = JSON.parse(raw);
   } catch {
-    // Ef Horizons skilar ekki JSON (mjög sjaldgæft), sýnum brot.
-    return { ok: false, error: "Horizons svar var ekki JSON", debug: raw.slice(0, 600) };
+    return { ok: false, error: "Horizons svar var ekki JSON", debug: raw.slice(0, 900) };
   }
 
   const text = (j && typeof j.result === "string") ? j.result : "";
@@ -91,7 +96,6 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   const i1 = text.indexOf("$$EOE");
 
   if (i0 === -1 || i1 === -1 || i1 <= i0) {
-    // Skilum broti úr "result" til að sjá raunvilluna (t.d. invalid date/step/command).
     const snippet = text ? text.slice(0, 900) : raw.slice(0, 900);
     return { ok: false, error: "Vantar $$SOE/$$EOE í Horizons result", debug: snippet };
   }
@@ -103,9 +107,11 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   for (const line of lines) {
     const parts = line.split(",").map(s => s.trim());
     if (parts.length < 5) continue;
+
     const x = parseFloat(parts[2]);
     const y = parseFloat(parts[3]);
     const z = parseFloat(parts[4]);
+
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     points.push({ x, y, z });
   }
@@ -117,20 +123,21 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   return { ok: true, points };
 }
 
-
-function json(obj, status=200, headers={}) {
+function json(obj, status = 200, headers = {}) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { "content-type":"application/json; charset=utf-8", ...headers }
+    headers: { "content-type": "application/json; charset=utf-8", ...headers }
   });
 }
+
 function clampInt(x, min, max, dflt) {
   const n = parseInt(String(x ?? ""), 10);
   if (!Number.isFinite(n)) return dflt;
   return Math.max(min, Math.min(max, n));
 }
+
 function addDaysISO(iso, add) {
   const d = new Date(iso + "T00:00:00Z");
   d.setUTCDate(d.getUTCDate() + add);
-  return d.toISOString().slice(0,10);
+  return d.toISOString().slice(0, 10);
 }
