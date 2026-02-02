@@ -113,8 +113,9 @@
         </summary>
         <div class="kort-acc-box">
           <!-- Þegar þú ert tilbúinn: menu.js getur toggle-að þessi með data-addon -->
-          <button class="kort-panel-item" type="button" data-addon="roads">Færð á vegum (Vegagerðin) — kemur</button>
           <button class="kort-panel-item" type="button" data-addon="flights">Flugvélar (ADS-B) — kemur</button>
+          <button class="kort-panel-item" type="button" data-addon="roads">Færð á vegum (Vegagerðin) — kemur</button>
+          <button class="kort-panel-item" type="button" data-addon="weather">Veður (overlay)</button>
 
           <p class="kort-panel-note">
             Þetta verður næsta skref: sér API + caching + throttling.
@@ -204,6 +205,7 @@
 
   <!-- ✅ Overpass add-ons (OSM vectors) -->
   <script src="/assets/js/pages/kort.addon.flights.js" defer></script>
+  <script src="/assets/js/pages/kort.addon.weather.js" defer></script>
   <script src="/assets/js/pages/kort.addons.overpass.js" defer></script>
 
   <!-- UI wiring -->
