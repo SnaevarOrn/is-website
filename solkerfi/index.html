@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="is">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sólkerfið — ephemeris + tunglfasi</title>
+  <style>
+    :root{
+      --bg:#070a18;
+      --stroke:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:#a8b2dc;
+      --cyan:#22d3ee;
+      --vio:#a78bfa;
+      --gold:#fbbf24;
+      --green:#4ade80;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --shadow: 0 14px 46px rgba(0,0,0,.42);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--text); font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(167,139,250,.35), transparent 55%),
+        radial-gradient(900px 520px at 80% 15%, rgba(34,211,238,.22), transparent 55%),
+        radial-gradient(900px 720px at 50% 92%, rgba(251,191,36,.12), transparent 60%),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:22px;display:grid;gap:14px}
+    header{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
+      border-radius:18px;
+      padding:16px 16px 12px;
+      box-shadow:var(--shadow);
+      display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;
+    }
+    h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .sub{margin:0;color:var(--muted);font-size:13.5px;line-height:1.35}
+    .chips{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .chip{
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.05);
+      border-radius:999px;
+      padding:6px 10px;
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .chip b{color:var(--text)}
+    .grid{display:grid;grid-template-columns: 1.2fr .8fr; gap:14px;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .chips{margin-left:0} }
+    .card{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;padding:12px 14px;
+      font-size:13px;letter-spacing:.35px;text-transform:uppercase;
+      color:var(--muted);
+      border-bottom:1px solid var(--stroke);
+      background:rgba(0,0,0,.15);
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
+    }
+    .body{padding:14px;display:grid;gap:12px}
+    canvas{
+      width:100%;
+      height:520px;
+      display:block;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background:
+        radial-gradient(700px 340px at 50% 45%, rgba(255,255,255,.06), transparent 60%),
+        rgba(0,0,0,.18);
+    }
+    @media (max-width: 980px){ canvas{height:420px} }
+
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    button{
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:650;
+      cursor:pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+    }
+    button:hover{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.24)}
+    button:active{transform:translateY(1px)}
+    .primary{background:rgba(34,211,238,.12);border-color:rgba(34,211,238,.35)}
+    .primary:hover{background:rgba(34,211,238,.17)}
+    .danger{background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.32)}
+    .danger:hover{background:rgba(251,113,133,.14)}
+    .panel{
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:12px;
+      display:grid;gap:10px;
+    }
+    .caption{color:var(--muted);font-size:13px;line-height:1.4}
+    input[type="range"]{width: 260px;}
+    .mono{font-family:var(--mono)}
+    .kv{display:grid;grid-template-columns: 120px 1fr;gap:8px;align-items:center}
+    .kv .k{color:var(--muted);font-size:12px}
+    .kv .v{font-family:var(--mono);font-size:12px}
+    .miniNote{color:var(--muted);font-size:12px;line-height:1.35}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Sólkerfið (raun-stöður) + tunglfasi</h1>
+      <p class="sub">
+        Pláneturnar eru teiknaðar úr <span class="mono">x,y</span> ephemeris-gögnum og tunglið fær “ljós” frá sól: sama staða → annar fasi,
+        og þú sérð **terminator-línuna** snúast með sól-stefnu.
+      </p>
+    </div>
+    <div class="chips">
+      <span class="chip">Dagur: <b id="dayLabel">—</b></span>
+      <span class="chip">Hraði: <b id="speedLabel">1.0×</b></span>
+      <span class="chip">Tunglfasi: <b id="phaseLabel">—</b></span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Orbits & motion <span class="mono" id="status">sæki gögn…</span></h2>
+      <div class="body">
+        <canvas id="cv"></canvas>
+
+        <div class="row">
+          <button class="primary" id="toggle">Auto ⏸</button>
+          <button id="step">Skref (1 dagur)</button>
+          <button id="toggleTrails">Slóðir: ON</button>
+          <button id="toggleMoons">Tungl: ON</button>
+          <button class="danger" id="reset">Reset</button>
+        </div>
+
+        <div class="row panel">
+          <div class="row" style="justify-content:space-between;gap:12px">
+            <div class="kv"><div class="k">Timeline</div><div class="v" id="timelineInfo">—</div></div>
+            <div class="row">
+              <span class="miniNote">Dagur</span>
+              <input id="scrub" type="range" min="0" max="364" value="0" />
+            </div>
+            <div class="row">
+              <span class="miniNote">Hraði</span>
+              <input id="speed" type="range" min="0.2" max="5" step="0.1" value="1" />
+            </div>
+          </div>
+          <div class="caption" id="caption">
+            Hugmyndin: þetta er bara “stöður yfir tíma”. Sólkerfið er í raun endalaust “state machine” — nema að reglan er þyngdarlögmál.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Tunglfasi: sólin stjórnar “fyllingu”</h2>
+      <div class="body">
+        <div class="panel">
+          <div class="caption">
+            Fasi ræðst af horninu milli (tungl→sól) og (tungl→jörð). Þegar þau vísa sömu leið sérðu nýtt tungl (myrkur),
+            þegar þau vísa í gagnstæða leið er fullt tungl. (Við teiknum terminator með því að færa skugga í átt <i>frá</i> sólinni.)
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="kv"><div class="k">Earth→Moon (AU)</div><div class="v" id="moonVec">—</div></div>
+          <div class="kv"><div class="k">Lýst hlutfall</div><div class="v" id="illum">—</div></div>
+          <div class="kv"><div class="k">Fasi (gróf)</div><div class="v" id="phaseName">—</div></div>
+          <div class="miniNote">
+            (V1) Við sýnum bara Earth-Moon til að byrja. Næst: Galíleó-tungl hjá Júpíter, og svo “toggle” svo þetta verði ekki sjónræn súpa.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="caption mono">
+            Heimild gagna: NASA/JPL Horizons API (proxy-að í gegnum /api/*). :contentReference[oaicite:1]{index=1}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById("cv");
+  const ctx = cv.getContext("2d");
+
+  const el = {
+    status: document.getElementById("status"),
+    dayLabel: document.getElementById("dayLabel"),
+    speedLabel: document.getElementById("speedLabel"),
+    phaseLabel: document.getElementById("phaseLabel"),
+    timelineInfo: document.getElementById("timelineInfo"),
+    caption: document.getElementById("caption"),
+    toggle: document.getElementById("toggle"),
+    step: document.getElementById("step"),
+    reset: document.getElementById("reset"),
+    toggleTrails: document.getElementById("toggleTrails"),
+    toggleMoons: document.getElementById("toggleMoons"),
+    scrub: document.getElementById("scrub"),
+    speed: document.getElementById("speed"),
+    moonVec: document.getElementById("moonVec"),
+    illum: document.getElementById("illum"),
+    phaseName: document.getElementById("phaseName"),
+  };
+
+  // ---- config ----
+  // AU rendering scale will be auto-chosen by max radius in dataset.
+  const PLANETS = [
+    { id:"mercury", label:"Merkúr", color:"rgba(251,191,36,0.85)" },
+    { id:"venus",   label:"Venus",  color:"rgba(167,139,250,0.85)" },
+    { id:"earth",   label:"Jörð",   color:"rgba(34,211,238,0.85)" },
+    { id:"mars",    label:"Mars",   color:"rgba(74,222,128,0.85)" },
+    { id:"jupiter", label:"Júpíter",color:"rgba(255,255,255,0.70)" },
+    { id:"saturn",  label:"Satúrnus",color:"rgba(255,255,255,0.55)" },
+  ];
+
+  // ---- canvas sizing ----
+  function resize(){
+    const r = cv.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    cv.width = Math.floor(r.width * dpr);
+    cv.height = Math.floor(r.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ---- helpers ----
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+
+  function vAdd(a,b){ return {x:a.x+b.x,y:a.y+b.y}; }
+  function vSub(a,b){ return {x:a.x-b.x,y:a.y-b.y}; }
+  function vMul(a,s){ return {x:a.x*s,y:a.y*s}; }
+  function vLen(a){ return Math.hypot(a.x,a.y); }
+  function vNorm(a){ const L=vLen(a)||1; return {x:a.x/L,y:a.y/L}; }
+  function vDot(a,b){ return a.x*b.x + a.y*b.y; }
+  function vAngle(a,b){
+    const na=vNorm(a), nb=vNorm(b);
+    return Math.acos(clamp(vDot(na,nb), -1, 1));
+  }
+
+  function phaseNameFromIllum(illum, waxing) {
+    // super-gróf (nóg til að vera skemmtilegt)
+    if (illum < 0.05) return "Nýtt tungl";
+    if (illum < 0.45) return waxing ? "Vaxandi sigð" : "Minnkandi sigð";
+    if (illum < 0.55) return waxing ? "Fyrsta kvartil" : "Síðasta kvartil";
+    if (illum < 0.95) return waxing ? "Vaxandi gibbous" : "Minnkandi gibbous";
+    return "Fullt tungl";
+  }
+
+  // ---- state ----
+  let auto = true;
+  let showTrails = true;
+  let showMoon = true;
+
+  let t0 = performance.now();
+  let simDay = 0;       // float index into arrays
+  let speed = 1.0;      // days per second-ish scaling
+
+  let data = null;      // planets heliocentric
+  let moon = null;      // moon geocentric (relative Earth)
+  let maxR = 1;
+
+  // ---- fetch data ----
+  // Default window: 365 days from today (UTC-ish). You can change start=YYYY-MM-DD.
+  const todayISO = new Date().toISOString().slice(0,10);
+
+  async function loadAll() {
+    el.status.textContent = "sæki ephemeris…";
+    const bodies = PLANETS.map(p=>p.id).join(",");
+    const url1 = `/api/ephemeris?start=${encodeURIComponent(todayISO)}&days=365&step=1d&bodies=${encodeURIComponent(bodies)}`;
+    const url2 = `/api/moon?start=${encodeURIComponent(todayISO)}&days=365&step=1d`;
+
+    const [a,b] = await Promise.all([
+      fetch(url1).then(r=>r.json()),
+      fetch(url2).then(r=>r.json()),
+    ]);
+
+    if (!a.ok) throw new Error(a.error || "ephemeris failed");
+    if (!b.ok) throw new Error(b.error || "moon failed");
+
+    data = a;
+    moon = b;
+
+    // find max radius for scaling
+    maxR = 0.1;
+    for (const pid of Object.keys(data.series)) {
+      for (const pt of data.series[pid]) {
+        const r = Math.hypot(pt.x, pt.y);
+        if (r > maxR) maxR = r;
+      }
+    }
+
+    el.status.textContent = "ok ✅";
+    el.timelineInfo.textContent = `${data.start} → ${data.end} (N=${data.count})`;
+    el.scrub.max = String(data.count - 1);
+    simDay = 0;
+  }
+
+  // ---- drawing ----
+  function worldToScreen(p, center, scale){
+    return { x: center.x + p.x*scale, y: center.y + p.y*scale };
+  }
+
+  function sampleSeries(series, idxFloat){
+    // linear interpolation between day i and i+1
+    const n = series.length;
+    const i = Math.floor(idxFloat);
+    const t = idxFloat - i;
+    const i0 = clamp(i, 0, n-1);
+    const i1 = clamp(i+1, 0, n-1);
+    const a = series[i0], b = series[i1];
+    return { x: lerp(a.x,b.x,t), y: lerp(a.y,b.y,t) };
+  }
+
+  function drawMoonDisk(screenPos, radiusPx, lightDirScreen, illum){
+    // We fake terminator by drawing lit disk + subtracting an offset shadow disk.
+    // Offset magnitude corresponds to phase: new -> full.
+    // illum in [0..1]
+    const L = vNorm(lightDirScreen); // direction from Moon towards light (Sun) on screen
+    const r = radiusPx;
+
+    // Base disk
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, r, 0, Math.PI*2);
+    ctx.clip();
+
+    // subtle texture gradient
+    const g = ctx.createRadialGradient(screenPos.x-r*0.25, screenPos.y-r*0.25, r*0.2, screenPos.x, screenPos.y, r);
+    g.addColorStop(0, "rgba(255,255,255,0.18)");
+    g.addColorStop(1, "rgba(0,0,0,0.28)");
+    ctx.fillStyle = g;
+    ctx.fillRect(screenPos.x-r, screenPos.y-r, r*2, r*2);
+
+    // illuminated overlay (directional)
+    const lg = ctx.createLinearGradient(
+      screenPos.x - L.x*r, screenPos.y - L.y*r,
+      screenPos.x + L.x*r, screenPos.y + L.y*r
+    );
+    lg.addColorStop(0, "rgba(0,0,0,0.45)");
+    lg.addColorStop(0.45, "rgba(255,255,255,0.10)");
+    lg.addColorStop(1, "rgba(255,255,255,0.26)");
+    ctx.fillStyle = lg;
+    ctx.fillRect(screenPos.x-r, screenPos.y-r, r*2, r*2);
+
+    // Shadow disk offset opposite light
+    // new moon => illum~0 => big shadow overlap; full => illum~1 => shadow shifted away
+    const phase = 2*illum - 1;                 // -1..+1
+    const offset = -phase * r;                 // shift shadow along light axis
+    ctx.fillStyle = "rgba(0,0,0,0.60)";
+    ctx.beginPath();
+    ctx.arc(screenPos.x + L.x*offset, screenPos.y + L.y*offset, r, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // rim
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, r, 0, Math.PI*2);
+    ctx.stroke();
+  }
+
+  function draw(now){
+    const w = cv.getBoundingClientRect().width;
+    const h = cv.getBoundingClientRect().height;
+    const dt = Math.min(0.05, (now - t0) / 1000);
+    t0 = now;
+
+    if (data && auto){
+      // speed slider: interpret as multiplier
+      simDay += dt * speed * 12; // 12 days per second at speed=1 (feels nice)
+      if (simDay >= data.count-1) simDay = 0;
+      el.scrub.value = String(Math.floor(simDay));
+    }
+
+    ctx.clearRect(0,0,w,h);
+
+    // center + scale
+    const center = { x:w*0.52, y:h*0.50 };
+    const scale = (Math.min(w,h)*0.42) / (maxR * 1.05);
+
+    // background vignette
+    const vg = ctx.createRadialGradient(center.x,center.y, Math.min(w,h)*0.05, center.x,center.y, Math.min(w,h)*0.75);
+    vg.addColorStop(0, "rgba(255,255,255,0.06)");
+    vg.addColorStop(1, "rgba(0,0,0,0.55)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(0,0,w,h);
+
+    // Sun
+    const sunR = 10;
+    const sunGlow = ctx.createRadialGradient(center.x,center.y, 0, center.x,center.y, 80);
+    sunGlow.addColorStop(0, "rgba(251,191,36,0.38)");
+    sunGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = sunGlow;
+    ctx.beginPath(); ctx.arc(center.x,center.y, 70, 0, Math.PI*2); ctx.fill();
+
+    ctx.fillStyle = "rgba(251,191,36,0.85)";
+    ctx.beginPath(); ctx.arc(center.x,center.y, sunR, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(center.x,center.y, sunR, 0, Math.PI*2); ctx.stroke();
+
+    if (!data){
+      el.dayLabel.textContent = "—";
+      requestAnimationFrame(draw);
+      return;
+    }
+
+    // draw orbit trails / paths
+    if (showTrails){
+      for (const p of PLANETS){
+        const series = data.series[p.id];
+        ctx.strokeStyle = p.color.replace("0.85", "0.18").replace("0.70", "0.12").replace("0.55","0.10");
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i=0;i<series.length;i++){
+          const s = worldToScreen(series[i], center, scale);
+          if (i===0) ctx.moveTo(s.x,s.y); else ctx.lineTo(s.x,s.y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // sample positions at simDay
+    const earthPos = sampleSeries(data.series.earth, simDay);
+    const marsPos  = sampleSeries(data.series.mars, simDay);
+
+    // travel-window “vibe” (V1): phase angle Earth vs Mars around Sun
+    const phaseAngle = vAngle(earthPos, marsPos); // 0..pi
+    const phaseDeg = phaseAngle * 180/Math.PI;
+
+    // draw planets
+    for (const p of PLANETS){
+      const pos = sampleSeries(data.series[p.id], simDay);
+      const s = worldToScreen(pos, center, scale);
+
+      const rPx = (p.id==="jupiter") ? 6 : (p.id==="saturn") ? 5 : (p.id==="mercury") ? 3.2 : 4;
+      const glow = ctx.createRadialGradient(s.x,s.y, 0, s.x,s.y, rPx*6);
+      glow.addColorStop(0, p.color.replace("0.85","0.22").replace("0.70","0.16").replace("0.55","0.14"));
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(s.x,s.y, rPx*4, 0, Math.PI*2); ctx.fill();
+
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(s.x,s.y, rPx, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.22)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(s.x,s.y, rPx, 0, Math.PI*2); ctx.stroke();
+
+      // labels (minimal)
+      if (p.id==="earth" || p.id==="mars"){
+        ctx.font = "600 12px ui-sans-serif";
+        ctx.fillStyle = "rgba(234,240,255,0.78)";
+        ctx.fillText(p.label, s.x + 10, s.y - 10);
+      }
+    }
+
+    // Moon around Earth + phase shading
+    let illum = 0.5;
+    let waxing = true;
+    if (showMoon && moon){
+      const moonGeo = sampleSeries(moon.series.moon, simDay); // Earth-centered AU
+      const moonHelio = vAdd(earthPos, moonGeo);
+
+      // phase angle at Moon between (moon->sun) and (moon->earth)
+      const moonToSun = vMul(moonHelio, -1);     // Sun at origin
+      const moonToEarth = vMul(moonGeo, -1);     // Earth relative to Moon
+      const alpha = vAngle(moonToSun, moonToEarth);
+      illum = (1 - Math.cos(alpha)) / 2;         // new=0, full=1
+
+      // waxing/waning: approximate by comparing next step illum
+      const moonGeo2 = sampleSeries(moon.series.moon, clamp(simDay+1,0,data.count-1));
+      const earth2 = sampleSeries(data.series.earth, clamp(simDay+1,0,data.count-1));
+      const moonHelio2 = vAdd(earth2, moonGeo2);
+      const alpha2 = vAngle(vMul(moonHelio2,-1), vMul(moonGeo2,-1));
+      const illum2 = (1 - Math.cos(alpha2)) / 2;
+      waxing = illum2 >= illum;
+
+      // draw Earth-Moon mini-system
+      const earthS = worldToScreen(earthPos, center, scale);
+      const moonS  = worldToScreen(moonHelio, center, scale);
+
+      // line Earth->Moon
+      ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(earthS.x,earthS.y); ctx.lineTo(moonS.x,moonS.y); ctx.stroke();
+
+      // Light direction in screen space: from Moon towards Sun (Sun at center)
+      const lightDir = vSub(center, moonS); // screen: moon -> sun
+      const lightN = vNorm(lightDir);
+
+      drawMoonDisk(moonS, 5.5, lightN, illum);
+    }
+
+    // HUD text
+    const dayIndex = Math.floor(simDay);
+    const dateStr = data.dates[clamp(dayIndex,0,data.dates.length-1)] || data.start;
+    el.dayLabel.textContent = dateStr;
+    el.phaseLabel.textContent = `${Math.round(illum*100)}%`;
+    el.moonVec.textContent = moon ? (() => {
+      const m = sampleSeries(moon.series.moon, simDay);
+      return `${m.x.toFixed(6)}, ${m.y.toFixed(6)}`;
+    })() : "—";
+    el.illum.textContent = `${illum.toFixed(3)} (${Math.round(illum*100)}%)`;
+    el.phaseName.textContent = phaseNameFromIllum(illum, waxing);
+
+    // a little philosophical humor
+    el.caption.textContent =
+      `Earth↔Mars fasahorn ~ ${phaseDeg.toFixed(1)}°. (V1 “launch-window vibe”: gott þegar fasinn er “réttur”.) ` +
+      `Tunglið er bókstaflega “shader” sem sólin keyrir.`;
+
+    requestAnimationFrame(draw);
+  }
+
+  // ---- controls ----
+  function setSpeedFromUI(){
+    speed = parseFloat(el.speed.value);
+    el.speedLabel.textContent = speed.toFixed(1) + "×";
+  }
+  el.speed.addEventListener("input", setSpeedFromUI);
+
+  el.scrub.addEventListener("input", () => {
+    auto = false;
+    el.toggle.textContent = "Auto ▶";
+    simDay = parseFloat(el.scrub.value);
+  });
+
+  el.toggle.addEventListener("click", () => {
+    auto = !auto;
+    el.toggle.textContent = auto ? "Auto ⏸" : "Auto ▶";
+  });
+
+  el.step.addEventListener("click", () => {
+    auto = false;
+    el.toggle.textContent = "Auto ▶";
+    simDay = clamp(Math.floor(simDay) + 1, 0, (data?.count||365)-1);
+    el.scrub.value = String(Math.floor(simDay));
+  });
+
+  el.reset.addEventListener("click", () => {
+    simDay = 0;
+    el.scrub.value = "0";
+  });
+
+  el.toggleTrails.addEventListener("click", () => {
+    showTrails = !showTrails;
+    el.toggleTrails.textContent = `Slóðir: ${showTrails ? "ON" : "OFF"}`;
+  });
+
+  el.toggleMoons.addEventListener("click", () => {
+    showMoon = !showMoon;
+    el.toggleMoons.textContent = `Tungl: ${showMoon ? "ON" : "OFF"}`;
+  });
+
+  // ---- boot ----
+  setSpeedFromUI();
+  loadAll()
+    .then(() => { el.status.textContent = "ok ✅"; requestAnimationFrame(draw); })
+    .catch(err => { el.status.textContent = "villa ❌"; console.error(err); });
+
+})();
+</script>
+</body>
+</html>
