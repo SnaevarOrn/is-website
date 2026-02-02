@@ -59,16 +59,16 @@ export async function onRequestGet({ request, env, ctx }) {
         step,
       });
 
-      if (!res.ok) return { id, ok:false, error: res.error };
+      if (!res.ok) return { id, ok:false, error: res.error, debug: res.debug };
 
       // ensure length matches 'days' (we expect one per day with step=1d)
       return { id, ok:true, points: res.points };
     }));
 
     for (const r of results) {
-      if (!r.ok) return json({ ok:false, error:r.error }, 400);
-      out.series[r.id] = r.points.map(p => ({ x:p.x, y:p.y })); // 2D for V1
-    }
+  if (!r.ok) return json({ ok:false, error:r.error, debug: r.debug, body: r.id }, 400);
+  out.series[r.id] = r.points.map(p => ({ x:p.x, y:p.y }));
+}
 
     return json(out, 200, {
       "Cache-Control": "public, max-age=3600, s-maxage=21600"
