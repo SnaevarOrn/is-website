@@ -43,7 +43,7 @@ const LAYERS = {
   huts: { minZoom: 9, maxDiagKm: 220 },
 
   // Lighthouses
-  lights: { minZoom: 6, maxDiagKm: 220 },
+  lights: { minZoom: 5, maxDiagKm: 1220 },
 
   // Mountain peaks (nice “wow”, but can be many)
   peaks: { minZoom: 8, maxDiagKm: 260 },
