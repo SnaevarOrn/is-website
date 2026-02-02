@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="is">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1div7 — hringrás aukastafa</title>
+  <style>
+    :root{
+      --bg:#070a18;
+      --panel:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:#a8b2dc;
+      --good:#4ade80;
+      --cyan:#22d3ee;
+      --vio:#a78bfa;
+      --gold:#fbbf24;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --shadow: 0 14px 46px rgba(0,0,0,.42);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(167,139,250,.35), transparent 55%),
+        radial-gradient(900px 520px at 80% 15%, rgba(34,211,238,.22), transparent 55%),
+        radial-gradient(900px 720px at 50% 92%, rgba(251,191,36,.12), transparent 60%),
+        var(--bg);
+      overflow-x:hidden;
+    }
+
+    .wrap{max-width:1100px;margin:0 auto;padding:22px;display:grid;gap:14px}
+    header{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
+      border-radius:18px;
+      padding:16px 16px 12px;
+      box-shadow:var(--shadow);
+      display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;
+    }
+    h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .sub{margin:0;color:var(--muted);font-size:13.5px;line-height:1.35}
+    .chips{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .chip{
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.05);
+      border-radius:999px;
+      padding:6px 10px;
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .chip b{color:var(--text)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .chips{margin-left:0} }
+
+    .card{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;
+      padding:12px 14px;
+      font-size:13px;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      color:var(--muted);
+      border-bottom:1px solid var(--stroke);
+      background:rgba(0,0,0,.15);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .body{padding:14px;display:grid;gap:12px}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+    button{
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:650;
+      cursor:pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+    }
+    button:hover{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.24)}
+    button:active{transform:translateY(1px)}
+    .primary{background:rgba(34,211,238,.12);border-color:rgba(34,211,238,.35)}
+    .primary:hover{background:rgba(34,211,238,.17)}
+    .danger{background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.32)}
+    .danger:hover{background:rgba(251,113,133,.14)}
+
+    .panel{
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:12px;
+      display:grid;gap:10px;
+    }
+
+    .bigNumber{
+      font-family:var(--mono);
+      font-size:18px;
+      line-height:1.25;
+      letter-spacing:1px;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:baseline;
+      gap:10px;
+    }
+    .bigNumber .lhs{color:rgba(255,255,255,.86)}
+    .bigNumber .rhs{color:rgba(255,255,255,.92)}
+    .overline{
+      position:relative;
+      display:inline-block;
+      padding-top:6px;
+    }
+    .overline::before{
+      content:"";
+      position:absolute;
+      left:0; right:0; top:0;
+      height:2px;
+      background:linear-gradient(90deg, transparent, rgba(34,211,238,.85), transparent);
+      opacity:.95;
+    }
+    .digits{
+      display:inline-flex;
+      gap:2px;
+      align-items:center;
+      font-variant-numeric: tabular-nums;
+    }
+    .d{
+      width: 1ch;
+      text-align:center;
+      padding:2px 0;
+      border-radius:8px;
+      transition: transform 250ms ease, filter 250ms ease, opacity 250ms ease;
+    }
+    .d.glow{
+      transform: translateY(-2px) scale(1.06);
+      filter: drop-shadow(0 0 10px rgba(34,211,238,.35));
+      opacity:1;
+    }
+    .d.dim{opacity:.35}
+    .caption{color:var(--muted);font-size:13px;line-height:1.4}
+
+    canvas{
+      width:100%;
+      height:420px;
+      display:block;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background:
+        radial-gradient(600px 260px at 50% 45%, rgba(255,255,255,.06), transparent 60%),
+        rgba(0,0,0,.18);
+    }
+    @media (max-width: 980px){ canvas{height:380px} }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 10px;
+      font-family:var(--mono);
+      font-size:13px;
+    }
+    th{color:var(--muted);font-weight:650;text-align:left;padding:0 10px}
+    td{
+      padding:10px 10px;
+      background:rgba(255,255,255,.05);
+      border-top:1px solid var(--stroke);
+      border-bottom:1px solid var(--stroke);
+      font-variant-numeric: tabular-nums;
+    }
+    td:first-child{border-left:1px solid var(--stroke);border-radius:12px 0 0 12px}
+    td:last-child{border-right:1px solid var(--stroke);border-radius:0 12px 12px 0}
+    tr.active td{
+      background:rgba(34,211,238,.10);
+      border-color:rgba(34,211,238,.22);
+    }
+    .mini{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .legend{
+      display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+      color:var(--muted);font-size:12px;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;display:inline-block}
+    .dot.c{background:rgba(34,211,238,.85)}
+    .dot.v{background:rgba(167,139,250,.85)}
+    .dot.g{background:rgba(74,222,128,.85)}
+    .dot.y{background:rgba(251,191,36,.85)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>1/7 — hringrás aukastafa</h1>
+        <p class="sub">
+          1/7 er ekki “leiðinlegt” brot. Það er hringtorg: <span style="color:rgba(255,255,255,.92);font-family:var(--mono)">0.<span class="overline">142857</span></span>.
+          Svo hoppar það í 2/7, 3/7… og **sama talnaröð** heldur áfram — bara snúin.
+        </p>
+      </div>
+      <div class="chips">
+        <span class="chip">Period: <b id="period">—</b></span>
+        <span class="chip">Nú: <b id="fracNow">—</b></span>
+        <span class="chip">Hliðrun: <b id="shiftNow">—</b></span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>
+          Hringrásin sem hjól
+          <span class="legend">
+            <span class="dot c"></span> 1/7–6/7
+            <span class="dot v"></span> “frændar” (1/11, 1/17, …)
+          </span>
+        </h2>
+        <div class="body">
+          <canvas id="cv"></canvas>
+
+          <div class="row">
+            <button class="primary" id="toggle">Auto ⏸</button>
+            <button id="step">Skref</button>
+            <button id="family">Sýna frændur: ON</button>
+            <button class="danger" id="reset">Reset</button>
+          </div>
+
+          <div class="panel">
+            <div class="bigNumber" id="line">
+              <span class="lhs" id="lhs">1/7</span>
+              <span>=</span>
+              <span class="rhs" id="rhs">0.<span class="overline"><span class="digits" id="digits"></span></span></span>
+            </div>
+            <div class="caption" id="caption">
+              Þetta er sama 6-stafa hringrásin: 142857. Multiplying með 2/3/4/5/6 “snýr” strengnum.
+              Ef þú vilt meta-húmor: þetta er *rotation invariance disguised as division*.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Hvernig þetta gerist (og frændurnir)</h2>
+        <div class="body">
+          <div class="panel">
+            <div class="caption">
+              Þegar þú deilir 1 með n í tugakerfi, þá stjórnar <b>10</b> hegðuninni.
+              Ráðandi stærð: minnsta k þannig að <span style="font-family:var(--mono)">10^k ≡ 1 (mod n)</span>.
+              Þá er hringrásarlengdin k (ef n deilir ekki 10).
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Brotið</th>
+                <th>Endurtekning</th>
+                <th class="mini">Period</th>
+              </tr>
+            </thead>
+            <tbody id="famRows"></tbody>
+          </table>
+
+          <div class="panel">
+            <div class="caption">
+              <b>1/11</b> er „taktfastur frændi“: <span style="font-family:var(--mono)">0.<span class="overline">09</span></span>.
+              <br/>
+              <b>1/17</b> er “langorður frændi”: periodan er lengri, þannig þú sérð stærra hjól.
+              <br/><br/>
+              Og já: sumar tölur eru eins og fólk — sumar tala endalaust (lang period), sumar endurtaka sig strax (stutt period).
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- core math: repeating decimal digits via long division ----------
+  function repeatingDigits(den) {
+    // Returns {digits: [0..9], period, preperiod, info}
+    // For 1/den in base 10.
+    const seen = new Map(); // remainder -> index
+    let rem = 1 % den;
+    const digits = [];
+    let idx = 0;
+
+    while (rem !== 0 && !seen.has(rem) && idx < 5000) {
+      seen.set(rem, idx);
+      rem *= 10;
+      const d = Math.floor(rem / den);
+      digits.push(d);
+      rem = rem % den;
+      idx++;
+    }
+
+    if (rem === 0) {
+      return { digits, period: 0, preperiod: digits.length, terminates: true };
+    }
+
+    const start = seen.get(rem);
+    const pre = start;
+    const per = digits.length - start;
+    return { digits, period: per, preperiod: pre, terminates: false };
+  }
+
+  function rotate(arr, k) {
+    const n = arr.length;
+    if (!n) return arr.slice();
+    const kk = ((k % n) + n) % n;
+    return arr.slice(kk).concat(arr.slice(0, kk));
+  }
+
+  // For 1/7 family: the cyclic number 142857 (period 6).
+  const baseDen = 7;
+  const base = repeatingDigits(baseDen);
+  const baseCycle = base.digits.slice(base.preperiod, base.preperiod + base.period); // should be [1,4,2,8,5,7]
+
+  // shifts for m/7 relative to 1/7:
+  // 1/7 = 0.(142857)
+  // 2/7 = 0.(285714) => rotate left by 4? Actually 142857 -> 285714 is rotate left by 2 (142857 -> 285714) yes.
+  // We'll compute directly by long-division digits for m/7 then find shift by matching.
+  function digitsFor(m, den) {
+    // digits of m/den repeating part length = period of 1/den (for m not multiple of den).
+    // We'll generate same length as base period for matching
+    let rem = m % den;
+    const out = [];
+    for (let i=0;i<50;i++){
+      rem *= 10;
+      const d = Math.floor(rem / den);
+      out.push(d);
+      rem = rem % den;
+    }
+    return out;
+  }
+
+  function findShift(baseArr, targetArr) {
+    // find k such that rotate(baseArr, k) starts with target prefix
+    // here rotate() is left rotation by k
+    const n = baseArr.length;
+    const tgt = targetArr.slice(0, n).join("");
+    for (let k=0;k<n;k++){
+      const r = rotate(baseArr, k).join("");
+      if (r === tgt) return k;
+    }
+    return 0;
+  }
+
+  const seven = [];
+  for (let m=1;m<=6;m++){
+    const t = digitsFor(m, 7).slice(0, baseCycle.length);
+    const shift = findShift(baseCycle, t);
+    seven.push({ m, den:7, digits:t, shift });
+  }
+
+  // ---------- family ("frændar") ----------
+  const familyDenoms = [11, 13, 17, 19, 21, 27, 37];
+  const family = familyDenoms.map(den => {
+    const r = repeatingDigits(den);
+    const cycle = r.terminates ? r.digits : r.digits.slice(r.preperiod, r.preperiod + r.period);
+    return { den, period: r.terminates ? 0 : r.period, cycle, terminates: r.terminates };
+  });
+
+  // ---------- DOM ----------
+  const cv = document.getElementById("cv");
+  const ctx = cv.getContext("2d");
+
+  const el = {
+    period: document.getElementById("period"),
+    fracNow: document.getElementById("fracNow"),
+    shiftNow: document.getElementById("shiftNow"),
+    lhs: document.getElementById("lhs"),
+    digits: document.getElementById("digits"),
+    caption: document.getElementById("caption"),
+    toggle: document.getElementById("toggle"),
+    step: document.getElementById("step"),
+    family: document.getElementById("family"),
+    reset: document.getElementById("reset"),
+    famRows: document.getElementById("famRows"),
+  };
+
+  function setDigitsSpans(digs, highlightIndex=-1) {
+    el.digits.innerHTML = "";
+    digs.forEach((d, i) => {
+      const s = document.createElement("span");
+      s.className = "d" + (i === highlightIndex ? " glow" : "");
+      s.textContent = String(d);
+      el.digits.appendChild(s);
+    });
+  }
+
+  function renderFamilyTable() {
+    el.famRows.innerHTML = "";
+    family.forEach(x => {
+      const tr = document.createElement("tr");
+      const rep = x.terminates ? "(endar)" : x.cycle.slice(0, Math.min(12, x.cycle.length)).join("") + (x.cycle.length > 12 ? "…" : "");
+      tr.innerHTML = `
+        <td>1/${x.den}</td>
+        <td>0.<span style="position:relative;display:inline-block;padding-top:6px">
+          <span style="position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(167,139,250,.85),transparent)"></span>
+          <span>${rep}</span>
+        </span></td>
+        <td class="mini">${x.period}</td>
+      `;
+      el.famRows.appendChild(tr);
+    });
+  }
+
+  renderFamilyTable();
+
+  // ---------- canvas sizing ----------
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    cv.width = Math.floor(r.width * dpr);
+    cv.height = Math.floor(r.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ---------- visual engine ----------
+  let t0 = performance.now();
+  let auto = true;
+  let showFamily = true;
+
+  // state for 1/7 cycle animation
+  let idx = 0;     // which m/7 (0..5 => m=1..6)
+  let phase = 0;   // digit highlight 0..period-1
+  const period = baseCycle.length;
+
+  // shimmer particles
+  const sparks = [];
+  function spawnSpark(cx, cy, hueShift=0) {
+    for (let i=0;i<10;i++){
+      sparks.push({
+        x: cx + (Math.random()-0.5)*16,
+        y: cy + (Math.random()-0.5)*16,
+        vx:(Math.random()-0.5)*1.6,
+        vy:(Math.random()-0.5)*1.6,
+        life: 1,
+        size: 1 + Math.random()*2,
+        hue: hueShift + Math.random()*40
+      });
+    }
+  }
+
+  function stepOnce() {
+    idx = (idx + 1) % seven.length;
+    phase = (phase + 1) % period;
+  }
+
+  function resetAll() {
+    idx = 0;
+    phase = 0;
+    sparks.length = 0;
+  }
+
+  function draw(now) {
+    const w = cv.getBoundingClientRect().width;
+    const h = cv.getBoundingClientRect().height;
+
+    const dt = Math.min(0.05, (now - t0) / 1000);
+    t0 = now;
+
+    // background fade
+    ctx.clearRect(0,0,w,h);
+
+    // center
+    const cx = w*0.5;
+    const cy = h*0.50;
+    const R = Math.min(w,h)*0.30;
+
+    // subtle vignette
+    const g = ctx.createRadialGradient(cx,cy, R*0.2, cx,cy, R*1.9);
+    g.addColorStop(0, "rgba(255,255,255,0.06)");
+    g.addColorStop(1, "rgba(0,0,0,0.45)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+
+    // orbit ring
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.beginPath();
+    ctx.arc(cx,cy,R,0,Math.PI*2);
+    ctx.stroke();
+
+    // digit nodes around ring
+    const digs = baseCycle;
+    const spin = now * 0.00018; // slow spin
+
+    for (let i=0;i<digs.length;i++){
+      const ang = (i / digs.length) * Math.PI*2 + spin - Math.PI/2;
+      const x = cx + Math.cos(ang)*R;
+      const y = cy + Math.sin(ang)*R;
+
+      const active = (i === phase);
+      const rr = active ? 14 : 11;
+
+      // glow
+      const gg = ctx.createRadialGradient(x,y, 0, x,y, active ? 40 : 28);
+      gg.addColorStop(0, active ? "rgba(34,211,238,0.35)" : "rgba(255,255,255,0.10)");
+      gg.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = gg;
+      ctx.beginPath();
+      ctx.arc(x,y, active ? 20 : 16, 0, Math.PI*2);
+      ctx.fill();
+
+      // node
+      ctx.fillStyle = active ? "rgba(34,211,238,0.22)" : "rgba(255,255,255,0.08)";
+      ctx.strokeStyle = active ? "rgba(34,211,238,0.55)" : "rgba(255,255,255,0.18)";
+      ctx.lineWidth = active ? 2 : 1;
+      ctx.beginPath();
+      ctx.arc(x,y, rr, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+
+      // digit text
+      ctx.font = active ? "700 18px ui-monospace" : "650 16px ui-monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = active ? "rgba(234,240,255,0.98)" : "rgba(234,240,255,0.75)";
+      ctx.fillText(String(digs[i]), x, y+0.5);
+    }
+
+    // current fraction pointer (m/7) as rotating arc overlay
+    const cur = seven[idx];
+    const shift = cur.shift; // left rotation of baseCycle to get m/7
+    const angA = ((shift) / period) * Math.PI*2 + spin - Math.PI/2;
+    const angB = ((shift + 1) / period) * Math.PI*2 + spin - Math.PI/2;
+
+    ctx.lineWidth = 8;
+    const arcGrad = ctx.createLinearGradient(cx- R, cy, cx+R, cy);
+    arcGrad.addColorStop(0, "rgba(167,139,250,0.0)");
+    arcGrad.addColorStop(0.45, "rgba(167,139,250,0.55)");
+    arcGrad.addColorStop(0.55, "rgba(34,211,238,0.55)");
+    arcGrad.addColorStop(1, "rgba(34,211,238,0.0)");
+    ctx.strokeStyle = arcGrad;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(cx,cy, R+18, angA, angB);
+    ctx.stroke();
+
+    // label in center
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.font = "750 28px ui-monospace";
+    ctx.fillStyle = "rgba(234,240,255,0.96)";
+    ctx.fillText(`${cur.m}/7`, cx, cy - 18);
+
+    ctx.font = "600 14px ui-sans-serif";
+    ctx.fillStyle = "rgba(168,178,220,0.9)";
+    ctx.fillText(`0.${cur.digits.join("")}  (snúningur: ${shift})`, cx, cy + 16);
+
+    // family orbits (frændar)
+    if (showFamily) {
+      const baseR = R + 70;
+      family.forEach((f, j) => {
+        if (f.terminates || f.period === 0) return;
+
+        const rr = baseR + j * 18;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(167,139,250,0.10)";
+        ctx.beginPath(); ctx.arc(cx,cy, rr, 0, Math.PI*2); ctx.stroke();
+
+        // moving marker around each ring based on its period (longer period -> slower? we invert a bit)
+        const speed = 0.00010 + 0.00030 * (1 / Math.min(24, f.period));
+        const a = now * speed + j;
+        const x = cx + Math.cos(a - Math.PI/2) * rr;
+        const y = cy + Math.sin(a - Math.PI/2) * rr;
+
+        const glow = ctx.createRadialGradient(x,y,0,x,y,24);
+        glow.addColorStop(0, "rgba(167,139,250,0.28)");
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(x,y, 18, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = "rgba(167,139,250,0.16)";
+        ctx.strokeStyle = "rgba(167,139,250,0.40)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(x,y, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+        ctx.font = "600 12px ui-monospace";
+        ctx.fillStyle = "rgba(234,240,255,0.74)";
+        ctx.fillText(`1/${f.den}`, x, y - 16);
+      });
+    }
+
+    // sparks update
+    for (let i=sparks.length-1;i>=0;i--){
+      const s = sparks[i];
+      s.life -= dt * 1.6;
+      s.x += s.vx;
+      s.y += s.vy;
+      s.vx *= 0.98; s.vy *= 0.98;
+
+      if (s.life <= 0) { sparks.splice(i,1); continue; }
+
+      const a = Math.max(0, s.life);
+      ctx.fillStyle = `rgba(34,211,238,${0.10*a})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size*2.4, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = `rgba(251,191,36,${0.08*a})`;
+      ctx.beginPath();
+      ctx.arc(s.x+2, s.y-1, s.size*1.6, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+
+  // ---------- text panel updates ----------
+  function updateText() {
+    const cur = seven[idx];
+    el.period.textContent = String(period);
+    el.fracNow.textContent = `${cur.m}/7`;
+    el.shiftNow.textContent = String(cur.shift);
+
+    el.lhs.textContent = `${cur.m}/7`;
+    setDigitsSpans(cur.digits, phase);
+
+    // Fun narration rotates with idx
+    const lines = [
+      `Þú ert að horfa á sama streng (142857) snúast. Þetta er “rotation” í dulargervi sem deiling.`,
+      `Sko: ${cur.m}/7 er bara 1/7 margfaldað með ${cur.m}. Tugabrotin hoppa, en mynstrið er sama hjólið.`,
+      `Þessi 6-stafa hringrás er klassísk “cyclic number” hegðun: margföldun snýr tölunum.`,
+      `Eins og gírkassi: þú skiptir um gír (m/7), en keðjan er sama hringrásin.`,
+      `Ef þetta væri heimspeki: “Formið helst, birtingarmyndin hliðrast.”`,
+      `Ef þetta væri rafmagn: sama merki, bara phase shift. (já, ég sé þig.)`
+    ];
+    el.caption.textContent = lines[idx % lines.length];
+  }
+
+  function bumpSpark() {
+    const rect = cv.getBoundingClientRect();
+    // spawn near center, with mild randomness
+    spawnSpark(rect.width*0.5 + (Math.random()-0.5)*40, rect.height*0.5 + (Math.random()-0.5)*40, 0);
+  }
+
+  // auto stepping engine
+  let timer = null;
+  function startAuto() {
+    if (timer) return;
+    auto = true;
+    el.toggle.textContent = "Auto ⏸";
+    timer = setInterval(() => {
+      stepOnce();
+      updateText();
+      bumpSpark();
+    }, 1150);
+  }
+  function stopAuto() {
+    auto = false;
+    el.toggle.textContent = "Auto ▶";
+    if (timer) clearInterval(timer);
+    timer = null;
+  }
+
+  // buttons
+  el.toggle.addEventListener("click", () => {
+    if (timer) stopAuto(); else startAuto();
+  });
+  el.step.addEventListener("click", () => {
+    stopAuto();
+    stepOnce();
+    updateText();
+    bumpSpark();
+  });
+  el.family.addEventListener("click", () => {
+    showFamily = !showFamily;
+    el.family.textContent = `Sýna frændur: ${showFamily ? "ON" : "OFF"}`;
+    bumpSpark();
+  });
+  el.reset.addEventListener("click", () => {
+    resetAll();
+    updateText();
+    bumpSpark();
+  });
+
+  // initial
+  updateText();
+  startAuto();
+})();
+</script>
+</body>
+</html>
