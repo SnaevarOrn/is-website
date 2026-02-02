@@ -51,10 +51,10 @@ const LAYERS = {
   // Road classes (LINES) — expensive: keep tight
   roads: { minZoom: 12, maxDiagKm: 70 },
 
-  waterfalls: { minZoom: 8,  maxDiagKm: 260 },
-  caves:      { minZoom: 8, maxDiagKm: 220 },
-  viewpoints: { minZoom: 9, maxDiagKm: 220 },
-  hotsprings: { minZoom: 9, maxDiagKm: 220 },
+  waterfalls: { minZoom: 6,  maxDiagKm: 260 },
+  caves:      { minZoom: 4, maxDiagKm: 220 },
+  viewpoints: { minZoom: 6, maxDiagKm: 220 },
+  hotsprings: { minZoom: 5, maxDiagKm: 220 },
   
   };
 
