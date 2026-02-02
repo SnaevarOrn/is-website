@@ -1,8 +1,12 @@
 // /functions/api/moon.js
 // GET /api/moon?start=YYYY-MM-DD&days=365&step=1d
 // Returns geocentric (Earth-centered) Moon vector (AU), 2D in ecliptic plane for V1.
+//
+// KV cache (env.SOLAR_KV):
+// - Key: path+query (versioned)
+// - If Horizons fails (503/anything), serve cached result (stale=true) if available.
 
-export async function onRequestGet({ request }) {
+export async function onRequestGet({ request, env, ctx }) {
   try {
     const url = new URL(request.url);
 
@@ -13,6 +17,14 @@ export async function onRequestGet({ request }) {
     // stop = start + (days-1). Note: days=1 => stop==start (Horizons dislikes).
     const stop = addDaysISO(start, days - 1);
 
+    // ---- KV cache (fast path) ----
+    const cacheKey = kvKeyFromURL(url);
+    const cached = await kvGetJSON(env, cacheKey);
+    if (cached) {
+      cached.meta = { ...(cached.meta || {}), cache: "kv-hit", stale: false, key: cacheKey };
+      return json(cached, 200, cacheHeaders());
+    }
+
     const res = await fetchHorizonsVectors({
       command: "301",     // Moon
       center: "500@399",  // Earth-centered
@@ -21,7 +33,15 @@ export async function onRequestGet({ request }) {
       step,
     });
 
-    if (!res.ok) return json({ ok: false, error: res.error, debug: res.debug }, 500);
+    if (!res.ok) {
+      // ---- stale-on-error ----
+      const fallback = await kvGetJSON(env, cacheKey);
+      if (fallback) {
+        fallback.meta = { ...(fallback.meta || {}), cache: "kv-stale", stale: true, key: cacheKey, error: res.error };
+        return json(fallback, 200, cacheHeaders());
+      }
+      return json({ ok: false, error: res.error, debug: res.debug }, 500);
+    }
 
     const out = {
       ok: true,
@@ -34,12 +54,21 @@ export async function onRequestGet({ request }) {
       count: res.points.length,
       series: {
         moon: res.points.map(p => ({ x: p.x, y: p.y }))
+      },
+      meta: {
+        cache: "miss",
+        stale: false,
+        key: cacheKey,
+        fetchedAt: new Date().toISOString()
       }
     };
 
-    return json(out, 200, {
-      "Cache-Control": "public, max-age=3600, s-maxage=21600"
-    });
+    // ---- KV put (async, best-effort) ----
+    const ttl = kvTTLSeconds(days);
+    const putPromise = kvPutJSON(env, cacheKey, out, ttl).catch(() => {});
+    if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(putPromise);
+
+    return json(out, 200, cacheHeaders());
 
   } catch (err) {
     return json({ ok: false, error: String(err?.message || err) }, 500);
@@ -109,10 +138,12 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   for (const line of lines) {
     const parts = line.split(",").map(s => s.trim());
     if (parts.length < 5) continue;
+
     const x = parseFloat(parts[2]);
     const y = parseFloat(parts[3]);
     const z = parseFloat(parts[4]);
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+
     points.push({ x, y, z });
   }
 
@@ -123,6 +154,43 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   return { ok: true, points };
 }
 
+// ---------- KV helpers ----------
+function kvKeyFromURL(url) {
+  // version the key so you can safely change response schema later
+  return `v1:${url.pathname}${url.search}`;
+}
+
+async function kvGetJSON(env, key) {
+  const kv = env?.SOLAR_KV;
+  if (!kv) return null;
+  const s = await kv.get(key);
+  if (!s) return null;
+  try { return JSON.parse(s); } catch { return null; }
+}
+
+async function kvPutJSON(env, key, obj, ttlSeconds) {
+  const kv = env?.SOLAR_KV;
+  if (!kv) return;
+  await kv.put(key, JSON.stringify(obj), { expirationTtl: ttlSeconds });
+}
+
+function kvTTLSeconds(days) {
+  // small windows change more -> shorter TTL; big windows -> longer
+  // 1–7d: 6h, 8–60d: 2d, 61–366d: 7d, >366d: 14d
+  if (days <= 7) return 6 * 3600;
+  if (days <= 60) return 2 * 24 * 3600;
+  if (days <= 366) return 7 * 24 * 3600;
+  return 14 * 24 * 3600;
+}
+
+function cacheHeaders() {
+  // browser can cache a bit; CDN can cache longer
+  return {
+    "Cache-Control": "public, max-age=300, s-maxage=21600"
+  };
+}
+
+// ---------- utilities ----------
 function json(obj, status = 200, headers = {}) {
   return new Response(JSON.stringify(obj), {
     status,
