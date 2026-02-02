@@ -49,8 +49,14 @@ const LAYERS = {
   peaks: { minZoom: 8, maxDiagKm: 260 },
 
   // Road classes (LINES) — expensive: keep tight
-  roads: { minZoom: 12, maxDiagKm: 70 }
-};
+  roads: { minZoom: 12, maxDiagKm: 70 },
+
+  waterfalls: { minZoom: 8,  maxDiagKm: 260 },
+  caves:      { minZoom: 8, maxDiagKm: 220 },
+  viewpoints: { minZoom: 9, maxDiagKm: 220 },
+  hotsprings: { minZoom: 9, maxDiagKm: 220 },
+  
+  };
 
 export async function onRequestGet({ request, context }) {
   const url = new URL(request.url);
@@ -272,6 +278,54 @@ function buildQuery(layer, b) {
       outGeom
     );
   }
+
+  if (layer === "waterfalls") {
+  return (
+    head +
+    `(` +
+      n(`["waterway"="waterfall"]`) +
+      n(`["natural"="waterfall"]`) +
+      w(`["waterway"="waterfall"]`) +
+      w(`["natural"="waterfall"]`) +
+    `);` +
+    outGeom
+  );
+}
+
+if (layer === "caves") {
+  return (
+    head +
+    `(` +
+      n(`["natural"="cave_entrance"]`) +
+      w(`["natural"="cave_entrance"]`) +
+    `);` +
+    outGeom
+  );
+}
+
+if (layer === "viewpoints") {
+  return (
+    head +
+    `(` +
+      n(`["tourism"="viewpoint"]`) +
+      w(`["tourism"="viewpoint"]`) +
+    `);` +
+    outGeom
+  );
+}
+
+if (layer === "hotsprings") {
+  return (
+    head +
+    `(` +
+      n(`["natural"="hot_spring"]`) +
+      w(`["natural"="hot_spring"]`) +
+      n(`["leisure"="spa"]`) +
+      w(`["leisure"="spa"]`) +
+    `);` +
+    outGeom
+  );
+}
 
   // Should never happen (whitelist)
   return head + `out;`;
