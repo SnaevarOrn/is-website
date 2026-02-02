@@ -33,14 +33,12 @@
   <a class="kort-close" href="/" aria-label="Til forsíðu" title="Til forsíðu">×</a>
 
   <main class="kort-page">
-
     <!-- Header -->
     <header class="kort-head">
       <div class="kort-head-left">
         <h1 id="kort-title">Ísland</h1>
         <p class="kort-sub">Kort byggt á OpenStreetMap.</p>
       </div>
-      <!-- Header search intentionally removed (we use overlay search) -->
     </header>
 
     <!-- Map container -->
@@ -58,7 +56,6 @@
         </button>
       </div>
     </section>
-
   </main>
 
   <!-- Side panel (hamburger opens this) -->
@@ -99,6 +96,12 @@
           <button class="kort-panel-item" type="button" data-addon="peaks">Fjallatindar</button>
           <button class="kort-panel-item" type="button" data-addon="roads">Vegagrind (OSM)</button>
 
+          <!-- Nýtt: áhugavert (þú bætir við í CFG + overpass layer policy/query) -->
+          <button class="kort-panel-item" type="button" data-addon="waterfalls">Fossar</button>
+          <button class="kort-panel-item" type="button" data-addon="caves">Hellar</button>
+          <button class="kort-panel-item" type="button" data-addon="viewpoints">Útsýnispunktar</button>
+          <button class="kort-panel-item" type="button" data-addon="hotsprings">Heitar laugar / uppsprettur</button>
+
           <p class="kort-panel-note" style="margin: 8px 2px 0;">
             Ath: Virkjar aðeins þegar þú zoomar nægilega inn (til að hlífa Overpass).
           </p>
@@ -112,13 +115,15 @@
           <span class="kort-acc-hint">rauntími</span>
         </summary>
         <div class="kort-acc-box">
-          <!-- Þegar þú ert tilbúinn: menu.js getur toggle-að þessi með data-addon -->
-          <button class="kort-panel-item" type="button" data-addon="flights">Flugvélar (ADS-B) — kemur</button>
-          <button class="kort-panel-item" type="button" data-addon="roads">Færð á vegum (Vegagerðin) — kemur</button>
+          <button class="kort-panel-item" type="button" data-addon="flights">Flugvélar</button>
+
+          <!-- IMPORTANT: ekki nota "roads" hér, það rekst á OSM roads -->
+          <button class="kort-panel-item" type="button" data-addon="roadcond">Færð á vegum (Vegagerðin)</button>
+
           <button class="kort-panel-item" type="button" data-addon="weather">Veður (overlay)</button>
 
           <p class="kort-panel-note">
-            Þetta verður næsta skref: sér API + caching + throttling.
+            Live-lög eru “létt” í UI, en þurfa sér API/caching (og eru mismunandi eftir gagnagjafa).
           </p>
         </div>
       </details>
@@ -197,15 +202,16 @@
   <script src="/assets/js/pages/kort.routing.js" defer></script>
   <script src="/assets/js/pages/kort.measure.js" defer></script>
 
-  <!-- Crosshair (ON only if you want it) -->
+  <!-- Crosshair -->
   <script src="/assets/js/pages/kort.crosshair.js" defer></script>
 
-  <!-- ✅ Live add-ons manager (flights/roads) -->
-  <script src="/assets/js/pages/kort.addons.js" defer></script>
-
-  <!-- ✅ Overpass add-ons (OSM vectors) -->
+  <!-- ✅ Live addons (register into window.kortAddonsLive) -->
   <script src="/assets/js/pages/kort.addon.flights.js" defer></script>
   <script src="/assets/js/pages/kort.addon.weather.js" defer></script>
+  <!-- (valkvætt) roadcond addon, ef/þegar þú býrð hann til -->
+  <!-- <script src="/assets/js/pages/kort.addon.roadcond.js" defer></script> -->
+
+  <!-- ✅ Overpass addons (creates window.kortAddonsOverpass + shared router window.kortAddons) -->
   <script src="/assets/js/pages/kort.addons.overpass.js" defer></script>
 
   <!-- UI wiring -->
