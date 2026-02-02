@@ -4,20 +4,29 @@
 // GET /api/ephemeris?start=YYYY-MM-DD&days=365&step=1d&bodies=earth,mars,venus
 // Returns heliocentric ecliptic positions (AU) for each body per day.
 //
-// Data source: NASA/JPL SSD Horizons API
-// Docs: https://ssd-api.jpl.nasa.gov/doc/horizons.html
+// KV cache (env.SOLAR_KV):
+// - Key: path+query (versioned)
+// - If Horizons fails, serve cached result (stale=true) if available.
 
-export async function onRequestGet({ request }) {
+export async function onRequestGet({ request, env, ctx }) {
   try {
     const url = new URL(request.url);
 
-    const start = (url.searchParams.get("start") || new Date().toISOString().slice(0, 10)).trim();
-    const days  = clampInt(url.searchParams.get("days"), 1, 1461, 365); // up to 4 years
-    const step  = (url.searchParams.get("step") || "1d").trim();
+    const start  = (url.searchParams.get("start") || new Date().toISOString().slice(0, 10)).trim();
+    const days   = clampInt(url.searchParams.get("days"), 1, 1461, 365); // up to 4 years
+    const step   = (url.searchParams.get("step") || "1d").trim();
     const bodies = (url.searchParams.get("bodies") || "earth,mars,venus,mercury,jupiter,saturn").trim();
 
     const bodyList = bodies.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
     if (!bodyList.length) return json({ ok:false, error:"bodies vantar" }, 400);
+
+    // ---- KV cache (fast path) ----
+    const cacheKey = kvKeyFromURL(url);
+    const cached = await kvGetJSON(env, cacheKey);
+    if (cached) {
+      cached.meta = { ...(cached.meta || {}), cache: "kv-hit", stale: false, key: cacheKey };
+      return json(cached, 200, cacheHeaders());
+    }
 
     const HMAP = {
       mercury: "199",
@@ -40,7 +49,13 @@ export async function onRequestGet({ request }) {
       step,
       count: days,
       dates: Array.from({ length: days }, (_, i) => addDaysISO(start, i)),
-      series: {}
+      series: {},
+      meta: {
+        cache: "miss",
+        stale: false,
+        key: cacheKey,
+        fetchedAt: new Date().toISOString()
+      }
     };
 
     const results = await Promise.all(bodyList.map(async (id) => {
@@ -63,13 +78,24 @@ export async function onRequestGet({ request }) {
     }));
 
     for (const r of results) {
-      if (!r.ok) return json({ ok:false, error:r.error, debug:r.debug, body:r.id }, 400);
+      if (!r.ok) {
+        // ---- stale-on-error ----
+        const fallback = await kvGetJSON(env, cacheKey);
+        if (fallback) {
+          fallback.meta = { ...(fallback.meta || {}), cache: "kv-stale", stale: true, key: cacheKey, error: r.error };
+          return json(fallback, 200, cacheHeaders());
+        }
+        return json({ ok:false, error:r.error, debug:r.debug, body:r.id }, 400);
+      }
       out.series[r.id] = r.points.map(p => ({ x: p.x, y: p.y }));
     }
 
-    return json(out, 200, {
-      "Cache-Control": "public, max-age=3600, s-maxage=21600"
-    });
+    // ---- KV put (async, best-effort) ----
+    const ttl = kvTTLSeconds(days);
+    const putPromise = kvPutJSON(env, cacheKey, out, ttl).catch(() => {});
+    if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(putPromise);
+
+    return json(out, 200, cacheHeaders());
 
   } catch (err) {
     return json({ ok:false, error: String(err?.message || err) }, 500);
@@ -77,7 +103,6 @@ export async function onRequestGet({ request }) {
 }
 
 // ---- Horizons fetch + parse ----
-// We use Horizons API and parse the $$SOE ... $$EOE block (CSV_FORMAT=YES).
 async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   const base = "https://ssd.jpl.nasa.gov/api/horizons.api";
 
@@ -102,7 +127,6 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
     REF_SYSTEM: "ICRF",
     OBJ_DATA: "NO",
 
-    // Horizons wants these quoted (control-file style)
     CENTER: `'${center}'`,
     COMMAND: `'${command}'`,
     START_TIME: `'${startT}'`,
@@ -155,6 +179,36 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   }
 
   return { ok: true, points };
+}
+
+// ---------- KV helpers ----------
+function kvKeyFromURL(url) {
+  return `v1:${url.pathname}${url.search}`;
+}
+
+async function kvGetJSON(env, key) {
+  const kv = env?.SOLAR_KV;
+  if (!kv) return null;
+  const s = await kv.get(key);
+  if (!s) return null;
+  try { return JSON.parse(s); } catch { return null; }
+}
+
+async function kvPutJSON(env, key, obj, ttlSeconds) {
+  const kv = env?.SOLAR_KV;
+  if (!kv) return;
+  await kv.put(key, JSON.stringify(obj), { expirationTtl: ttlSeconds });
+}
+
+function kvTTLSeconds(days) {
+  if (days <= 7) return 6 * 3600;
+  if (days <= 60) return 2 * 24 * 3600;
+  if (days <= 366) return 7 * 24 * 3600;
+  return 14 * 24 * 3600;
+}
+
+function cacheHeaders() {
+  return { "Cache-Control": "public, max-age=300, s-maxage=21600" };
 }
 
 // ---- utilities ----
