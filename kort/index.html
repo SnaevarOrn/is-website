@@ -185,37 +185,29 @@
   <div id="kortPanelBackdrop" class="kort-panel-backdrop" hidden></div>
 
   <!-- MapLibre JS -->
-  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 
-  <!-- Page JS (order matters). Use defer; order is preserved. -->
-  <script src="/assets/js/pages/kort.js" defer></script>
+<!-- Core -->
+<script src="/assets/js/pages/kort.js" defer></script>
+<script src="/assets/js/pages/kort.styles.js" defer></script>
 
-  <!-- must run AFTER kort.js creates window.kortMap -->
-  <script src="/assets/js/pages/kort.styles.js" defer></script>
+<!-- Modules -->
+<script src="/assets/js/pages/kort.modes.js" defer></script>
+<script src="/assets/js/pages/kort.routing.js" defer></script>
+<script src="/assets/js/pages/kort.measure.js" defer></script>
+<script src="/assets/js/pages/kort.crosshair.js" defer></script>
 
-  <!-- modules that attach to map -->
-  <script src="/assets/js/pages/kort.modes.js" defer></script>
-  <script src="/assets/js/pages/kort.routing.js" defer></script>
-  <script src="/assets/js/pages/kort.measure.js" defer></script>
+<!-- Live (one manager) -->
+<script src="/assets/js/pages/kort.addons.js" defer></script>
 
-  <!-- Crosshair -->
-  <script src="/assets/js/pages/kort.crosshair.js" defer></script>
+<!-- Overpass -->
+<script src="/assets/js/pages/kort.addons.overpass.js" defer></script>
 
-  <!-- ✅ Live addons (register into window.kortAddonsLive) -->
-  <script src="/assets/js/pages/kort.addon.flights.js" defer></script>
-  <script src="/assets/js/pages/kort.addon.weather.js" defer></script>
-  <!-- (valkvætt) roadcond addon, ef/þegar þú býrð hann til -->
-  <!-- <script src="/assets/js/pages/kort.addon.roadcond.js" defer></script> -->
+<!-- UI -->
+<script src="/assets/js/pages/kort.menu.js" defer></script>
+<script src="/assets/js/pages/kort.search.overlay.js" defer></script>
+<script src="/assets/js/pages/kort.search.js" defer></script>
+<script src="/assets/js/pages/kort.controls.js" defer></script>
 
-  <!-- ✅ Overpass addons (creates window.kortAddonsOverpass + shared router window.kortAddons) -->
-  <script src="/assets/js/pages/kort.addons.overpass.js" defer></script>
-
-  <!-- UI wiring -->
-  <script src="/assets/js/pages/kort.menu.js" defer></script>
-  <script src="/assets/js/pages/kort.search.overlay.js" defer></script>
-  <script src="/assets/js/pages/kort.search.js" defer></script>
-
-  <!-- controls LAST: uses everything above -->
-  <script src="/assets/js/pages/kort.controls.js" defer></script>
 </body>
 </html>
