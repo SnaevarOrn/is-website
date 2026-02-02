@@ -3,508 +3,402 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sólkerfið — Horizons v1</title>
+  <title>Sólkerfi — Horizons (plánetur + sporbaugar + tunglfasi)</title>
   <style>
     :root{
       --bg:#070a18;
       --stroke:rgba(255,255,255,.14);
       --text:#eaf0ff;
-      --muted:#a8b2dc;
-      --shadow: 0 14px 46px rgba(0,0,0,.42);
-      --card: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      --panel: rgba(0,0,0,.18);
-      --sun: rgba(251,191,36,.85);
-      --earth: rgba(34,211,238,.85);
-      --mars: rgba(74,222,128,.85);
+      --muted:rgba(255,255,255,.72);
+      --muted2:rgba(255,255,255,.55);
+      --bad:rgba(251,113,133,.35);
+      --good:rgba(74,222,128,.35);
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --shadow: 0 14px 46px rgba(0,0,0,.42);
     }
     *{box-sizing:border-box}
     body{
-      margin:0; min-height:100vh; color:var(--text); font-family:var(--sans);
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
       background:
-        radial-gradient(1200px 600px at 20% 10%, rgba(167,139,250,.35), transparent 55%),
-        radial-gradient(900px 520px at 80% 15%, rgba(34,211,238,.22), transparent 55%),
-        radial-gradient(900px 720px at 50% 92%, rgba(251,191,36,.12), transparent 60%),
+        radial-gradient(1200px 600px at 20% 10%, rgba(167,139,250,.28), transparent 55%),
+        radial-gradient(900px 520px at 80% 15%, rgba(34,211,238,.18), transparent 55%),
+        radial-gradient(900px 720px at 50% 92%, rgba(251,191,36,.10), transparent 60%),
         var(--bg);
-      overflow-x:hidden;
+      color:var(--text);
     }
-    .wrap{max-width:1200px;margin:0 auto;padding:18px;display:grid;gap:12px}
-    header{
-      border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
-      border-radius:18px;
-      padding:14px 14px 10px;
-      box-shadow:var(--shadow);
-      display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;
-    }
-    h1{margin:0;font-size:20px;letter-spacing:.2px}
-    .sub{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
-    .chips{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .chip{
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.05);
-      border-radius:999px;
-      padding:6px 10px;
-      color:var(--muted);
-      font-size:12px;
-      white-space:nowrap;
-    }
-    .chip b{color:var(--text)}
-    .grid{display:grid;grid-template-columns: 1.25fr .75fr; gap:12px;}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .chips{margin-left:0} }
-
+    .wrap{max-width:1050px; margin:0 auto; padding:18px; display:grid; gap:12px;}
     .card{
       border:1px solid var(--stroke);
-      background:var(--card);
-      border-radius:18px;
-      box-shadow:var(--shadow);
+      border-radius:16px;
       overflow:hidden;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
     }
-    .card h2{
-      margin:0;padding:10px 12px;
-      font-size:12px;letter-spacing:.35px;text-transform:uppercase;
-      color:var(--muted);
+    .hd{
+      padding:12px 14px;
       border-bottom:1px solid var(--stroke);
-      background:rgba(0,0,0,.15);
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
     }
-    .body{padding:12px;display:grid;gap:10px}
+    .title{font-size:12px; letter-spacing:.35px; text-transform:uppercase; color:var(--muted);}
+    .status{font-family:var(--mono); font-size:12px; color:var(--muted2);}
+    .bd{padding:14px; display:grid; gap:10px;}
     canvas{
       width:100%;
-      height:520px;
+      height:560px;
       display:block;
-      border-radius:16px;
+      border-radius:14px;
       border:1px solid var(--stroke);
       background:
         radial-gradient(700px 340px at 50% 45%, rgba(255,255,255,.06), transparent 60%),
         rgba(0,0,0,.18);
     }
-    @media (max-width: 980px){ canvas{height:420px} }
+    @media (max-width: 760px){ canvas{height:520px} }
 
-    .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .chip{
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.05);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .mono{font-family:var(--mono)}
+    .controls{
+      display:grid;
+      gap:10px;
+      padding-top:4px;
+    }
+    .panel{
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.18);
+      border-radius:14px;
+      padding:10px;
+      display:grid;
+      gap:10px;
+    }
+    .subrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .toggles{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+    label{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      color:var(--muted);
+      user-select:none;
+    }
+    input[type="checkbox"]{transform:translateY(1px)}
+    input[type="range"]{width:min(520px, 100%);}
+
+    .help{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:18px; height:18px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.05);
+      color:var(--muted2);
+      font-size:12px;
+      cursor:help;
+      position:relative;
+      flex:0 0 auto;
+    }
+    .help:hover::after{
+      content:attr(data-tip);
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:calc(100% + 10px);
+      width:min(420px, 80vw);
+      white-space:normal;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.75);
+      color:rgba(255,255,255,.86);
+      font-size:12px;
+      line-height:1.35;
+      box-shadow:var(--shadow);
+      z-index:10;
+    }
+    .help:hover::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:calc(100% + 2px);
+      border:8px solid transparent;
+      border-top-color:rgba(255,255,255,.16);
+    }
+
+    .err{
+      display:none;
+      border:1px solid var(--bad);
+      background:rgba(251,113,133,.08);
+      border-radius:14px;
+      padding:12px;
+    }
+    .oknote{
+      border:1px solid var(--good);
+      background:rgba(74,222,128,.08);
+      border-radius:14px;
+      padding:10px 12px;
+      color:rgba(255,255,255,.80);
+      font-size:12px;
+      display:none;
+    }
+    .err pre{
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-size:12px;
+      margin:8px 0 0;
+      color:rgba(255,255,255,.75);
+    }
+    .small{font-size:12px; color:var(--muted2); line-height:1.35}
     button{
       border:1px solid var(--stroke);
       background:rgba(255,255,255,.06);
       color:var(--text);
-      border-radius:14px;
-      padding:9px 11px;
+      border-radius:12px;
+      padding:8px 10px;
       font-weight:650;
       cursor:pointer;
-      transition: transform .08s ease, background .15s ease, border-color .15s ease;
     }
-    button:hover{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.24)}
-    button:active{transform:translateY(1px)}
-    .primary{background:rgba(34,211,238,.12);border-color:rgba(34,211,238,.35)}
-    .primary:hover{background:rgba(34,211,238,.17)}
-    .danger{background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.32)}
-    .danger:hover{background:rgba(251,113,133,.14)}
-
-    .panel{
-      border:1px solid var(--stroke);
-      background:var(--panel);
-      border-radius:16px;
-      padding:10px;
-      display:grid;gap:10px;
-    }
-    .caption{color:var(--muted);font-size:13px;line-height:1.4}
-    .mono{font-family:var(--mono)}
-
-    .kv{display:grid;grid-template-columns: 120px 1fr;gap:8px;align-items:center}
-    .kv .k{color:var(--muted);font-size:12px}
-    .kv .v{font-family:var(--mono);font-size:12px}
-
-    .ctrl{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
-
-    .checks{
-      display:flex; flex-wrap:wrap; gap:10px;
-      align-items:center;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.04);
-      border-radius:14px;
-      padding:10px;
-    }
-    .checks label{
-      display:flex; gap:8px; align-items:center;
-      color:var(--muted); font-size:12px;
-      user-select:none;
-    }
-    input[type="checkbox"]{ transform: translateY(1px); }
-    input[type="range"]{width: 100%;}
-
-    /* tiny tooltip */
-    .tip{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:16px;height:16px;
-      border-radius:999px;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.06);
-      color:var(--muted);
-      font-size:11px;
-      cursor:help;
-      margin-left:6px;
-    }
-
-    .errorBox{
-      border:1px solid rgba(251,113,133,.45);
-      background:rgba(251,113,133,.08);
-      border-radius:16px;
-      padding:10px;
-      color:rgba(255,255,255,.90);
-      font-size:13px;
-      line-height:1.35;
-      white-space:pre-wrap;
-    }
+    button:hover{background:rgba(255,255,255,.09)}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <h1>Sólkerfið (Horizons) + tunglfasi</h1>
-      <p class="sub">
-        Við lesum <span class="mono">x,y</span> stöður í AU úr NASA/JPL Horizons: Jarð/Mars heliocentric og Tungl geocentric.
-      </p>
+  <div class="card">
+    <div class="hd">
+      <div class="title">Sólkerfi (Horizons) — plánetur + sporbaugar + tunglfasi</div>
+      <div id="status" class="status mono">sæki…</div>
     </div>
-    <div class="chips">
-      <span class="chip">Dagur: <b id="dayLabel">—</b></span>
-      <span class="chip">Illum: <b id="illumLabel">—</b></span>
-      <span class="chip">Tunglfasi: <b id="phaseLabel">—</b></span>
-    </div>
-  </header>
+    <div class="bd">
+      <div class="err" id="err"><b>Villa</b><pre id="errtxt"></pre></div>
+      <div class="oknote" id="oknote"></div>
 
-  <div class="grid">
-    <section class="card">
-      <h2>Orbits & motion <span class="mono" id="status">sæki gögn…</span></h2>
-      <div class="body">
-        <canvas id="cv"></canvas>
+      <div class="row">
+        <span class="chip">Dagur: <b id="day">—</b></span>
 
-        <div class="row">
-          <button class="primary" id="toggleAuto">Auto ⏸</button>
-          <button id="dayMinus">Dagur −1</button>
-          <button id="dayPlus">Dagur +1</button>
-          <button id="weekMinus">−7</button>
-          <button id="weekPlus">+7</button>
-          <button id="todayBtn">Í dag</button>
-          <button class="danger" id="reset">Reset</button>
-        </div>
+        <span class="chip">
+          Illum: <b id="illum">—</b> <span id="phase" style="opacity:.85"></span>
+          <span class="help" title="Hjálp" data-tip="Illum = lýst hlutfall tunglsins (0% = nýtt, 50% = hálft, 100% = fullt). Reiknað úr horninu α milli vektoranna (Moon→Sun) og (Moon→Earth):  illum = (1 − cos(α)) / 2.">?</span>
+        </span>
 
-        <div class="panel ctrl">
-          <div class="checks">
-            <label><input type="checkbox" id="orbitsOn" checked> Sporbaugur</label>
-            <label><input type="checkbox" id="moonOn" checked> Tungl</label>
-            <label><input type="checkbox" id="moonRealScale"> Tungl í raun-skala</label>
+        <span class="chip">d(E→M): <b id="distAU">—</b> <span class="mono" style="opacity:.7">AU</span></span>
+        <span class="chip">≈ <b id="distKM">—</b> <span class="mono" style="opacity:.7">km</span></span>
 
-            <span class="mono" style="margin-left:auto;color:rgba(255,255,255,.75);font-size:12px">
-              Horizon window:
-              <span id="windowInfo">—</span>
-            </span>
-          </div>
-
-          <div class="checks" id="planetChecks">
-            <!-- injected -->
-          </div>
-
-          <div class="kv">
-            <div class="k">Timeline</div>
-            <div class="v">
-              <input id="scrub" type="range" min="0" max="0" value="0" />
-            </div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Hraði</div>
-            <div class="v">
-              <input id="speed" type="range" min="0.2" max="5" step="0.1" value="1" />
-            </div>
-          </div>
-
-          <div class="caption" id="caption">
-            Þetta er “stöðuvigur yfir tíma”: við teiknum state, ekki “hreyfingu” sem slík.
-          </div>
-        </div>
-
-        <div id="err" class="errorBox" style="display:none"></div>
+        <span class="chip">
+          Gögn: <span class="mono">x,y</span> í <span class="mono">AU</span>, plan = <span class="mono">ecliptic</span>
+          <span class="help" data-tip="Ephemeris: heliocentric staða plánetu (Sun-centered). Moon: geocentric staða tungls (Earth-centered). Allt er 2D (x,y) í ecliptic plani í þessari V1.">?</span>
+        </span>
       </div>
-    </section>
 
-    <section class="card">
-      <h2>Tunglgögn & útskýringar</h2>
-      <div class="body">
-        <div class="panel">
-          <div class="caption">
-            <b>Illum</b> er “lýst hlutfall” tunglsins (0% = nýtt, 100% = fullt).
-            Reiknað úr horni milli <span class="mono">(Moon→Sun)</span> og <span class="mono">(Moon→Earth)</span>.
-            <span class="tip" title="Illum = (1 - cos(alpha))/2, þar sem alpha er horn milli (tungl→sól) og (tungl→jörð).">?</span>
+      <canvas id="cv"></canvas>
+
+      <div class="controls panel">
+        <div class="subrow">
+          <div class="toggles">
+            <label><input type="checkbox" id="showOrbits" checked> Sporbaugar</label>
+            <label><input type="checkbox" id="showMoon" checked> Tungl</label>
+            <label><input type="checkbox" id="showMoonTrue" checked> Tungl (raunstaða á helio)</label>
+            <label><input type="checkbox" id="showPhaseDiagram" checked> Fasa-skýring</label>
+          </div>
+          <div class="toggles">
+            <button id="today">Í dag</button>
+            <button id="prev">Dagur −1</button>
+            <button id="next">Dagur +1</button>
+            <button id="reload">Sækja aftur</button>
           </div>
         </div>
 
-        <div class="panel">
-          <div class="kv"><div class="k">Earth→Moon (AU)</div><div class="v" id="moonVec">—</div></div>
-          <div class="kv"><div class="k">d(E→M)</div><div class="v" id="moonDist">—</div></div>
-          <div class="kv"><div class="k">EarthHelio (AU)</div><div class="v" id="earthVec">—</div></div>
-          <div class="kv"><div class="k">MarsHelio (AU)</div><div class="v" id="marsVec">—</div></div>
-          <div class="caption mono" id="mathLine">—</div>
+        <div class="subrow">
+          <label>
+            Horizon window (days):
+            <input type="range" id="days" min="1" max="365" value="30" />
+            <span class="mono" id="daysLabel">30</span>
+            <span class="help" data-tip="Sporbaugar eru teiknaðir út frá þessum glugga (days). Stærri gluggi = lengri slóð, en meiri líkur á 503 ef Horizons er í stuði. KV cache + stale-on-error hjálpar hér.">?</span>
+          </label>
+
+          <label>
+            Timeline:
+            <input type="range" id="t" min="0" max="29" value="0" />
+            <span class="mono" id="tLabel">0</span>
+          </label>
         </div>
 
-        <div class="panel">
-          <div class="caption">
-            Mánuðir á sporbaug Jarðar eru merktir út frá <span class="mono">dates[]</span> sem þú færð frá ephemeris API.
+        <div class="subrow">
+          <div class="toggles">
+            <span class="small">Veldu plánetur:</span>
+            <label><input type="checkbox" class="body" value="mercury"> Merkúr</label>
+            <label><input type="checkbox" class="body" value="venus"> Venus</label>
+            <label><input type="checkbox" class="body" value="earth" checked> Jörð</label>
+            <label><input type="checkbox" class="body" value="mars" checked> Mars</label>
+            <label><input type="checkbox" class="body" value="jupiter"> Júpíter</label>
+            <label><input type="checkbox" class="body" value="saturn"> Satúrnus</label>
           </div>
+        </div>
+
+        <div class="small">
+          Við lesum: <span class="mono">PlanetHelio(x,y)</span> (sólmiðja) og <span class="mono">MoonGeo(x,y)</span> (jörðmiðja).
+          Síðan: <span class="mono">MoonHelio = EarthHelio + MoonGeo</span>.
+          <br/>Mælieining: <span class="mono">1 AU ≈ 149,597,870.7 km</span>.
         </div>
       </div>
-    </section>
+    </div>
   </div>
 </div>
 
 <script>
 (() => {
+  const AU_KM = 149597870.7;
+
   const cv = document.getElementById("cv");
   const ctx = cv.getContext("2d");
 
   const el = {
     status: document.getElementById("status"),
-    dayLabel: document.getElementById("dayLabel"),
-    illumLabel: document.getElementById("illumLabel"),
-    phaseLabel: document.getElementById("phaseLabel"),
-    caption: document.getElementById("caption"),
-    windowInfo: document.getElementById("windowInfo"),
     err: document.getElementById("err"),
+    errtxt: document.getElementById("errtxt"),
+    oknote: document.getElementById("oknote"),
 
-    toggleAuto: document.getElementById("toggleAuto"),
-    dayMinus: document.getElementById("dayMinus"),
-    dayPlus: document.getElementById("dayPlus"),
-    weekMinus: document.getElementById("weekMinus"),
-    weekPlus: document.getElementById("weekPlus"),
-    todayBtn: document.getElementById("todayBtn"),
-    reset: document.getElementById("reset"),
+    day: document.getElementById("day"),
+    illum: document.getElementById("illum"),
+    phase: document.getElementById("phase"),
+    distAU: document.getElementById("distAU"),
+    distKM: document.getElementById("distKM"),
 
-    scrub: document.getElementById("scrub"),
-    speed: document.getElementById("speed"),
+    showOrbits: document.getElementById("showOrbits"),
+    showMoon: document.getElementById("showMoon"),
+    showMoonTrue: document.getElementById("showMoonTrue"),
+    showPhaseDiagram: document.getElementById("showPhaseDiagram"),
 
-    orbitsOn: document.getElementById("orbitsOn"),
-    moonOn: document.getElementById("moonOn"),
-    moonRealScale: document.getElementById("moonRealScale"),
-    planetChecks: document.getElementById("planetChecks"),
+    days: document.getElementById("days"),
+    daysLabel: document.getElementById("daysLabel"),
+    t: document.getElementById("t"),
+    tLabel: document.getElementById("tLabel"),
 
-    moonVec: document.getElementById("moonVec"),
-    moonDist: document.getElementById("moonDist"),
-    earthVec: document.getElementById("earthVec"),
-    marsVec: document.getElementById("marsVec"),
-    mathLine: document.getElementById("mathLine"),
+    today: document.getElementById("today"),
+    prev: document.getElementById("prev"),
+    next: document.getElementById("next"),
+    reload: document.getElementById("reload"),
   };
 
-  // --- planet config (id must match API series keys) ---
-  const PLANETS = [
-    { id:"mercury", label:"Merkúr",  color:"rgba(251,191,36,0.65)" },
-    { id:"venus",   label:"Venus",   color:"rgba(167,139,250,0.75)" },
-    { id:"earth",   label:"Jörð",    color:"rgba(34,211,238,0.85)" },
-    { id:"mars",    label:"Mars",    color:"rgba(74,222,128,0.85)" },
-    { id:"jupiter", label:"Júpíter", color:"rgba(255,255,255,0.70)" },
-    { id:"saturn",  label:"Satúrnus",color:"rgba(255,255,255,0.55)" },
-  ];
-
-  // default selected
-  const selected = new Set(["earth","mars"]);
-  function buildPlanetChecks(){
-    el.planetChecks.innerHTML = "";
-    for (const p of PLANETS){
-      const lab = document.createElement("label");
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = selected.has(p.id);
-      cb.addEventListener("change", () => {
-        if (cb.checked) selected.add(p.id);
-        else selected.delete(p.id);
-      });
-      lab.appendChild(cb);
-      const t = document.createElement("span");
-      t.textContent = p.label;
-      lab.appendChild(t);
-      el.planetChecks.appendChild(lab);
-    }
-    // add a tooltip-y helper chip
-    const hint = document.createElement("span");
-    hint.className = "mono";
-    hint.style.marginLeft = "auto";
-    hint.style.fontSize = "12px";
-    hint.style.color = "rgba(255,255,255,.65)";
-    hint.textContent = "✓ = teikna plánetu";
-    el.planetChecks.appendChild(hint);
-  }
-  buildPlanetChecks();
-
-  // ---- canvas sizing ----
   function resize(){
     const r = cv.getBoundingClientRect();
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
-    cv.width = Math.floor(r.width * dpr);
+    const dpr = Math.max(1, devicePixelRatio || 1);
+    cv.width  = Math.floor(r.width * dpr);
     cv.height = Math.floor(r.height * dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  window.addEventListener("resize", resize);
-  resize();
+  addEventListener("resize", resize); resize();
 
-  // ---- math helpers ----
   const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
-  const lerp  = (a,b,t)=>a+(b-a)*t;
+  const lerp = (a,b,t)=>a+(b-a)*t;
 
-  const vAdd = (a,b)=>({x:a.x+b.x,y:a.y+b.y});
-  const vSub = (a,b)=>({x:a.x-b.x,y:a.y-b.y});
-  const vMul = (a,s)=>({x:a.x*s,y:a.y*s});
+  const vAdd = (a,b)=>({x:a.x+b.x, y:a.y+b.y});
+  const vSub = (a,b)=>({x:a.x-b.x, y:a.y-b.y});
+  const vMul = (a,s)=>({x:a.x*s, y:a.y*s});
   const vLen = (a)=>Math.hypot(a.x,a.y);
-  const vNorm=(a)=>{ const L=vLen(a)||1; return {x:a.x/L,y:a.y/L}; };
+  const vNorm = (a)=>{ const L=vLen(a)||1; return {x:a.x/L,y:a.y/L}; };
   const vDot = (a,b)=>a.x*b.x + a.y*b.y;
-  const vAngle=(a,b)=>{
-    const na=vNorm(a), nb=vNorm(b);
-    return Math.acos(clamp(vDot(na,nb), -1, 1));
-  };
+  const vAngle = (a,b)=>Math.acos(clamp(vDot(vNorm(a),vNorm(b)),-1,1));
 
-  function phaseNameFromIllum(illum, waxing) {
-    if (illum < 0.05) return "Nýtt";
-    if (illum < 0.45) return waxing ? "Vaxandi sigð" : "Minnkandi sigð";
-    if (illum < 0.55) return waxing ? "Fyrsta kvartil" : "Síðasta kvartil";
-    if (illum < 0.95) return waxing ? "Vaxandi gibbous" : "Minnkandi gibbous";
-    return "Fullt";
+  function phaseName(illum){
+    if (illum < 0.05) return "— Nýtt";
+    if (illum < 0.45) return "— Sigð";
+    if (illum < 0.55) return "— Hálft (kvartil-ish)";
+    if (illum < 0.95) return "— Gibbous";
+    return "— Fullt";
   }
 
-  function sampleSeries(series, idxFloat){
-    const n = series.length;
-    if (n <= 1) return series[0] || {x:0,y:0};
-    const i = Math.floor(idxFloat);
-    const t = idxFloat - i;
-    const i0 = clamp(i, 0, n-1);
-    const i1 = clamp(i+1, 0, n-1);
-    const a = series[i0], b = series[i1];
-    return { x: lerp(a.x,b.x,t), y: lerp(a.y,b.y,t) };
+  function isoToday(){
+    return new Date().toISOString().slice(0,10);
   }
 
-  function worldToScreen(p, center, scale){
-    return { x: center.x + p.x*scale, y: center.y + p.y*scale };
+  function roundRect(x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y, x+w,y+h, rr);
+    ctx.arcTo(x+w,y+h, x,y+h, rr);
+    ctx.arcTo(x,y+h, x,y, rr);
+    ctx.arcTo(x,y, x+w,y, rr);
+    ctx.closePath();
   }
-
-  function showError(msg){
-    el.err.style.display = "block";
-    el.err.textContent = msg;
-  }
-  function clearError(){
-    el.err.style.display = "none";
-    el.err.textContent = "";
-  }
-
-  // ---- data state ----
-  let data = null;  // ephemeris
-  let moon = null;  // moon
-  let maxR = 1;
-
-  let auto = true;
-  let t0 = performance.now();
-  let simDay = 0;      // float index
-  let speed = 1.0;
-
-  // ---- API fetch ----
-  const API = `${location.origin}/api`;
 
   async function fetchJSON(url){
-    const r = await fetch(url, { headers: { "accept":"application/json" } });
-    const ct = (r.headers.get("content-type")||"").toLowerCase();
+    const r = await fetch(url, { headers:{accept:"application/json"}, cache:"no-store" });
     const txt = await r.text();
-
-    // Fast fail if we got HTML (SPA fallback / error page)
-    if (!ct.includes("application/json")){
-      throw new Error(`API skilaði ekki JSON (HTTP ${r.status}).\nURL: ${url}\nContent-Type: ${ct||"unknown"}\nByrjun:\n${txt.slice(0,220).replace(/\s+/g," ")}…`);
-    }
+    const ct = (r.headers.get("content-type")||"").toLowerCase();
+    if (!ct.includes("application/json")) throw new Error(`Ekki JSON frá ${url}\n${txt.slice(0,220)}`);
 
     let j;
     try { j = JSON.parse(txt); }
-    catch { throw new Error(`Ógilt JSON frá ${url}\nByrjun:\n${txt.slice(0,220)}…`); }
+    catch { throw new Error(`Ógilt JSON frá ${url}\n${txt.slice(0,220)}`); }
 
-    if (!r.ok || j?.ok === false){
-      const dbg = j?.debug ? `\n\nDEBUG:\n${String(j.debug).slice(0,800)}` : "";
-      throw new Error(`API villa: ${j?.error || ("HTTP "+r.status)}${dbg}`);
+    if (!r.ok || j.ok === false) {
+      const dbg = j?.debug ? ("\n\nDEBUG:\n" + j.debug) : "";
+      throw new Error(`API villa: ${j?.error || r.status}${dbg}`);
     }
     return j;
   }
 
-  function todayISO(){
-    return new Date().toISOString().slice(0,10);
-  }
+  const COLORS = {
+    mercury: "rgba(251,191,36,0.85)",
+    venus:   "rgba(167,139,250,0.85)",
+    earth:   "rgba(34,211,238,0.90)",
+    mars:    "rgba(74,222,128,0.90)",
+    jupiter: "rgba(255,255,255,0.70)",
+    saturn:  "rgba(255,255,255,0.55)",
+  };
+  const LABELS = {
+    mercury:"Merkúr",
+    venus:"Venus",
+    earth:"Jörð",
+    mars:"Mars",
+    jupiter:"Júpíter",
+    saturn:"Satúrnus",
+  };
 
-  async function loadWindow(startISO, days=365){
-    clearError();
-    el.status.textContent = "sæki gögn…";
-
-    const bodies = PLANETS.map(p=>p.id).join(",");
-    const url1 = `${API}/ephemeris?start=${encodeURIComponent(startISO)}&days=${days}&step=1d&bodies=${encodeURIComponent(bodies)}`;
-    const url2 = `${API}/moon?start=${encodeURIComponent(startISO)}&days=${days}&step=1d`;
-
-    const [a,b] = await Promise.all([ fetchJSON(url1), fetchJSON(url2) ]);
-
-    data = a;
-    moon = b;
-
-    // determine max radius for scaling from selected bodies only (so scaling feels nicer)
-    maxR = 0.1;
-    for (const pid of Object.keys(data.series)){
-      for (const pt of data.series[pid]){
-        const r = Math.hypot(pt.x, pt.y);
-        if (r > maxR) maxR = r;
-      }
-    }
-
-    el.windowInfo.textContent = `${data.start} → ${data.end} (N=${data.count})`;
-
-    el.scrub.min = "0";
-    el.scrub.max = String(Math.max(0, data.count - 1));
-    el.scrub.value = "0";
-    simDay = 0;
-
-    el.status.textContent = "ok ✅";
-  }
-
-  // ---- month labels on Earth's orbit (within loaded window) ----
-  const MONTHS = ["jan","feb","mar","apr","maí","jún","júl","ágú","sep","okt","nóv","des"];
-  function findMonthStarts(dates){
-    // return list of {i, label} where month changes and day==01
-    const out = [];
-    if (!dates || !dates.length) return out;
-
-    for (let i=0;i<dates.length;i++){
-      const s = dates[i]; // YYYY-MM-DD
-      const mm = parseInt(s.slice(5,7),10);
-      const dd = parseInt(s.slice(8,10),10);
-      if (dd === 1) out.push({ i, label: MONTHS[mm-1] });
-    }
-
-    // if window doesn't start at day 1, still mark start month near first point
-    if (out.length === 0){
-      const mm0 = parseInt(dates[0].slice(5,7),10);
-      out.push({ i: 0, label: MONTHS[mm0-1] });
-    }
-    return out;
-  }
-
-  // ---- drawing ----
   function drawSun(center){
-    // glow
-    const sunGlow = ctx.createRadialGradient(center.x,center.y, 0, center.x,center.y, 85);
-    sunGlow.addColorStop(0, "rgba(251,191,36,0.38)");
-    sunGlow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = sunGlow;
-    ctx.beginPath(); ctx.arc(center.x,center.y, 80, 0, Math.PI*2); ctx.fill();
+    const glow = ctx.createRadialGradient(center.x,center.y,0, center.x,center.y,150);
+    glow.addColorStop(0,"rgba(251,191,36,0.35)");
+    glow.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(center.x,center.y,140,0,Math.PI*2); ctx.fill();
 
-    // core
-    ctx.fillStyle = "rgba(251,191,36,0.85)";
-    ctx.beginPath(); ctx.arc(center.x,center.y, 10, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.fillStyle = "rgba(251,191,36,0.90)";
+    ctx.beginPath(); ctx.arc(center.x,center.y,10,0,Math.PI*2); ctx.fill();
+  }
+
+  function drawDot(p, center, scale, r, fill, label){
+    const s = { x:center.x + p.x*scale, y:center.y + p.y*scale };
+    ctx.fillStyle = fill;
+    ctx.beginPath(); ctx.arc(s.x,s.y,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.22)";
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(center.x,center.y, 10, 0, Math.PI*2); ctx.stroke();
+    ctx.stroke();
+
+    if (label){
+      ctx.font = "600 12px system-ui";
+      ctx.fillStyle = "rgba(234,240,255,0.75)";
+      ctx.fillText(label, s.x + 10, s.y - 10);
+    }
+    return s;
   }
 
   function drawOrbit(series, center, scale, stroke){
@@ -512,315 +406,364 @@
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let i=0;i<series.length;i++){
-      const s = worldToScreen(series[i], center, scale);
+      const p = series[i];
+      const s = { x:center.x + p.x*scale, y:center.y + p.y*scale };
       if (i===0) ctx.moveTo(s.x,s.y); else ctx.lineTo(s.x,s.y);
     }
     ctx.stroke();
   }
 
-  function drawPlanet(pos, center, scale, color, radiusPx){
-    const s = worldToScreen(pos, center, scale);
-
-    const glow = ctx.createRadialGradient(s.x,s.y, 0, s.x,s.y, radiusPx*7);
-    glow.addColorStop(0, color.replace("0.85","0.22").replace("0.75","0.18").replace("0.70","0.16").replace("0.65","0.14").replace("0.55","0.12"));
-    glow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(s.x,s.y, radiusPx*5, 0, Math.PI*2); ctx.fill();
-
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(s.x,s.y, radiusPx, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.22)";
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(s.x,s.y, radiusPx, 0, Math.PI*2); ctx.stroke();
-
-    return s;
-  }
-
-  function drawLabel(text, x, y){
-    ctx.font = "600 12px ui-sans-serif";
-    ctx.fillStyle = "rgba(234,240,255,0.75)";
-    ctx.fillText(text, x+10, y-10);
-  }
-
-  function drawMoonDisk(screenPos, radiusPx, lightDirScreen, illum){
-    const L = vNorm(lightDirScreen);
-    const r = radiusPx;
+  function drawMoonDisk(moonS, lightDir, illum){
+    const L = vNorm(lightDir);
+    const r = 7;
 
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(screenPos.x, screenPos.y, r, 0, Math.PI*2);
+    ctx.beginPath(); ctx.arc(moonS.x, moonS.y, r, 0, Math.PI*2);
     ctx.clip();
 
-    const g = ctx.createRadialGradient(screenPos.x-r*0.25, screenPos.y-r*0.25, r*0.2, screenPos.x, screenPos.y, r);
-    g.addColorStop(0, "rgba(255,255,255,0.18)");
-    g.addColorStop(1, "rgba(0,0,0,0.30)");
-    ctx.fillStyle = g;
-    ctx.fillRect(screenPos.x-r, screenPos.y-r, r*2, r*2);
+    const g = ctx.createRadialGradient(moonS.x-r*0.2, moonS.y-r*0.2, r*0.2, moonS.x, moonS.y, r);
+    g.addColorStop(0,"rgba(255,255,255,0.18)");
+    g.addColorStop(1,"rgba(0,0,0,0.30)");
+    ctx.fillStyle=g;
+    ctx.fillRect(moonS.x-r, moonS.y-r, r*2, r*2);
 
-    const lg = ctx.createLinearGradient(
-      screenPos.x - L.x*r, screenPos.y - L.y*r,
-      screenPos.x + L.x*r, screenPos.y + L.y*r
-    );
-    lg.addColorStop(0, "rgba(0,0,0,0.48)");
-    lg.addColorStop(0.45, "rgba(255,255,255,0.10)");
-    lg.addColorStop(1, "rgba(255,255,255,0.26)");
-    ctx.fillStyle = lg;
-    ctx.fillRect(screenPos.x-r, screenPos.y-r, r*2, r*2);
-
-    const phase = 2*illum - 1;   // -1..+1
-    const offset = -phase * r;   // shift shadow along light axis
-    ctx.fillStyle = "rgba(0,0,0,0.62)";
+    // shadow overlap trick
+    const phase = 2*illum - 1; // -1..+1
+    const offset = -phase * r;
+    ctx.fillStyle="rgba(0,0,0,0.60)";
     ctx.beginPath();
-    ctx.arc(screenPos.x + L.x*offset, screenPos.y + L.y*offset, r, 0, Math.PI*2);
+    ctx.arc(moonS.x + L.x*offset, moonS.y + L.y*offset, r, 0, Math.PI*2);
     ctx.fill();
 
     ctx.restore();
+    ctx.strokeStyle="rgba(255,255,255,0.35)";
+    ctx.beginPath(); ctx.arc(moonS.x, moonS.y, r, 0, Math.PI*2); ctx.stroke();
+  }
 
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  function drawPhaseDiagram(box, centerSun, earthS, moonTrueS){
+    // box: {x,y,w,h}
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.strokeStyle = "rgba(255,255,255,0.14)";
     ctx.lineWidth = 1;
+    roundRect(box.x, box.y, box.w, box.h, 14);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = "rgba(234,240,255,0.70)";
+    ctx.font = "600 11px system-ui";
+    ctx.fillText("Fasa-skýring (Sól–Jörð–Tungl)", box.x+12, box.y+18);
+
+    // Map points into box coords (we just reuse actual screen points but clamp-ish by shifting)
+    // We'll draw 3 points: Sun at center of box, Earth and Moon relative directions.
+    const cx = box.x + box.w*0.50;
+    const cy = box.y + box.h*0.62;
+
+    // directions from Earth: Earth->Sun and Earth->Moon (using real positions)
+    const eToSun = vSub(centerSun, earthS);
+    const eToMoon = vSub(moonTrueS, earthS);
+
+    const u1 = vNorm(eToSun);
+    const u2 = vNorm(eToMoon);
+
+    const L = Math.min(box.w, box.h) * 0.28;
+
+    const sunP  = { x: cx + u1.x*L, y: cy + u1.y*L };
+    const moonP = { x: cx + u2.x*L, y: cy + u2.y*L };
+    const earthP= { x: cx, y: cy };
+
+    // rays
+    ctx.strokeStyle = "rgba(255,255,255,0.20)";
+    ctx.beginPath(); ctx.moveTo(earthP.x, earthP.y); ctx.lineTo(sunP.x, sunP.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(earthP.x, earthP.y); ctx.lineTo(moonP.x, moonP.y); ctx.stroke();
+
+    // angle arc
+    const ang = vAngle(eToSun, eToMoon);
+    ctx.strokeStyle = "rgba(34,211,238,0.55)";
     ctx.beginPath();
-    ctx.arc(screenPos.x, screenPos.y, r, 0, Math.PI*2);
+    ctx.arc(earthP.x, earthP.y, 22, Math.atan2(u1.y,u1.x), Math.atan2(u2.y,u2.x), false);
     ctx.stroke();
+
+    ctx.fillStyle = "rgba(234,240,255,0.65)";
+    ctx.font = "600 11px system-ui";
+    ctx.fillText(`α ≈ ${(ang*180/Math.PI).toFixed(1)}°`, box.x+12, box.y+box.h-12);
+
+    // dots
+    ctx.fillStyle = "rgba(34,211,238,0.95)";
+    ctx.beginPath(); ctx.arc(earthP.x, earthP.y, 4.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "rgba(251,191,36,0.90)";
+    ctx.beginPath(); ctx.arc(sunP.x, sunP.y, 4.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.90)";
+    ctx.beginPath(); ctx.arc(moonP.x, moonP.y, 4.0, 0, Math.PI*2); ctx.fill();
+
+    // labels
+    ctx.fillStyle = "rgba(234,240,255,0.60)";
+    ctx.font = "600 10px system-ui";
+    ctx.fillText("Jörð", earthP.x+8, earthP.y-8);
+    ctx.fillText("Sól",  sunP.x+8, sunP.y-8);
+    ctx.fillText("Tungl", moonP.x+8, moonP.y-8);
+
+    ctx.restore();
   }
 
-  function drawMonthMarkers(center, scale){
-    if (!data?.dates?.length) return;
-    if (!data?.series?.earth?.length) return;
+  // --- state ---
+  let startISO = "2026-02-02"; // stabilt demo; þú getur sett isoToday() ef þú vilt live
+  let ep = null;
+  let mo = null;
 
-    const marks = findMonthStarts(data.dates);
-    ctx.font = "600 11px ui-sans-serif";
-    for (const m of marks){
-      const pt = data.series.earth[m.i];
-      const s = worldToScreen(pt, center, scale);
-      ctx.fillStyle = "rgba(255,255,255,0.40)";
-      ctx.beginPath(); ctx.arc(s.x, s.y, 2.2, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,0.55)";
-      ctx.fillText(m.label, s.x + 6, s.y + 4);
+  function selectedBodies(){
+    return Array.from(document.querySelectorAll('input.body:checked')).map(x=>x.value);
+  }
+
+  function setStatusOk(metaA, metaB){
+    const bits = [];
+    if (metaA?.cache) bits.push(`ep:${metaA.cache}${metaA.stale?"/stale":""}`);
+    if (metaB?.cache) bits.push(`moon:${metaB.cache}${metaB.stale?"/stale":""}`);
+    el.status.textContent = bits.length ? `ok ✅ (${bits.join(", ")})` : "ok ✅";
+  }
+
+  function setStatusLoading(msg){ el.status.textContent = msg || "sæki…"; }
+
+  function showError(e){
+    el.err.style.display="block";
+    el.errtxt.textContent = String(e?.message || e);
+  }
+  function clearError(){
+    el.err.style.display="none";
+    el.errtxt.textContent = "";
+  }
+
+  function showNote(html){
+    el.oknote.style.display="block";
+    el.oknote.innerHTML = html;
+  }
+  function hideNote(){
+    el.oknote.style.display="none";
+    el.oknote.innerHTML = "";
+  }
+
+  function sample(series, iFloat){
+    const n = series.length;
+    if (!n) return {x:0,y:0};
+    const i = Math.floor(iFloat);
+    const t = iFloat - i;
+    const i0 = clamp(i, 0, n-1);
+    const i1 = clamp(i+1, 0, n-1);
+    const a = series[i0], b = series[i1];
+    return { x: lerp(a.x,b.x,t), y: lerp(a.y,b.y,t) };
+  }
+
+  async function load(){
+    clearError();
+    hideNote();
+    setStatusLoading("sæki…");
+
+    const days = parseInt(el.days.value, 10);
+    el.daysLabel.textContent = String(days);
+    el.t.max = String(Math.max(0, days-1));
+    if (parseInt(el.t.value,10) > days-1) el.t.value = "0";
+    el.tLabel.textContent = el.t.value;
+
+    const bodies = selectedBodies();
+    if (!bodies.includes("earth")) {
+      showNote(`Ath: þú slökktir á <b>Jörð</b>. Tunglið þarf Jörð til að reikna MoonHelio og fasa. Ég læt Jörð samt vera í bakgrunnsgögnum.`);
     }
+
+    // Ensure Earth is always fetched (for MoonHelio + phase) even if not drawn.
+    const fetchBodies = Array.from(new Set([...bodies, "earth"]));
+
+    const epUrl = `/api/ephemeris?start=${encodeURIComponent(startISO)}&days=${days}&step=1d&bodies=${encodeURIComponent(fetchBodies.join(","))}`;
+    const moUrl = `/api/moon?start=${encodeURIComponent(startISO)}&days=${days}&step=1d`;
+
+    const [epData, moData] = await Promise.all([ fetchJSON(epUrl), fetchJSON(moUrl) ]);
+
+    ep = epData;
+    mo = moData;
+
+    const N = Math.min(ep.count||0, (ep.dates||[]).length, mo.count||0, days);
+    if (N < 1) throw new Error(`Of lítil gögn: ep.count=${ep.count}, moon.count=${mo.count}`);
+
+    // If API returned stale, show a friendly banner
+    const stale = !!(ep.meta?.stale || mo.meta?.stale);
+    if (stale) {
+      showNote(`Horizons var líklega í 503-stuði — sýni <b>stale cache</b> (síðustu góðu gögn).`);
+    }
+
+    setStatusOk(ep.meta, mo.meta);
+    render();
   }
 
-  function draw(now){
+  function render(){
+    if (!ep || !mo) return;
+
     const w = cv.getBoundingClientRect().width;
     const h = cv.getBoundingClientRect().height;
-
-    const dt = Math.min(0.05, (now - t0) / 1000);
-    t0 = now;
-
-    if (data && auto){
-      simDay += dt * speed * 10; // “nice” feel
-      if (simDay >= data.count - 1) simDay = 0;
-      el.scrub.value = String(Math.floor(simDay));
-    }
-
     ctx.clearRect(0,0,w,h);
 
-    // background vignette
-    const center = { x:w*0.52, y:h*0.50 };
-    const vg = ctx.createRadialGradient(center.x,center.y, Math.min(w,h)*0.05, center.x,center.y, Math.min(w,h)*0.75);
-    vg.addColorStop(0, "rgba(255,255,255,0.06)");
-    vg.addColorStop(1, "rgba(0,0,0,0.55)");
-    ctx.fillStyle = vg;
-    ctx.fillRect(0,0,w,h);
+    const days = parseInt(el.days.value,10);
+    const i = clamp(parseInt(el.t.value,10), 0, days-1);
+    el.tLabel.textContent = String(i);
 
+    const date = ep.dates?.[i] || ep.start || startISO;
+    el.day.textContent = date;
+
+    // world center
+    const center = { x: w*0.52, y: h*0.52 };
+
+    // compute max radius among selected planets for scaling (use fetched series)
+    let maxR = 0.2;
+    for (const [id, series] of Object.entries(ep.series || {})) {
+      // only scale by planets we might show OR earth (to keep stable)
+      if (!series?.length) continue;
+      if (id !== "earth" && !selectedBodies().includes(id)) continue;
+      for (const p of series) {
+        const r = Math.hypot(p.x,p.y);
+        if (r > maxR) maxR = r;
+      }
+    }
+    const scale = (Math.min(w,h)*0.42) / (maxR*1.05);
+
+    // sun
     drawSun(center);
 
-    if (!data){
-      requestAnimationFrame(draw);
-      return;
-    }
+    // orbits
+    const showOrbits = el.showOrbits.checked;
+    const bodies = selectedBodies();
 
-    const scale = (Math.min(w,h)*0.42) / (maxR * 1.05);
-
-    // Orbits
-    if (el.orbitsOn.checked){
-      for (const p of PLANETS){
-        if (!selected.has(p.id)) continue;
-        const series = data.series[p.id];
+    if (showOrbits){
+      for (const id of bodies){
+        const series = ep.series?.[id];
         if (!series) continue;
-        const stroke = p.color.replace("0.85","0.16").replace("0.75","0.14").replace("0.70","0.12").replace("0.65","0.11").replace("0.55","0.10");
-        drawOrbit(series, center, scale, stroke);
+        const c = (COLORS[id] || "rgba(255,255,255,0.5)");
+        // fade for orbit
+        const stroke = c.replace("0.90","0.18").replace("0.85","0.18").replace("0.70","0.12").replace("0.55","0.10");
+        drawOrbit(series.slice(0, days), center, scale, stroke);
       }
-      // month markers only on Earth's orbit
-      if (selected.has("earth")) drawMonthMarkers(center, scale);
     }
 
-    // Sample positions at simDay
-    const earthPos = sampleSeries(data.series.earth, simDay);
-    const marsPos  = data.series.mars ? sampleSeries(data.series.mars, simDay) : {x:0,y:0};
+    // planets at day i
+    const earth = sample(ep.series.earth, i);
+    const earthS = drawDot(earth, center, scale, 5, COLORS.earth, bodies.includes("earth") ? "Jörð" : "");
 
-    // Draw planets
-    let earthS = null, marsS = null;
-
-    for (const p of PLANETS){
-      if (!selected.has(p.id)) continue;
-      const series = data.series[p.id];
+    for (const id of bodies){
+      if (id === "earth") continue;
+      const series = ep.series?.[id];
       if (!series) continue;
-      const pos = sampleSeries(series, simDay);
-
-      const rPx = (p.id==="jupiter") ? 6 : (p.id==="saturn") ? 5 : (p.id==="mercury") ? 3.2 : 4;
-      const sp = drawPlanet(pos, center, scale, p.color, rPx);
-
-      if (p.id==="earth"){ earthS = sp; drawLabel("Jörð", sp.x, sp.y); }
-      if (p.id==="mars"){  marsS  = sp; drawLabel("Mars", sp.x, sp.y); }
+      const p = sample(series, i);
+      const r = (id==="jupiter") ? 6 : (id==="saturn") ? 5 : (id==="mercury") ? 3.5 : 4.5;
+      drawDot(p, center, scale, r, COLORS[id] || "rgba(255,255,255,0.7)", LABELS[id] || id);
     }
 
     // Moon + phase
-    let illum = 0.5;
-    let waxing = true;
+    const moonGeo = sample(mo.series.moon, i);
+    const dAU = vLen(moonGeo);
+    el.distAU.textContent = dAU.toFixed(6);
+    el.distKM.textContent = Math.round(dAU * AU_KM).toLocaleString("is-IS");
 
-    if (el.moonOn.checked && moon?.series?.moon && earthS){
-      const moonGeo = sampleSeries(moon.series.moon, simDay); // AU, Earth-centered
-      const moonHelio = vAdd(earthPos, moonGeo);
+    const moonHelio = vAdd(earth, moonGeo);
 
-      const moonToSun   = vMul(moonHelio, -1); // Sun at origin
-      const moonToEarth = vMul(moonGeo, -1);   // Earth relative to Moon
-      const alpha = vAngle(moonToSun, moonToEarth);
-      illum = (1 - Math.cos(alpha)) / 2;
+    // phase (illum)
+    const moonToSun   = vMul(moonHelio, -1); // Sun at origin
+    const moonToEarth = vMul(moonGeo, -1);   // Earth relative to Moon
+    const alpha = vAngle(moonToSun, moonToEarth);
+    const illum = (1 - Math.cos(alpha)) / 2;
 
-      // waxing/waning from next day sample
-      const idx2 = clamp(simDay + 1, 0, (data.count||1) - 1);
-      const moonGeo2 = sampleSeries(moon.series.moon, idx2);
-      const earth2   = sampleSeries(data.series.earth, idx2);
-      const moonHelio2 = vAdd(earth2, moonGeo2);
-      const alpha2 = vAngle(vMul(moonHelio2,-1), vMul(moonGeo2,-1));
-      const illum2 = (1 - Math.cos(alpha2)) / 2;
-      waxing = illum2 >= illum;
+    el.illum.textContent = (illum*100).toFixed(1) + "%";
+    el.phase.textContent = phaseName(illum);
 
-      // Decide whether Moon is drawn in real scale or “visible”
-      const moonGeoDraw = el.moonRealScale.checked ? moonGeo : vMul(moonGeo, 120); // 120x is “visible”, tweak freely
-      const moonHelioDraw = vAdd(earthPos, moonGeoDraw);
+    if (el.showMoon.checked){
+      // true heliocentric moon pixel
+      const moonTrueS = { x:center.x + moonHelio.x*scale, y:center.y + moonHelio.y*scale };
 
-      const moonS = worldToScreen(moonHelioDraw, center, scale);
+      // visible (exaggerated) moon offset around earth
+      const exaggeration = 9000;
+      const moonVisS = {
+        x: earthS.x + moonGeo.x*scale*exaggeration,
+        y: earthS.y + moonGeo.y*scale*exaggeration
+      };
 
-      // line Earth->Moon (draw-scale, for visual clarity)
-      ctx.strokeStyle = "rgba(255,255,255,0.10)";
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(earthS.x, earthS.y); ctx.lineTo(moonS.x, moonS.y); ctx.stroke();
+      // Earth->Moon line (visible)
+      ctx.strokeStyle="rgba(255,255,255,0.14)";
+      ctx.beginPath(); ctx.moveTo(earthS.x,earthS.y); ctx.lineTo(moonVisS.x,moonVisS.y); ctx.stroke();
 
-      // Light direction on screen: Moon -> Sun (Sun = center)
-      const lightDir = vSub(center, moonS);
-      const lightN = vNorm(lightDir);
+      // light direction should be from Moon towards Sun using true direction
+      const lightDir = vSub(center, moonTrueS);
+      drawMoonDisk(moonVisS, lightDir, illum);
 
-      drawMoonDisk(moonS, 5.6, lightN, illum);
+      // mark true moon location if enabled
+      if (el.showMoonTrue.checked){
+        ctx.fillStyle="rgba(255,255,255,0.28)";
+        ctx.beginPath(); ctx.arc(moonTrueS.x, moonTrueS.y, 2.3, 0, Math.PI*2); ctx.fill();
+      }
 
-      // small inset showing Earth-Moon (always “scaled up”)
-      const inset = { x: 14, y: h - 142, w: 210, h: 120 };
-      ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.strokeStyle = "rgba(255,255,255,0.12)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.roundRect(inset.x, inset.y, inset.w, inset.h, 14);
-      ctx.fill(); ctx.stroke();
+      // Phase diagram inset
+      if (el.showPhaseDiagram.checked){
+        drawPhaseDiagram(
+          { x: 14, y: h - 170 - 14, w: 320, h: 170 },
+          center,
+          earthS,
+          moonTrueS
+        );
+      }
 
-      ctx.fillStyle = "rgba(255,255,255,0.55)";
-      ctx.font = "600 12px ui-sans-serif";
-      ctx.fillText("Earth–Moon (skalað upp)", inset.x+12, inset.y+22);
-
-      const c = { x: inset.x + 40, y: inset.y + 80 };
-      const m = vMul(moonGeo, 9000); // big exaggeration in inset
-      const ms = { x: c.x + m.x*12000, y: c.y + m.y*12000 };
-
-      // earth dot
-      ctx.fillStyle = "rgba(34,211,238,0.85)";
-      ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, Math.PI*2); ctx.fill();
-
-      // moon dot
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
-      ctx.beginPath(); ctx.arc(ms.x, ms.y, 3, 0, Math.PI*2); ctx.fill();
-
-      // line
-      ctx.strokeStyle = "rgba(255,255,255,0.12)";
-      ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(ms.x,ms.y); ctx.stroke();
-
-      ctx.restore();
-
-      // Update right-panel stats
-      el.moonVec.textContent = `${moonGeo.x.toFixed(6)}, ${moonGeo.y.toFixed(6)}`;
-      el.moonDist.textContent = `${vLen(moonGeo).toFixed(6)} AU`;
-    } else {
-      el.moonVec.textContent = "—";
-      el.moonDist.textContent = "—";
+      // Tiny label for moon vis
+      ctx.fillStyle="rgba(234,240,255,0.55)";
+      ctx.font="600 11px system-ui";
+      ctx.fillText("Tungl (stækkað)", moonVisS.x + 10, moonVisS.y + 14);
     }
 
-    // HUD text
-    const dayIndex = clamp(Math.floor(simDay), 0, data.dates.length-1);
-    const dateStr = data.dates[dayIndex] || data.start;
-    el.dayLabel.textContent = dateStr;
-
-    const illumPct = illum * 100;
-    el.illumLabel.textContent = `${illumPct.toFixed(1)}%`;
-
-    const phase = phaseNameFromIllum(illum, waxing);
-    el.phaseLabel.textContent = phase;
-
-    // debug vectors
-    el.earthVec.textContent = `${earthPos.x.toFixed(6)}, ${earthPos.y.toFixed(6)}`;
-    el.marsVec.textContent  = (data.series.mars ? `${marsPos.x.toFixed(6)}, ${marsPos.y.toFixed(6)}` : "—");
-
-    el.mathLine.textContent =
-      `Lesum: EarthHelio(x,y), MarsHelio(x,y), MoonGeo(x,y). Síðan: MoonHelio = EarthHelio + MoonGeo.`;
-
-    requestAnimationFrame(draw);
+    // bottom hint
+    ctx.fillStyle="rgba(234,240,255,0.38)";
+    ctx.font="600 11px system-ui";
+    ctx.fillText("x,y í AU (ecliptic). Sporbaugar = sýnilegar slóðir yfir valinn days-glugga.", 14, 18);
   }
 
-  // ---- controls ----
-  function setSpeedFromUI(){
-    speed = parseFloat(el.speed.value);
+  // --- UI wiring ---
+  function attach(){
+    el.days.addEventListener("input", () => {
+      el.daysLabel.textContent = el.days.value;
+      el.t.max = String(Math.max(0, parseInt(el.days.value,10)-1));
+    });
+
+    el.days.addEventListener("change", () => load().catch(onFail));
+    el.t.addEventListener("input", () => { el.tLabel.textContent = el.t.value; render(); });
+
+    document.querySelectorAll("input.body").forEach(cb => {
+      cb.addEventListener("change", () => load().catch(onFail));
+    });
+
+    [el.showOrbits, el.showMoon, el.showMoonTrue, el.showPhaseDiagram].forEach(x => {
+      x.addEventListener("change", () => render());
+    });
+
+    el.today.addEventListener("click", () => { startISO = isoToday(); load().catch(onFail); });
+    el.reload.addEventListener("click", () => load().catch(onFail));
+
+    el.prev.addEventListener("click", () => {
+      el.t.value = String(clamp(parseInt(el.t.value,10)-1, 0, parseInt(el.t.max,10)));
+      el.tLabel.textContent = el.t.value;
+      render();
+    });
+    el.next.addEventListener("click", () => {
+      el.t.value = String(clamp(parseInt(el.t.value,10)+1, 0, parseInt(el.t.max,10)));
+      el.tLabel.textContent = el.t.value;
+      render();
+    });
   }
-  el.speed.addEventListener("input", setSpeedFromUI);
 
-  el.scrub.addEventListener("input", () => {
-    auto = false;
-    el.toggleAuto.textContent = "Auto ▶";
-    simDay = parseFloat(el.scrub.value);
-  });
-
-  el.toggleAuto.addEventListener("click", () => {
-    auto = !auto;
-    el.toggleAuto.textContent = auto ? "Auto ⏸" : "Auto ▶";
-  });
-
-  function stepBy(n){
-    auto = false;
-    el.toggleAuto.textContent = "Auto ▶";
-    simDay = clamp(Math.floor(simDay) + n, 0, (data?.count||1) - 1);
-    el.scrub.value = String(Math.floor(simDay));
+  function onFail(e){
+    el.status.textContent = "villa ❌";
+    showError(e);
+    console.error(e);
   }
 
-  el.dayMinus.addEventListener("click", () => stepBy(-1));
-  el.dayPlus.addEventListener("click", () => stepBy(+1));
-  el.weekMinus.addEventListener("click", () => stepBy(-7));
-  el.weekPlus.addEventListener("click", () => stepBy(+7));
+  attach();
 
-  el.reset.addEventListener("click", () => {
-    simDay = 0;
-    el.scrub.value = "0";
-  });
+  // boot
+  el.daysLabel.textContent = el.days.value;
+  el.t.max = String(Math.max(0, parseInt(el.days.value,10)-1));
+  el.tLabel.textContent = el.t.value;
 
-  // fetch a new 365d window starting today
-  el.todayBtn.addEventListener("click", async () => {
-    try{
-      await loadWindow(todayISO(), 365);
-    } catch(e){
-      el.status.textContent = "villa ❌";
-      showError(String(e.message || e));
-    }
-  });
-
-  // ---- boot ----
-  setSpeedFromUI();
-  (async () => {
-    try{
-      // start window today
-      await loadWindow(todayISO(), 365);
-      requestAnimationFrame(draw);
-    } catch (e){
-      el.status.textContent = "villa ❌";
-      showError(String(e.message || e));
-      requestAnimationFrame(draw);
-    }
-  })();
+  load().catch(onFail);
 })();
 </script>
 </body>
