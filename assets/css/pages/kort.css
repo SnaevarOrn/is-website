@@ -345,6 +345,32 @@ html[data-theme="light"] .kort-panel-item:hover{
   line-height: 1.4;
 }
 
+/* ✅ Addon checkmark state (menu buttons) */
+.kort-panel-item{
+  position: relative;
+  padding-right: 38px; /* pláss fyrir ✓ */
+}
+
+.kort-panel-item.is-on{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.14);
+}
+
+html[data-theme="light"] .kort-panel-item.is-on{
+  background: rgba(0,0,0,.04);
+  border-color: rgba(0,0,0,.10);
+}
+
+.kort-panel-item.is-on::after{
+  content: "✓";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: .95;
+  font-weight: 800;
+}
+
 /* =========================
    Crosshair overlay (when enabled)
    ========================= */
