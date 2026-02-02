@@ -1,5 +1,5 @@
 // assets/js/pages/kort.menu.js
-// Kort — Hamburger panel UI + accordion + mode/style switching + addon toggles
+// Kort — Hamburger panel UI + accordion + mode/style switching + addon toggles + checkmarks
 // Build-safe: no optional chaining
 
 "use strict";
@@ -15,9 +15,8 @@
   const hintMode = document.getElementById("kortHintMode");
   const hintStyle = document.getElementById("kortHintStyle");
 
-  // ✅ Correct globals (separate namespaces)
-  const getOverpass = () => window.kortAddonsOverpass;
-  const getLive = () => window.kortAddonsLive;
+  // ✅ One API to rule them all (router created by addons.overpass.js)
+  const getAddons = () => window.kortAddons;
 
   function setHintMode(id) {
     if (!hintMode) return;
@@ -36,14 +35,38 @@
     hintStyle.textContent = map[id] || id;
   }
 
+  function setBtnState(btn, on) {
+    btn.classList.toggle("is-on", !!on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+
+  function isAddonOn(id) {
+    const ka = getAddons();
+    if (!ka || typeof ka.isOn !== "function") return false;
+    try { return !!ka.isOn(id); } catch { return false; }
+  }
+
+  function toggleAddon(id) {
+    const ka = getAddons();
+    if (!ka || typeof ka.toggle !== "function") return false;
+    try { return !!ka.toggle(id); } catch (e) { console.warn(e); return false; }
+  }
+
+  function syncAddonChecks() {
+    const btns = panel.querySelectorAll("[data-addon]");
+    for (let i = 0; i < btns.length; i++) {
+      const b = btns[i];
+      const id = b.getAttribute("data-addon");
+      if (!id) continue;
+      setBtnState(b, isAddonOn(id));
+    }
+  }
+
   function open() {
     panel.classList.add("is-open");
     panel.setAttribute("aria-hidden", "false");
     backdrop.hidden = false;
-
     for (let i = 0; i < details.length; i++) details[i].open = false;
-
-    // sync ✓ when opened
     syncAddonChecks();
   }
 
@@ -62,28 +85,30 @@
   backdrop.addEventListener("click", close);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
-  // One accordion open at a time
   for (let i = 0; i < details.length; i++) {
     const d = details[i];
     d.addEventListener("toggle", () => {
       if (!d.open) return;
-      for (let j = 0; j < details.length; j++) {
-        const other = details[j];
-        if (other !== d) other.open = false;
-      }
+      for (let j = 0; j < details.length; j++) if (details[j] !== d) details[j].open = false;
     });
   }
 
   async function applyStyle(id) {
     const ks = window.kortStyles;
     if (!ks || typeof ks.set !== "function") return false;
-
     try {
       const key = await ks.set(id);
       setHintStyle(key);
 
-      // Style swap nukes layers -> give addons a moment then resync UI
-      setTimeout(syncAddonChecks, 250);
+      // after style swap, layers vanish -> addons refresh + UI resync
+      setTimeout(() => {
+        try {
+          const ka = getAddons();
+          if (ka && typeof ka.refresh === "function") ka.refresh();
+        } catch {}
+        syncAddonChecks();
+      }, 260);
+
       return true;
     } catch (e) {
       console.warn(e);
@@ -102,56 +127,6 @@
     return false;
   }
 
-  function setBtnState(btn, on) {
-    btn.classList.toggle("is-on", !!on);
-    btn.setAttribute("aria-pressed", on ? "true" : "false");
-  }
-
-  function isOverpassOn(id) {
-    const over = getOverpass();
-    if (!over || typeof over.isOn !== "function") return false;
-    try { return !!over.isOn(id); } catch { return false; }
-  }
-
-  function isLiveOn(id) {
-    const live = getLive();
-    if (!live || typeof live.isOn !== "function") return false;
-    try { return !!live.isOn(id); } catch { return false; }
-  }
-
-  function syncAddonChecks() {
-    // Overpass buttons
-    const opBtns = panel.querySelectorAll("[data-addon]");
-    for (let i = 0; i < opBtns.length; i++) {
-      const b = opBtns[i];
-      const id = b.getAttribute("data-addon");
-      if (!id) continue;
-      setBtnState(b, isOverpassOn(id));
-    }
-
-    // Live buttons (optional)
-    const liveBtns = panel.querySelectorAll("[data-live]");
-    for (let i = 0; i < liveBtns.length; i++) {
-      const b = liveBtns[i];
-      const id = b.getAttribute("data-live");
-      if (!id) continue;
-      setBtnState(b, isLiveOn(id));
-    }
-  }
-
-  function toggleOverpass(id) {
-    const over = getOverpass();
-    if (!over || typeof over.toggle !== "function") return false;
-    try { over.toggle(id); return true; } catch (e) { console.warn(e); return false; }
-  }
-
-  function toggleLive(id) {
-    const live = getLive();
-    if (!live || typeof live.toggle !== "function") return false;
-    try { live.toggle(id); return true; } catch (e) { console.warn(e); return false; }
-  }
-
-  // Click delegation
   panel.addEventListener("click", (e) => {
     const t = e.target;
 
@@ -171,25 +146,14 @@
       return;
     }
 
-    // Overpass addons
     const addonBtn = t && t.closest ? t.closest("[data-addon]") : null;
     if (addonBtn) {
       const id = addonBtn.getAttribute("data-addon");
       if (!id) return;
 
-      const ok = toggleOverpass(id);
-      if (ok) setBtnState(addonBtn, isOverpassOn(id));
-      return;
-    }
-
-    // Live addons (optional)
-    const liveBtn = t && t.closest ? t.closest("[data-live]") : null;
-    if (liveBtn) {
-      const id = liveBtn.getAttribute("data-live");
-      if (!id) return;
-
-      const ok = toggleLive(id);
-      if (ok) setBtnState(liveBtn, isLiveOn(id));
+      // ✅ keep panel open for multi-toggle, update checkmark instantly
+      toggleAddon(id);
+      setBtnState(addonBtn, isAddonOn(id));
       return;
     }
 
@@ -206,11 +170,8 @@
     }
   });
 
-  // Initialize hints
   try {
-    if (window.kortModes && typeof window.kortModes.getCurrent === "function") {
-      setHintMode(window.kortModes.getCurrent());
-    }
+    if (window.kortModes && typeof window.kortModes.getCurrent === "function") setHintMode(window.kortModes.getCurrent());
   } catch {}
 
   try {
@@ -218,10 +179,8 @@
     if (ks && typeof ks.getCurrent === "function") setHintStyle(ks.getCurrent());
   } catch {}
 
-  // Expose for ☰ control
   window.kortMenu = { open, close, toggle };
 
-  // Best-effort initial sync
   setTimeout(syncAddonChecks, 0);
   setTimeout(syncAddonChecks, 350);
 })();
