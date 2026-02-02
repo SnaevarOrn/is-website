@@ -26,7 +26,7 @@
     harbors: { label: "Hafnir + smábátahafnir",   minZoom: 8,  type: "mix" },
     fuel:    { label: "Bensínstöðvar",            minZoom: 10, type: "points" },
     huts:    { label: "Skálar + skjól",           minZoom: 9, type: "points" },
-    lights:  { label: "Vitar",                    minZoom: 6, type: "points" },
+    lights:  { label: "Vitar",                    minZoom: 4, type: "points" },
     peaks:   { label: "Fjallatindar",             minZoom: 8,  type: "points" },
     roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" }
   };
