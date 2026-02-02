@@ -19,7 +19,7 @@ export async function onRequestGet({ request }) {
       step,
     });
 
-    if (!res.ok) return json({ ok:false, error:res.error }, 500);
+    if (!res.ok) return json({ ok:false, error:res.error, debug: res.debug }, 500);
 
     const out = {
       ok: true,
