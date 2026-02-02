@@ -84,10 +84,10 @@ export async function onRequestGet({ request, env, ctx }) {
 async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   const base = "https://ssd.jpl.nasa.gov/api/horizons.api";
 
-  // TABLE_TYPE=VEC, VEC_TABLE=1 -> position-only
-  // REF_PLANE=ECLIPTIC + OUT_UNITS=AU-D keeps AU output. (Docs: Horizons API) 
+  // Nota JSON svo við fáum alltaf structured svar.
+  // Ath: Horizons setur ephemeris-útgáfuna í "result" streng.
   const params = new URLSearchParams({
-    format: "text",
+    format: "json",
     MAKE_EPHEM: "YES",
     TABLE_TYPE: "VEC",
     VEC_TABLE: "1",
@@ -97,31 +97,44 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
     REF_PLANE: "ECLIPTIC",
     REF_SYSTEM: "ICRF",
     OBJ_DATA: "NO",
-    CENTER: `'${center}'`,
-    COMMAND: `'${command}'`,
-    START_TIME: `'${start}'`,
-    STOP_TIME: `'${stop}'`,
-    STEP_SIZE: `'${step}'`,
+
+    // Horizons vill venjulega gildin með apostrophe:
+    CENTER: `\'${center}\'`,
+    COMMAND: `\'${command}\'`,
+    START_TIME: `\'${start}\'`,
+    STOP_TIME: `\'${stop}\'`,
+    STEP_SIZE: `\'${step}\'`,
   });
 
   const u = `${base}?${params.toString()}`;
   const resp = await fetch(u, { headers: { "User-Agent": "is.is-solar/1.0" } });
-  if (!resp.ok) return { ok:false, error:`Horizons HTTP ${resp.status}` };
+  const raw = await resp.text();
 
-  const text = await resp.text();
+  if (!resp.ok) {
+    return { ok: false, error: `Horizons HTTP ${resp.status}`, debug: raw.slice(0, 600) };
+  }
 
-  // Extract between $$SOE and $$EOE
+  let j;
+  try {
+    j = JSON.parse(raw);
+  } catch {
+    // Ef Horizons skilar ekki JSON (mjög sjaldgæft), sýnum brot.
+    return { ok: false, error: "Horizons svar var ekki JSON", debug: raw.slice(0, 600) };
+  }
+
+  const text = (j && typeof j.result === "string") ? j.result : "";
   const i0 = text.indexOf("$$SOE");
   const i1 = text.indexOf("$$EOE");
+
   if (i0 === -1 || i1 === -1 || i1 <= i0) {
-    return { ok:false, error:"Gat ekki lesið $$SOE/$$EOE úr Horizons svari" };
+    // Skilum broti úr "result" til að sjá raunvilluna (t.d. invalid date/step/command).
+    const snippet = text ? text.slice(0, 900) : raw.slice(0, 900);
+    return { ok: false, error: "Vantar $$SOE/$$EOE í Horizons result", debug: snippet };
   }
 
   const block = text.slice(i0 + 5, i1).trim();
   const lines = block.split("\n").map(l => l.trim()).filter(Boolean);
 
-  // Expected CSV: JD, Calendar Date, X, Y, Z,
-  // We'll parse X,Y in AU (might be exponential)
   const points = [];
   for (const line of lines) {
     const parts = line.split(",").map(s => s.trim());
@@ -133,9 +146,13 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
     points.push({ x, y, z });
   }
 
-  if (!points.length) return { ok:false, error:"Engin punktar parse-uðust úr Horizons CSV" };
-  return { ok:true, points };
+  if (!points.length) {
+    return { ok: false, error: "Engin punktar parse-uðust", debug: block.slice(0, 900) };
+  }
+
+  return { ok: true, points };
 }
+
 
 // ---- utilities ----
 function json(obj, status=200, headers={}) {
