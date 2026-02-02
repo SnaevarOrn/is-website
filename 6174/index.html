@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="is">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>6174 — Kaprekar fastinn</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a33;
+      --panel2:#0f1730;
+      --text:#e9eeff;
+      --muted:#aab3d6;
+      --ok:#4ade80;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --chip:#1b2550;
+      --stroke:rgba(255,255,255,.12);
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(124,58,237,.35), transparent 55%),
+        radial-gradient(900px 500px at 80% 20%, rgba(34,211,238,.25), transparent 55%),
+        radial-gradient(900px 600px at 50% 90%, rgba(74,222,128,.18), transparent 55%),
+        var(--bg);
+      min-height:100vh;
+      padding:24px;
+    }
+    .wrap{max-width:980px;margin:0 auto;display:grid;gap:16px}
+    header{
+      display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;
+      padding:18px 18px 10px;
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
+    }
+    h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .subtitle{margin:0;color:var(--muted);font-size:14px}
+    .pill{
+      margin-left:auto;
+      display:flex;gap:8px;flex-wrap:wrap;
+      align-items:center;justify-content:flex-end;
+      color:var(--muted);font-size:12px
+    }
+    .pill span{
+      padding:6px 10px;border:1px solid var(--stroke);
+      border-radius:999px;background:rgba(255,255,255,.04)
+    }
+
+    .grid{display:grid;grid-template-columns: 1.15fr .85fr; gap:16px}
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} .pill{margin-left:0} }
+
+    .card{
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;padding:14px 16px;
+      border-bottom:1px solid var(--stroke);
+      font-size:14px;color:var(--muted);font-weight:600;
+      letter-spacing:.3px;text-transform:uppercase;
+      background:rgba(0,0,0,.12);
+    }
+    .card .body{padding:16px;display:grid;gap:12px}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input[type="text"]{
+      font-family:var(--mono);
+      font-size:22px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      width:170px;
+      letter-spacing:2px;
+      outline:none;
+    }
+    input[type="text"]:focus{border-color:rgba(34,211,238,.55); box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    button{
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:650;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+    }
+    button:hover{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.22)}
+    button:active{transform: translateY(1px)}
+    .primary{background:rgba(74,222,128,.12); border-color: rgba(74,222,128,.35)}
+    .primary:hover{background:rgba(74,222,128,.18)}
+    .danger{background:rgba(251,113,133,.10); border-color: rgba(251,113,133,.35)}
+    .danger:hover{background:rgba(251,113,133,.15)}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--stroke);
+      color:var(--muted);font-size:12px
+    }
+    .chip b{color:var(--text)}
+    .msg{
+      padding:10px 12px;border-radius:14px;
+      border:1px dashed rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18);
+      color:var(--muted);font-size:13px;line-height:1.35
+    }
+    .msg.ok{border-color: rgba(74,222,128,.35); color: rgba(220,255,235,.92)}
+    .msg.warn{border-color: rgba(251,191,36,.35); color: rgba(255,243,209,.95)}
+    .msg.bad{border-color: rgba(251,113,133,.38); color: rgba(255,220,227,.95)}
+
+    .big{
+      display:grid;gap:10px;
+      padding:14px;border-radius:16px;
+      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+      border:1px solid var(--stroke);
+    }
+    .equation{
+      font-family:var(--mono);
+      font-size:16px;
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      letter-spacing:.6px;
+    }
+    .eqbox{
+      padding:8px 10px;border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--stroke);
+      min-width:90px;text-align:center
+    }
+    .eqarrow{
+      opacity:.85
+    }
+    .pulse{
+      animation: pulse 700ms ease both;
+    }
+    @keyframes pulse{
+      0%{transform:scale(.98); filter:brightness(0.95)}
+      55%{transform:scale(1.02); filter:brightness(1.12)}
+      100%{transform:scale(1); filter:brightness(1)}
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 10px;
+      font-family:var(--mono);
+      font-size:13px;
+    }
+    th{color:var(--muted);font-weight:650;text-align:left;padding:0 10px}
+    td{
+      padding:10px 10px;
+      background:rgba(255,255,255,.05);
+      border-top:1px solid var(--stroke);
+      border-bottom:1px solid var(--stroke);
+    }
+    td:first-child{border-left:1px solid var(--stroke);border-radius:12px 0 0 12px}
+    td:last-child{border-right:1px solid var(--stroke);border-radius:0 12px 12px 0}
+    tr.hit td{
+      background:rgba(74,222,128,.10);
+      border-color: rgba(74,222,128,.22);
+    }
+    tr.loop td{
+      background:rgba(251,191,36,.10);
+      border-color: rgba(251,191,36,.22);
+    }
+
+    .footerNote{color:var(--muted);font-size:12px;line-height:1.4}
+    a{color:rgba(34,211,238,.95)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>6174 — Kaprekar fastinn</h1>
+        <p class="subtitle">Raða tölustöfum ↘️ / ↗️, draga frá, endurtaka… þar til allt sogast inn í 6174.</p>
+      </div>
+      <div class="pill">
+        <span>≤ <b>7</b> skref (ef a.m.k. 2 ólíkir stafir)</span>
+        <span>4 stafir, með núllum framan á</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Prófaðu</h2>
+        <div class="body">
+          <div class="row">
+            <input id="n" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="t.d. 3524" />
+            <button class="primary" id="run">Keyra</button>
+            <button id="step">Skref</button>
+            <button id="auto">Auto ▶</button>
+            <button class="danger" id="reset">Reset</button>
+            <button id="random">Random 🎲</button>
+          </div>
+
+          <div class="row">
+            <span class="chip">Inntak: <b id="inVal">—</b></span>
+            <span class="chip">Skref: <b id="count">0</b></span>
+            <span class="chip">Staða: <b id="status">—</b></span>
+          </div>
+
+          <div id="msg" class="msg">Sláðu inn 4 stafa tölu (0000–9999). Núlur framan á telja með: 21 verður 0021.</div>
+
+          <div class="big" id="big">
+            <div class="equation">
+              <span class="eqbox" id="desc">—</span>
+              <span class="eqarrow">−</span>
+              <span class="eqbox" id="asc">—</span>
+              <span class="eqarrow">=</span>
+              <span class="eqbox" id="diff">—</span>
+            </div>
+            <div class="footerNote" id="hint">
+              Tip: Tölur eins og 1111 / 2222 / 0000 eru “degenerate” og enda í 0000, ekki 6174.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Skrefatafla</h2>
+        <div class="body">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>↘️ Desc</th>
+                <th>↗️ Asc</th>
+                <th>Mismunur</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div class="footerNote">
+            <div>
+              Kaprekar-rútínan: raða tölustöfum í lækkandi/hækkandi röð og draga frá. 6174 er fastapunktur fyrir 4 stafa tölur með a.m.k. tvo ólíka tölustafi. :contentReference[oaicite:1]{index=1}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Mini “why it works”</h2>
+      <div class="body">
+        <div class="msg">
+          Þetta er í grunninn *örlítill stærðfræðilegur svarthol*: aðgerðin minnkar “óreiðu” í tölunni á ákveðinn hátt, og flest allt togarst að föstum punkti (6174).  
+          Þú færð líka fallega samhverfu: sama reglusetning, sama endir, sama “aha”.
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  const el = {
+    n: $("n"),
+    run: $("run"),
+    step: $("step"),
+    auto: $("auto"),
+    reset: $("reset"),
+    random: $("random"),
+    rows: $("rows"),
+    msg: $("msg"),
+    inVal: $("inVal"),
+    count: $("count"),
+    status: $("status"),
+    desc: $("desc"),
+    asc: $("asc"),
+    diff: $("diff"),
+    big: $("big"),
+    hint: $("hint"),
+  };
+
+  let state = {
+    start: null,
+    current: null,
+    steps: [],
+    seen: new Set(),
+    timer: null,
+    autoplay: false,
+    done: false,
+  };
+
+  function pad4(num) {
+    const s = String(num);
+    return s.padStart(4, "0").slice(-4);
+  }
+
+  function digitsSorted(str4) {
+    const arr = str4.split("");
+    const asc = arr.slice().sort().join("");
+    const desc = arr.slice().sort((a,b)=> b.localeCompare(a)).join("");
+    return { asc, desc };
+  }
+
+  function isDegenerate(str4) {
+    // all digits same => will end at 0000, not 6174
+    return str4.split("").every(ch => ch === str4[0]);
+  }
+
+  function parseInput(raw) {
+    // allow "21", "0021", " 3524 "
+    const clean = String(raw ?? "").trim();
+    if (!/^\d{1,4}$/.test(clean)) return { ok:false, reason:"Sláðu inn bara tölustafi (1–4 stafir)." };
+    const str4 = pad4(clean);
+    return { ok:true, str4 };
+  }
+
+  function setMsg(kind, text) {
+    el.msg.className = "msg" + (kind ? " " + kind : "");
+    el.msg.textContent = text;
+  }
+
+  function updateHeader() {
+    el.inVal.textContent = state.start ?? "—";
+    el.count.textContent = String(state.steps.length);
+    el.status.textContent = state.done ? (state.current === "6174" ? "✅ Náð 6174" : "⚠️ Stopp") : (state.steps.length ? "Í gangi…" : "—");
+  }
+
+  function renderBig(stepObj) {
+    const pulse = () => {
+      el.big.classList.remove("pulse");
+      void el.big.offsetWidth; // reflow to restart anim
+      el.big.classList.add("pulse");
+    };
+
+    if (!stepObj) {
+      el.desc.textContent = "—";
+      el.asc.textContent = "—";
+      el.diff.textContent = "—";
+      el.hint.textContent = "Tip: Tölur eins og 1111 / 2222 / 0000 eru “degenerate” og enda í 0000, ekki 6174.";
+      return;
+    }
+
+    el.desc.textContent = stepObj.desc;
+    el.asc.textContent  = stepObj.asc;
+    el.diff.textContent = stepObj.diff;
+
+    if (stepObj.diff === "6174") {
+      el.hint.textContent = "Búmm. 7641 − 1467 = 6174. Nú ert þú kominn á fastapunkt (endurtekur sig).";
+    } else if (stepObj.loop) {
+      el.hint.textContent = "Þetta er lykkja (tala endurtekur sig). Fyrir 4 stafa (með ≥2 ólíka stafi) ætti hún samt að enda í 6174 — nema degenerate tilfelli.";
+    } else {
+      el.hint.textContent = "Næsta skref: raða nýja mismuninum og endurtaka.";
+    }
+    pulse();
+  }
+
+  function renderTable() {
+    el.rows.innerHTML = "";
+    state.steps.forEach((s, i) => {
+      const tr = document.createElement("tr");
+      if (s.diff === "6174") tr.classList.add("hit");
+      if (s.loop) tr.classList.add("loop");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${s.desc}</td>
+        <td>${s.asc}</td>
+        <td>${s.diff}</td>
+      `;
+      el.rows.appendChild(tr);
+    });
+  }
+
+  function resetAll(keepInput=false) {
+    if (state.timer) clearInterval(state.timer);
+    const keep = keepInput ? el.n.value : "";
+    state = { start:null, current:null, steps:[], seen:new Set(), timer:null, autoplay:false, done:false };
+    el.rows.innerHTML = "";
+    renderBig(null);
+    setMsg("", "Sláðu inn 4 stafa tölu (0000–9999). Núlur framan á telja með: 21 verður 0021.");
+    el.auto.textContent = "Auto ▶";
+    if (keepInput) el.n.value = keep;
+    updateHeader();
+  }
+
+  function initFromInput() {
+    const p = parseInput(el.n.value);
+    if (!p.ok) {
+      setMsg("bad", p.reason);
+      return false;
+    }
+    const str4 = p.str4;
+
+    // rule: needs at least two distinct digits to converge to 6174
+    if (isDegenerate(str4)) {
+      setMsg("warn", `Óleyfilegt fyrir 6174: ${str4} (allir tölustafir eins). Þessi tilfelli enda í 0000.`);
+      state.start = str4;
+      state.current = str4;
+      state.done = true;
+      updateHeader();
+      renderBig({ asc: str4, desc: str4, diff: "0000", loop:false });
+      return false;
+    }
+
+    state.start = str4;
+    state.current = str4;
+    state.seen = new Set([str4]);
+    setMsg("ok", `Start: ${str4}. Nú keyrum við Kaprekar-rútínuna þangað til hún lendir á 6174 (≤ 7 skref).`);
+    updateHeader();
+    return true;
+  }
+
+  function oneStep() {
+    if (state.done) return;
+
+    if (state.current == null) {
+      if (!initFromInput()) return;
+    }
+
+    const { asc, desc } = digitsSorted(state.current);
+    const diffNum = parseInt(desc, 10) - parseInt(asc, 10);
+    const diff = pad4(diffNum);
+
+    const loop = state.seen.has(diff);
+    state.seen.add(diff);
+
+    const stepObj = { asc, desc, diff, loop };
+    state.steps.push(stepObj);
+    state.current = diff;
+
+    renderBig(stepObj);
+    renderTable();
+    updateHeader();
+
+    if (diff === "6174") {
+      state.done = true;
+      setMsg("ok", `Náð 6174 í ${state.steps.length} skrefum. Þetta er “fastapunktur”: næsta skref gefur 6174 aftur.`);
+      stopAuto();
+      return;
+    }
+
+    // safety: cap steps (should be <= 7 for valid inputs)
+    if (state.steps.length >= 20) {
+      state.done = true;
+      setMsg("warn", "Stoppaði eftir 20 skref (öryggishemill). Þetta ætti ekki að gerast fyrir 4 stafa með ≥2 ólíka tölustafi.");
+      stopAuto();
+      return;
+    }
+
+    if (loop) {
+      // for 4-digit base-10, should only loop at 6174 or degenerate 0000
+      // but we still show the loop if detected
+      setMsg("warn", `Lykkja greindist á ${diff}. (Venjulega endar þetta í 6174 nema degenerate tilfelli.)`);
+    }
+  }
+
+  function runToEnd() {
+    resetAll(true);
+    if (!initFromInput()) return;
+    while (!state.done) oneStep();
+  }
+
+  function startAuto() {
+    if (state.timer) return;
+    state.autoplay = true;
+    el.auto.textContent = "Auto ⏸";
+    if (state.current == null) initFromInput();
+    state.timer = setInterval(() => {
+      if (state.done) { stopAuto(); return; }
+      oneStep();
+    }, 650);
+  }
+
+  function stopAuto() {
+    state.autoplay = false;
+    el.auto.textContent = "Auto ▶";
+    if (state.timer) clearInterval(state.timer);
+    state.timer = null;
+  }
+
+  function toggleAuto() {
+    if (state.timer) stopAuto();
+    else startAuto();
+  }
+
+  function randomValid() {
+    // generate 0000-9999 but not all digits equal
+    while (true) {
+      const x = Math.floor(Math.random() * 10000);
+      const s = pad4(x);
+      if (!isDegenerate(s)) return s;
+    }
+  }
+
+  // Events
+  el.run.addEventListener("click", runToEnd);
+  el.step.addEventListener("click", () => {
+    if (state.current == null && !initFromInput()) return;
+    oneStep();
+  });
+  el.auto.addEventListener("click", toggleAuto);
+  el.reset.addEventListener("click", () => resetAll(true));
+  el.random.addEventListener("click", () => {
+    resetAll(false);
+    const s = randomValid();
+    el.n.value = s;
+    initFromInput();
+    oneStep();
+  });
+
+  el.n.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runToEnd();
+    if (e.key === "Escape") resetAll(true);
+  });
+
+  el.n.addEventListener("input", () => {
+    // keep only digits and max 4
+    const cleaned = el.n.value.replace(/[^\d]/g, "").slice(0,4);
+    if (cleaned !== el.n.value) el.n.value = cleaned;
+  });
+
+  // Nice starter example
+  el.n.value = "3524";
+  updateHeader();
+})();
+</script>
+</body>
+</html>
