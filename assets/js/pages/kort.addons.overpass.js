@@ -23,11 +23,11 @@
 
   const CFG = {
     air:     { label: "Flugvellir + þyrlupallar", minZoom: 7,  type: "mix" },
-    harbors: { label: "Hafnir + smábátahafnir",   minZoom: 9,  type: "mix" },
-    fuel:    { label: "Bensínstöðvar",            minZoom: 11, type: "points" },
-    huts:    { label: "Skálar + skjól",           minZoom: 10, type: "points" },
-    lights:  { label: "Vitar",                    minZoom: 10, type: "points" },
-    peaks:   { label: "Fjallatindar",             minZoom: 9,  type: "points" },
+    harbors: { label: "Hafnir + smábátahafnir",   minZoom: 8,  type: "mix" },
+    fuel:    { label: "Bensínstöðvar",            minZoom: 10, type: "points" },
+    huts:    { label: "Skálar + skjól",           minZoom: 9, type: "points" },
+    lights:  { label: "Vitar",                    minZoom: 6, type: "points" },
+    peaks:   { label: "Fjallatindar",             minZoom: 8,  type: "points" },
     roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" }
   };
 
