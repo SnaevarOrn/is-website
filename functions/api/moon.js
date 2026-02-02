@@ -62,12 +62,13 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
     OBJ_DATA: "NO",
 
     // Horizons vill venjulega gildin með apostrophe:
-    CENTER: `\'${center}\'`,
-    COMMAND: `\'${command}\'`,
-    START_TIME: `\'${start}\'`,
-    STOP_TIME: `\'${stop}\'`,
-    STEP_SIZE: `\'${step}\'`,
-  });
+    CENTER: `'${center}'`,
+    COMMAND: `'${command}'`,
+    START_TIME: `'${start} 00:00'`,
+    STOP_TIME: `'${stop} 00:00'`,
+    STEP_SIZE: `'${step}'`,
+    
+      });
 
   const u = `${base}?${params.toString()}`;
   const resp = await fetch(u, { headers: { "User-Agent": "is.is-solar/1.0" } });
