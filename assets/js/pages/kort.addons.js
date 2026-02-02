@@ -379,12 +379,12 @@
     }
   })();
 
-    // ✅ Export LIVE backend (do NOT overwrite window.kortAddons router)
-  window.kortAddonsLive = {
-    toggle,
-    set: (id, on) => toggle(id, on),
-    isOn,
-    refresh: refreshAllAfterStyle,
-    list: () => Object.keys(ADDONS)
-  };
+// NEW:
+window.kortAddonsLive = {
+  toggle,
+  isOn,
+  refresh: refreshAllAfterStyle,
+  list: () => Object.keys(ADDONS)
+};
+
 })();
