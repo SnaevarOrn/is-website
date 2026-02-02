@@ -29,10 +29,10 @@
     lights:  { label: "Vitar",                    minZoom: 4, type: "points" },
     peaks:   { label: "Fjallatindar",             minZoom: 8,  type: "points" },
     roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" },
-    waterfalls: { label: "Fossar", minZoom: 9, type: "points" },
-    caves:      { label: "Hellar", minZoom: 10, type: "points" },
-    viewpoints: { label: "Útsýnispunktar", minZoom: 10, type: "points" },
-    hotsprings: { label: "Heitar laugar / uppsprettur", minZoom: 10, type: "points" },
+    waterfalls: { label: "Fossar", minZoom: 6, type: "points" },
+    caves:      { label: "Hellar", minZoom: 4, type: "points" },
+    viewpoints: { label: "Útsýnispunktar", minZoom: 6, type: "points" },
+    hotsprings: { label: "Heitar laugar / uppsprettur", minZoom: 5, type: "points" },
 
     
   };
