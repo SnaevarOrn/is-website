@@ -49,14 +49,15 @@ export async function onRequestGet({ request }) {
 async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   const base = "https://ssd.jpl.nasa.gov/api/horizons.api";
 
-  // Horizons wants STOP_TIME strictly later than START_TIME.
+  // Horizons needs STOP_TIME strictly later than START_TIME
   const startT = `${start} 00:00`;
-  let stopT = `${stop} 00:00`;
-  if (stop === start) {
-    stopT = `${addDaysISO(stop, 1)} 00:00`; // safety for days=1
-  }
+  let stopDate = stop;
+  if (stop === start) stopDate = addDaysISO(stop, 1);
+  const stopT = `${stopDate} 00:00`;
 
-  // Note: In JSON mode, don't over-quote with extra apostrophes.
+  // Make STEP more Horizons-friendly: "1 d" instead of "1d"
+  const stepSafe = /^\d+\s*d$/i.test(step) ? step.replace(/d/i, " d") : step;
+
   const params = new URLSearchParams({
     format: "json",
     MAKE_EPHEM: "YES",
@@ -69,11 +70,12 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
     REF_SYSTEM: "ICRF",
     OBJ_DATA: "NO",
 
-    CENTER: center,
-    COMMAND: command,
-    START_TIME: startT,
-    STOP_TIME: stopT,
-    STEP_SIZE: step,
+    // ✅ Horizons control syntax wants these quoted
+    CENTER: `'${center}'`,
+    COMMAND: `'${command}'`,
+    START_TIME: `'${startT}'`,
+    STOP_TIME: `'${stopT}'`,
+    STEP_SIZE: `'${stepSafe}'`,
   });
 
   const u = `${base}?${params.toString()}`;
@@ -81,14 +83,14 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   const raw = await resp.text();
 
   if (!resp.ok) {
-    return { ok: false, error: `Horizons HTTP ${resp.status}`, debug: raw.slice(0, 900) };
+    return { ok: false, error: `Horizons HTTP ${resp.status}`, debug: raw.slice(0, 1200) };
   }
 
   let j;
   try {
     j = JSON.parse(raw);
   } catch {
-    return { ok: false, error: "Horizons svar var ekki JSON", debug: raw.slice(0, 900) };
+    return { ok: false, error: "Horizons svar var ekki JSON", debug: raw.slice(0, 1200) };
   }
 
   const text = (j && typeof j.result === "string") ? j.result : "";
@@ -96,7 +98,7 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   const i1 = text.indexOf("$$EOE");
 
   if (i0 === -1 || i1 === -1 || i1 <= i0) {
-    const snippet = text ? text.slice(0, 900) : raw.slice(0, 900);
+    const snippet = text ? text.slice(0, 1200) : raw.slice(0, 1200);
     return { ok: false, error: "Vantar $$SOE/$$EOE í Horizons result", debug: snippet };
   }
 
@@ -107,17 +109,15 @@ async function fetchHorizonsVectors({ command, center, start, stop, step }) {
   for (const line of lines) {
     const parts = line.split(",").map(s => s.trim());
     if (parts.length < 5) continue;
-
     const x = parseFloat(parts[2]);
     const y = parseFloat(parts[3]);
     const z = parseFloat(parts[4]);
-
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     points.push({ x, y, z });
   }
 
   if (!points.length) {
-    return { ok: false, error: "Engin punktar parse-uðust", debug: block.slice(0, 900) };
+    return { ok: false, error: "Engin punktar parse-uðust", debug: block.slice(0, 1200) };
   }
 
   return { ok: true, points };
