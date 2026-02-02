@@ -371,6 +371,15 @@ html[data-theme="light"] .kort-panel-item.is-on{
   font-weight: 800;
 }
 
+.kort-panel-item:focus-visible{
+  outline: 2px solid rgba(255,255,255,.22);
+  outline-offset: 2px;
+}
+
+html[data-theme="light"] .kort-panel-item:focus-visible{
+  outline-color: rgba(0,0,0,.18);
+}
+
 /* =========================
    Crosshair overlay (when enabled)
    ========================= */
