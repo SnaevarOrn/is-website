@@ -72,7 +72,24 @@
         "place-label",
         "poi-label"
       ]
-    }
+    },
+    weather: {
+      label: "Veður",
+      minZoom: 0,
+      intervalMs: 600000, // 10 min, not used yet
+      // dummy, no map layer yet
+      url: () => "",
+      sourceId: "addon-weather",
+      layerId: "addon-weather-layer",
+      source: () => ({ type: "geojson", data: emptyFC() }),
+      layer: () => ({
+        id: "addon-weather-layer",
+        type: "circle",
+        source: "addon-weather",
+        paint: { "circle-radius": 0 }
+  })
+}
+
   };
 
   const state = {
