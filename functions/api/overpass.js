@@ -14,7 +14,7 @@
 "use strict";
 
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
-const USER_AGENT = "is.is-kort/1.0 (contact: admin@is.is)"; // breyttu ef þú vilt
+const USER_AGENT = "is.is-kort/1.0 (contact: rokogstormur@gmail.com)"; // breyttu ef þú vilt
 
 // Best-effort per-IP cooldown (edge-scoped)
 const LAST_REQUEST = new Map();
@@ -34,19 +34,19 @@ const LAYERS = {
   air: { minZoom: 7, maxDiagKm: 900 },
 
   // Harbors / marinas / piers (coastal POIs)
-  harbors: { minZoom: 9, maxDiagKm: 350 },
+  harbors: { minZoom: 8, maxDiagKm: 350 },
 
   // Fuel stations
-  fuel: { minZoom: 11, maxDiagKm: 140 },
+  fuel: { minZoom: 10, maxDiagKm: 140 },
 
   // Mountain huts / cabins / shelters
-  huts: { minZoom: 10, maxDiagKm: 220 },
+  huts: { minZoom: 9, maxDiagKm: 220 },
 
   // Lighthouses
-  lights: { minZoom: 10, maxDiagKm: 220 },
+  lights: { minZoom: 6, maxDiagKm: 220 },
 
   // Mountain peaks (nice “wow”, but can be many)
-  peaks: { minZoom: 9, maxDiagKm: 260 },
+  peaks: { minZoom: 8, maxDiagKm: 260 },
 
   // Road classes (LINES) — expensive: keep tight
   roads: { minZoom: 12, maxDiagKm: 70 }
