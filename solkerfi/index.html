@@ -14,6 +14,7 @@
       --vio:#a78bfa;
       --gold:#fbbf24;
       --green:#4ade80;
+      --red:#fb7185;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       --shadow: 0 14px 46px rgba(0,0,0,.42);
@@ -89,10 +90,11 @@
       padding:10px 12px;
       font-weight:650;
       cursor:pointer;
-      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease, opacity .2s ease;
     }
     button:hover{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.24)}
     button:active{transform:translateY(1px)}
+    button[disabled]{opacity:.55; cursor:not-allowed}
     .primary{background:rgba(34,211,238,.12);border-color:rgba(34,211,238,.35)}
     .primary:hover{background:rgba(34,211,238,.17)}
     .danger{background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.32)}
@@ -111,6 +113,38 @@
     .kv .k{color:var(--muted);font-size:12px}
     .kv .v{font-family:var(--mono);font-size:12px}
     .miniNote{color:var(--muted);font-size:12px;line-height:1.35}
+
+    .err{
+      border:1px solid rgba(251,113,133,.45);
+      background:rgba(251,113,133,.10);
+      border-radius:16px;
+      padding:12px;
+      color:rgba(255,255,255,.92);
+      font-size:13px;
+      line-height:1.4;
+      display:none;
+      white-space:pre-wrap;
+    }
+    .okhint{
+      border:1px solid rgba(74,222,128,.35);
+      background:rgba(74,222,128,.08);
+      border-radius:16px;
+      padding:10px 12px;
+      color:rgba(255,255,255,.88);
+      font-size:12.5px;
+      line-height:1.35;
+    }
+    .spinner{
+      display:inline-block;
+      width:10px;height:10px;
+      border:2px solid rgba(255,255,255,.25);
+      border-top-color: rgba(255,255,255,.75);
+      border-radius:50%;
+      animation: spin .9s linear infinite;
+      vertical-align:-1px;
+      margin-right:6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -119,8 +153,8 @@
     <div>
       <h1>Sólkerfið (raun-stöður) + tunglfasi</h1>
       <p class="sub">
-        Pláneturnar eru teiknaðar úr <span class="mono">x,y</span> ephemeris-gögnum og tunglið fær “ljós” frá sól: sama staða → annar fasi,
-        og þú sérð **terminator-línuna** snúast með sól-stefnu.
+        Pláneturnar eru teiknaðar úr <span class="mono">x,y</span> ephemeris-gögnum og tunglið fær “ljós” frá sól:
+        sama staða → annar fasi, og þú sérð <b>terminator-línuna</b> snúast með sól-stefnu.
       </p>
     </div>
     <div class="chips">
@@ -132,8 +166,9 @@
 
   <div class="grid">
     <section class="card">
-      <h2>Orbits & motion <span class="mono" id="status">sæki gögn…</span></h2>
+      <h2>Orbits & motion <span class="mono" id="status"><span class="spinner"></span>sæki gögn…</span></h2>
       <div class="body">
+        <div id="err" class="err"></div>
         <canvas id="cv"></canvas>
 
         <div class="row">
@@ -142,6 +177,7 @@
           <button id="toggleTrails">Slóðir: ON</button>
           <button id="toggleMoons">Tungl: ON</button>
           <button class="danger" id="reset">Reset</button>
+          <button id="loadYear">Sækja 1 ár (365d)</button>
         </div>
 
         <div class="row panel">
@@ -149,7 +185,7 @@
             <div class="kv"><div class="k">Timeline</div><div class="v" id="timelineInfo">—</div></div>
             <div class="row">
               <span class="miniNote">Dagur</span>
-              <input id="scrub" type="range" min="0" max="364" value="0" />
+              <input id="scrub" type="range" min="0" max="89" value="0" />
             </div>
             <div class="row">
               <span class="miniNote">Hraði</span>
@@ -159,6 +195,11 @@
           <div class="caption" id="caption">
             Hugmyndin: þetta er bara “stöður yfir tíma”. Sólkerfið er í raun endalaust “state machine” — nema að reglan er þyngdarlögmál.
           </div>
+        </div>
+
+        <div class="okhint">
+          <b>V1:</b> Við byrjum á 90 dögum (öruggt/snjallt). Þú getur svo sótt 365 daga með takkanum.
+          Ef NASA fer í frí og hangir, þá færðu skýra villu í stað limbós.
         </div>
       </div>
     </section>
@@ -184,7 +225,7 @@
 
         <div class="panel">
           <div class="caption mono">
-            Heimild gagna: NASA/JPL Horizons API (proxy-að í gegnum /api/*). :contentReference[oaicite:1]{index=1}
+            Heimild gagna: NASA/JPL Horizons API (proxy-að í gegnum /api/*).
           </div>
         </div>
       </div>
@@ -199,6 +240,7 @@
 
   const el = {
     status: document.getElementById("status"),
+    err: document.getElementById("err"),
     dayLabel: document.getElementById("dayLabel"),
     speedLabel: document.getElementById("speedLabel"),
     phaseLabel: document.getElementById("phaseLabel"),
@@ -207,6 +249,7 @@
     toggle: document.getElementById("toggle"),
     step: document.getElementById("step"),
     reset: document.getElementById("reset"),
+    loadYear: document.getElementById("loadYear"),
     toggleTrails: document.getElementById("toggleTrails"),
     toggleMoons: document.getElementById("toggleMoons"),
     scrub: document.getElementById("scrub"),
@@ -217,14 +260,13 @@
   };
 
   // ---- config ----
-  // AU rendering scale will be auto-chosen by max radius in dataset.
   const PLANETS = [
-    { id:"mercury", label:"Merkúr", color:"rgba(251,191,36,0.85)" },
-    { id:"venus",   label:"Venus",  color:"rgba(167,139,250,0.85)" },
-    { id:"earth",   label:"Jörð",   color:"rgba(34,211,238,0.85)" },
-    { id:"mars",    label:"Mars",   color:"rgba(74,222,128,0.85)" },
-    { id:"jupiter", label:"Júpíter",color:"rgba(255,255,255,0.70)" },
-    { id:"saturn",  label:"Satúrnus",color:"rgba(255,255,255,0.55)" },
+    { id:"mercury", label:"Merkúr",   color:"rgba(251,191,36,0.85)" },
+    { id:"venus",   label:"Venus",    color:"rgba(167,139,250,0.85)" },
+    { id:"earth",   label:"Jörð",     color:"rgba(34,211,238,0.85)" },
+    { id:"mars",    label:"Mars",     color:"rgba(74,222,128,0.85)" },
+    { id:"jupiter", label:"Júpíter",  color:"rgba(255,255,255,0.70)" },
+    { id:"saturn",  label:"Satúrnus", color:"rgba(255,255,255,0.55)" },
   ];
 
   // ---- canvas sizing ----
@@ -254,12 +296,67 @@
   }
 
   function phaseNameFromIllum(illum, waxing) {
-    // super-gróf (nóg til að vera skemmtilegt)
     if (illum < 0.05) return "Nýtt tungl";
     if (illum < 0.45) return waxing ? "Vaxandi sigð" : "Minnkandi sigð";
     if (illum < 0.55) return waxing ? "Fyrsta kvartil" : "Síðasta kvartil";
     if (illum < 0.95) return waxing ? "Vaxandi gibbous" : "Minnkandi gibbous";
     return "Fullt tungl";
+  }
+
+  function showError(msg){
+    el.err.style.display = "block";
+    el.err.textContent = msg;
+  }
+  function clearError(){
+    el.err.style.display = "none";
+    el.err.textContent = "";
+  }
+
+  // ---- robust fetch ----
+  async function fetchJSON(url, timeoutMs=18000){
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+
+    try {
+      const r = await fetch(url, {
+        headers: { "accept":"application/json" },
+        signal: ctrl.signal
+      });
+
+      const ct = (r.headers.get("content-type") || "").toLowerCase();
+      const txt = await r.text();
+
+      if (!ct.includes("application/json")) {
+        // Oft SPA fallback sem skilar HTML
+        throw new Error(
+          `API skilaði ekki JSON.\n`+
+          `HTTP: ${r.status}\n`+
+          `URL: ${url}\n`+
+          `Content-Type: ${ct || "unknown"}\n`+
+          `Byrjun: ${txt.slice(0,160).replace(/\s+/g," ")}…`
+        );
+      }
+
+      let j;
+      try { j = JSON.parse(txt); }
+      catch {
+        throw new Error(`Ógilt JSON frá API.\nURL: ${url}\nByrjun: ${txt.slice(0,160)}…`);
+      }
+
+      if (!r.ok || j?.ok === false) {
+        const extra = j?.debug ? `\n\nDEBUG:\n${String(j.debug).slice(0,800)}` : "";
+        throw new Error(`API villa: ${j?.error || ("HTTP "+r.status)}${extra}`);
+      }
+
+      return j;
+    } catch (e) {
+      if (e?.name === "AbortError") {
+        throw new Error(`Timeout (> ${timeoutMs}ms).\nURL: ${url}\n\n(Það er venjulega Horizons sem er hæg/stoppar.)`);
+      }
+      throw e;
+    } finally {
+      clearTimeout(t);
+    }
   }
 
   // ---- state ----
@@ -275,75 +372,69 @@
   let moon = null;      // moon geocentric (relative Earth)
   let maxR = 1;
 
-  // ---- fetch data ----
-  // Default window: 365 days from today (UTC-ish). You can change start=YYYY-MM-DD.
+  // ---- API + load ----
   const todayISO = new Date().toISOString().slice(0,10);
 
-  const todayISO = new Date().toISOString().slice(0,10);
-
-async function fetchJSON(url){
-  const r = await fetch(url, { headers: { "accept": "application/json" } });
-  const ct = (r.headers.get("content-type") || "").toLowerCase();
-  const txt = await r.text();
-
-  if (!ct.includes("application/json")) {
-    throw new Error(
-      `API skilaði ekki JSON (${r.status}). Fekk: ${ct || "unknown"}\n` +
-      `URL: ${url}\n` +
-      `Byrjun: ${txt.slice(0, 160).replace(/\s+/g," ")}…`
-    );
-  }
-
-  let j;
-  try { j = JSON.parse(txt); }
-  catch { throw new Error(`Ógilt JSON frá ${url}\nByrjun: ${txt.slice(0, 160)}…`); }
-
-  if (!r.ok || j?.ok === false) {
-    throw new Error(j?.error ? `API villa: ${j.error}` : `HTTP ${r.status}`);
-  }
-  return j;
-}
-
-async function loadAll() {
-  el.status.textContent = "sæki ephemeris…";
-
-  if (!location.origin || location.origin === "null") {
-    throw new Error("Opnað sem file://. Notaðu vefslóð (t.d. https://ís.is/solkerfi/) eða keyrðu local server, annars virkar /api ekki.");
-  }
-
-  const bodies = PLANETS.map(p=>p.id).join(",");
-  const API = `${location.origin}/api`;
-
-  const url1 = `${API}/ephemeris?start=${encodeURIComponent(todayISO)}&days=365&step=1d&bodies=${encodeURIComponent(bodies)}`;
-  const url2 = `${API}/moon?start=${encodeURIComponent(todayISO)}&days=365&step=1d`;
-
-  const [a, b] = await Promise.all([ fetchJSON(url1), fetchJSON(url2) ]);
-
-  data = a;
-  moon = b;
-
-  // find max radius for scaling (guard: missing series)
-  maxR = 0.1;
-  for (const pid of Object.keys(data.series || {})) {
-    for (const pt of (data.series[pid] || [])) {
-      const r = Math.hypot(pt.x, pt.y);
-      if (r > maxR) maxR = r;
+  function apiBase(){
+    if (!location.origin || location.origin === "null") {
+      throw new Error("Þú ert líklega að opna síðuna sem file://.\nOpnaðu hana í gegnum https://ís.is/solkerfi/ (eða local server), annars virkar /api ekki.");
     }
+    return `${location.origin}/api`;
   }
 
-  el.status.textContent = "ok ✅";
-  el.timelineInfo.textContent = `${data.start} → ${data.end} (N=${data.count})`;
-  el.scrub.max = String((data.count || 365) - 1);
-  simDay = 0;
-}
+  function setLoading(msg){
+    el.status.textContent = msg;
+  }
+  function setButtonsDisabled(disabled){
+    for (const b of [el.toggle, el.step, el.reset, el.toggleTrails, el.toggleMoons, el.loadYear]) {
+      b.disabled = !!disabled;
+    }
+    el.scrub.disabled = !!disabled;
+    el.speed.disabled = !!disabled;
+  }
+
+  async function loadAll(days){
+    clearError();
+    setButtonsDisabled(true);
+    setLoading("sæki gögn…");
+
+    const bodies = PLANETS.map(p=>p.id).join(",");
+    const API = apiBase();
+
+    // status messages: show progress so user doesn't think it's dead
+    setLoading(`sæki ephemeris (${days} dagar)…`);
+    const url1 = `${API}/ephemeris?start=${encodeURIComponent(todayISO)}&days=${encodeURIComponent(days)}&step=1d&bodies=${encodeURIComponent(bodies)}`;
+    const a = await fetchJSON(url1, 22000);
+
+    setLoading(`sæki tungl (${days} dagar)…`);
+    const url2 = `${API}/moon?start=${encodeURIComponent(todayISO)}&days=${encodeURIComponent(days)}&step=1d`;
+    const b = await fetchJSON(url2, 22000);
+
+    data = a;
+    moon = b;
+
+    // scale
+    maxR = 0.1;
+    for (const pid of Object.keys(data.series || {})) {
+      for (const pt of (data.series[pid] || [])) {
+        const r = Math.hypot(pt.x, pt.y);
+        if (r > maxR) maxR = r;
+      }
+    }
+
+    el.timelineInfo.textContent = `${data.start} → ${data.end} (N=${data.count})`;
+    el.scrub.max = String((data.count || days) - 1);
+    el.scrub.value = "0";
+    simDay = 0;
+    setLoading("ok ✅");
+    setButtonsDisabled(false);
+  }
 
   // ---- drawing ----
   function worldToScreen(p, center, scale){
     return { x: center.x + p.x*scale, y: center.y + p.y*scale };
   }
-
   function sampleSeries(series, idxFloat){
-    // linear interpolation between day i and i+1
     const n = series.length;
     const i = Math.floor(idxFloat);
     const t = idxFloat - i;
@@ -354,26 +445,20 @@ async function loadAll() {
   }
 
   function drawMoonDisk(screenPos, radiusPx, lightDirScreen, illum){
-    // We fake terminator by drawing lit disk + subtracting an offset shadow disk.
-    // Offset magnitude corresponds to phase: new -> full.
-    // illum in [0..1]
-    const L = vNorm(lightDirScreen); // direction from Moon towards light (Sun) on screen
+    const L = vNorm(lightDirScreen);
     const r = radiusPx;
 
-    // Base disk
     ctx.save();
     ctx.beginPath();
     ctx.arc(screenPos.x, screenPos.y, r, 0, Math.PI*2);
     ctx.clip();
 
-    // subtle texture gradient
     const g = ctx.createRadialGradient(screenPos.x-r*0.25, screenPos.y-r*0.25, r*0.2, screenPos.x, screenPos.y, r);
     g.addColorStop(0, "rgba(255,255,255,0.18)");
     g.addColorStop(1, "rgba(0,0,0,0.28)");
     ctx.fillStyle = g;
     ctx.fillRect(screenPos.x-r, screenPos.y-r, r*2, r*2);
 
-    // illuminated overlay (directional)
     const lg = ctx.createLinearGradient(
       screenPos.x - L.x*r, screenPos.y - L.y*r,
       screenPos.x + L.x*r, screenPos.y + L.y*r
@@ -384,10 +469,8 @@ async function loadAll() {
     ctx.fillStyle = lg;
     ctx.fillRect(screenPos.x-r, screenPos.y-r, r*2, r*2);
 
-    // Shadow disk offset opposite light
-    // new moon => illum~0 => big shadow overlap; full => illum~1 => shadow shifted away
-    const phase = 2*illum - 1;                 // -1..+1
-    const offset = -phase * r;                 // shift shadow along light axis
+    const phase = 2*illum - 1;   // -1..+1
+    const offset = -phase * r;   // shift shadow along light axis
     ctx.fillStyle = "rgba(0,0,0,0.60)";
     ctx.beginPath();
     ctx.arc(screenPos.x + L.x*offset, screenPos.y + L.y*offset, r, 0, Math.PI*2);
@@ -395,7 +478,6 @@ async function loadAll() {
 
     ctx.restore();
 
-    // rim
     ctx.strokeStyle = "rgba(255,255,255,0.35)";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -410,19 +492,16 @@ async function loadAll() {
     t0 = now;
 
     if (data && auto){
-      // speed slider: interpret as multiplier
-      simDay += dt * speed * 12; // 12 days per second at speed=1 (feels nice)
+      simDay += dt * speed * 12;
       if (simDay >= data.count-1) simDay = 0;
       el.scrub.value = String(Math.floor(simDay));
     }
 
     ctx.clearRect(0,0,w,h);
 
-    // center + scale
     const center = { x:w*0.52, y:h*0.50 };
     const scale = (Math.min(w,h)*0.42) / (maxR * 1.05);
 
-    // background vignette
     const vg = ctx.createRadialGradient(center.x,center.y, Math.min(w,h)*0.05, center.x,center.y, Math.min(w,h)*0.75);
     vg.addColorStop(0, "rgba(255,255,255,0.06)");
     vg.addColorStop(1, "rgba(0,0,0,0.55)");
@@ -449,10 +528,11 @@ async function loadAll() {
       return;
     }
 
-    // draw orbit trails / paths
+    // trails
     if (showTrails){
       for (const p of PLANETS){
         const series = data.series[p.id];
+        if (!series) continue;
         ctx.strokeStyle = p.color.replace("0.85", "0.18").replace("0.70", "0.12").replace("0.55","0.10");
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -464,17 +544,17 @@ async function loadAll() {
       }
     }
 
-    // sample positions at simDay
     const earthPos = sampleSeries(data.series.earth, simDay);
     const marsPos  = sampleSeries(data.series.mars, simDay);
 
-    // travel-window “vibe” (V1): phase angle Earth vs Mars around Sun
-    const phaseAngle = vAngle(earthPos, marsPos); // 0..pi
+    const phaseAngle = vAngle(earthPos, marsPos);
     const phaseDeg = phaseAngle * 180/Math.PI;
 
-    // draw planets
+    // planets
     for (const p of PLANETS){
-      const pos = sampleSeries(data.series[p.id], simDay);
+      const series = data.series[p.id];
+      if (!series) continue;
+      const pos = sampleSeries(series, simDay);
       const s = worldToScreen(pos, center, scale);
 
       const rPx = (p.id==="jupiter") ? 6 : (p.id==="saturn") ? 5 : (p.id==="mercury") ? 3.2 : 4;
@@ -490,7 +570,6 @@ async function loadAll() {
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(s.x,s.y, rPx, 0, Math.PI*2); ctx.stroke();
 
-      // labels (minimal)
       if (p.id==="earth" || p.id==="mars"){
         ctx.font = "600 12px ui-sans-serif";
         ctx.fillStyle = "rgba(234,240,255,0.78)";
@@ -498,20 +577,18 @@ async function loadAll() {
       }
     }
 
-    // Moon around Earth + phase shading
+    // Moon + phase
     let illum = 0.5;
     let waxing = true;
-    if (showMoon && moon){
-      const moonGeo = sampleSeries(moon.series.moon, simDay); // Earth-centered AU
+    if (showMoon && moon?.series?.moon){
+      const moonGeo = sampleSeries(moon.series.moon, simDay);
       const moonHelio = vAdd(earthPos, moonGeo);
 
-      // phase angle at Moon between (moon->sun) and (moon->earth)
-      const moonToSun = vMul(moonHelio, -1);     // Sun at origin
-      const moonToEarth = vMul(moonGeo, -1);     // Earth relative to Moon
+      const moonToSun = vMul(moonHelio, -1);
+      const moonToEarth = vMul(moonGeo, -1);
       const alpha = vAngle(moonToSun, moonToEarth);
-      illum = (1 - Math.cos(alpha)) / 2;         // new=0, full=1
+      illum = (1 - Math.cos(alpha)) / 2;
 
-      // waxing/waning: approximate by comparing next step illum
       const moonGeo2 = sampleSeries(moon.series.moon, clamp(simDay+1,0,data.count-1));
       const earth2 = sampleSeries(data.series.earth, clamp(simDay+1,0,data.count-1));
       const moonHelio2 = vAdd(earth2, moonGeo2);
@@ -519,35 +596,30 @@ async function loadAll() {
       const illum2 = (1 - Math.cos(alpha2)) / 2;
       waxing = illum2 >= illum;
 
-      // draw Earth-Moon mini-system
       const earthS = worldToScreen(earthPos, center, scale);
       const moonS  = worldToScreen(moonHelio, center, scale);
 
-      // line Earth->Moon
       ctx.strokeStyle = "rgba(255,255,255,0.10)";
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(earthS.x,earthS.y); ctx.lineTo(moonS.x,moonS.y); ctx.stroke();
 
-      // Light direction in screen space: from Moon towards Sun (Sun at center)
-      const lightDir = vSub(center, moonS); // screen: moon -> sun
+      const lightDir = vSub(center, moonS);
       const lightN = vNorm(lightDir);
-
       drawMoonDisk(moonS, 5.5, lightN, illum);
     }
 
-    // HUD text
+    // HUD
     const dayIndex = Math.floor(simDay);
-    const dateStr = data.dates[clamp(dayIndex,0,data.dates.length-1)] || data.start;
+    const dateStr = (data.dates && data.dates[clamp(dayIndex,0,data.dates.length-1)]) || data.start;
     el.dayLabel.textContent = dateStr;
     el.phaseLabel.textContent = `${Math.round(illum*100)}%`;
-    el.moonVec.textContent = moon ? (() => {
+    el.moonVec.textContent = (moon?.series?.moon) ? (() => {
       const m = sampleSeries(moon.series.moon, simDay);
       return `${m.x.toFixed(6)}, ${m.y.toFixed(6)}`;
     })() : "—";
     el.illum.textContent = `${illum.toFixed(3)} (${Math.round(illum*100)}%)`;
     el.phaseName.textContent = phaseNameFromIllum(illum, waxing);
 
-    // a little philosophical humor
     el.caption.textContent =
       `Earth↔Mars fasahorn ~ ${phaseDeg.toFixed(1)}°. (V1 “launch-window vibe”: gott þegar fasinn er “réttur”.) ` +
       `Tunglið er bókstaflega “shader” sem sólin keyrir.`;
@@ -576,7 +648,7 @@ async function loadAll() {
   el.step.addEventListener("click", () => {
     auto = false;
     el.toggle.textContent = "Auto ▶";
-    simDay = clamp(Math.floor(simDay) + 1, 0, (data?.count||365)-1);
+    simDay = clamp(Math.floor(simDay) + 1, 0, (data?.count||90)-1);
     el.scrub.value = String(Math.floor(simDay));
   });
 
@@ -595,11 +667,30 @@ async function loadAll() {
     el.toggleMoons.textContent = `Tungl: ${showMoon ? "ON" : "OFF"}`;
   });
 
+  el.loadYear.addEventListener("click", async () => {
+    try {
+      await loadAll(365);
+    } catch (e) {
+      setLoading("villa ❌");
+      showError(String(e?.message || e));
+      setButtonsDisabled(false);
+    }
+  });
+
   // ---- boot ----
   setSpeedFromUI();
-  loadAll()
-    .then(() => { el.status.textContent = "ok ✅"; requestAnimationFrame(draw); })
-    .catch(err => { el.status.textContent = "villa ❌"; console.error(err); });
+  (async () => {
+    try {
+      // default: 90 days (fast & reliable)
+      await loadAll(90);
+      requestAnimationFrame(draw);
+    } catch (e) {
+      setLoading("villa ❌");
+      showError(String(e?.message || e));
+      setButtonsDisabled(false);
+      requestAnimationFrame(draw);
+    }
+  })();
 
 })();
 </script>
