@@ -1,4 +1,4 @@
-// /assets/js/pages/frettir.js 
+// /assets/js/pages/frettir.js
 (() => {
   "use strict";
 
@@ -71,6 +71,7 @@
     btnThemeToggle: $("#btnThemeToggle"),
     btnOpenSettings: $("#btnOpenSettings"),
     btnRefresh: $("#btnRefresh"),
+    // NEW
     btnLoadMore: $("#btnLoadMore"),
     
     settingsDialog: $("#settingsDialog"),
