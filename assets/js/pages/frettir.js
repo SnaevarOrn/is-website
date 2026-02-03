@@ -41,6 +41,10 @@
   // Tweak limits if you want:
   const LIMIT_CORE = 50;
   const LIMIT_REST = 60;
+  // Rest comes in batches (smaller requests => smoother progress)
+  const REST_BATCH_SIZE = 4;     // 4 sources at a time
+  const LIMIT_PER_BATCH = 35;    // items per batch request
+  const LOAD_MORE_STEP = 60;     // how many more items when pressing "Sækja meira"
 
   // Read/visited tracking
   const READ_KEY = "is_news_read_v1";
@@ -67,7 +71,8 @@
     btnThemeToggle: $("#btnThemeToggle"),
     btnOpenSettings: $("#btnOpenSettings"),
     btnRefresh: $("#btnRefresh"),
-
+    btnLoadMore: $("#btnLoadMore"),
+    
     settingsDialog: $("#settingsDialog"),
     sourcesList: $("#sourcesList"),
     catsList: $("#catsList"),
@@ -440,6 +445,14 @@
   function selectedIds(mapObj) {
     return Object.entries(mapObj).filter(([, v]) => !!v).map(([k]) => k);
   }
+  
+  function chunkArray(arr, size) {
+    const out = [];
+    for (let i = 0; i < (arr || []).length; i += size) {
+      out.push(arr.slice(i, i + size));
+    }
+    return out;
+  }
 
   function mergeItemsUnique(base, extra) {
     const out = [];
@@ -471,7 +484,7 @@
     const qs = new URLSearchParams();
     qs.set("sources", sources.join(","));
     qs.set("cats", cats.join(","));
-    qs.set("limit", String(limitOverride || 60));
+    qs.set("limit", String(limitOverride ?? currentLimit ?? 60));
 
     const res = await fetch(`/api/news?${qs.toString()}`, {
       headers: { "Accept": "application/json" }
@@ -482,11 +495,17 @@
 
   let isRefreshing = false;
 
+  let currentLimit = 60;   // will be set on refresh
+  let canLoadMore = false;
+  let lastPrefsForLoadMore = null;
+  let lastSelectedSourcesForLoadMore = [];
+
   async function refresh() {
     if (isRefreshing) return;
     isRefreshing = true;
 
     const prefs = loadPrefs();
+    lastPrefsForLoadMore = prefs;
     showError(false);
     showEmpty(false);
 
@@ -496,6 +515,11 @@
     setStatus("Sæki fréttir…");
 
     const selected = selectedIds(prefs.sources);
+    lastSelectedSourcesForLoadMore = selected.slice();
+    currentLimit = LIMIT_CORE; // reset on full refresh
+    canLoadMore = false;
+    els.btnLoadMore?.setAttribute("hidden", "");
+
     const selectedCats = selectedIds(prefs.categories);
 
     // Engar stillingar => sýna empty strax
@@ -539,24 +563,31 @@
         setProgress(0, `Sæki miðla… (0/${total})`);
       }
 
-      // 2) Rest afterwards
-      if (restCount > 0) {
-        // hér er % “fjöldi miðla sem eru að verða sóttir” — við höfum nú þegar lokið core requestinu
-        const basePct = (coreCount / total) * 100;
-        setProgress(basePct, `Sæki fleiri miðla… (${coreCount}/${total})`);
+      // 2) Rest in batches (smooth progress)
+if (restCount > 0) {
+  const batches = chunkArray(restSources, REST_BATCH_SIZE);
+  let processed = coreCount;
 
-        const restData = await fetchNewsFromBackend(prefs, restSources, LIMIT_REST);
-        const restItems = Array.isArray(restData?.items) ? restData.items : [];
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i];
 
-        combined = mergeItemsUnique(combined, restItems);
-        renderNews(combined);
-        setLastUpdated();
+    // progress based on sources completed
+    setProgress((processed / total) * 100, `Sæki fleiri miðla… (${processed}/${total})`);
 
-        setProgress(100, `Sýni ${combined.length} fréttir.`);
-      } else {
-        // bara core valið
-        setProgress(100, combined.length ? `Sýni ${combined.length} fréttir.` : "Ekkert fannst.");
-      }
+    const batchData = await fetchNewsFromBackend(prefs, batch, LIMIT_PER_BATCH);
+    const batchItems = Array.isArray(batchData?.items) ? batchData.items : [];
+
+    combined = mergeItemsUnique(combined, batchItems);
+    renderNews(combined);
+    setLastUpdated();
+
+    processed += batch.length;
+  }
+
+  setProgress(100, `Sýni ${combined.length} fréttir.`);
+} else {
+  setProgress(100, combined.length ? `Sýni ${combined.length} fréttir.` : "Ekkert fannst.");
+}
 
       if (combined.length === 0) {
         showEmpty(true);
@@ -564,6 +595,12 @@
       } else {
         showEmpty(false);
       }
+// Decide if "Sækja meira" makes sense
+canLoadMore = combined.length >= (LIMIT_CORE + Math.max(0, restCount) * 5); 
+if (els.btnLoadMore) {
+  if (combined.length > 0) els.btnLoadMore.removeAttribute("hidden");
+  else els.btnLoadMore.setAttribute("hidden", "");
+}
 
     } catch (err) {
       console.error("[frettir] refresh error", err);
@@ -577,6 +614,38 @@
       ptrDone();
     }
   }
+async function loadMore() {
+  if (isRefreshing) return;
+  if (!lastPrefsForLoadMore) return;
+
+  const btn = els.btnLoadMore;
+  if (!btn) return;
+
+  // Increase limit and refetch with same selections
+  currentLimit = (currentLimit || 60) + LOAD_MORE_STEP;
+
+  btn.disabled = true;
+  const prevText = btn.textContent;
+  btn.textContent = "Sæki meira…";
+
+  try {
+    const data = await fetchNewsFromBackend(lastPrefsForLoadMore, lastSelectedSourcesForLoadMore, currentLimit);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    renderNews(items);
+    setLastUpdated();
+
+    // If backend returns fewer than requested, likely no more available right now
+    canLoadMore = items.length >= currentLimit;
+    if (!canLoadMore) btn.setAttribute("hidden", "");
+    setStatus(`Sýni ${items.length} fréttir.`);
+  } catch (err) {
+    console.error("[frettir] loadMore error", err);
+    setStatus("Gat ekki sótt fleiri fréttir.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevText || "Sækja meira";
+  }
+}
 
   /* -----------------------
      Reading view modal
@@ -843,7 +912,8 @@
     els.btnSourcesNone?.addEventListener("click", () => setAll("source", false));
     els.btnCatsAll?.addEventListener("click", () => setAll("cat", true));
     els.btnCatsNone?.addEventListener("click", () => setAll("cat", false));
-
+    els.btnLoadMore?.addEventListener("click", loadMore);
+    
     els.btnResetSettings?.addEventListener("click", () => {
       const d = defaultPrefs();
       savePrefs(d);
@@ -916,7 +986,8 @@
         return;
       }
       closeMenu();
-    });
+          });
+    
   }
 
   function init() {
@@ -924,6 +995,7 @@
     setHeaderTabsActive();
 
     const prefs = loadPrefs();
+    lastPrefsForLoadMore = prefs;
     renderSettings(prefs);
     wire();
     wirePullToRefresh();
