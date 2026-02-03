@@ -170,20 +170,22 @@ export async function onRequest(context) {
     const text = await res.text();
 
     let payload;
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      return jsonResponse(
-        {
-          ok: false,
-          error: "Upstream returned non-JSON",
-          status: res.status,
-          upstream: upstream.toString(),
-          sample: text.slice(0, 400),
-        },
-        502
-      );
-    }
+try {
+  payload = JSON.parse(text);
+} catch (e) {
+  return jsonResponse(
+    {
+      ok: false,
+      error: "Upstream parse error",
+      message: String(e),
+      status: res.status,
+      contentType: res.headers.get("content-type"),
+      upstream: upstream.toString(),
+      sample: text.slice(0, 300),
+    },
+    200 // ⬅️ mikilvægt: EKKI 502
+  );
+}
 
     const out = {
       ok: res.ok,
