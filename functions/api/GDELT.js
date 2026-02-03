@@ -3,20 +3,20 @@
 //
 // GET /api/GDELT?q=...&recent=24h&max=50&sort=DateDesc&format=json
 // Optional:
-//   - mode: ArtList | timelinevolinfo | timelinevol | tonechart | ...
+//   - mode: ArtList | timelinevolinfo | timelineavgtone | ...
 //   - start: YYYYMMDDHHMMSS (STARTDATETIME)
 //   - end:   YYYYMMDDHHMMSS (ENDDATETIME)
-//   - domain: example.com   (domain filter)
-//   - sourceCountry: IS     (2-letter country code for SOURCECOUNTRY)
-//   - language: en          (sourcelang / SOURCELANG)
+//   - domain: example.com (domain filter)
+//   - sourceCountry: IS (SOURCECOUNTRY)
+//   - language: en (sourcelang)
 //   - format: json | jsonp | html | rss ...
 //
-// Notes:
-// - Thin proxy to avoid CORS issues and enable edge caching
-// - Basic caps on query length and maxrecords
-//
-// Upstream endpoint:
-// https://api.gdeltproject.org/api/v2/doc/doc
+// Hardening:
+// - Never throw -> always return JSON {ok:false,...}
+// - Handles GDELT 429 (1 request / ~5 seconds) gracefully with retryAfterMs
+// - Edge cache with stale-while-revalidate to reduce rate limiting
+// - Timeout on upstream fetch
+// - CORS + OPTIONS
 
 "use strict";
 
@@ -24,11 +24,22 @@ const GDELT_DOC_ENDPOINT = "https://api.gdeltproject.org/api/v2/doc/doc";
 
 const MAX_RECORDS_CAP = 250;
 const QUERY_LEN_CAP = 300;
-const CACHE_TTL_SECONDS = 60;
 
 const DEFAULT_MODE = "ArtList";
 const DEFAULT_SORT = "DateDesc";
 const DEFAULT_FORMAT = "json";
+
+// Caching: keep short-ish but helpful
+const CACHE_MAX_AGE = 300;               // 5 min fresh
+const CACHE_STALE_REVALIDATE = 900;      // 15 min stale-while-revalidate
+
+// Upstream constraints / hardening
+const UPSTREAM_TIMEOUT_MS = 9000;        // keep under Pages limits
+const GDELT_MIN_INTERVAL_MS = 5200;      // per-edge throttle to avoid 429
+const GDELT_DEFAULT_RETRY_MS = 5500;
+
+// Best-effort per-edge throttle (not global, but helps)
+const LAST_UPSTREAM_AT = new Map(); // key -> timestamp
 
 function corsHeaders(extra = {}) {
   return {
@@ -44,7 +55,6 @@ function jsonResponse(obj, status = 200, extraHeaders = {}) {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
       ...corsHeaders(),
       ...extraHeaders,
     },
@@ -62,15 +72,35 @@ function cleanStr(s) {
 }
 
 function isYmdhms(s) {
-  // YYYYMMDDHHMMSS
   return /^[0-9]{14}$/.test(s);
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function cacheKeyFromUpstream(urlStr) {
+  // Normalizes to reduce cache fragmentation
+  // (GDELT params are order-sensitive only in text form, not meaning)
+  // We'll just use the final upstream.toString() which already orders by insertion,
+  // but this helper exists if you want stronger normalization later.
+  return urlStr;
+}
+
+async function fetchWithTimeout(url, init, timeoutMs) {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort("timeout"), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: ac.signal });
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 export async function onRequest(context) {
   const { request, ctx } = context || {};
   const method = request?.method || "GET";
 
-  // CORS preflight
   if (method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
@@ -86,11 +116,16 @@ export async function onRequest(context) {
           error: "Missing parameter: q",
           example: "/api/GDELT?q=iceland%20AND%20volcano&recent=24h&max=50",
         },
-        400
+        200,
+        { "cache-control": "no-store" }
       );
     }
     if (q.length > QUERY_LEN_CAP) {
-      return jsonResponse({ ok: false, error: `q too long (>${QUERY_LEN_CAP})` }, 413);
+      return jsonResponse(
+        { ok: false, error: `q too long (>${QUERY_LEN_CAP})` },
+        200,
+        { "cache-control": "no-store" }
+      );
     }
 
     const mode = cleanStr(url.searchParams.get("mode")) || DEFAULT_MODE;
@@ -119,7 +154,6 @@ export async function onRequest(context) {
     upstream.searchParams.set("maxrecords", String(max));
     upstream.searchParams.set("sort", sort);
 
-    // Time window logic
     if (start || end) {
       if (!isYmdhms(start) || !isYmdhms(end)) {
         return jsonResponse(
@@ -128,7 +162,8 @@ export async function onRequest(context) {
             error: "start/end must be YYYYMMDDHHMMSS (14 digits)",
             example: "/api/GDELT?q=ukraine&start=20260201000000&end=20260203000000",
           },
-          400
+          200,
+          { "cache-control": "no-store" }
         );
       }
       upstream.searchParams.set("STARTDATETIME", start);
@@ -141,9 +176,15 @@ export async function onRequest(context) {
     if (sourceCountry) upstream.searchParams.set("sourceCountry", sourceCountry);
     if (language) upstream.searchParams.set("sourcelang", language);
 
-    // Edge cache (best-effort)
+    const upstreamUrl = upstream.toString();
+    const upstreamKey = cacheKeyFromUpstream(upstreamUrl);
+
+    // Edge cache
     const cache = caches?.default;
-    const cacheKey = new Request(upstream.toString(), {
+
+    // IMPORTANT: cache-control on our response determines client caching too,
+    // but edge cache (caches.default) is separate.
+    const cacheKey = new Request(upstreamKey, {
       method: "GET",
       headers: { accept: "application/json" },
     });
@@ -152,7 +193,7 @@ export async function onRequest(context) {
       const cached = await cache.match(cacheKey);
       if (cached) {
         const headers = new Headers(cached.headers);
-        // ensure CORS survives cache
+        // keep CORS
         headers.set("access-control-allow-origin", "*");
         headers.set("access-control-allow-methods", "GET, OPTIONS");
         headers.set("access-control-allow-headers", "content-type");
@@ -160,32 +201,103 @@ export async function onRequest(context) {
       }
     }
 
-    const res = await fetch(upstream.toString(), {
-      headers: {
-        "user-agent": "is.is-gdelt/1.0",
-        accept: "application/json,text/plain,*/*",
-      },
-    });
+    // Best-effort throttle to reduce 429:
+    // Per-edge only, but still helps a lot for your own traffic.
+    const tNow = Date.now();
+    const last = LAST_UPSTREAM_AT.get(upstreamKey) || 0;
+    const delta = tNow - last;
+    if (delta < GDELT_MIN_INTERVAL_MS) {
+      await sleep(GDELT_MIN_INTERVAL_MS - delta);
+    }
+    LAST_UPSTREAM_AT.set(upstreamKey, Date.now());
 
+    // Upstream fetch with timeout
+    const t0 = Date.now();
+    let res;
+    try {
+      res = await fetchWithTimeout(
+        upstreamUrl,
+        {
+          headers: {
+            "user-agent": "is.is-gdelt/1.0",
+            accept: "application/json,text/plain,*/*",
+          },
+        },
+        UPSTREAM_TIMEOUT_MS
+      );
+    } catch (e) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "Upstream fetch failed",
+          message: String(e?.message || e),
+          upstream: upstreamUrl,
+          meta: { upstreamMs: Date.now() - t0 },
+          hint: "GDELT may be slow or unreachable. Try shorter recent window or fewer max.",
+        },
+        200,
+        { "cache-control": "no-store" }
+      );
+    }
+
+    const upstreamMs = Date.now() - t0;
     const text = await res.text();
 
+    // Handle GDELT throttling (429) gracefully
+    if (res.status === 429) {
+      const out429 = {
+        ok: false,
+        error: "Upstream rate limited",
+        status: 429,
+        upstream: upstreamUrl,
+        retryAfterMs: GDELT_DEFAULT_RETRY_MS,
+        sample: text.slice(0, 300),
+        meta: { upstreamMs },
+        hint:
+          "GDELT limit: ~1 request / 5 seconds. Add cooldown in UI or rely on cache.",
+      };
+
+      // Cache 429 briefly to prevent stampede (short!)
+      const response429 = jsonResponse(out429, 200, {
+        "cache-control": "public, max-age=5",
+      });
+
+      if (cache) {
+        const put = () => cache.put(cacheKey, response429.clone());
+        if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(put());
+        else await put();
+      }
+
+      return response429;
+    }
+
+    // Parse JSON safely; if upstream returned text/HTML, return structured error
     let payload;
-try {
-  payload = JSON.parse(text);
-} catch (e) {
-  return jsonResponse(
-    {
-      ok: false,
-      error: "Upstream parse error",
-      message: String(e),
-      status: res.status,
-      contentType: res.headers.get("content-type"),
-      upstream: upstream.toString(),
-      sample: text.slice(0, 300),
-    },
-    200 // ⬅️ mikilvægt: EKKI 502
-  );
-}
+    try {
+      payload = JSON.parse(text);
+    } catch (e) {
+      const outParse = {
+        ok: false,
+        error: "Upstream parse error",
+        status: res.status,
+        contentType: res.headers.get("content-type"),
+        upstream: upstreamUrl,
+        sample: text.slice(0, 300),
+        meta: { upstreamMs },
+      };
+
+      // Cache parse errors briefly (avoid hammering)
+      const resp = jsonResponse(outParse, 200, {
+        "cache-control": "public, max-age=15",
+      });
+
+      if (cache) {
+        const put = () => cache.put(cacheKey, resp.clone());
+        if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(put());
+        else await put();
+      }
+      return resp;
+    }
 
     const out = {
       ok: res.ok,
@@ -202,13 +314,16 @@ try {
         domain: domain || null,
         sourceCountry: sourceCountry || null,
         language: language || null,
-        upstream: upstream.toString(),
+        upstream: upstreamUrl,
+        upstreamMs,
       },
       data: payload,
     };
 
-    const response = jsonResponse(out, res.ok ? 200 : 502, {
-      "cache-control": `public, max-age=${CACHE_TTL_SECONDS}`,
+    // Always return 200 to avoid Cloudflare "host error" pages;
+    // encode success/failure in out.ok/out.status.
+    const response = jsonResponse(out, 200, {
+      "cache-control": `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_STALE_REVALIDATE}`,
     });
 
     if (cache) {
@@ -219,6 +334,10 @@ try {
 
     return response;
   } catch (err) {
-    return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
+    return jsonResponse(
+      { ok: false, error: "Server error", message: String(err?.message || err) },
+      200,
+      { "cache-control": "no-store" }
+    );
   }
 }
