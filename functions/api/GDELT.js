@@ -336,7 +336,8 @@ export async function onRequestGet({ request, ctx }) {
       "cache-control": `public, max-age=${CACHE_TTL_SECONDS}`,
     });
 
-    ctx.waitUntil(cache.put(cacheKey, response.clone()));
+    if (ctx && typeof ctx.waitUntil === "function") {
+  ctx.waitUntil(cache.put(cacheKey, response.clone()));
     return response;
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
