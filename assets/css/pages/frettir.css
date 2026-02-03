@@ -596,3 +596,34 @@ html[data-theme="dark"] .reading-card{ background:var(--panel2); }
   transition: width 180ms ease;
 }
 
+/* Load-more as a small + button in the status/header line */
+#btnLoadMore.nm-plus{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:28px;
+  height:28px;
+  margin-left:10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: inherit;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#btnLoadMore.nm-plus:hover{
+  background: rgba(255,255,255,.10);
+}
+
+#btnLoadMore.nm-plus:active{
+  transform: translateY(1px);
+}
+
+#btnLoadMore.nm-plus:disabled{
+  opacity:.55;
+  cursor: default;
+  transform:none;
+}
