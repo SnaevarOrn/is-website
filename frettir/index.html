@@ -48,24 +48,25 @@
     </div>
 
     <div class="ph-meta" aria-live="polite">
-  <span id="statusText">Tilbúið.</span>
-  <button id="btnLoadMore"
-        class="nm-plus"
-        type="button"
-        hidden
-        title="Sækja meira"
-        aria-label="Sækja meira">+</button>
-  <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
-  <span class="ph-dot">•</span>
-  
-  <span class="ph-dot">•</span>
+  <span id="statusText" class="ph-status">Tilbúið.</span>
 
-<div class="progress" id="loadProgress" hidden aria-label="Hleðsla">
-  <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
+  <button id="btnLoadMore"
+          class="nm-plus"
+          type="button"
+          hidden
+          title="Sækja meira"
+          aria-label="Sækja meira">+</button>
+
+  <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
+  <span id="loadProgressText" class="tiny muted ph-pct" hidden>0%</span>
+
+  <span class="ph-dot">•</span>
+  <span id="lastUpdated" class="ph-updated"></span>
+
+  <div class="progress ph-progress" id="loadProgress" hidden aria-label="Hleðsla">
+    <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
+  </div>
 </div>
-<span class="tiny muted" id="loadProgressText" hidden>0%</span>
-</div>
-<span id="lastUpdated"></span>
     <div class="menu-panel" id="menuPanel" aria-hidden="true">
       <div class="menu-card">
         <button class="menu-action" id="btnThemeToggle" type="button">
