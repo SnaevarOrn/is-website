@@ -627,3 +627,51 @@ html[data-theme="dark"] .reading-card{ background:var(--panel2); }
   cursor: default;
   transform:none;
 }
+
+/* --- Bottom meta row layout fixes --- */
+.ph-meta{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* Þetta er “Sýni 190 fr…” — þarf að mega minnka í flex */
+.ph-meta .ph-status,
+#statusText{
+  flex:1 1 auto;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* setur Uppfært hægra megin */
+.ph-meta .ph-updated,
+#lastUpdated{
+  margin-left:auto;
+  white-space:nowrap;
+}
+
+/* % við hliðina á spinnernum, aldrei hægra megin */
+.ph-meta .ph-pct,
+#loadProgressText{
+  white-space:nowrap;
+}
+
+/* litli + takkinn */
+.nm-plus{
+  width:28px;
+  height:28px;
+  padding:0;
+  display:inline-grid;
+  place-items:center;
+  border-radius:999px;
+  line-height:1;
+  font-weight:700;
+}
+
+/* progress bar má vera compact og ekki ýta layouti í sundur */
+.ph-meta .ph-progress{
+  width:72px;
+  max-width:72px;
+}
