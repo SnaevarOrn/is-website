@@ -1,4 +1,4 @@
-// /assets/js/pages/frettir.js
+// /assets/js/pages/frettir.js 
 (() => {
   "use strict";
 
