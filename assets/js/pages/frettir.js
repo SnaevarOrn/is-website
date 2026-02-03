@@ -596,8 +596,10 @@ if (restCount > 0) {
       } else {
         showEmpty(false);
       }
-// Decide if "Sækja meira" makes sense
-canLoadMore = combined.length >= (LIMIT_CORE + Math.max(0, restCount) * 5); 
+      // Sync limit with what we actually rendered (refresh uses multiple batch limits)
+currentLimit = combined.length;
+
+// Decide if "Sækja meira" should be shown after refresh
 if (els.btnLoadMore) {
   if (combined.length > 0) els.btnLoadMore.removeAttribute("hidden");
   else els.btnLoadMore.setAttribute("hidden", "");
