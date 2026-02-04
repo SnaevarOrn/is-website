@@ -280,12 +280,16 @@
     }, ELEV_DEBOUNCE_MS);
   }
 
-  //function updateStateLine() {
-    //if (!elState) return;
-    //const c = map.getCenter();
-    //elState.textContent =
-    //  "miðja: " + fmt(c.lat, 5) + ", " + fmt(c.lng, 5) + " · zoom: " + fmt(map.getZoom(), 2);
-  //}
+  function updateStateLine() {
+  if (!elState) return;
+
+  // Ef crosshair er ON, þá látum við annað module sjá um state-line
+  if (crosshairOn) return;
+
+  const c = map.getCenter();
+  elState.textContent =
+    "miðja: " + fmt(c.lat, 5) + ", " + fmt(c.lng, 5) + " · zoom: " + fmt(map.getZoom(), 2);
+}
 
   function setCrosshair(on) {
     crosshairOn = !!on;
