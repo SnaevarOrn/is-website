@@ -189,6 +189,8 @@
 
   let crosshairOn = false;
 
+  let userLocationMarker = null;
+  
   let elevTimer = null;
   let elevAbort = null;
   let lastElevKey = "";
@@ -328,17 +330,31 @@
   };
 
   window.kortUseLocation = function () {
-    if (!("geolocation" in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
-      function (pos) {
-        const lng = pos.coords.longitude;
-        const lat = pos.coords.latitude;
-        map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 14), essential: true });
-      },
-      function () {},
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
-    );
-  };
+  if (!("geolocation" in navigator)) return;
+
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      const lng = pos.coords.longitude;
+      const lat = pos.coords.latitude;
+
+      if (!userLocationMarker) {
+        userLocationMarker = new maplibregl.Marker({ color: "#e11d48" }) // rauður
+          .setLngLat([lng, lat])
+          .addTo(map);
+      } else {
+        userLocationMarker.setLngLat([lng, lat]);
+      }
+
+      map.flyTo({
+        center: [lng, lat],
+        zoom: Math.max(map.getZoom(), 14),
+        essential: true
+      });
+    },
+    function () {},
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
+  );
+};
 
   map.on("load", () => {
     updateStateLine();
