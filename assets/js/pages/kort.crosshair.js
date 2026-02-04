@@ -77,7 +77,17 @@
       timer = null;
     }
     if (aborter) {
-      try { aborter.abort(); } catch {}
+      function cancelPending() {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  if (aborter) {
+    try { aborter.abort(); } catch (e) {}
+    aborter = null;
+  }
+}
+
       aborter = null;
     }
   }
