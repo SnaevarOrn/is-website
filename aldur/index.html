@@ -1,300 +1,54 @@
 <!doctype html>
-<html lang="is">
+<html lang="is" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Aldur — tilraun</title>
-  <style>
-    body{font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:16px; line-height:1.35;}
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-bottom:12px;}
-    label{display:block; font-weight:600; font-size:14px; margin-bottom:6px;}
-    input,button{font:inherit; padding:10px 12px; border:1px solid #ccc; border-radius:10px;}
-    button{cursor:pointer;}
-    #out{white-space:pre-wrap; background:#f6f7f9; border:1px solid #e6e8ee; padding:12px; border-radius:12px;}
-    .hint{color:#555; font-size:13px; margin:8px 0 12px;}
-  </style>
+
+  <!-- Shared CSS (ís.is) -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/assets/css/pages/aldur.css">
 </head>
+
 <body>
-  <button class="page-close" id="btnClose">×</button>
-  <h1>Aldur</h1>
+  <button class="page-close" id="btnClose" aria-label="Loka">×</button>
 
-  <div class="row">
-    <div>
-      <label>Fæðingardagur</label>
-      <input id="dob" type="date" />
+  <main class="page">
+    <h1>Aldur</h1>
+
+    <div class="row">
+      <div>
+        <label for="dob">Fæðingardagur</label>
+        <input id="dob" type="date" />
+      </div>
+
+      <div>
+        <label for="tob">Klukkan (valfrjálst)</label>
+        <input id="tob" type="time" step="1" value="00:00:00" />
+      </div>
+
+      <div>
+        <label for="tz">Tímabelti</label>
+        <input id="tz" type="text" value="Atlantic/Reykjavik" />
+      </div>
+
+      <div>
+        <button id="calc" class="btn-primary">Reikna</button>
+      </div>
     </div>
-    <div>
-      <label>Klukkan (valfrjálst)</label>
-      <input id="tob" type="time" step="1" value="00:00:00" />
-    </div>
-    <div>
-      <label>Tímabelti</label>
-      <input id="tz" type="text" value="Atlantic/Reykjavik" />
-    </div>
-    <div>
-      <button id="calc">Reikna</button>
-    </div>
-  </div>
 
-  <div class="hint">
-    Ef þú setur bara dagsetningu og lætur klukkuna vera 00:00:00 færðu “clean” tölur.  
-    Planet- og tungl-aldur eru nálganir (en mjög fínar nálganir).
-  </div>
+    <p class="hint">
+      Ef þú setur bara dagsetningu og lætur klukkuna vera 00:00:00 færðu “clean” tölur.
+      Planet- og tungl-aldur eru nálganir (en mjög fínar nálganir).
+    </p>
 
-  <div id="out">Veldu dagsetningu…</div>
+    <pre id="out" class="out">Veldu dagsetningu…</pre>
+  </main>
 
-<script>
-(() => {
-  // --- Constants ---
-  const MS = 1;
-  const SEC = 1000 * MS;
-  const MIN = 60 * SEC;
-  const HOUR = 60 * MIN;
-  const DAY = 24 * HOUR;
-  const WEEK = 7 * DAY;
-
-  // Synodic month (new moon to new moon), days:
-  const SYNODIC_MONTH_D = 29.530588; // good-enough
-  // Mean tropical year in days (Earth):
-  const TROPICAL_YEAR_D = 365.242189;
-
-  // Planet orbital periods in Earth days (sidereal-ish). Good approximations:
-  const PLANETS = [
-    { name: "Merkúríus", days: 87.9691 },
-    { name: "Venus",     days: 224.701 },
-    { name: "Jörð",      days: 365.256363004 },
-    { name: "Mars",      days: 686.980 },
-    { name: "Júpíter",   days: 4332.589 },
-    { name: "Satúrnus",  days: 10759.22 },
-    { name: "Úranus",    days: 30688.5 },
-    { name: "Neptúnus",  days: 60182 }
-  ];
-
-  // --- Helpers ---
-  const pad2 = n => String(n).padStart(2,"0");
-  const fmt = (x, dp=3) => Number.isFinite(x) ? x.toLocaleString("is-IS", {maximumFractionDigits: dp, minimumFractionDigits: dp}) : "—";
-
-  // Create a Date that represents local wall-clock time in a given IANA TZ.
-  // Note: JS Date stores UTC internally; we hack via Intl to get correct offset at that moment.
-  function zonedDateFromParts({y,m,d, hh, mm, ss, tz}) {
-    // Start with a UTC guess:
-    const utcGuess = new Date(Date.UTC(y, m-1, d, hh, mm, ss));
-    // Find what local time that guess corresponds to in tz:
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: tz, hour12: false,
-      year:"numeric", month:"2-digit", day:"2-digit",
-      hour:"2-digit", minute:"2-digit", second:"2-digit"
-    }).formatToParts(utcGuess).reduce((acc,p)=>{acc[p.type]=p.value; return acc;}, {});
-    // Build the "as-if local" time from tz parts back into UTC:
-    const asIfLocalUTC = Date.UTC(+parts.year, +parts.month-1, +parts.day, +parts.hour, +parts.minute, +parts.second);
-    // Offset between guess UTC and as-if-local UTC tells us the TZ offset at that instant:
-    const offsetMs = asIfLocalUTC - utcGuess.getTime();
-    // Correct the guess by that offset:
-    return new Date(utcGuess.getTime() - offsetMs);
-  }
-
-  // NEW ESC CLOSE
-document.getElementById("btnClose")?.addEventListener("click", () => {
-  if (history.length > 1) history.back();
-  else location.href = "/";
-});
-window.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape") return;
-
-  if (history.length > 1) history.back();
-  else location.href = "/";
-});
-  .page-close{
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 20000;
-
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  text-decoration: none;
-
-  box-shadow: 0 10px 24px var(--shadow);
-}
-
-.page-close:hover{
-  background: var(--panel2);
-}
-
-  function diffCalendarMonths(d1, d2, tz){
-    // Count full calendar months between two instants, based on wall-clock date in tz.
-    // Returns {monthsTotal, years, months, remainderDaysApprox}
-    const toYMD = (dt) => {
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: tz, year:"numeric", month:"2-digit", day:"2-digit"
-      }).formatToParts(dt).reduce((a,p)=>{a[p.type]=p.value; return a;},{});
-      return { y:+parts.year, m:+parts.month, d:+parts.day };
-    };
-
-    const a = toYMD(d1);
-    const b = toYMD(d2);
-
-    let months = (b.y - a.y) * 12 + (b.m - a.m);
-
-    // If b.day < a.day, not a full month yet:
-    if (b.d < a.d) months -= 1;
-
-    const years = Math.floor(months / 12);
-    const remMonths = months % 12;
-
-    return { monthsTotal: months, years, months: remMonths };
-  }
-
-  function isPrime(n){
-    if (n < 2 || (n|0) !== n) return false;
-    if (n === 2) return true;
-    if (n % 2 === 0) return false;
-    const r = Math.floor(Math.sqrt(n));
-    for (let i=3; i<=r; i+=2) if (n % i === 0) return false;
-    return true;
-  }
-
-  function nextPrime(n){
-    let k = Math.max(2, Math.floor(n));
-    while (!isPrime(k)) k++;
-    return k;
-  }
-
-  function isFib(n){
-    if (n < 0 || (n|0)!==n) return false;
-    // n is Fibonacci if 5n^2+4 or 5n^2-4 is perfect square
-    const t1 = 5*n*n + 4;
-    const t2 = 5*n*n - 4;
-    const isSquare = x => {
-      const s = Math.floor(Math.sqrt(x));
-      return s*s === x;
-    };
-    return isSquare(t1) || isSquare(t2);
-  }
-
-  function nextFib(n){
-    let k = Math.max(0, Math.floor(n));
-    while (!isFib(k)) k++;
-    return k;
-  }
-
-  function yearsFloatFromMs(ms){
-    return ms / (TROPICAL_YEAR_D * DAY);
-  }
-
-  // --- Main ---
-  function calculate(){
-    const dobEl = document.getElementById("dob");
-    const tobEl = document.getElementById("tob");
-    const tzEl  = document.getElementById("tz");
-    const outEl = document.getElementById("out");
-
-    const dob = dobEl.value;
-    if (!dob) { outEl.textContent = "Veldu fæðingardag."; return; }
-
-    const [Y,M,D] = dob.split("-").map(Number);
-    const [hh,mm,ss] = (tobEl.value || "00:00:00").split(":").map(x => Number(x||0));
-    const tz = (tzEl.value || "Atlantic/Reykjavik").trim();
-
-    const birth = zonedDateFromParts({y:Y,m:M,d:D, hh:hh||0, mm:mm||0, ss:ss||0, tz});
-    const now = new Date();
-
-    const ageMs = now.getTime() - birth.getTime();
-    if (ageMs < 0) { outEl.textContent = "Þú ert ekki fædd(ur) enn. (Samkvæmt þessu.)"; return; }
-
-    const ageSec = ageMs / 1000;
-    const ageMin = ageMs / MIN;
-    const ageHour= ageMs / HOUR;
-    const ageDay = ageMs / DAY;
-    const ageWeek= ageMs / WEEK;
-
-    // Approx months: average month length in Gregorian calendar:
-    const AVG_MONTH_D = 365.2425 / 12; // ~30.436875
-    const ageMonthApprox = ageDay / AVG_MONTH_D;
-
-    // Calendar months (full months elapsed)
-    const cal = diffCalendarMonths(birth, now, tz);
-
-    const ageYearsFloat = yearsFloatFromMs(ageMs);
-    const ageYearsInt = Math.floor(ageYearsFloat);
-
-    const lunarCycles = ageDay / SYNODIC_MONTH_D;
-
-    // Planet ages:
-    const planetLines = PLANETS.map(p => {
-      const py = ageDay / p.days;
-      return `- ${p.name}: ${fmt(py, 6)} ár`;
-    }).join("\n");
-
-    // Prime & Fibonacci birthdays (in years)
-    const nextPrimeAge = nextPrime(ageYearsInt + 1);
-    const nextFibAge   = nextFib(ageYearsInt + 1);
-
-    // Doublings (log2) from 1 day
-    const doublingsFrom1Day = Math.log2(Math.max(1, ageDay));
-
-    // Some fun milestones (days)
-    const milestonesDays = [1000, 5000, 10000, 20000, 30000, 40000].filter(x => x > ageDay);
-    const nextDayMs = (targetDays) => birth.getTime() + targetDays * DAY;
-    const nextMilestoneText = milestonesDays.length
-      ? milestonesDays.slice(0,3).map(d => {
-          const dt = new Date(nextDayMs(d));
-          const iso = dt.toISOString().slice(0,10);
-          return `- ${d.toLocaleString("is-IS")} dagar: ${iso}`;
-        }).join("\n")
-      : "- (engin næstu “kringlóttu” dagar í þessum lista)";
-
-    outEl.textContent =
-`Fæðing: ${birth.toISOString().replace("T"," ").replace("Z"," UTC")}
-Núna:   ${now.toISOString().replace("T"," ").replace("Z"," UTC")}
-
-Grunn-aldur
-- Sekúndur:   ${fmt(ageSec, 0)}
-- Mínútur:    ${fmt(ageMin, 0)}
-- Klukkust.:  ${fmt(ageHour,0)}
-- Dagar:      ${fmt(ageDay, 3)}
-- Vikur:      ${fmt(ageWeek,3)}
-
-Mánuðir
-- Approx (dagar/30.436875): ${fmt(ageMonthApprox, 3)} mán
-- Calendar (heilumánuðir):  ${cal.monthsTotal.toLocaleString("is-IS")} mán  (${cal.years} ár + ${cal.months} mán)
-
-Ár
-- Jarðarár (tropical): ${fmt(ageYearsFloat, 6)} ár
-- Heilu ár:           ${ageYearsInt.toLocaleString("is-IS")} ár
-
-Tungl
-- Tunglhringir (≈29.530588 d): ${fmt(lunarCycles, 6)} hringir
-
-Plánetur (aldur í “árum” þeirra)
-${planetLines}
-
-Tölur
-- Næsta prímtölu-afmæli (ár):     ${nextPrimeAge} (eftir ${(nextPrimeAge - ageYearsInt).toLocaleString("is-IS")} ár)
-- Næsta Fibonacci-afmæli (ár):    ${nextFibAge} (eftir ${(nextFibAge - ageYearsInt).toLocaleString("is-IS")} ár)
-
-Log / tvöföldun
-- log2(aldur í dögum) frá 1 degi: ${fmt(doublingsFrom1Day, 6)}
-  (þú hefur “tvöfaldað” dagafjölda ca. ${fmt(doublingsFrom1Day, 2)} sinnum)
-
-Næstu “kringlóttu” dagar (úr lista)
-${nextMilestoneText}
-`;
-  }
-
-  document.getElementById("calc").addEventListener("click", calculate);
-
-  // Set a sane default date for quick testing (2000-01-01)
-  const dobEl = document.getElementById("dob");
-  if (!dobEl.value) dobEl.value = "2000-01-01";
-})();
-</script>
+  <!-- Page JS -->
+  <script src="/assets/js/pages/aldur.js" defer></script>
 </body>
 </html>
