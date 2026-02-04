@@ -1,0 +1,79 @@
+/* /assets/css/pages/aldur.css */
+
+.page{
+  max-width: 980px;
+  margin: 16px auto;
+  padding: 0 6px;
+}
+
+.row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:end;
+  margin-bottom:12px;
+}
+
+label{
+  display:block;
+  font-weight:600;
+  font-size:14px;
+  margin-bottom:6px;
+}
+
+/* Fallbacks ef base.css skilgreinir ekki þessar breytur */
+:root{
+  --aldur-border: var(--border, #d7dbe3);
+  --aldur-panel:  var(--panel, #f6f7f9);
+  --aldur-panel2: var(--panel2, #eef1f6);
+  --aldur-text:   var(--text, #101418);
+  --aldur-shadow: var(--shadow, rgba(0,0,0,.12));
+}
+
+input, button{
+  font: inherit;
+  padding:10px 12px;
+  border: 1px solid var(--aldur-border);
+  border-radius: 10px;
+}
+
+button{ cursor:pointer; }
+
+.out{
+  white-space: pre-wrap;
+  background: var(--aldur-panel);
+  border: 1px solid color-mix(in oklab, var(--aldur-border) 75%, transparent);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.hint{
+  color: color-mix(in oklab, var(--aldur-text) 70%, transparent);
+  font-size: 13px;
+  margin: 8px 0 12px;
+}
+
+/* “X” loka-takki */
+.page-close{
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 20000;
+
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+  border: 1px solid var(--aldur-border);
+  background: var(--aldur-panel);
+  color: var(--aldur-text);
+  text-decoration: none;
+
+  box-shadow: 0 10px 24px var(--aldur-shadow);
+}
+
+.page-close:hover{
+  background: var(--aldur-panel2);
+}
