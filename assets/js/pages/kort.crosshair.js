@@ -21,20 +21,23 @@
   }
 
   function setStatusLine(lat, lng, zoom, elevMeters) {
-    const el = document.getElementById("kortState");
-    if (!el) return;
+  const el = document.getElementById("kortState");
+  const elAlt = document.getElementById("kortAlt");
 
-    const z = (typeof zoom === "number") ? zoom.toFixed(2) : "—";
-    const base = "miðja: " + lat.toFixed(5) + ", " + lng.toFixed(5) + " · zoom: " + z;
-
-    if (!on) {
-      el.textContent = base;
-      return;
-    }
-
-    const h = (typeof elevMeters === "number") ? (Math.round(elevMeters) + " m") : "—";
-    el.textContent = base + " · hæð: " + h;
+  if (elAlt) {
+    elAlt.hidden = !on;
+    elAlt.textContent =
+      "hæð: " + (typeof elevMeters === "number" ? (Math.round(elevMeters) + " m") : "—");
   }
+
+  if (!el) return;
+
+  const z = (typeof zoom === "number") ? zoom.toFixed(2) : "—";
+  const base = "miðja: " + lat.toFixed(5) + ", " + lng.toFixed(5) + " · zoom: " + z;
+
+  // #kortState þarf ekki lengur að bera hæðina ef þú vilt footerinn
+  el.textContent = base;
+}
 
   async function fetchElev(lat, lng) {
     const k = makeKey(lat, lng);
