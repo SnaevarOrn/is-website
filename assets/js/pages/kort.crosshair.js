@@ -17,6 +17,7 @@
 
   let timer = null;
   let aborter = null;
+
   const cache = new Map(); // key -> elevation_m
 
   function makeKey(lat, lng) {
@@ -26,6 +27,16 @@
   function setStatusLine(lat, lng, zoom, elevMeters) {
     const el = document.getElementById("kortState");
     const elAlt = document.getElementById("kortAlt");
+
+    const hud = document.querySelector(".kort-hud");
+if (hud) {
+  hud.hidden = !on;
+  hud.textContent =
+    "hæð: " +
+    (typeof elevMeters === "number"
+      ? Math.round(elevMeters) + " m"
+      : "—");
+}
 
     if (elAlt) {
       elAlt.hidden = !on;
