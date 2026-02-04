@@ -8,7 +8,10 @@
   const map = window.kortMap;
   if (!map) return;
 
-  const mapEl = (typeof map.getContainer === "function") ? map.getContainer() : document.querySelector(".kort-map");
+  const mapEl =
+    (typeof map.getContainer === "function")
+      ? map.getContainer()
+      : document.querySelector(".kort-map");
 
   let on = false;
 
@@ -21,33 +24,45 @@
   }
 
   function setStatusLine(lat, lng, zoom, elevMeters) {
-  const el = document.getElementById("kortState");
-  const elAlt = document.getElementById("kortAlt");
+    const el = document.getElementById("kortState");
+    const elAlt = document.getElementById("kortAlt");
 
-  if (elAlt) {
-    elAlt.hidden = !on;
-    elAlt.textContent =
-      "hæð: " + (typeof elevMeters === "number" ? (Math.round(elevMeters) + " m") : "—");
+    if (elAlt) {
+      elAlt.hidden = !on;
+      elAlt.textContent =
+        "hæð: " +
+        (typeof elevMeters === "number"
+          ? Math.round(elevMeters) + " m"
+          : "—");
+    }
+
+    if (!el) return;
+
+    const z = (typeof zoom === "number") ? zoom.toFixed(2) : "—";
+    el.textContent =
+      "miðja: " +
+      lat.toFixed(5) +
+      ", " +
+      lng.toFixed(5) +
+      " · zoom: " +
+      z;
   }
-
-  if (!el) return;
-
-  const z = (typeof zoom === "number") ? zoom.toFixed(2) : "—";
-  const base = "miðja: " + lat.toFixed(5) + ", " + lng.toFixed(5) + " · zoom: " + z;
-
-  // #kortState þarf ekki lengur að bera hæðina ef þú vilt footerinn
-  el.textContent = base;
-}
 
   async function fetchElev(lat, lng) {
     const k = makeKey(lat, lng);
     if (cache.has(k)) return cache.get(k);
 
-    // Cancel previous in-flight request
-    if (aborter) aborter.abort();
+    if (aborter) {
+      try { aborter.abort(); } catch (e) {}
+    }
     aborter = new AbortController();
 
-    const url = "/api/elevation?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng);
+    const url =
+      "/api/elevation?lat=" +
+      encodeURIComponent(lat) +
+      "&lng=" +
+      encodeURIComponent(lng);
+
     const res = await fetch(url, {
       headers: { accept: "application/json" },
       cache: "no-store",
@@ -60,9 +75,9 @@
     if (!j || j.ok !== true) throw new Error("elev_bad_payload");
 
     const v =
-      (typeof j.elevation_m === "number") ? j.elevation_m :
-      (typeof j.meters === "number") ? j.meters :
-      (typeof j.elevation === "number") ? j.elevation :
+      typeof j.elevation_m === "number" ? j.elevation_m :
+      typeof j.meters === "number" ? j.meters :
+      typeof j.elevation === "number" ? j.elevation :
       null;
 
     if (typeof v !== "number") throw new Error("elev_missing_value");
@@ -77,17 +92,7 @@
       timer = null;
     }
     if (aborter) {
-      function cancelPending() {
-  if (timer) {
-    clearTimeout(timer);
-    timer = null;
-  }
-  if (aborter) {
-    try { aborter.abort(); } catch (e) {}
-    aborter = null;
-  }
-}
-
+      try { aborter.abort(); } catch (e) {}
       aborter = null;
     }
   }
@@ -96,14 +101,12 @@
     if (timer) clearTimeout(timer);
 
     timer = setTimeout(async () => {
-      // If user toggled OFF while we waited, skip work
       if (!on) return;
 
       try {
         const elev = await fetchElev(lat, lng);
         setStatusLine(lat, lng, map.getZoom(), elev);
       } catch (e) {
-        // Keep coords updated; show hæð: —
         setStatusLine(lat, lng, map.getZoom(), null);
       }
     }, 650);
@@ -137,7 +140,6 @@
   function get() { return on; }
   function refresh() { updateCoords(); }
 
-  // Update coords while moving (no elevation spam)
   map.on("move", () => {
     if (!on) return;
     const c = map.getCenter();
