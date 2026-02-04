@@ -299,6 +299,44 @@ function truncateFromCommentDisclaimer(paragraphs) {
   return paras;
 }
 
+// Subscription / cookie "cut markers" — drop paragraph + everything after it
+function truncateFromKnownCutMarkers(paragraphs) {
+  const paras = Array.isArray(paragraphs) ? paragraphs.slice() : [];
+  if (!paras.length) return paras;
+
+  const MARKERS = [
+    // mbl.is / Árvakur paywall-ish block
+    /með\s+áskrift\s+færðu\s+fullan\s+aðgang\s+að\s+öllum\s+l[æa]stum\s+greinum\s+árvakurs/i,
+
+    // bb.is cookie/consent notice
+    /við\s+notum\s+vefk[öo]kur\s+til\s+a[ðd]\s+safna\s+og\s+greina\s+uppl[ýy]singar\s+um\s+notkun\s+og\s+virkni\s+á\s+bb\.is/i,
+  ];
+
+  const isMarker = (s) => {
+    const t = String(s || "");
+    return MARKERS.some((re) => re.test(t));
+  };
+
+  for (let i = 0; i < paras.length; i++) {
+    const p = String(paras[i] || "");
+    if (!p) continue;
+
+    // Marker as whole paragraph -> cut from here
+    if (isMarker(p)) return paras.slice(0, i);
+
+    // Marker appears mid-paragraph -> trim paragraph and cut rest
+    for (const re of MARKERS) {
+      const m = p.match(re);
+      if (m && typeof m.index === "number") {
+        const head = p.slice(0, m.index).trim();
+        return head ? paras.slice(0, i).concat([head]) : paras.slice(0, i);
+      }
+    }
+  }
+
+  return paras;
+}
+
 function splitToParagraphs(rawText) {
   const t = normSpace(stripTags(rawText));
   if (!t) return [];
@@ -722,8 +760,11 @@ let finalParagraphs = (paragraphs || [])
   .filter(p => !looksLikeFooterNoise(p))
   .slice(0, 120);
 
-// 👇 cut-marker patch
+// 👇 cut-marker patch (comments / disclaimers)
 finalParagraphs = truncateFromCommentDisclaimer(finalParagraphs);
+
+// 👇 bb.is / Árvakur paywall + cookie banners (and anything after)
+finalParagraphs = truncateFromKnownCutMarkers(finalParagraphs);
 
 // 👇 build final text ONCE
 const finalText = clampText(normSpace(finalParagraphs.join("\n\n")), 15000);
