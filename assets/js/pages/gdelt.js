@@ -360,6 +360,14 @@ function initActions() {
   $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") runIntel(); });
 }
 
+// NEW Esc closing
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+
+  if (history.length > 1) history.back();
+  else location.href = "/";
+});
+
 function ensureMap() {
   if (map) return map;
 
