@@ -21,6 +21,7 @@
     { id: "fiskifrettir", label: "Fiskifréttir", domain: "fiskifrettir.is" },
     { id: "frjalsverslun", label: "Frjáls verslun", domain: "frjalsverslun.is" },
     { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
+    { id: "visbending", label: "Vísbending",       domain: "visbending.is" },
   ];
 
   const CATEGORIES = [
