@@ -679,7 +679,8 @@ function mapFromText(x) {
   ];
 
   const localWords = [
-    "innlent", "island", "reykjavik", "hafnarfjord", "akureyri", "reykjanes",
+    "innlent", "island", "reykjavik", "hafnarfjord", "akureyri", "reykjanes", "kopavog",
+    "laugarvatn", "vestmannaeyj", "landsbank", "hs ork",
     "logregl", "rettar", "daemd", "dom", "handtek", "sakfelld"
   ];
 
