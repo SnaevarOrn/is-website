@@ -1,24 +1,9 @@
 /* /assets/css/pages/aldur.css */
 
 .page{
-  max-width: 980px;
+  max-width: 1100px;
   margin: 16px auto;
-  padding: 0 6px;
-}
-
-.row{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  align-items:end;
-  margin-bottom:12px;
-}
-
-label{
-  display:block;
-  font-weight:600;
-  font-size:14px;
-  margin-bottom:6px;
+  padding: 0 10px;
 }
 
 /* Fallbacks ef base.css skilgreinir ekki þessar breytur */
@@ -27,28 +12,90 @@ label{
   --aldur-panel:  var(--panel, #f6f7f9);
   --aldur-panel2: var(--panel2, #eef1f6);
   --aldur-text:   var(--text, #101418);
+  --aldur-muted:  color-mix(in oklab, var(--aldur-text) 70%, transparent);
   --aldur-shadow: var(--shadow, rgba(0,0,0,.12));
 }
 
+/* =========================
+   Toolbar layout
+   ========================= */
+
+.aldur-toolbar{
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 16px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.aldur-title{
+  margin: 0;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.aldur-form{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  align-items: end; /* heldur button “á botni” við inputs */
+  justify-content: flex-start;
+}
+
+.field{
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.field span{
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--aldur-muted);
+}
+
+/* Inputs/Buttons */
 input, button{
   font: inherit;
-  padding:10px 12px;
+  padding: 10px 12px;
   border: 1px solid var(--aldur-border);
   border-radius: 10px;
 }
 
 button{ cursor:pointer; }
 
-.out{
-  white-space: pre-wrap;
-  background: var(--aldur-panel);
-  border: 1px solid color-mix(in oklab, var(--aldur-border) 75%, transparent);
-  padding: 12px;
-  border-radius: 12px;
+.btn-calc{
+  height: 42px;
+  padding-inline: 14px;
 }
 
+/* =========================
+   Results panel
+   ========================= */
+
+.aldur-results{
+  margin-top: 10px;
+}
+
+.out{
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  width: 100%;
+  background: var(--aldur-panel);
+  border: 1px solid color-mix(in oklab, var(--aldur-border) 75%, transparent);
+  padding: 14px;
+  border-radius: 14px;
+
+  /* Lítil “card” tilfinning án þess að brjóta theme */
+  box-shadow: 0 12px 28px color-mix(in oklab, var(--aldur-shadow) 65%, transparent);
+}
+
+/* Optional hint class (ef þú notar seinna) */
 .hint{
-  color: color-mix(in oklab, var(--aldur-text) 70%, transparent);
+  color: var(--aldur-muted);
   font-size: 13px;
   margin: 8px 0 12px;
 }
@@ -76,4 +123,18 @@ button{ cursor:pointer; }
 
 .page-close:hover{
   background: var(--aldur-panel2);
+}
+
+/* Mobile: titill ofan, form undir */
+@media (max-width: 740px){
+  .aldur-toolbar{
+    grid-template-columns: 1fr;
+  }
+  .field{
+    min-width: 180px;
+    flex: 1 1 180px;
+  }
+  .btn-calc{
+    flex: 1 1 180px;
+  }
 }
