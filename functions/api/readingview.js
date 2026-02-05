@@ -34,6 +34,7 @@ const ALLOWED_HOSTS = new Set([
   "heimildin.is", "www.heimildin.is",
   "grapevine.is", "www.grapevine.is",
   "433.is", "www.433.is",
+  "visbending.is", "www.visbending.is",
 ]);
 
 function json(data, status = 200, cacheControl = "public, max-age=300") {
