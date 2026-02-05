@@ -75,6 +75,9 @@ export async function onRequestGet({ request }) {
 
   // If classification fails for these sources, force into "innlent"
   const FORCE_INNLENT_IF_UNCLASSIFIED = new Set([
+    "bb",
+    "bbl",
+    "byggingar",
     "eyjafrettir",
     "fiskifrettir",
     "frjalsverslun",
