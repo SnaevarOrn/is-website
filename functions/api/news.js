@@ -675,7 +675,7 @@ function mapFromText(x) {
 
   const foreignWords = [
     "erlent", "foreign", "bandarisk", "usa", "iran", "italia", "evropa", "world", "alheim", "althjod",
-    "trump", "musk", "russland", "kina", "japan", "ukraina", "bresk", "bandarikin"
+    "trump", "musk", "russland", "kina", "japan", "ukraina", "bresk", "bandarikin", "epstein",
   ];
 
   const localWords = [
