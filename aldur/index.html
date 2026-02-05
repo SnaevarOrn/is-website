@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="is" data-theme="light">
+<html lang="is" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -16,31 +16,35 @@
 <body>
   <button class="page-close" id="btnClose" aria-label="Loka">×</button>
 
-  <main class="page">
-    <h1>Aldur</h1>
+  <main class="page aldur-page">
+    <header class="aldur-toolbar">
+      <h1 class="aldur-title">Aldur</h1>
 
-    <div class="row">
-      <div>
-        <label for="dob">Fæðingardagur</label>
-        <input id="dob" type="date" />
-      </div>
+      <!-- All inputs in a header/toolbar -->
+      <form class="aldur-form" id="aldurForm">
+        <label class="field" for="dob">
+          <span>Fæðingardagur</span>
+          <input id="dob" type="date" />
+        </label>
 
-      <div>
-        <label for="tob">Klukkan (valfrjálst)</label>
-        <input id="tob" type="time" step="1" value="00:00:00" />
-      </div>
+        <label class="field" for="tob">
+          <span>Klukkan (valfrjálst)</span>
+          <input id="tob" type="time" step="1" value="00:00:00" />
+        </label>
 
-      <div>
-        <label for="tz">Tímabelti</label>
-        <input id="tz" type="text" value="Atlantic/Reykjavik" />
-      </div>
+        <label class="field" for="tz">
+          <span>Tímabelti</span>
+          <input id="tz" type="text" value="Atlantic/Reykjavik" />
+        </label>
 
-      <div>
-        <button id="calc" class="btn-primary">Reikna</button>
-      </div>
-    </div>
+        <button id="calc" class="btn-primary btn-calc" type="submit">Reikna</button>
+      </form>
+    </header>
 
-    <pre id="out" class="out">Veldu dagsetningu…</pre>
+    <!-- Results below, wide, never pushes the toolbar around -->
+    <section class="aldur-results" aria-live="polite">
+      <pre id="out" class="out">Veldu dagsetningu…</pre>
+    </section>
   </main>
 
   <!-- Page JS -->
