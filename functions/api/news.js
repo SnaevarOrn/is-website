@@ -75,9 +75,12 @@ export async function onRequestGet({ request }) {
 
   // If classification fails for these sources, force into "innlent"
   const FORCE_INNLENT_IF_UNCLASSIFIED = new Set([
+    "eyjafrettir",
     "fiskifrettir",
     "frjalsverslun",
     "feykir",
+    "fjardarfrettir",
+    "midjan",
   ]);
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
