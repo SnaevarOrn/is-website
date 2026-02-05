@@ -21,7 +21,7 @@
     { name: "Merkúríus", days: 87.9691 },
     { name: "Venus",     days: 224.701 },
     { name: "Jörð",      days: 365.256363004 },
-    { name: "Mars",      days: 686.980 },
+    { name: "Mars",      days: 686.98 },
     { name: "Júpíter",   days: 4332.589 },
     { name: "Satúrnus",  days: 10759.22 },
     { name: "Úranus",    days: 30688.5 },
@@ -38,6 +38,7 @@
   function zonedDateFromParts({ y, m, d, hh, mm, ss, tz }) {
     const utcGuess = new Date(Date.UTC(y, m - 1, d, hh, mm, ss));
 
+    // Intl throws RangeError on invalid timeZone
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: tz,
       hour12: false,
@@ -118,6 +119,8 @@
     return ms / (TROPICAL_YEAR_D * DAY);
   }
 
+  const isoUTC = (d) => d.toISOString().replace("T", " ").replace("Z", " UTC");
+
   // --- Close button ---
   function closePage() {
     if (history.length > 1) history.back();
@@ -136,12 +139,12 @@
     const tzEl  = document.getElementById("tz");
     const outEl = document.getElementById("out");
 
-    const dob = dobEl.value;
+    const dob = dobEl?.value || "";
     if (!dob) { outEl.textContent = "Veldu fæðingardag."; return; }
 
     const [Y, M, D] = dob.split("-").map(Number);
-    const [hh, mm, ss] = (tobEl.value || "00:00:00").split(":").map(x => Number(x || 0));
-    const tz = (tzEl.value || "Atlantic/Reykjavik").trim();
+    const [hh, mm, ss] = (tobEl?.value || "00:00:00").split(":").map(x => Number(x || 0));
+    const tz = (tzEl?.value || "Atlantic/Reykjavik").trim();
 
     let birth;
     try {
@@ -199,8 +202,8 @@
       : "- (engin næstu “kringlóttu” dagar í þessum lista)";
 
     outEl.textContent =
-`Fæðing: ${birth.toISOString().replace("T"," ").replace("Z"," UTC")}
-Núna:   ${now.toISOString().replace("T"," ").replace("Z"," UTC")}
+`Fæðing: ${isoUTC(birth)}
+Núna:   ${isoUTC(now)}
 
 Grunn-aldur
 - Sekúndur:   ${fmt(ageSec, 0)}
@@ -239,10 +242,13 @@ ${nextMilestoneText}
 `;
   }
 
-  document.getElementById("calc")?.addEventListener("click", calculate);
+  // Submit on form (Enter works nicely)
+  document.getElementById("aldurForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    calculate();
+  });
 
   // Quick default for testing
   const dobEl = document.getElementById("dob");
   if (dobEl && !dobEl.value) dobEl.value = "2000-01-01";
 })();
-
