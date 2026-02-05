@@ -79,18 +79,30 @@ button{ cursor:pointer; }
   margin-top: 10px;
 }
 
-.out{
+/* FORCE: page má ALDREI vera side-by-side */
+.aldur-page{
+  display: block;
+}
+
+/* niðurstöður alltaf full breidd */
+.aldur-results{ width: 100%; }
+
+.aldur-out{
   white-space: pre-wrap;
   word-break: break-word;
-
   width: 100%;
+  box-sizing: border-box;
+
   background: var(--aldur-panel);
   border: 1px solid color-mix(in oklab, var(--aldur-border) 75%, transparent);
   padding: 14px;
   border-radius: 14px;
-
-  /* Lítil “card” tilfinning án þess að brjóta theme */
   box-shadow: 0 12px 28px color-mix(in oklab, var(--aldur-shadow) 65%, transparent);
+
+  /* “anti-toast” vörn ef eitthvað shared reynir */
+  position: static;
+  inset: auto;
+  transform: none;
 }
 
 /* Optional hint class (ef þú notar seinna) */
