@@ -377,15 +377,94 @@
   }
 
   async function refresh() {
-    if (!anyOn()) return;
+  if (!anyOn()) return;
 
-    const ids = list();
-    for (let i = 0; i < ids.length; i++) {
-      const id = ids[i];
-      if (!state[id]) continue;
-      await fetchLayer(id);
+  const z = map.getZoom();
+  const bounds = map.getBounds();
+  const key = bboxKey(bounds, z);
+
+  // Collect active layers that are eligible at this zoom
+  const ids = list();
+  const active = [];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    if (!state[id]) continue;
+
+    const cfg = CFG[id];
+    if (!cfg) continue;
+
+    // If zoom too low for this overlay, clear and skip
+    if (z < cfg.minZoom) {
+      clearData(id);
+      continue;
+    }
+
+    // Per-layer bbox cache key (keeps your existing "no refetch if same bbox+z" behavior)
+    if (lastKey[id] === key) continue;
+    lastKey[id] = key;
+
+    active.push(id);
+  }
+
+  if (!active.length) return;
+
+  const bbox = getBBox(bounds).map((n) => round(n, 5));
+  const url =
+    "/api/overpass_pack?layers=" + encodeURIComponent(active.join(",")) +
+    "&bbox=" + encodeURIComponent(bbox.join(",")) +
+    "&z=" + encodeURIComponent(String(Math.floor(z)));
+
+  // Abort any inflight per-layer (since we now do one request)
+  for (let i = 0; i < active.length; i++) {
+    const id = active[i];
+    if (inflight[id]) {
+      try { inflight[id].abort(); } catch {}
+      inflight[id] = null;
     }
   }
+
+  const ac = new AbortController();
+  // Keep one shared controller; store it under a pseudo key
+  inflight.__pack = ac;
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { accept: "application/json" },
+      cache: "no-store",
+      signal: ac.signal
+    });
+    if (!res.ok) return;
+
+    const j = await res.json();
+    if (!j || j.ok !== true || !j.geojson || !Array.isArray(j.geojson.features)) return;
+
+    // Split features by properties.layer
+    const buckets = {};
+    for (let i = 0; i < active.length; i++) {
+      buckets[active[i]] = { type: "FeatureCollection", features: [] };
+    }
+
+    const feats = j.geojson.features;
+    for (let i = 0; i < feats.length; i++) {
+      const f = feats[i];
+      const p = f && f.properties ? f.properties : null;
+      const lid = p && p.layer ? String(p.layer) : "";
+      if (buckets[lid]) buckets[lid].features.push(f);
+    }
+
+    // Set data per layer source
+    for (let i = 0; i < active.length; i++) {
+      const id = active[i];
+      const src = map.getSource(sid(id));
+      if (src && src.setData) src.setData(buckets[id]);
+    }
+  } catch {
+    // silent
+  } finally {
+    if (inflight.__pack === ac) inflight.__pack = null;
+  }
+}
 
   function attachMoveHandler() {
     if (moveHandlerAttached) return;
