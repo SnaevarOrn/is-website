@@ -50,7 +50,7 @@ function labelFor(id) {
 const FEEDS = {
   // Wire / global agencies
   // NOTE: Reuters/AP no longer provide reliable free RSS. Use RSSHub as a proxy.
-  reuters:  { url: "https://rsshub.app/reuters/world",             label: "Reuters" },
+  reuters:  { url: "https://news.google.com/rss/search?q=site%3Areuters.com&hl=en-US&gl=US&ceid=US%3Aen",             label: "Reuters" },
   ap:       { url: "https://rsshub.app/apnews/topics/ap-top-news", label: "AP News" },
   
   // Public service / large broadcasters
