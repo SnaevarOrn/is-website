@@ -21,21 +21,67 @@
   const map = window.kortMap;
   if (!map) return;
 
+  /* =========================================================
+     CFG: what overlays exist + minZoom gates (UI side)
+     NOTE: Your API has its OWN minZoom gates too.
+     If UI minZoom < API minZoom => overlay appears "empty" below API gate.
+     ========================================================= */
   const CFG = {
     air:     { label: "Flugvellir + þyrlupallar", minZoom: 5,  type: "mix" },
     harbors: { label: "Hafnir + smábátahafnir",   minZoom: 6,  type: "mix" },
-    fuel:    { label: "Bensínstöðvar",            minZoom: 8, type: "points" },
-    huts:    { label: "Skálar + skjól",           minZoom: 5, type: "points" },
-    lights:  { label: "Vitar",                    minZoom: 4, type: "points" },
-    peaks:   { label: "Fjallatindar",             minZoom: 8,  type: "points" },
+    fuel:    { label: "Bensínstöðvar",            minZoom: 8,  type: "points" },
+
+    // ⚠️ API has huts minZoom=9 in your overpass function.
+    // Keep UI consistent unless you intentionally want "empty until 9".
+    huts:    { label: "Skálar + skjól",           minZoom: 9,  type: "points" },
+
+    lights:  { label: "Vitar",                    minZoom: 4,  type: "points" },
+
+    // Peaks can be MANY -> clustering makes zoomed-out map usable.
+    // Edit clusterMaxZoom / clusterRadius to tune behavior.
+    peaks:   { label: "Fjallatindar",             minZoom: 8,  type: "points", cluster: true, clusterMaxZoom: 12, clusterRadius: 45 },
+
+    // Lines are heavy -> keep minZoom higher.
     roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" },
+
     waterfalls: { label: "Fossar", minZoom: 5, type: "points" },
     caves:      { label: "Hellar", minZoom: 4, type: "points" },
     viewpoints: { label: "Útsýnispunktar", minZoom: 6, type: "points" },
     hotsprings: { label: "Heitar laugar / uppsprettur", minZoom: 4, type: "points" },
-
-    
   };
+
+  /* =========================================================
+     STYLE: colors per overlay id
+     - Edit freely.
+     - fill = inside color for point circles / cluster bubbles
+     - stroke = outline color for point circles / cluster bubbles
+     - line = line color (for line overlays like roads)
+     ========================================================= */
+  const STYLE = {
+    // Requested palette
+    lights:     { fill: "#ff8c1a", stroke: "#111" },     // vitarnir: appelsínugult
+    waterfalls: { fill: "#7fd6ff", stroke: "#111" },     // fossar: ljósblátt
+    hotsprings: { fill: "#0b3d91", stroke: "#e8f1ff" },  // heitar laugar: dökkblátt (með ljósum hring)
+    huts:       { fill: "#7CFF7A", stroke: "#111" },     // skálar/skjól: ljósgrænt
+
+    // Extras (stilltu eins og þú vilt)
+    caves:      { fill: "#a78bfa", stroke: "#111" },     // fjólublátt
+    viewpoints: { fill: "#fbbf24", stroke: "#111" },     // gult/amber
+    fuel:       { fill: "#ef4444", stroke: "#111" },     // rautt
+    peaks:      { fill: "#e5e7eb", stroke: "#111" },     // ljósgrátt
+
+    // Mix layers
+    air:        { fill: "#22d3ee", stroke: "#111" },     // cyan
+    harbors:    { fill: "#34d399", stroke: "#111" },     // grænt
+
+    // Lines
+    roads:      { line: "#94a3b8" }                      // mildur gráblár
+  };
+
+  function styleFor(id) {
+    // Default fallback if id isn't in STYLE
+    return STYLE[id] || { fill: "#60a5fa", stroke: "#111", line: "#94a3b8" };
+  }
 
   const state = {};      // id -> boolean
   const inflight = {};   // id -> AbortController
@@ -46,6 +92,10 @@
   function sid(id) { return "op-" + id; }
   function lidPoint(id) { return "op-" + id + "-pt"; }
   function lidLine(id)  { return "op-" + id + "-ln"; }
+
+  // Cluster layers (only created if CFG[id].cluster === true)
+  function lidCluster(id) { return "op-" + id + "-cl"; }
+  function lidClusterCount(id) { return "op-" + id + "-clc"; }
 
   function isOn(id) { return !!state[id]; }
   function list() { return Object.keys(CFG); }
@@ -58,21 +108,76 @@
 
   function ensureLayers(id) {
     const sourceId = sid(id);
+    const cfg = CFG[id] || {};
+    const st = styleFor(id);
 
+    /* =========================================================
+       Source: one GeoJSON source per overlay id
+       - We optionally enable clustering if cfg.cluster is true.
+       - Clustering ONLY affects Point features.
+       ========================================================= */
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
         type: "geojson",
-        data: { type: "FeatureCollection", features: [] }
+        data: { type: "FeatureCollection", features: [] },
+
+        // ✅ Clustering knobs (only used when cfg.cluster === true)
+        cluster: !!cfg.cluster,
+        clusterMaxZoom: cfg.clusterMaxZoom ?? 12,
+        clusterRadius: cfg.clusterRadius ?? 45
       });
     }
 
-    // Points
+    /* =========================================================
+       Cluster layers (bubble + count)
+       - Only created if cfg.cluster === true
+       - Bubble uses same fill/stroke as the overlay style
+       ========================================================= */
+    if (cfg.cluster) {
+      if (!map.getLayer(lidCluster(id))) {
+        map.addLayer({
+          id: lidCluster(id),
+          type: "circle",
+          source: sourceId,
+          filter: ["has", "point_count"],
+          paint: {
+            "circle-radius": ["step", ["get", "point_count"], 16, 25, 22, 100, 28],
+            "circle-color": st.fill,
+            "circle-stroke-color": st.stroke,
+            "circle-stroke-width": 1.2,
+            "circle-opacity": 0.75
+          }
+        });
+      }
+
+      if (!map.getLayer(lidClusterCount(id))) {
+        map.addLayer({
+          id: lidClusterCount(id),
+          type: "symbol",
+          source: sourceId,
+          filter: ["has", "point_count"],
+          layout: {
+            "text-field": "{point_count_abbreviated}",
+            "text-size": 12
+          },
+          paint: { "text-color": "#111" }
+        });
+      }
+    }
+
+    /* =========================================================
+       Points layer
+       - If clustering is enabled, we must hide clustered points
+         by excluding features that have point_count.
+       ========================================================= */
     if (!map.getLayer(lidPoint(id))) {
       map.addLayer({
         id: lidPoint(id),
         type: "circle",
         source: sourceId,
-        filter: ["==", ["geometry-type"], "Point"],
+        filter: cfg.cluster
+          ? ["all", ["==", ["geometry-type"], "Point"], ["!", ["has", "point_count"]]]
+          : ["==", ["geometry-type"], "Point"],
         paint: {
           "circle-radius": [
             "interpolate", ["linear"], ["zoom"],
@@ -80,16 +185,20 @@
             12, 5,
             15, 7
           ],
-          "circle-color": "#111",
+          // ✅ Color per overlay id (edit STYLE above)
+          "circle-color": st.fill,
           "circle-stroke-width": 1.2,
-          "circle-stroke-color": "#fff",
-          "circle-opacity": 0.85,
-          "circle-stroke-opacity": 0.9
+          "circle-stroke-color": st.stroke,
+          "circle-opacity": 0.9,
+          "circle-stroke-opacity": 0.95
         }
       });
     }
 
-    // Lines
+    /* =========================================================
+       Lines layer (LineString only)
+       - Uses st.line if provided, otherwise falls back.
+       ========================================================= */
     if (!map.getLayer(lidLine(id))) {
       map.addLayer({
         id: lidLine(id),
@@ -98,7 +207,7 @@
         filter: ["==", ["geometry-type"], "LineString"],
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
-          "line-color": "#111",
+          "line-color": st.line || "#94a3b8",
           "line-width": [
             "interpolate", ["linear"], ["zoom"],
             10, 1.2,
@@ -110,11 +219,40 @@
       });
     }
 
-    // One-time click popup (safe)
+    /* =========================================================
+       One-time click handler:
+       1) If user clicks a cluster bubble -> expand/zoom in
+       2) Otherwise: show popup with name + "kind" field
+       ========================================================= */
     if (!map.__opClickBound) {
       map.__opClickBound = true;
 
       map.on("click", (e) => {
+        // 1) Cluster click => zoom in (no popup)
+        const clLayers = [];
+        const keys0 = Object.keys(CFG);
+        for (let i = 0; i < keys0.length; i++) {
+          const k = keys0[i];
+          if (CFG[k] && CFG[k].cluster) clLayers.push(lidCluster(k));
+        }
+        if (clLayers.length) {
+          const hits = map.queryRenderedFeatures(e.point, { layers: clLayers });
+          if (hits && hits.length) {
+            const f0 = hits[0];
+            const srcId = f0.layer && f0.layer.source;
+            const clusterId = f0.properties && f0.properties.cluster_id;
+            const src0 = srcId && map.getSource(srcId);
+            if (src0 && typeof src0.getClusterExpansionZoom === "function") {
+              src0.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                if (err) return;
+                map.easeTo({ center: f0.geometry.coordinates, zoom });
+              });
+              return;
+            }
+          }
+        }
+
+        // 2) Normal feature popup
         const layers = [];
         const keys = Object.keys(CFG);
         for (let i = 0; i < keys.length; i++) {
@@ -151,10 +289,17 @@
   }
 
   function removeLayers(id) {
+    // Remove cluster layers first (if they exist), then normal layers, then source.
+    const lc = lidCluster(id);
+    const lcc = lidClusterCount(id);
     const lp = lidPoint(id);
     const ll = lidLine(id);
+
+    try { if (map.getLayer(lc)) map.removeLayer(lc); } catch {}
+    try { if (map.getLayer(lcc)) map.removeLayer(lcc); } catch {}
     try { if (map.getLayer(lp)) map.removeLayer(lp); } catch {}
     try { if (map.getLayer(ll)) map.removeLayer(ll); } catch {}
+
     const s = sid(id);
     try { if (map.getSource(s)) map.removeSource(s); } catch {}
   }
