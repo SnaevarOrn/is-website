@@ -6,6 +6,7 @@
   const SOURCES = [
   { id: "reuters",   label: "Reuters",       domain: "reuters.com" },
   { id: "ap",        label: "AP News",       domain: "apnews.com" },
+  { id: "bloomberg",        label: "Bloomberg",       domain: "bloomberg.com" },
   { id: "bbc",       label: "BBC",           domain: "bbc.co.uk" },
   { id: "guardian",  label: "The Guardian",  domain: "theguardian.com" },
   { id: "aljazeera", label: "Al Jazeera",    domain: "aljazeera.com" },
