@@ -14,13 +14,18 @@
 // Response:
 // {
 //   ok: true,
-//   layersRequested: [...],
-//   layersIncluded: [...],
-//   layersSkipped: [{ layer, reason, minZoom }],
+//   layersRequested: [...],        // canonical (sorted) list
+//   layersIncluded: [...],         // eligible + fetched (zoom+diag gates)
+//   layersSkipped: [{ layer, reason, minZoom?, maxDiagKm?, diagKm? }],
 //   bbox: [minLng,minLat,maxLng,maxLat],
-//   geojson: FeatureCollection,
-//   meta: { zoom, diagKm, perLayer: { lights: {elements, features}... }, totalFeatures }
+//   geojson: FeatureCollection,    // merged; each feature has properties.layer
+//   meta: { zoom, diagKm, perLayer: { lights: {ok,elements,features,error?}... }, totalFeatures }
 // }
+//
+// IMPORTANT BEHAVIOR CHANGE vs your draft:
+// - We DO NOT hard-fail when bbox is too large for one layer.
+//   Instead: we "skip" that layer and still return others.
+//   This prevents overlays from "flashing" in/out when multiple layers are selected.
 
 "use strict";
 
@@ -83,41 +88,31 @@ export async function onRequestGet({ request, context }) {
     return json({ ok: false, error: "too_many_layers", max: MAX_LAYERS_PER_REQUEST }, 400);
   }
 
-  // Whitelist only
+  // Whitelist only, and dedupe
   const invalid = [];
-  const layers = [];
+  const uniq = [];
+  const seen = new Set();
   for (let i = 0; i < requested.length; i++) {
     const id = requested[i];
-    if (!LAYERS[id]) invalid.push(id);
-    else layers.push(id);
+    if (!id) continue;
+    if (!LAYERS[id]) { invalid.push(id); continue; }
+    if (seen.has(id)) continue;
+    seen.add(id);
+    uniq.push(id);
   }
   if (invalid.length) return json({ ok: false, error: "invalid_layer", invalid }, 400);
+  if (!uniq.length) return json({ ok: false, error: "invalid_layers" }, 400);
 
   const zoom = Math.floor(z);
 
-  // BBox diagonal gate per-request (same diag for all layers)
-  const diagKm = bboxDiagonalKm(bbox);
+  // Normalize bbox for caching (round to 4 decimals ~ 11 m lat-ish)
+  const nb = bbox.map((n) => round(n, 4));
 
-  // Reject if bbox too large for ANY requested layer
-  const tooBig = [];
-  for (let i = 0; i < layers.length; i++) {
-    const id = layers[i];
-    const pol = LAYERS[id];
-    if (diagKm > pol.maxDiagKm) {
-      tooBig.push({ layer: id, maxDiagKm: pol.maxDiagKm });
-    }
-  }
-  if (tooBig.length) {
-    return json(
-      {
-        ok: false,
-        error: "bbox_too_large",
-        diagKm: round(diagKm, 1),
-        offenders: tooBig
-      },
-      400
-    );
-  }
+  // Canonical layer order for cache + response stability
+  const layersRequested = uniq.slice().sort();
+
+  // Compute diag once (same bbox for all)
+  const diagKm = bboxDiagonalKm(nb);
 
   // Rate limit (best-effort) once per pack
   const ip =
@@ -129,14 +124,10 @@ export async function onRequestGet({ request, context }) {
     return json({ ok: false, error: "rate_limited" }, 429, { "Retry-After": "2" });
   }
 
-  // Normalize bbox for caching (round to 4 decimals ~ 11 m lat-ish)
-  const nb = bbox.map((n) => round(n, 4));
-
-  // Cache key: layers sorted for stable cache
-  const sortedLayers = layers.slice().sort();
+  // Cache key: canonical params
   const cacheKeyUrl =
     url.origin +
-    "/api/overpass_pack?layers=" + encodeURIComponent(sortedLayers.join(",")) +
+    "/api/overpass_pack?layers=" + encodeURIComponent(layersRequested.join(",")) +
     "&bbox=" + encodeURIComponent(nb.join(",")) +
     "&z=" + encodeURIComponent(String(zoom));
 
@@ -146,21 +137,60 @@ export async function onRequestGet({ request, context }) {
   const cached = await cache.match(cacheKey);
   if (cached) return cached;
 
-  // Decide which layers to include vs skip based on zoom
+  // Decide which layers to include vs skip based on zoom + bbox size.
+  // NOTE: We skip offenders rather than hard failing the whole request.
   const layersSkipped = [];
   const layersIncluded = [];
-  for (let i = 0; i < layers.length; i++) {
-    const id = layers[i];
+
+  for (let i = 0; i < layersRequested.length; i++) {
+    const id = layersRequested[i];
     const pol = LAYERS[id];
+
     if (zoom < pol.minZoom) {
       layersSkipped.push({ layer: id, reason: "zoom_too_low", minZoom: pol.minZoom });
-    } else {
-      layersIncluded.push(id);
+      continue;
     }
+    if (diagKm > pol.maxDiagKm) {
+      layersSkipped.push({
+        layer: id,
+        reason: "bbox_too_large",
+        maxDiagKm: pol.maxDiagKm,
+        diagKm: round(diagKm, 1)
+      });
+      continue;
+    }
+    layersIncluded.push(id);
+  }
+
+  // If nothing eligible, return ok:true with empty geojson (prevents UI "flash")
+  if (!layersIncluded.length) {
+    const body = {
+      ok: true,
+      layersRequested,
+      layersIncluded: [],
+      layersSkipped,
+      bbox: nb,
+      geojson: { type: "FeatureCollection", features: [] },
+      meta: {
+        zoom,
+        diagKm: round(diagKm, 2),
+        perLayer: {},
+        totalFeatures: 0
+      }
+    };
+
+    const response = json(body, 200, {
+      // short cache: the result can change quickly as user zooms/pans
+      "Cache-Control": "public, max-age=60",
+      "X-Privacy": "no-cookies; no-storage"
+    });
+
+    try { context.waitUntil(cache.put(cacheKey, response.clone())); } catch {}
+    return response;
   }
 
   // Fetch included layers sequentially (gentler on Overpass)
-  // If you want more speed: you can parallelize with a small concurrency pool.
+  // If you want more speed later: add small concurrency (2-3).
   const merged = { type: "FeatureCollection", features: [] };
   const perLayer = {};
 
@@ -179,8 +209,7 @@ export async function onRequestGet({ request, context }) {
           "Accept": "application/json"
         },
         body: "data=" + encodeURIComponent(query),
-        // modest caching hint (we also edge-cache below)
-        cf: { cacheTtl: 900, cacheEverything: true }
+        cf: { cacheTtl: 900, cacheEverything: true } // hint; we edge-cache below anyway
       });
 
       if (!res.ok) {
@@ -211,7 +240,7 @@ export async function onRequestGet({ request, context }) {
 
   const body = {
     ok: true,
-    layersRequested: layers,
+    layersRequested,
     layersIncluded,
     layersSkipped,
     bbox: nb,
@@ -229,9 +258,7 @@ export async function onRequestGet({ request, context }) {
     "X-Privacy": "no-cookies; no-storage"
   });
 
-  // Edge cache (best-effort)
   try { context.waitUntil(cache.put(cacheKey, response.clone())); } catch {}
-
   return response;
 }
 
@@ -461,7 +488,7 @@ function propsFrom(el, layer) {
   const tags = el.tags || {};
   const name = tags.name || tags["name:is"] || tags["name:en"] || "";
   const p = {
-    layer,               // ✅ important: tells frontend which overlay it belongs to
+    layer, // ✅ tells frontend which overlay it belongs to
     osm_type: el.type,
     osm_id: el.id,
     name
