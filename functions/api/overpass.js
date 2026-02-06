@@ -31,16 +31,16 @@ function rateLimit(key) {
 // Layer policy (zoom + max bbox diagonal in km)
 const LAYERS = {
   // Airports + helipads
-  air: { minZoom: 7, maxDiagKm: 900 },
+  air: { minZoom: 5, maxDiagKm: 1200 },
 
   // Harbors / marinas / piers (coastal POIs)
-  harbors: { minZoom: 8, maxDiagKm: 350 },
+  harbors: { minZoom: 6, maxDiagKm: 500 },
 
   // Fuel stations
-  fuel: { minZoom: 10, maxDiagKm: 140 },
+  fuel: { minZoom: 8, maxDiagKm: 250 },
 
   // Mountain huts / cabins / shelters
-  huts: { minZoom: 9, maxDiagKm: 220 },
+  huts: { minZoom: 9, maxDiagKm: 250 },
 
   // Lighthouses
   lights: { minZoom: 5, maxDiagKm: 1220 },
@@ -51,10 +51,10 @@ const LAYERS = {
   // Road classes (LINES) — expensive: keep tight
   roads: { minZoom: 12, maxDiagKm: 70 },
 
-  waterfalls: { minZoom: 6,  maxDiagKm: 260 },
-  caves:      { minZoom: 4, maxDiagKm: 220 },
-  viewpoints: { minZoom: 6, maxDiagKm: 220 },
-  hotsprings: { minZoom: 5, maxDiagKm: 220 },
+  waterfalls: { minZoom: 5,  maxDiagKm: 360 },
+  caves:      { minZoom: 4, maxDiagKm: 1220 },
+  viewpoints: { minZoom: 6, maxDiagKm: 250 },
+  hotsprings: { minZoom: 4, maxDiagKm: 1220 },
   
   };
 
