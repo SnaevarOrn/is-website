@@ -398,17 +398,21 @@ html[data-theme="light"] .kort-panel-item:focus-visible{
 .kort-map.kort-crosshair-on::before{
   width: 2px;
   height: 22px;
-  background: rgba(0,0,0,.75);
+  background: rgba(185, 28, 28, 0.9);
   border-radius: 999px;
-  box-shadow: 0 0 0 2px rgba(255,255,255,.65);
+  box-shadow:
+  0 0 0 2px rgba(255,255,255,0.6),
+  0 0 8px rgba(220,38,38,0.8);
 }
 
 .kort-map.kort-crosshair-on::after{
   height: 2px;
   width: 22px;
-  background: rgba(0,0,0,.75);
+  background: rgba(185, 28, 28, 0.9);
   border-radius: 999px;
-  box-shadow: 0 0 0 2px rgba(255,255,255,.65);
+  box-shadow:
+  0 0 0 2px rgba(255,255,255,0.6),
+  0 0 8px rgba(220,38,38,0.8);
 }
 
 /* =========================
