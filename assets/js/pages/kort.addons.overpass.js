@@ -1,9 +1,9 @@
 // assets/js/pages/kort.addons.overpass.js
-// Overpass addons (vector overlays) for kort
+// Overpass addons (vector overlays) for kort — PACK VERSION
 //
 // Requires:
 // - window.kortMap
-// - /api/overpass (Cloudflare function)
+// - /api/overpass_pack (Cloudflare function)
 //
 // Exposes:
 // - window.kortAddonsOverpass.toggle(id)
@@ -22,26 +22,23 @@
   if (!map) return;
 
   /* =========================================================
-     CFG: what overlays exist + minZoom gates (UI side)
-     NOTE: Your API has its OWN minZoom gates too.
-     If UI minZoom < API minZoom => overlay appears "empty" below API gate.
+     CFG: overlays + UI-side minZoom gate
+     NOTE: Backend (/api/overpass_pack) also enforces minZoom/maxDiagKm.
+     Keep UI minZoom >= API minZoom to avoid "empty" below API gate.
      ========================================================= */
   const CFG = {
     air:     { label: "Flugvellir + þyrlupallar", minZoom: 5,  type: "mix" },
     harbors: { label: "Hafnir + smábátahafnir",   minZoom: 6,  type: "mix" },
     fuel:    { label: "Bensínstöðvar",            minZoom: 8,  type: "points" },
 
-    // ⚠️ API has huts minZoom=9 in your overpass function.
-    // Keep UI consistent unless you intentionally want "empty until 9".
+    // API had huts minZoom=9 in your overpass function -> keep consistent
     huts:    { label: "Skálar + skjól",           minZoom: 9,  type: "points" },
 
     lights:  { label: "Vitar",                    minZoom: 4,  type: "points" },
 
-    // Peaks can be MANY -> clustering makes zoomed-out map usable.
-    // Edit clusterMaxZoom / clusterRadius to tune behavior.
-    peaks:   { label: "Fjallatindar",             minZoom: 8,  type: "points", cluster: true, clusterMaxZoom: 12, clusterRadius: 45 },
+    // Peaks can be MANY -> clustering makes zoomed-out map usable
+    peaks:   { label: "Fjallatindar", minZoom: 8, type: "points", cluster: true, clusterMaxZoom: 12, clusterRadius: 45 },
 
-    // Lines are heavy -> keep minZoom higher.
     roads:   { label: "Vegagrind (OSM)",          minZoom: 12, type: "lines" },
 
     waterfalls: { label: "Fossar", minZoom: 5, type: "points" },
@@ -52,7 +49,6 @@
 
   /* =========================================================
      STYLE: colors per overlay id
-     - Edit freely.
      - fill = inside color for point circles / cluster bubbles
      - stroke = outline color for point circles / cluster bubbles
      - line = line color (for line overlays like roads)
@@ -64,36 +60,39 @@
     hotsprings: { fill: "#0b3d91", stroke: "#e8f1ff" },  // heitar laugar: dökkblátt (með ljósum hring)
     huts:       { fill: "#7CFF7A", stroke: "#111" },     // skálar/skjól: ljósgrænt
 
-    // Extras (stilltu eins og þú vilt)
-    caves:      { fill: "#a78bfa", stroke: "#111" },     // fjólublátt
-    viewpoints: { fill: "#fbbf24", stroke: "#111" },     // gult/amber
-    fuel:       { fill: "#ef4444", stroke: "#111" },     // rautt
-    peaks:      { fill: "#e5e7eb", stroke: "#111" },     // ljósgrátt
+    // Extras
+    caves:      { fill: "#a78bfa", stroke: "#111" },
+    viewpoints: { fill: "#fbbf24", stroke: "#111" },
+    fuel:       { fill: "#ef4444", stroke: "#111" },
+    peaks:      { fill: "#e5e7eb", stroke: "#111" },
 
     // Mix layers
-    air:        { fill: "#22d3ee", stroke: "#111" },     // cyan
-    harbors:    { fill: "#34d399", stroke: "#111" },     // grænt
+    air:        { fill: "#22d3ee", stroke: "#111" },
+    harbors:    { fill: "#34d399", stroke: "#111" },
 
     // Lines
-    roads:      { line: "#94a3b8" }                      // mildur gráblár
+    roads:      { line: "#94a3b8" }
   };
 
   function styleFor(id) {
-    // Default fallback if id isn't in STYLE
     return STYLE[id] || { fill: "#60a5fa", stroke: "#111", line: "#94a3b8" };
   }
 
-  const state = {};      // id -> boolean
-  const inflight = {};   // id -> AbortController
-  const lastKey = {};    // id -> cache key for bbox+zoom
+  /* =========================================================
+     State
+     ========================================================= */
+  const state = {};        // id -> boolean (enabled/disabled)
+  const lastKey = {};      // id -> cache key for bbox+zi
+  const inflight = { __pack: null }; // AbortController for the pack request
   let moveHandlerAttached = false;
   let refreshTimer = null;
 
+  /* =========================================================
+     MapLibre ids
+     ========================================================= */
   function sid(id) { return "op-" + id; }
   function lidPoint(id) { return "op-" + id + "-pt"; }
   function lidLine(id)  { return "op-" + id + "-ln"; }
-
-  // Cluster layers (only created if CFG[id].cluster === true)
   function lidCluster(id) { return "op-" + id + "-cl"; }
   function lidClusterCount(id) { return "op-" + id + "-clc"; }
 
@@ -106,33 +105,29 @@
     return false;
   }
 
+  /* =========================================================
+     Layer creation (per overlay id)
+     - One GeoJSON source per overlay
+     - Optional clustering on source if cfg.cluster = true
+     ========================================================= */
   function ensureLayers(id) {
     const sourceId = sid(id);
     const cfg = CFG[id] || {};
     const st = styleFor(id);
 
-    /* =========================================================
-       Source: one GeoJSON source per overlay id
-       - We optionally enable clustering if cfg.cluster is true.
-       - Clustering ONLY affects Point features.
-       ========================================================= */
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
 
-        // ✅ Clustering knobs (only used when cfg.cluster === true)
+        // clustering knobs
         cluster: !!cfg.cluster,
         clusterMaxZoom: cfg.clusterMaxZoom ?? 12,
         clusterRadius: cfg.clusterRadius ?? 45
       });
     }
 
-    /* =========================================================
-       Cluster layers (bubble + count)
-       - Only created if cfg.cluster === true
-       - Bubble uses same fill/stroke as the overlay style
-       ========================================================= */
+    // Cluster bubble + count (only if cfg.cluster)
     if (cfg.cluster) {
       if (!map.getLayer(lidCluster(id))) {
         map.addLayer({
@@ -165,11 +160,7 @@
       }
     }
 
-    /* =========================================================
-       Points layer
-       - If clustering is enabled, we must hide clustered points
-         by excluding features that have point_count.
-       ========================================================= */
+    // Points (hide cluster features if clustering is enabled)
     if (!map.getLayer(lidPoint(id))) {
       map.addLayer({
         id: lidPoint(id),
@@ -179,13 +170,7 @@
           ? ["all", ["==", ["geometry-type"], "Point"], ["!", ["has", "point_count"]]]
           : ["==", ["geometry-type"], "Point"],
         paint: {
-          "circle-radius": [
-            "interpolate", ["linear"], ["zoom"],
-            7, 3,
-            12, 5,
-            15, 7
-          ],
-          // ✅ Color per overlay id (edit STYLE above)
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 3, 12, 5, 15, 7],
           "circle-color": st.fill,
           "circle-stroke-width": 1.2,
           "circle-stroke-color": st.stroke,
@@ -195,10 +180,7 @@
       });
     }
 
-    /* =========================================================
-       Lines layer (LineString only)
-       - Uses st.line if provided, otherwise falls back.
-       ========================================================= */
+    // Lines
     if (!map.getLayer(lidLine(id))) {
       map.addLayer({
         id: lidLine(id),
@@ -208,33 +190,25 @@
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
           "line-color": st.line || "#94a3b8",
-          "line-width": [
-            "interpolate", ["linear"], ["zoom"],
-            10, 1.2,
-            13, 2.0,
-            16, 3.0
-          ],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.2, 13, 2.0, 16, 3.0],
           "line-opacity": 0.75
         }
       });
     }
 
-    /* =========================================================
-       One-time click handler:
-       1) If user clicks a cluster bubble -> expand/zoom in
-       2) Otherwise: show popup with name + "kind" field
-       ========================================================= */
+    // One-time click handler: (1) cluster zoom-in, (2) popup for feature
     if (!map.__opClickBound) {
       map.__opClickBound = true;
 
       map.on("click", (e) => {
-        // 1) Cluster click => zoom in (no popup)
+        // 1) Cluster click -> zoom in
         const clLayers = [];
         const keys0 = Object.keys(CFG);
         for (let i = 0; i < keys0.length; i++) {
           const k = keys0[i];
           if (CFG[k] && CFG[k].cluster) clLayers.push(lidCluster(k));
         }
+
         if (clLayers.length) {
           const hits = map.queryRenderedFeatures(e.point, { layers: clLayers });
           if (hits && hits.length) {
@@ -252,12 +226,10 @@
           }
         }
 
-        // 2) Normal feature popup
+        // 2) Feature popup (points + lines)
         const layers = [];
         const keys = Object.keys(CFG);
-        for (let i = 0; i < keys.length; i++) {
-          layers.push(lidPoint(keys[i]), lidLine(keys[i]));
-        }
+        for (let i = 0; i < keys.length; i++) layers.push(lidPoint(keys[i]), lidLine(keys[i]));
 
         const features = map.queryRenderedFeatures(e.point, { layers });
         if (!features || !features.length) return;
@@ -289,7 +261,7 @@
   }
 
   function removeLayers(id) {
-    // Remove cluster layers first (if they exist), then normal layers, then source.
+    // remove cluster layers first, then normal layers, then source
     const lc = lidCluster(id);
     const lcc = lidClusterCount(id);
     const lp = lidPoint(id);
@@ -304,14 +276,17 @@
     try { if (map.getSource(s)) map.removeSource(s); } catch {}
   }
 
-  function bboxKey(bounds, z) {
+  /* =========================================================
+     BBox keying (rounded) — keeps request stable
+     ========================================================= */
+  function bboxKey(bounds, zi) {
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
     const minLng = round(sw.lng, 3);
     const minLat = round(sw.lat, 3);
     const maxLng = round(ne.lng, 3);
     const maxLat = round(ne.lat, 3);
-    return `${minLng},${minLat},${maxLng},${maxLat}|${Math.floor(z)}`;
+    return `${minLng},${minLat},${maxLng},${maxLat}|${zi}`;
   }
 
   function getBBox(bounds) {
@@ -320,35 +295,69 @@
     return [sw.lng, sw.lat, ne.lng, ne.lat];
   }
 
-  async function fetchLayer(id) {
-    const cfg = CFG[id];
-    if (!cfg) return;
+  /* =========================================================
+     Refresh scheduling
+     - Slight debounce to avoid spamming backend on tiny pans
+     ========================================================= */
+  function refreshSoon() {
+    if (refreshTimer) clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(refresh, 950);
+  }
 
-    const z = map.getZoom();
-    if (z < cfg.minZoom) {
-      clearData(id);
-      return;
+  /* =========================================================
+     PACK refresh:
+     - collects active overlays
+     - calls /api/overpass_pack once
+     - splits returned features into per-layer sources
+     ========================================================= */
+  async function refresh() {
+    if (!anyOn()) return;
+
+    const zi = Math.floor(map.getZoom()); // 🔒 stable integer zoom
+    const bounds = map.getBounds();
+    const key = bboxKey(bounds, zi);
+
+    // Determine which overlays should be included in pack call
+    const ids = list();
+    const active = [];
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      if (!state[id]) continue;
+
+      const cfg = CFG[id];
+      if (!cfg) continue;
+
+      // Gate by integer zoom (prevents float jitter)
+      if (zi < cfg.minZoom) {
+        clearData(id);
+        lastKey[id] = ""; // refetch when user zooms in later
+        continue;
+      }
+
+      // Only refetch per layer if bbox/zi changed
+      if (lastKey[id] === key) continue;
+      lastKey[id] = key;
+
+      active.push(id);
     }
 
-    const bounds = map.getBounds();
-    const key = bboxKey(bounds, z);
-    if (lastKey[id] === key) return;
-    lastKey[id] = key;
+    if (!active.length) return;
 
-    // Abort previous
-    if (inflight[id]) {
-      try { inflight[id].abort(); } catch {}
-      inflight[id] = null;
+    // Abort previous pack request (prevents late-arriving results)
+    if (inflight.__pack) {
+      try { inflight.__pack.abort(); } catch {}
+      inflight.__pack = null;
     }
 
     const ac = new AbortController();
-    inflight[id] = ac;
+    inflight.__pack = ac;
 
     const bbox = getBBox(bounds).map((n) => round(n, 5));
     const url =
-      "/api/overpass?layer=" + encodeURIComponent(id) +
+      "/api/overpass_pack?layers=" + encodeURIComponent(active.join(",")) +
       "&bbox=" + encodeURIComponent(bbox.join(",")) +
-      "&z=" + encodeURIComponent(String(Math.floor(z)));
+      "&z=" + encodeURIComponent(String(zi));
 
     try {
       const res = await fetch(url, {
@@ -360,118 +369,46 @@
       if (!res.ok) return;
 
       const j = await res.json();
-      if (!j || j.ok !== true || !j.geojson) return;
+      if (!j || j.ok !== true || !j.geojson || !Array.isArray(j.geojson.features)) return;
 
-      const src = map.getSource(sid(id));
-      if (src && src.setData) src.setData(j.geojson);
+      // Create empty buckets for the requested overlays
+      const buckets = {};
+      for (let i = 0; i < active.length; i++) {
+        buckets[active[i]] = { type: "FeatureCollection", features: [] };
+      }
+
+      // Split by properties.layer (set by /api/overpass_pack)
+      const feats = j.geojson.features;
+      for (let i = 0; i < feats.length; i++) {
+        const f = feats[i];
+        const p = f && f.properties ? f.properties : null;
+        const lid = p && p.layer ? String(p.layer) : "";
+        if (buckets[lid]) buckets[lid].features.push(f);
+      }
+
+      // Update per-layer source data
+      for (let i = 0; i < active.length; i++) {
+        const id = active[i];
+        const src = map.getSource(sid(id));
+        if (src && src.setData) src.setData(buckets[id]);
+      }
     } catch {
       // silent
     } finally {
-      if (inflight[id] === ac) inflight[id] = null;
+      if (inflight.__pack === ac) inflight.__pack = null;
     }
   }
 
-  function refreshSoon() {
-    if (refreshTimer) clearTimeout(refreshTimer);
-    refreshTimer = setTimeout(refresh, 220);
-  }
-
-  async function refresh() {
-  if (!anyOn()) return;
-
-  const z = map.getZoom();
-  const bounds = map.getBounds();
-  const key = bboxKey(bounds, z);
-
-  // Collect active layers that are eligible at this zoom
-  const ids = list();
-  const active = [];
-  for (let i = 0; i < ids.length; i++) {
-    const id = ids[i];
-    if (!state[id]) continue;
-
-    const cfg = CFG[id];
-    if (!cfg) continue;
-
-    // If zoom too low for this overlay, clear and skip
-    if (z < cfg.minZoom) {
-      clearData(id);
-      continue;
-    }
-
-    // Per-layer bbox cache key (keeps your existing "no refetch if same bbox+z" behavior)
-    if (lastKey[id] === key) continue;
-    lastKey[id] = key;
-
-    active.push(id);
-  }
-
-  if (!active.length) return;
-
-  const bbox = getBBox(bounds).map((n) => round(n, 5));
-  const url =
-    "/api/overpass_pack?layers=" + encodeURIComponent(active.join(",")) +
-    "&bbox=" + encodeURIComponent(bbox.join(",")) +
-    "&z=" + encodeURIComponent(String(Math.floor(z)));
-
-  // Abort any inflight per-layer (since we now do one request)
-  for (let i = 0; i < active.length; i++) {
-    const id = active[i];
-    if (inflight[id]) {
-      try { inflight[id].abort(); } catch {}
-      inflight[id] = null;
-    }
-  }
-
-  const ac = new AbortController();
-  // Keep one shared controller; store it under a pseudo key
-  inflight.__pack = ac;
-
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: { accept: "application/json" },
-      cache: "no-store",
-      signal: ac.signal
-    });
-    if (!res.ok) return;
-
-    const j = await res.json();
-    if (!j || j.ok !== true || !j.geojson || !Array.isArray(j.geojson.features)) return;
-
-    // Split features by properties.layer
-    const buckets = {};
-    for (let i = 0; i < active.length; i++) {
-      buckets[active[i]] = { type: "FeatureCollection", features: [] };
-    }
-
-    const feats = j.geojson.features;
-    for (let i = 0; i < feats.length; i++) {
-      const f = feats[i];
-      const p = f && f.properties ? f.properties : null;
-      const lid = p && p.layer ? String(p.layer) : "";
-      if (buckets[lid]) buckets[lid].features.push(f);
-    }
-
-    // Set data per layer source
-    for (let i = 0; i < active.length; i++) {
-      const id = active[i];
-      const src = map.getSource(sid(id));
-      if (src && src.setData) src.setData(buckets[id]);
-    }
-  } catch {
-    // silent
-  } finally {
-    if (inflight.__pack === ac) inflight.__pack = null;
-  }
-}
-
+  /* =========================================================
+     Handlers attach/detach
+     ========================================================= */
   function attachMoveHandler() {
     if (moveHandlerAttached) return;
     moveHandlerAttached = true;
 
     map.on("moveend", refreshSoon);
 
+    // If style reloads (theme swap etc.), layers/sources disappear -> recreate
     map.on("styledata", () => {
       const ids = list();
       for (let i = 0; i < ids.length; i++) {
@@ -486,10 +423,24 @@
   function detachMoveHandlerIfNone() {
     if (!moveHandlerAttached) return;
     if (anyOn()) return;
+
+    // stop pending refresh timer
+    try { if (refreshTimer) clearTimeout(refreshTimer); } catch {}
+    refreshTimer = null;
+
+    // abort pending pack request
+    if (inflight.__pack) {
+      try { inflight.__pack.abort(); } catch {}
+      inflight.__pack = null;
+    }
+
     try { map.off("moveend", refreshSoon); } catch {}
     moveHandlerAttached = false;
   }
 
+  /* =========================================================
+     Public API: set/toggle
+     ========================================================= */
   function set(id, on) {
     if (!CFG[id]) return false;
 
@@ -501,10 +452,12 @@
       attachMoveHandler();
       refreshSoon();
     } else {
-      if (inflight[id]) {
-        try { inflight[id].abort(); } catch {}
-        inflight[id] = null;
+      // Abort pack to prevent late results re-populating after disable
+      if (inflight.__pack) {
+        try { inflight.__pack.abort(); } catch {}
+        inflight.__pack = null;
       }
+
       lastKey[id] = "";
       try { removeLayers(id); } catch {}
       detachMoveHandlerIfNone();
@@ -517,6 +470,9 @@
     return set(id, !isOn(id));
   }
 
+  /* =========================================================
+     Utils
+     ========================================================= */
   function esc(s) {
     const str = String(s);
     return str
@@ -535,12 +491,11 @@
   // ✅ Export Overpass backend under its own name
   window.kortAddonsOverpass = { toggle, set, isOn, refresh, list };
 
-  /* =========================
-     ✅ Shared router: window.kortAddons
+  /* =========================================================
+     Shared router: window.kortAddons
      - merges live + overpass so menu can call ONE thing
-     - avoids "overwriting" when multiple addon modules load
-     ========================= */
-
+     - avoids overwriting when multiple addon modules load
+     ========================================================= */
   function ensureRouter() {
     if (window.kortAddons && window.kortAddons.__isRouter) return;
 
@@ -581,18 +536,14 @@
         const live = window.kortAddonsLive;
         const over = window.kortAddonsOverpass;
 
-        if (live && typeof live.isOn === "function") {
-          if (typeof live.list === "function") {
-            const keys = live.list();
-            for (let i = 0; i < keys.length; i++) if (keys[i] === id) return !!live.isOn(id);
-          }
+        if (live && typeof live.isOn === "function" && typeof live.list === "function") {
+          const keys = live.list();
+          for (let i = 0; i < keys.length; i++) if (keys[i] === id) return !!live.isOn(id);
         }
 
-        if (over && typeof over.isOn === "function") {
-          if (typeof over.list === "function") {
-            const keys = over.list();
-            for (let i = 0; i < keys.length; i++) if (keys[i] === id) return !!over.isOn(id);
-          }
+        if (over && typeof over.isOn === "function" && typeof over.list === "function") {
+          const keys = over.list();
+          for (let i = 0; i < keys.length; i++) if (keys[i] === id) return !!over.isOn(id);
         }
 
         return false;
