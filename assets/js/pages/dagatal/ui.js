@@ -220,17 +220,39 @@
   function jumpToToday() {
     const now = new Date();
     state.year = now.getFullYear();
+
+    // "Í dag" sýnir dagatalið og fer á deginum í dag
     state.view = "calendar";
     state.layout = "months";
+
     build().then(() => {
-      scrollToIso(D.isoDate(now), "smooth");
+      requestAnimationFrame(() => {
+        syncHeaderHeightVar();
+        scrollToIso(D.isoDate(now), "smooth");
+      });
     });
   }
 
   function toggleHolidaysView() {
-    // preserve current scroll anchor (so coming back to calendar stays sane too)
+    // Ef verið er í frídagalista og opna dagatal -> hoppa beint á Í dag
+    if (state.view === "holidays") {
+      const now = new Date();
+      state.year = now.getFullYear();
+      state.view = "calendar";
+      state.layout = "months";
+
+      build().then(() => {
+        requestAnimationFrame(() => {
+          syncHeaderHeightVar();
+          scrollToIso(D.isoDate(now), "smooth");
+        });
+      });
+      return;
+    }
+
+    // Ef verið er í dagatali og farið í frídagalista -> halda scroll-viðmiði “sane”
     const anchor = getAnchorIso();
-    state.view = state.view === "holidays" ? "calendar" : "holidays";
+    state.view = "holidays";
     build({ preserveScrollIso: anchor });
   }
 
@@ -334,8 +356,18 @@
   monthLabel?.addEventListener("click", () => {
     // clicking month label toggles between months/weeks (kept as your old shortcut)
     if (state.view === "holidays") {
+      // opna dagatal og hoppa á í dag
+      const now = new Date();
+      state.year = now.getFullYear();
       state.view = "calendar";
-      build({ preserveScrollIso: getAnchorIso() });
+      state.layout = "months";
+
+      build().then(() => {
+        requestAnimationFrame(() => {
+          syncHeaderHeightVar();
+          scrollToIso(D.isoDate(now), "smooth");
+        });
+      });
       return;
     }
     state.layout = state.layout === "months" ? "weeks" : "months";
@@ -478,9 +510,9 @@
     const now = new Date();
     state.year = now.getFullYear();
 
-    // defaults for view select
+    // ✅ default: frídagalisti
     state.layout = "months";
-    state.view = "calendar";
+    state.view = "holidays";
 
     // first sync header var (prevents overlap flashes)
     syncHeaderHeightVar();
@@ -488,13 +520,14 @@
     build().then(() => {
       requestAnimationFrame(() => {
         syncHeaderHeightVar();
-        scrollToIso(D.isoDate(now), "auto");
+        // holiday view: engin day-cells, þannig ekki scrolla
       });
     });
   })();
 
   NS._state = state;
 })();
+
 // --- Holiday explainer (header info bubble) ------------------------------
 (() => {
   function qs(id){ return document.getElementById(id); }
