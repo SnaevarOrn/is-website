@@ -51,7 +51,7 @@ const FEEDS = {
   // Wire / global agencies
   // NOTE: Reuters/AP no longer provide reliable free RSS. Use RSSHub as a proxy.
   reuters:  { url: "https://news.google.com/rss/search?q=site%3Areuters.com&hl=en-US&gl=US&ceid=US%3Aen",             label: "Reuters" },
-  ap:       { url: "https://rsshub.app/apnews/topics/ap-top-news", label: "AP News" },
+  ap:       { url: "https://news.google.com/rss/search?q=when:24h allinurl:apnews.com", label: "AP News" },
   
   // Public service / large broadcasters
   bbc:      { url: "https://feeds.bbci.co.uk/news/rss.xml",             label: "BBC News" },
