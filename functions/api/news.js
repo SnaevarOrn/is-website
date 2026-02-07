@@ -376,13 +376,25 @@ function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
+  // Robust: handles namespaces, whitespace, CRLF, CDATA, attributes
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<\\s*(?:\\w+:)?${esc}(?:\\s[^>]*)?>` +          // <title ...>
+    `([\\s\\S]*?)` +                                // content
+    `<\\s*\\/\\s*(?:\\w+:)?${esc}\\s*>`,            // </title>
     "i"
   );
 
   const m = src.match(re);
-  return m ? decodeEntities(m[1]).trim() : null;
+  if (!m) return null;
+
+  let v = m[1] ?? "";
+
+  // Strip CDATA if present
+  v = v.replace(/^\\s*<!\\[CDATA\\[\\s*/i, "");
+  v = v.replace(/\\s*\\]\\]>\\s*$/i, "");
+
+  v = decodeEntities(v).trim();
+  return v || null;
 }
 
 function extractLink(block) {
