@@ -376,11 +376,10 @@ function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
-  // Robust: handles namespaces, whitespace, CRLF, CDATA, attributes
   const re = new RegExp(
-    `<\\s*(?:\\w+:)?${esc}(?:\\s[^>]*)?>` +          // <title ...>
-    `([\\s\\S]*?)` +                                // content
-    `<\\s*\\/\\s*(?:\\w+:)?${esc}\\s*>`,            // </title>
+    `<\\s*(?:\\w+:)?${esc}(?:\\s[^>]*)?>` +
+    `([\\s\\S]*?)` +
+    `<\\s*\\/\\s*(?:\\w+:)?${esc}\\s*>`,
     "i"
   );
 
@@ -388,8 +387,6 @@ function extractTagValue(xml, tag) {
   if (!m) return null;
 
   let v = m[1] ?? "";
-
-  // Strip CDATA if present
   v = v.replace(/^\\s*<!\\[CDATA\\[\\s*/i, "");
   v = v.replace(/\\s*\\]\\]>\\s*$/i, "");
 
