@@ -112,14 +112,18 @@ mbl: {
   );
 
   const items = [];
-  const debugStats = {};
+const debugStats = {};
+const seenUrls = new Set(); // ✅ ONE global dedupe set
 
-  for (const id of activeSources) {
-    const feed = feeds[id];
-    if (!feed) continue;
+for (const id of activeSources) {
+  const feed = feeds[id];
+  if (!feed) continue;
 
+  const urls = Array.isArray(feed.url) ? feed.url : [feed.url];
+
+  for (const feedUrl of urls) {
     try {
-      const res = await fetch(feed.url, {
+      const res = await fetch(feedUrl, {
         headers: {
           "User-Agent": "is.is news bot",
           "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
@@ -130,9 +134,16 @@ mbl: {
       const xml = await res.text();
 
       if (!res.ok) {
-        console.error("Feed HTTP error:", id, res.status);
+        console.error("Feed HTTP error:", id, feedUrl, res.status);
         if (debug) {
-          debugStats[id] = { url: feed.url, status: res.status, ok: res.ok, length: xml.length, head: xml.slice(0, 220) };
+          debugStats[id] = debugStats[id] || { label: feed.label || id, urls: [] };
+          debugStats[id].urls.push({
+            url: feedUrl,
+            status: res.status,
+            ok: res.ok,
+            length: xml.length,
+            head: xml.slice(0, 220)
+          });
         }
         continue;
       }
@@ -142,11 +153,12 @@ mbl: {
       if (debug) {
         const firstBlock = blocks[0] || "";
         const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
-        const firstLink = firstBlock ? extractLink(firstBlock) : null;
-        const firstCats = firstBlock ? extractCategories(firstBlock) : [];
+        const firstLink  = firstBlock ? extractLink(firstBlock) : null;
+        const firstCats  = firstBlock ? extractCategories(firstBlock) : [];
 
-        debugStats[id] = {
-          url: feed.url,
+        debugStats[id] = debugStats[id] || { label: feed.label || id, urls: [] };
+        debugStats[id].urls.push({
+          url: feedUrl,
           status: res.status,
           ok: res.ok,
           length: xml.length,
@@ -158,12 +170,12 @@ mbl: {
           firstCats,
           head: xml.slice(0, 220),
           firstBlockHead: firstBlock.slice(0, 220),
-        };
+        });
       }
 
       for (const block of blocks) {
         const title = extractTagValue(block, "title");
-        const link = extractLink(block);
+        const link  = extractLink(block);
 
         const pubDate =
           extractTagValue(block, "pubDate") ||
@@ -173,7 +185,11 @@ mbl: {
 
         if (!title || !link) continue;
 
-        // ✅ Per-feed include/exclude (aðskilur VB vs Fiskifréttir)
+        // ✅ Global dedupe (critical for MBL multi-feed)
+        if (seenUrls.has(link)) continue;
+        seenUrls.add(link);
+
+        // ✅ Per-feed include/exclude (VB vs Fiskifréttir)
         const host = safeHost(link);
         if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
         if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
@@ -198,8 +214,6 @@ mbl: {
 
         let { categoryId, categoryLabel, categoryFrom } = inferred;
 
-        // ✅ Fallback override:
-        // Ef þessi miðill lendir í "oflokkad" => þvinga í "innlent"
         if (FORCE_INNLENT_IF_UNCLASSIFIED.has(id) && categoryId === "oflokkad") {
           categoryId = "innlent";
           categoryLabel = labelFor("innlent");
@@ -218,20 +232,22 @@ mbl: {
           category: categoryLabel
         };
 
-        if (debug) {
-          item.debug = {
-            rssCats,
-            categoryFrom
-          };
-        }
+        if (debug) item.debug = { rssCats, categoryFrom, feedUrl };
 
         items.push(item);
       }
     } catch (err) {
-      console.error("Feed error:", id, err);
-      if (debug) debugStats[id] = { url: feeds[id]?.url, error: String(err?.message || err) };
+      console.error("Feed error:", id, feedUrl, err);
+      if (debug) {
+        debugStats[id] = debugStats[id] || { label: feed.label || id, urls: [] };
+        debugStats[id].urls.push({
+          url: feedUrl,
+          error: String(err?.message || err)
+        });
+      }
     }
   }
+}
 
   items.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
 
