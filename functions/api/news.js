@@ -44,7 +44,25 @@ export async function onRequestGet({ request }) {
 
   const feeds = {
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
-    mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "Morgunblaðið" },
+    // mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "Morgunblaðið" },
+    // ✅ MBL PATCH: fleiri RSS, sama label, sama sourceId
+    mbl: {
+      label: "Morgunblaðið",
+      url: [
+        "https://www.mbl.is/feeds/fp/",
+        "https://www.mbl.is/feeds/nyjast/",
+        "https://www.mbl.is/feeds/innlent/",
+        "https://www.mbl.is/feeds/erlent/",
+        "https://www.mbl.is/feeds/vidskipti/",
+        "https://www.mbl.is/feeds/menning/",
+        "https://www.mbl.is/feeds/sport/",
+        "https://www.mbl.is/feeds/togt/",
+        "https://www.mbl.is/feeds/smartland/",
+        "https://www.mbl.is/feeds/matur/",
+        "https://www.mbl.is/feeds/ferdalog/",
+        "https://www.mbl.is/feeds/200milur/"
+      ]
+    },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
     frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
