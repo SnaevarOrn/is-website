@@ -15,6 +15,7 @@ const CATEGORY_MAP = [
   { id: "menning",   label: "Menning" },
   { id: "skodun",    label: "Skoðun" },
 
+  // Extra buckets
   { id: "taekni",    label: "Tækni" },
   { id: "heilsa",    label: "Heilsa" },
   { id: "umhverfi",  label: "Umhverfi" },
@@ -24,7 +25,10 @@ const CATEGORY_MAP = [
 ];
 
 const VALID_CATEGORY_IDS = new Set(CATEGORY_MAP.map(c => c.id));
-const labelFor = (id) => (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
+
+function labelFor(id) {
+  return (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
+}
 
 /* =========================
    API
@@ -38,72 +42,24 @@ export async function onRequestGet({ request }) {
   const limit = clampInt(searchParams.get("limit"), 1, 360, 50);
   const debug = searchParams.get("debug") === "1";
 
-  // ---- Time budget (avoid CF function timeouts => empty results) ----
-  const START_MS = Date.now();
-  const TIME_BUDGET_MS = debug ? 12000 : 8500;
-  const outOfTime = () => (Date.now() - START_MS) > TIME_BUDGET_MS;
-
-  // Per fetch timeout
-  const FETCH_TIMEOUT_MS = debug ? 6500 : 4200;
-
-  // Concurrency for sub-feeds (MBL pack)
-  const SUBFEED_CONCURRENCY = 4;
-
-  // MBL: mörg feed undir einu source
-  // (ATH: helstu var 404 í debug hjá þér, fjarlægt)
-  const MBL_FEEDS = [
-    // Core first
-    "https://www.mbl.is/feeds/fp/",
-    "https://www.mbl.is/feeds/nyjast/",
-    "https://www.mbl.is/feeds/innlent/",
-    "https://www.mbl.is/feeds/erlent/",
-    "https://www.mbl.is/feeds/vidskipti/",
-    "https://www.mbl.is/feeds/menning/",
-    "https://www.mbl.is/feeds/sport/",
-    "https://www.mbl.is/feeds/togt/",
-
-    // More
-    "https://www.mbl.is/feeds/smartland/",
-    "https://www.mbl.is/feeds/matur/",
-    "https://www.mbl.is/feeds/ferdalog/",
-    "https://www.mbl.is/feeds/bilar/",
-    "https://www.mbl.is/feeds/200milur/",
-    "https://www.mbl.is/feeds/sjonvarp/",
-    "https://www.mbl.is/feeds/folk/",
-    "https://www.mbl.is/feeds/verold/",
-
-    // Sports subfeeds
-    "https://www.mbl.is/feeds/fotbolti/",
-    "https://www.mbl.is/feeds/enskiboltinn/",
-    "https://www.mbl.is/feeds/handbolti/",
-    "https://www.mbl.is/feeds/korfubolti/",
-    "https://www.mbl.is/feeds/golf/",
-    "https://www.mbl.is/feeds/pepsideildin/",
-    "https://www.mbl.is/feeds/formula1/",
-    "https://www.mbl.is/feeds/hestar/",
-    "https://www.mbl.is/feeds/rafithrottir/",
-  ];
-
   const feeds = {
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
-    mbl:   { url: MBL_FEEDS, label: "Morgunblaðið" },
+    mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "Morgunblaðið" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
-
-    frettin:         { url: "https://frettin.is/feed/",               label: "Fréttin" },
-    heimildin:       { url: "https://heimildin.is/rss/",              label: "Heimildin" },
-    grapevine:       { url: "https://grapevine.is/feed/",             label: "Grapevine" },
-    bb:              { url: "https://bb.is/feed/",                    label: "Bæjarins Besta" },
-    nutiminn:        { url: "https://www.nutiminn.is/feed/",          label: "Nútíminn" },
-    feykir:          { url: "https://www.feykir.is/feed",             label: "Feykir" },
-    midjan:          { url: "http://www.midjan.is/feed/",             label: "Miðjan" },
-    eyjafrettir:     { url: "https://eyjafrettir.is/feed/",           label: "Eyjafréttir" },
-    fjardarfrettir:  { url: "https://www.fjardarfrettir.is/feed",     label: "Fjarðarfréttir" },
-    frjalsverslun:   { url: "https://vb.is/rss/frjals-verslun/",      label: "Frjáls verslun" },
-    bbl:             { url: "https://www.bbl.is/rss/",                label: "Bændablaðið" },
-    byggingar:       { url: "https://byggingar.is/feed",              label: "Byggingar" },
-    visbending:      { url: "https://visbending.is/rss/",             label: "Vísbending" },
-
+    frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
+    heimildin:  { url: "https://heimildin.is/rss/",       label: "Heimildin" },
+    grapevine:  { url: "https://grapevine.is/feed/",      label: "Grapevine" },
+    bb:         { url: "https://bb.is/feed/",             label: "Bæjarins Besta" },
+    nutiminn:   { url: "https://www.nutiminn.is/feed/",   label: "Nútíminn" },
+    feykir:     { url: "https://www.feykir.is/feed",      label: "Feykir" },
+    midjan:     { url: "http://www.midjan.is/feed/",      label: "Miðjan" },
+    eyjafrettir: { url: "https://eyjafrettir.is/feed/",      label: "Eyjafréttir" },
+    fjardarfrettir: { url: "https://www.fjardarfrettir.is/feed",      label: "Fjarðarfréttir" },
+    frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
+    bbl:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
+    byggingar:   { url: "https://byggingar.is/feed",            label: "Byggingar" },
+    visbending: { url: "https://visbending.is/rss/",            label: "Vísbending" },
     // VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb: {
       url: "https://www.vb.is/rss",
@@ -139,151 +95,124 @@ export async function onRequestGet({ request }) {
   );
 
   const items = [];
-  const seenUrls = new Set();
   const debugStats = {};
 
-  // Budget-friendly cap (we still sort & slice to limit later)
-  const HARD_ITEM_CAP = Math.max(limit * 6, 240);
-
   for (const id of activeSources) {
-    if (outOfTime()) break;
-
     const feed = feeds[id];
     if (!feed) continue;
 
-    const urls = Array.isArray(feed.url) ? feed.url : [feed.url];
+    try {
+      const res = await fetch(feed.url, {
+        headers: {
+          "User-Agent": "is.is news bot",
+          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
+        }
+      });
 
-    // per-source cap
-    const MAX_PER_SOURCE = Math.max(limit * 3, 120);
-    let addedForSource = 0;
+      const xml = await res.text();
 
-    const batches = chunkArray(urls, SUBFEED_CONCURRENCY);
+      if (!res.ok) {
+        console.error("Feed HTTP error:", id, res.status);
+        if (debug) {
+          debugStats[id] = { url: feed.url, status: res.status, ok: res.ok, length: xml.length, head: xml.slice(0, 220) };
+        }
+        continue;
+      }
 
-    for (const batch of batches) {
-      if (outOfTime()) break;
-      if (items.length >= HARD_ITEM_CAP) break;
-      if (addedForSource >= MAX_PER_SOURCE) break;
+      const blocks = parseFeedBlocks(xml);
 
-      const results = await Promise.allSettled(
-        batch.map(feedUrl => fetchFeedXml({ sourceId: id, feedUrl, timeoutMs: FETCH_TIMEOUT_MS }))
-      );
+      if (debug) {
+        const firstBlock = blocks[0] || "";
+        const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
+        const firstLink = firstBlock ? extractLink(firstBlock) : null;
+        const firstCats = firstBlock ? extractCategories(firstBlock) : [];
 
-      for (let i = 0; i < results.length; i++) {
-        if (outOfTime()) break;
-        if (items.length >= HARD_ITEM_CAP) break;
-        if (addedForSource >= MAX_PER_SOURCE) break;
+        debugStats[id] = {
+          url: feed.url,
+          status: res.status,
+          ok: res.ok,
+          length: xml.length,
+          hasItem: xml.toLowerCase().includes("<item"),
+          hasEntry: xml.toLowerCase().includes("<entry"),
+          blocksCount: blocks.length,
+          firstTitle,
+          firstLink,
+          firstCats,
+          head: xml.slice(0, 220),
+          firstBlockHead: firstBlock.slice(0, 220),
+        };
+      }
 
-        const feedUrl = batch[i];
-        const r = results[i];
+      for (const block of blocks) {
+        const title = extractTagValue(block, "title");
+        const link = extractLink(block);
 
-        if (r.status !== "fulfilled") {
-          if (debug) pushDebugUrl(debugStats, id, feed?.label, feedUrl, { error: String(r.reason || "fetch failed") });
-          continue;
+        const pubDate =
+          extractTagValue(block, "pubDate") ||
+          extractTagValue(block, "updated") ||
+          extractTagValue(block, "published") ||
+          extractTagValue(block, "dc:date");
+
+        if (!title || !link) continue;
+
+        // ✅ Per-feed include/exclude (aðskilur VB vs Fiskifréttir)
+        const host = safeHost(link);
+        if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
+        if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
+
+        const rssCats = extractCategories(block);
+        const catText = rssCats.join(" ").trim();
+
+        const description =
+          extractTagValue(block, "description") ||
+          extractTagValue(block, "summary") ||
+          extractTagValue(block, "content:encoded") ||
+          "";
+
+        let inferred = inferCategory({
+          sourceId: id,
+          url: link,
+          rssCategories: rssCats,
+          rssCategoryText: catText,
+          title,
+          description
+        });
+
+        let { categoryId, categoryLabel, categoryFrom } = inferred;
+
+        // ✅ Fallback override:
+        // Ef þessi miðill lendir í "oflokkad" => þvinga í "innlent"
+        if (FORCE_INNLENT_IF_UNCLASSIFIED.has(id) && categoryId === "oflokkad") {
+          categoryId = "innlent";
+          categoryLabel = labelFor("innlent");
+          categoryFrom = `fallbackOverride:${id}`;
         }
 
-        const { ok, status, xml, aborted } = r.value;
+        if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
 
-        if (!ok) {
-          if (debug) pushDebugUrl(debugStats, id, feed?.label, feedUrl, {
-            status,
-            ok,
-            aborted,
-            length: (xml || "").length,
-            head: String(xml || "").slice(0, 220),
-          });
-          continue;
-        }
-
-        const blocks = parseFeedBlocks(xml);
+        const item = {
+          title,
+          url: link,
+          publishedAt: pubDate ? safeToIso(pubDate) : null,
+          sourceId: id,
+          sourceLabel: feed.label,
+          categoryId,
+          category: categoryLabel
+        };
 
         if (debug) {
-          const firstBlock = blocks[0] || "";
-          const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
-          const firstLink = firstBlock ? extractLink(firstBlock) : null;
-          const firstCats = firstBlock ? extractCategories(firstBlock) : [];
-          pushDebugUrl(debugStats, id, feed?.label, feedUrl, {
-            status,
-            ok: true,
-            aborted,
-            length: (xml || "").length,
-            hasItem: String(xml || "").toLowerCase().includes("<item"),
-            hasEntry: String(xml || "").toLowerCase().includes("<entry"),
-            blocksCount: blocks.length,
-            firstTitle,
-            firstLink,
-            firstCats,
-            head: String(xml || "").slice(0, 220),
-            firstBlockHead: String(firstBlock || "").slice(0, 220),
-          });
-        }
-
-        for (const block of blocks) {
-          if (outOfTime()) break;
-          if (items.length >= HARD_ITEM_CAP) break;
-          if (addedForSource >= MAX_PER_SOURCE) break;
-
-          const title = extractTagValue(block, "title");
-          const link = extractLink(block);
-
-          const pubDate =
-            extractTagValue(block, "pubDate") ||
-            extractTagValue(block, "updated") ||
-            extractTagValue(block, "published") ||
-            extractTagValue(block, "dc:date");
-
-          if (!title || !link) continue;
-
-          const host = safeHost(link);
-          if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
-          if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
-
-          if (seenUrls.has(link)) continue;
-          seenUrls.add(link);
-
-          const rssCats = extractCategories(block);
-          const catText = rssCats.join(" ").trim();
-
-          const description =
-            extractTagValue(block, "description") ||
-            extractTagValue(block, "summary") ||
-            extractTagValue(block, "content:encoded") ||
-            "";
-
-          let inferred = inferCategory({
-            sourceId: id,
-            url: link,
-            rssCategories: rssCats,
-            rssCategoryText: catText,
-            title,
-            description
-          });
-
-          let { categoryId, categoryLabel, categoryFrom } = inferred;
-
-          if (FORCE_INNLENT_IF_UNCLASSIFIED.has(id) && categoryId === "oflokkad") {
-            categoryId = "innlent";
-            categoryLabel = labelFor("innlent");
-            categoryFrom = `fallbackOverride:${id}`;
-          }
-
-          if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
-
-          const item = {
-            title,
-            url: link,
-            publishedAt: pubDate ? safeToIso(pubDate) : null,
-            sourceId: id,
-            sourceLabel: feed.label,
-            categoryId,
-            category: categoryLabel
+          item.debug = {
+            rssCats,
+            categoryFrom
           };
-
-          if (debug) item.debug = { rssCats, categoryFrom, feedUrl };
-
-          items.push(item);
-          addedForSource++;
         }
+
+        items.push(item);
       }
+    } catch (err) {
+      console.error("Feed error:", id, err);
+      if (debug) debugStats[id] = { url: feeds[id]?.url, error: String(err?.message || err) };
     }
   }
 
@@ -296,7 +225,7 @@ export async function onRequestGet({ request }) {
   const availableCategories = [...availableSet];
 
   const payload = debug
-    ? { items: sliced, availableCategories, debugStats, meta: { tookMs: Date.now() - START_MS, budgetMs: TIME_BUDGET_MS } }
+    ? { items: sliced, availableCategories, debugStats }
     : { items: sliced, availableCategories };
 
   return new Response(JSON.stringify(payload), {
@@ -305,46 +234,6 @@ export async function onRequestGet({ request }) {
       "cache-control": debug ? "no-store" : "public, max-age=300"
     }
   });
-}
-
-/* =========================
-   Fetch helper (timeout + headers)
-   ========================= */
-
-async function fetchFeedXml({ sourceId, feedUrl, timeoutMs }) {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort("timeout"), timeoutMs);
-
-  const headers = {
-    "User-Agent": "is.is news bot",
-    "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-    "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
-  };
-
-  // Referer bara fyrir MBL
-  if (sourceId === "mbl") headers["Referer"] = "https://www.mbl.is/feeds/";
-
-  try {
-    const res = await fetch(feedUrl, { headers, signal: controller.signal });
-    const xml = await res.text().catch(() => "");
-    clearTimeout(t);
-    return { ok: res.ok, status: res.status, xml, aborted: false };
-  } catch (err) {
-    clearTimeout(t);
-    const aborted = String(err?.name || "").toLowerCase().includes("abort");
-    return { ok: false, status: 0, xml: "", aborted };
-  }
-}
-
-function pushDebugUrl(debugStats, id, label, feedUrl, obj) {
-  debugStats[id] = debugStats[id] || { label: label || id, urls: [] };
-  debugStats[id].urls.push({ url: feedUrl, ...obj });
-}
-
-function chunkArray(arr, size) {
-  const out = [];
-  for (let i = 0; i < (arr || []).length; i += size) out.push(arr.slice(i, i + size));
-  return out;
 }
 
 /* =========================
@@ -360,37 +249,27 @@ function parseFeedBlocks(xml) {
   return [...String(xml || "").matchAll(entryRe)].map(m => m[0]);
 }
 
-// ✅ Fixið sem bjargar þessu öllu:
-// robust tag extraction (MBL title var annars að verða null => allt filtered út)
 function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
   const re = new RegExp(
-    `<\\s*(?:\\w+:)?${esc}(?:\\s[^>]*)?>` +   // <title ...>
-    `([\\s\\S]*?)` +                         // content
-    `<\\s*\\/\\s*(?:\\w+:)?${esc}\\s*>`,     // </title>
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
   const m = src.match(re);
-  if (!m) return null;
-
-  let v = m[1] ?? "";
-  v = v.replace(/^\\s*<!\\[CDATA\\[\\s*/i, "");
-  v = v.replace(/\\s*\\]\\]>\\s*$/i, "");
-  v = decodeEntities(v).trim();
-  return v || null;
+  return m ? decodeEntities(m[1]).trim() : null;
 }
 
 function extractLink(block) {
   const src = String(block || "");
 
-  // Atom: <link href="..."/>
+  // 1) Atom style: <link href="..."/>
   const mHref = src.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
   if (mHref?.[1]) return decodeEntities(mHref[1]).trim();
 
-  // RSS: <link>...</link>
+  // 2) RSS style: <link>...</link>
   const m = src.match(/<link\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
   if (m?.[1]) return decodeEntities(m[1]).trim();
 
@@ -401,6 +280,7 @@ function extractCategories(block) {
   const src = String(block || "");
   const out = [];
 
+  // RSS: <category>Text</category>
   const reRss = /<category\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/category>/gi;
   let m;
   while ((m = reRss.exec(src)) !== null) {
@@ -408,6 +288,7 @@ function extractCategories(block) {
     if (v) out.push(v);
   }
 
+  // Atom: <category term="Text" />
   const reAtom = /<category\b[^>]*\bterm=["']([^"']+)["'][^>]*\/?>/gi;
   while ((m = reAtom.exec(src)) !== null) {
     const v = decodeEntities(m[1] || "").trim();
@@ -423,12 +304,18 @@ function safeToIso(dateString) {
 }
 
 function safeHost(url) {
-  try { return new URL(url).host.toLowerCase(); } catch { return ""; }
+  try {
+    return new URL(url).host.toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
+// Slightly beefed-up entity decoding (handles &amp;ndash; and numeric entities)
 function decodeEntities(s) {
   let str = String(s || "");
 
+  // First pass: common named entities
   str = str
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
@@ -440,10 +327,12 @@ function decodeEntities(s) {
     .replaceAll("&ndash;", "–")
     .replaceAll("&mdash;", "—");
 
+  // Second pass: if we had &amp;ndash; => now "&ndash;" exists, so convert again
   str = str
     .replaceAll("&ndash;", "–")
     .replaceAll("&mdash;", "—");
 
+  // Numeric entities: &#8211; or &#x2013;
   str = str.replace(/&#(\d+);/g, (_, n) => {
     const code = Number(n);
     return Number.isFinite(code) ? String.fromCodePoint(code) : _;
@@ -469,6 +358,7 @@ function clampInt(value, min, max, fallback) {
 
 /* =========================
    Categorization
+   Priority: Source-hints -> RSS category -> URL -> text keywords
    ========================= */
 
 function normalizeText(s) {
@@ -484,7 +374,7 @@ function normalizeText(s) {
 function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title, description }) {
   const host = safeHost(url);
 
-  // 0) Source-hints
+  // 0) Source-specific hints (safe overrides, uses feed categories + obvious patterns)
   const hinted = classifyWithSourceHints({
     host,
     url,
@@ -503,25 +393,30 @@ function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title, d
   const rssTermsNorm = (rssCategories || []).map(normalizeText).filter(Boolean);
   const rssNormJoined = normalizeText(rssCategoryText);
 
-  // 1) RSS category mapping
+  // 1) RSS category mapping (strongest after source-hints)
   const fromRss = mapFromRssCategories(sourceId, rssTermsNorm, rssNormJoined);
-  if (fromRss) return { categoryId: fromRss, categoryLabel: labelFor(fromRss), categoryFrom: "rss" };
+  if (fromRss) {
+    return { categoryId: fromRss, categoryLabel: labelFor(fromRss), categoryFrom: "rss" };
+  }
 
-  // 2) URL mapping
+  // 2) URL mapping (next best)
   const fromUrl = mapFromUrl(sourceId, u, t);
-  if (fromUrl) return { categoryId: fromUrl, categoryLabel: labelFor(fromUrl), categoryFrom: "url" };
+  if (fromUrl) {
+    return { categoryId: fromUrl, categoryLabel: labelFor(fromUrl), categoryFrom: "url" };
+  }
 
-  // 3) Keyword fallback
+  // 3) Keyword fallback (weakest)
   const fromText = mapFromText(rssNormJoined) || mapFromText(t);
   const categoryId = fromText || "oflokkad";
   return { categoryId, categoryLabel: labelFor(categoryId), categoryFrom: fromText ? "keywords" : "default" };
 }
 
 /* =========================
-   Source-specific hints
+   Source-specific category hints (Heimildin / BB / Feykir / BBL / Nútíminn)
+   Safe: uses explicit feed categories + obvious patterns
    ========================= */
 
-function norm(s) {
+function norm(s){
   return String(s || "")
     .replace(/&nbsp;|&#160;/g, " ")
     .replace(/\s+/g, " ")
@@ -529,14 +424,16 @@ function norm(s) {
     .toLowerCase();
 }
 
-function extractFeedCategories(item) {
+function extractFeedCategories(item){
+  // rss-parser can give: item.categories (array) OR item.category (string) OR raw-ish
   const cats = [];
   if (Array.isArray(item?.categories)) cats.push(...item.categories);
   if (typeof item?.category === "string") cats.push(item.category);
 
+  // de-dup + normalize (keep original letters too, we match via norm())
   const out = [];
   const seen = new Set();
-  for (const c of cats) {
+  for (const c of cats){
     const cc = String(c || "").trim();
     if (!cc) continue;
     const key = norm(cc);
@@ -547,30 +444,49 @@ function extractFeedCategories(item) {
   return out;
 }
 
-function mapBbCategoryToBucket(feedCats) {
+function mapBbCategoryToBucket(feedCats){
+  // BB uses WP categories heavily; trust them.
   const joined = norm(feedCats.join(" | "));
   if (!joined) return null;
+
+  // Aðsendar greinar -> Skoðun (guest columns)
   if (joined.includes("aðsendar greinar")) return "skodun";
+
+  // Menning -> Menning
   if (joined.includes("menning")) return "menning";
+
+  // Samgöngur -> Innlent (avoid new bucket)
   if (joined.includes("samgöngur")) return "innlent";
+
+  // Íþróttir
   if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
+
+  // Vestfirðir / sveitarfélagstög -> Innlent
   if (joined.includes("vestfir")) return "innlent";
+
+  // Default
   return null;
 }
 
-function mapNutiminnCategoryToBucket(feedCats) {
+function mapNutiminnCategoryToBucket(feedCats){
+  // Nútíminn: WordPress categories present; treat a few safely.
   const joined = norm(feedCats.join(" | "));
   if (!joined) return null;
+
   if (joined.includes("aðsendar")) return "skodun";
-  if (joined.includes("brotkast")) return "menning";
+  if (joined.includes("brotkast")) return "menning"; // podcasts / shows / media
   if (joined.includes("fréttir")) return "innlent";
-  if (joined.includes("forsíða")) return null;
+  if (joined.includes("forsíða")) return null; // not a category, ignore
   if (joined.includes("í fókus") || joined.includes("i fokus")) return "menning";
+
+  // If sports ever appears
   if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
+
   return null;
 }
 
-function mapBblUrlToBucket(uNorm) {
+function mapBblUrlToBucket(uNorm){
+  // Bændablaðið has strong section paths in the link URLs.
   if (!uNorm) return null;
   if (uNorm.includes("/skodun/")) return "skodun";
   if (uNorm.includes("/folk/")) return "menning";
@@ -578,7 +494,7 @@ function mapBblUrlToBucket(uNorm) {
   return null;
 }
 
-function classifyWithSourceHints({ host, url, title, description, item }) {
+function classifyWithSourceHints({ host, url, title, description, item }){
   const h = norm(host);
   const u = norm(url);
   const t = norm(title);
@@ -586,50 +502,86 @@ function classifyWithSourceHints({ host, url, title, description, item }) {
   const feedCats = extractFeedCategories(item);
   const fcNorm = norm(feedCats.join(" | "));
 
-  // BB.is
-  if (h === "bb.is" || h.endsWith(".bb.is")) {
+  /* ---- BB.is: trust feed categories first ---- */
+  if (h === "bb.is" || h.endsWith(".bb.is")){
     const bb = mapBbCategoryToBucket(feedCats);
     if (bb) return bb;
+
+    // fallback: Aðsendar greinar / "skrifar" in title often signals opinion
     if (t.includes(" skrifar") || (t.includes("|") && t.includes("skrifar"))) return "skodun";
     return null;
   }
 
-  // Nútíminn
-  if (h === "www.nutiminn.is" || h === "nutiminn.is" || h.endsWith(".nutiminn.is")) {
+  /* ---- Nútíminn: trust WP categories first ---- */
+  if (h === "www.nutiminn.is" || h === "nutiminn.is" || h.endsWith(".nutiminn.is")){
     const nm = mapNutiminnCategoryToBucket(feedCats);
     if (nm) return nm;
+
+    // obvious opinion markers
     if (fcNorm.includes("aðsendar")) return "skodun";
     if (t.includes(" pistill") || t.includes(" leiðari") || t.includes(" skrifar")) return "skodun";
+
     return null;
   }
 
-  // Bændablaðið
-  if (h === "www.bbl.is" || h === "bbl.is" || h.endsWith(".bbl.is")) {
+  /* ---- Bændablaðið: usually no <category>; use URL sections safely ---- */
+  if (h === "www.bbl.is" || h === "bbl.is" || h.endsWith(".bbl.is")){
     const byUrl = mapBblUrlToBucket(u);
     if (byUrl) return byUrl;
+
+    // if they ever add categories later
     if (fcNorm.includes("skodun")) return "skodun";
     if (fcNorm.includes("folk")) return "menning";
     if (fcNorm.includes("frettir")) return "innlent";
+
     return null;
   }
 
-  // Heimildin
-  if (h === "heimildin.is" || h.endsWith(".heimildin.is") || h === "stundin.is" || h.endsWith(".stundin.is")) {
+  /* ---- Heimildin.is: clear split between news vs essays/columns by phrasing ---- */
+  if (h === "heimildin.is" || h.endsWith(".heimildin.is") || h === "stundin.is" || h.endsWith(".stundin.is")){
+    // Strong opinion markers
     if (t.includes(" skrifar") || t.includes(" pistill") || t.includes(" leiðari")) return "skodun";
     if (d.includes(" kemur fram í pistli") || d.includes(" skrifar") || d.includes(" leiðari")) return "skodun";
-    if (t.includes("kvikmynd") || t.includes("leikhús") || t.includes("listasafn") || t.includes("menning")) return "menning";
-    if (t.includes("vísind") || t.includes("rannsókn")) return "visindi";
-    if (t.includes("loftslag") || t.includes("umhverf")) return "umhverfi";
+
+    // Culture/arts markers (very safe ones)
+    if (t.includes("kvikmynd") || t.includes("leikhús") || t.includes("listasafn") || t.includes("menning"))
+      return "menning";
+
+    // Science (safe-ish)
+    if (t.includes("homo ") || t.includes("neanderd") || t.includes("forn") || t.includes("vísind") || t.includes("rannsókn"))
+      return "visindi";
+
+    // Climate/environment (safe)
+    if (t.includes("loftslag") || t.includes("mengun") || t.includes("náttúru") || t.includes("umhverf"))
+      return "umhverfi";
+
     return null;
   }
 
-  // Feykir
-  if (h === "feykir.is" || h.endsWith(".feykir.is")) {
+  /* ---- Feykir.is: lots of sports + local columns ---- */
+  if (h === "feykir.is" || h.endsWith(".feykir.is")){
+    // Opinion/columns
     if (t.includes(" skrifar") || (t.includes("|") && t.includes("skrifar"))) return "skodun";
-    if (t.includes("knattspyrn") || t.includes("körfu") || t.includes("bonus deild") || d.includes("knattspyrn") || d.includes("körfu"))
-      return "ithrottir";
-    if (t.includes("uppskrift") || d.includes("uppskrift")) return "menning";
-    if (t.includes("sjókvía") || d.includes("sjókvía")) return "umhverfi";
+
+    // Sports (very safe terms)
+    if (
+      t.includes("knattspyrn") || t.includes("körfu") || t.includes("bonus deild") ||
+      t.includes("leikur") || t.includes("jafntefli") || t.includes("sigur") ||
+      d.includes("knattspyrn") || d.includes("körfu") || d.includes("bonus deild")
+    ) return "ithrottir";
+
+    // Food/recipes -> Menning
+    if (t.includes("matgæð") || t.includes("uppskrift") || t.includes("mælir með") || d.includes("uppskrift"))
+      return "menning";
+
+    // Energy grid / infrastructure often local society/politics
+    if (t.includes("byggðalín") || t.includes("landsnet") || t.includes("raforku") || t.includes("flutningskerfi"))
+      return "innlent";
+
+    // Aquaculture / sea pens -> Umhverfi
+    if (t.includes("sjókvía") || t.includes("lagareldi") || t.includes("eldis") || d.includes("sjókvía"))
+      return "umhverfi";
+
     return null;
   }
 
@@ -641,31 +593,36 @@ function classifyWithSourceHints({ host, url, title, description, item }) {
    ========================= */
 
 function mapFromRssCategories(sourceId, termsNorm, joinedNorm) {
+  // If no categories present, bail fast
   if ((!termsNorm || termsNorm.length === 0) && !joinedNorm) return null;
 
+  // Source-specific rules first
   const bySource = mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm);
   if (bySource) return bySource;
 
-  return mapFromText(termsNorm.join(" ")) || mapFromText(joinedNorm) || null;
+  // Then generic mapping (works for many feeds)
+  const generic = mapFromText(termsNorm.join(" ")) || mapFromText(joinedNorm);
+  return generic || null;
 }
 
 function mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm) {
-  const has = (needle) =>
-    termsNorm.includes(normalizeText(needle)) || String(joinedNorm || "").includes(normalizeText(needle));
+  const has = (needle) => termsNorm.includes(normalizeText(needle)) || String(joinedNorm || "").includes(normalizeText(needle));
 
+  // MBL: categories like "Innlent", "Íþróttir", "Matur", "Smartland", "200 mílur"
   if (sourceId === "mbl") {
     if (has("innlent")) return "innlent";
     if (has("erlent")) return "erlent";
     if (has("íþróttir") || has("ithrottir")) return "ithrottir";
     if (has("viðskipti") || has("vidskipti")) return "vidskipti";
+
+    // MBL lifestyle/culture buckets
     if (has("matur")) return "menning";
     if (has("smartland")) return "menning";
     if (has("200 mílur") || has("200 milur")) return "innlent";
-    if (has("tækni") || has("taekni") || has("togt")) return "taekni";
-    if (has("vísindi") || has("visindi")) return "visindi";
     return null;
   }
 
+  // BBL (Bændablaðið): if they add categories later, honor basic ones
   if (sourceId === "bbl") {
     if (has("frettir")) return "innlent";
     if (has("skodun")) return "skodun";
@@ -684,20 +641,67 @@ function mapFromText(x) {
   if (!x) return null;
 
   const sportWords = [
-    "sport","ithrott","fotbolta","fotbolti","handbolti","korfubolti","tennis","formula","ufc",
-    "olymp","premier league","champions league","europa league","ronaldo","messi","arsenal","liverpool",
-    "man city","manchester united","chelsea","tottenham","barcelona","real madrid","433","4-3-3"
+    "sport", "ithrott", "fotbolta", "fotbolti",
+    "handbolti", "nba", "korfubolti", "tennis", "motorsport", "formula",
+    "ufc", "olymp", "olympi", "marathon", "darts",
+
+    "hnefaleik", "breidablik", "valur", "tindastoll", "chess", "nfl",
+    "premier league", "champions league", "europa league",
+    "enska urvalsdeild", "enskar urvalsdeild", "enski boltinn", "enskur boltinn",
+
+    "ronaldo", "messi", "mourinho", "guardiola", "klopp",
+    "arsenal", "man city", "manchester city", "man utd", "manchester united",
+    "liverpool", "chelsea", "tottenham", "barcelona", "real madrid", "atletico",
+    "psg", "bayern", "dortmund", "juventus", "milan", "inter",
+    "433", "4-3-3", "4 3 3"
   ];
 
-  const bizWords = ["vidskip","business","markad","fjarmal","kaupholl","gengi","vext","verdbolga"];
-  const cultureWords = ["menning","folk","lifid","list","tonlist","kvikmynd","bok","leikhus","matur","smartland"];
-  const opinionWords = ["skodun","comment","pistill","leidari","adsendar","aðsendar"];
-  const foreignWords = ["erlent","world","alheim","althjod","ukraina","russland","kina","evropa","usa"];
-  const localWords = ["innlent","island","reykjavik","akureyri","reykjanes","logregl","dom","handtek"];
-  const techWords = ["taekni","tolva","forrit","gervigreind","ai","netoryggi","snjallsimi","apple","google","microsoft"];
-  const healthWords = ["heilsa","laekn","sjuk","lyf","spitali","smit","veira"];
-  const envWords = ["umhverfi","loftslag","mengun","natur","eldgos","skjalfti","vedur","haf"];
-  const sciWords = ["visindi","rannsokn","geim","edlis","efna","stjornufraedi","tungl","sol"];
+  const bizWords = [
+    "vidskip", "business", "markad", "fjarmal", "kaupholl",
+    "verdbref", "gengi", "vext", "hagkerfi", "verdbolga"
+  ];
+
+  const cultureWords = [
+    "menning", "folk", "lifid", "list", "tonlist", "kvikmynd", "bok",
+    "leikhus", "sjonvarp", "utvarp", "svidslist",
+    "matur", "kokte", "smartland", "samkvaem", "daisy", "tipsy",
+    "tattuin", "tattoo", "stjarna", "model", "fegurd", "afthrey"
+  ];
+
+  const opinionWords = [
+    "skodun", "comment", "pistill", "leidari", "grein",
+    "ummal", "dalkur", "kronika", "nedanmals", "adsendar", "aðsendar"
+  ];
+
+  const foreignWords = [
+    "erlent", "foreign", "bandarisk", "usa", "iran", "italia", "evropa", "world", "alheim", "althjod",
+    "trump", "musk", "russland", "kina", "japan", "ukraina", "bresk", "bandarikin", "epstein",
+  ];
+
+  const localWords = [
+    "innlent", "island", "reykjavik", "hafnarfjord", "akureyri", "reykjanes", "kopavog",
+    "laugarvatn", "vestmannaeyj", "landsbank", "hs ork",
+    "logregl", "rettar", "daemd", "dom", "handtek", "sakfelld"
+  ];
+
+  const techWords = [
+    "taekni", "tolva", "forrit", "forritun", "gervigreind", "ai",
+    "netoryggi", "oryggi", "snjallsimi", "apple", "google", "microsoft", "raf"
+  ];
+
+  const healthWords = [
+    "heilsa", "laekn", "sjuk", "sjukdom", "lyf", "spitali", "naering", "smit", "veira"
+  ];
+
+  const envWords = [
+    "umhverfi", "loftslag", "mengun", "natur", "jokull", "eldgos", "skjalfti", "vedur", "haf", "fisk",
+    "skograekt", "fornleif"
+  ];
+
+  const sciWords = [
+    "visindi", "rannsokn", "geim", "edlis", "efna", "liffraedi",
+    "stjornufraedi", "stjornukerfi", "tungl", "sol"
+  ];
 
   if (sportWords.some(w => x.includes(w))) return "ithrottir";
   if (bizWords.some(w => x.includes(w))) return "vidskipti";
@@ -723,51 +727,59 @@ function mapFromUrl(sourceId, u, titleNorm) {
   if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
   if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list") || u.includes("/folk")) return "menning";
   if (u.includes("/skodun") || u.includes("/pistill") || u.includes("/comment")) return "skodun";
-  if (u.includes("/taekni") || u.includes("/tech") || u.includes("/togt")) return "taekni";
+  if (u.includes("/taekni") || u.includes("/tech")) return "taekni";
   if (u.includes("/heilsa") || u.includes("/health")) return "heilsa";
   if (u.includes("/umhverfi") || u.includes("/environment")) return "umhverfi";
   if (u.includes("/visindi") || u.includes("/science")) return "visindi";
   if (u.includes("/erlent")) return "erlent";
   if (u.includes("/innlent")) return "innlent";
 
-  // VB
+  // VB: category-less RSS -> section is in URL path
   if (sourceId === "vb") {
     if (u.includes("/frettir/")) return "vidskipti";
     if (u.includes("/skodun/")) return "skodun";
     if (u.includes("/folk/")) return "menning";
     if (u.includes("/eftir-vinnu/")) {
       const t = String(titleNorm || "");
-      if (t.includes("taekni") || t.includes("iphone") || t.includes("ai") || t.includes("gervigreind")) return "taekni";
+      if (t.includes("taekni") || t.includes("iphone") || t.includes("simi") || t.includes("ai") || t.includes("gervigreind")) {
+        return "taekni";
+      }
       return "menning";
     }
   }
 
-  // DV
+  // DV: URL sections are strong signals
   if (sourceId === "dv") {
     if (u.includes("/pressan")) return "innlent";
     if (u.includes("/fokus")) return "menning";
     if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
   }
 
-  // Vísir
+  // Vísir: many links are /g/<id>/<slug> => no section in URL
   if (sourceId === "visir") {
+    if (u.includes("/g/")) {
+      const t = String(titleNorm || "");
+      if (
+        t.includes("ronaldo") || t.includes("messi") || t.includes("mourinho") ||
+        t.includes("arsenal") || t.includes("man city") || t.includes("premier") ||
+        t.includes("olymp") || t.includes("darts") || t.includes("undanurslit")
+      ) return "ithrottir";
+    }
+
     if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
     if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
 
-  // MBL
+  // MBL: URL sections are very consistent; use as fallback when RSS has none/odd buckets
   if (sourceId === "mbl") {
     if (u.includes("/frettir/innlent")) return "innlent";
     if (u.includes("/frettir/erlent")) return "erlent";
     if (u.includes("/sport/")) return "ithrottir";
-    if (u.includes("/vidskipti/")) return "vidskipti";
     if (u.includes("/matur/")) return "menning";
     if (u.includes("/smartland/")) return "menning";
     if (u.includes("/200milur/")) return "innlent";
-    if (u.includes("/togt/")) return "taekni";
   }
 
-  // RÚV
   if (sourceId === "ruv") {
     if (u.includes("/ithrottir")) return "ithrottir";
     if (u.includes("/vidskipti")) return "vidskipti";
@@ -776,7 +788,7 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/innlent")) return "innlent";
   }
 
-  // BBL
+  // BBL: section-driven URLs
   if (sourceId === "bbl") {
     if (u.includes("/skodun/")) return "skodun";
     if (u.includes("/folk/")) return "menning";
