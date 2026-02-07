@@ -123,16 +123,46 @@ export async function onRequestGet({ request }) {
     if (!feed) continue;
 
     try {
-      const res = await fetch(feed.url, {
-        headers: {
-          "User-Agent": "is.is news bot",
-          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
-        }
-      });
+      // const res = await fetch(feed.url, {
+        //headers: {
+          //"User-Agent": "is.is news bot",
+          //"Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+          //"Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
+        //}
+      //});
 
-      const xml = await res.text();
+      //const xml = await res.text();
 
+    const urls = Array.isArray(feed.url) ? feed.url : [feed.url];
+
+for (const feedUrl of urls) {
+  const res = await fetch(feedUrl, {
+    headers: {
+      "User-Agent": "is.is news bot",
+      "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+      "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
+    }
+  });
+
+  const xml = await res.text();
+  if (!res.ok) continue;
+
+  const blocks = parseFeedBlocks(xml);
+
+  for (const block of blocks) {
+    const title = extractTagValue(block, "title");
+    const link  = extractLink(block);
+    if (!title || !link) continue;
+
+    // 🔒 dedupe (mjög mikilvægt fyrir MBL)
+    if (seenUrls.has(link)) continue;
+    seenUrls.add(link);
+
+    // 👉 HÉR FER ALLUR ÞINN NÚVERANDI KÓÐI ÓBREYTTUR
+    // pubDate, categories, inferCategory, items.push(...)
+  }
+}
+    
       if (!res.ok) {
         console.error("Feed HTTP error:", id, res.status);
         if (debug) {
