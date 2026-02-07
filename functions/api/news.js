@@ -114,6 +114,9 @@ export async function onRequestGet({ request }) {
 
   const items = [];
   const debugStats = {};
+  
+  // New
+  const seenUrls = new Set();
 
   for (const id of activeSources) {
     const feed = feeds[id];
