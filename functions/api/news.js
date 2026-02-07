@@ -809,6 +809,7 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/frettir/erlent")) return "erlent";
     if (u.includes("/sport/")) return "ithrottir";
     if (u.includes("/matur/")) return "menning";
+    if (u.includes("/ferdalog/")) return "menning";
     if (u.includes("/smartland/")) return "menning";
     if (u.includes("/200milur/")) return "innlent";
   }
