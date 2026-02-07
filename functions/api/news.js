@@ -45,6 +45,7 @@ export async function onRequestGet({ request }) {
   const feeds = {
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
     mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "Morgunblaðið" },
+    mbl:   { url: "https://www.mbl.is/feeds/innlent/",   label: "Morgunblaðið" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
     frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
