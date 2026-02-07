@@ -44,29 +44,9 @@ export async function onRequestGet({ request }) {
 
   const feeds = {
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
-
-    // ✅ MBL: mörg RSS undir EINU sourceId + EINU label
-    mbl: {
-      label: "Morgunblaðið",
-      url: [
-        "https://www.mbl.is/feeds/fp/",
-        "https://www.mbl.is/feeds/nyjast/",
-        "https://www.mbl.is/feeds/innlent/",
-        "https://www.mbl.is/feeds/erlent/",
-        "https://www.mbl.is/feeds/vidskipti/",
-        "https://www.mbl.is/feeds/menning/",
-        "https://www.mbl.is/feeds/sport/",
-        "https://www.mbl.is/feeds/togt/",
-        "https://www.mbl.is/feeds/smartland/",
-        "https://www.mbl.is/feeds/matur/",
-        "https://www.mbl.is/feeds/ferdalog/",
-        "https://www.mbl.is/feeds/200milur/",
-      ]
-    },
-
+    mbl:   { url: "https://www.mbl.is/feeds/fp/",   label: "Morgunblaðið" },
     visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
-
     frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
     heimildin:  { url: "https://heimildin.is/rss/",       label: "Heimildin" },
     grapevine:  { url: "https://grapevine.is/feed/",      label: "Grapevine" },
@@ -80,14 +60,12 @@ export async function onRequestGet({ request }) {
     bbl:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
     byggingar:   { url: "https://byggingar.is/feed",            label: "Byggingar" },
     visbending: { url: "https://visbending.is/rss/",            label: "Vísbending" },
-
     // VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb: {
       url: "https://www.vb.is/rss",
       label: "Viðskiptablaðið",
       excludeLinkHosts: ["fiskifrettir.vb.is"]
     },
-
     // Fiskifréttir: leyfum bara linka sem eru á fiskifrettir.vb.is
     fiskifrettir: {
       url: "https://fiskifrettir.vb.is/rss/",
@@ -119,137 +97,122 @@ export async function onRequestGet({ request }) {
   const items = [];
   const debugStats = {};
 
-  // ✅ Global dedupe (mjög mikilvægt fyrir MBL pack)
-  const seenUrls = new Set();
-
   for (const id of activeSources) {
     const feed = feeds[id];
     if (!feed) continue;
 
-    // ✅ styður annaðhvort string eða array af URLum
-    const urls = Array.isArray(feed.url) ? feed.url : [feed.url];
+    try {
+      const res = await fetch(feed.url, {
+        headers: {
+          "User-Agent": "is.is news bot",
+          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
+        }
+      });
 
-    for (const feedUrl of urls) {
-      try {
-        const res = await fetchWithTimeout(feedUrl, {
-          headers: {
-            "User-Agent": "is.is news bot",
-            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-            "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
-          }
-        }, 4500);
+      const xml = await res.text();
 
-        const xml = await res.text().catch(() => "");
+      if (!res.ok) {
+        console.error("Feed HTTP error:", id, res.status);
+        if (debug) {
+          debugStats[id] = { url: feed.url, status: res.status, ok: res.ok, length: xml.length, head: xml.slice(0, 220) };
+        }
+        continue;
+      }
 
-        if (!res.ok) {
-          console.error("Feed HTTP error:", id, res.status, feedUrl);
-          if (debug) pushDebugUrl(debugStats, id, feed.label, feedUrl, {
-            status: res.status,
-            ok: res.ok,
-            length: xml.length,
-            head: xml.slice(0, 220),
-          });
-          continue;
+      const blocks = parseFeedBlocks(xml);
+
+      if (debug) {
+        const firstBlock = blocks[0] || "";
+        const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
+        const firstLink = firstBlock ? extractLink(firstBlock) : null;
+        const firstCats = firstBlock ? extractCategories(firstBlock) : [];
+
+        debugStats[id] = {
+          url: feed.url,
+          status: res.status,
+          ok: res.ok,
+          length: xml.length,
+          hasItem: xml.toLowerCase().includes("<item"),
+          hasEntry: xml.toLowerCase().includes("<entry"),
+          blocksCount: blocks.length,
+          firstTitle,
+          firstLink,
+          firstCats,
+          head: xml.slice(0, 220),
+          firstBlockHead: firstBlock.slice(0, 220),
+        };
+      }
+
+      for (const block of blocks) {
+        const title = extractTagValue(block, "title");
+        const link = extractLink(block);
+
+        const pubDate =
+          extractTagValue(block, "pubDate") ||
+          extractTagValue(block, "updated") ||
+          extractTagValue(block, "published") ||
+          extractTagValue(block, "dc:date");
+
+        if (!title || !link) continue;
+
+        // ✅ Per-feed include/exclude (aðskilur VB vs Fiskifréttir)
+        const host = safeHost(link);
+        if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
+        if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
+
+        const rssCats = extractCategories(block);
+        const catText = rssCats.join(" ").trim();
+
+        const description =
+          extractTagValue(block, "description") ||
+          extractTagValue(block, "summary") ||
+          extractTagValue(block, "content:encoded") ||
+          "";
+
+        let inferred = inferCategory({
+          sourceId: id,
+          url: link,
+          rssCategories: rssCats,
+          rssCategoryText: catText,
+          title,
+          description
+        });
+
+        let { categoryId, categoryLabel, categoryFrom } = inferred;
+
+        // ✅ Fallback override:
+        // Ef þessi miðill lendir í "oflokkad" => þvinga í "innlent"
+        if (FORCE_INNLENT_IF_UNCLASSIFIED.has(id) && categoryId === "oflokkad") {
+          categoryId = "innlent";
+          categoryLabel = labelFor("innlent");
+          categoryFrom = `fallbackOverride:${id}`;
         }
 
-        const blocks = parseFeedBlocks(xml);
+        if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
+
+        const item = {
+          title,
+          url: link,
+          publishedAt: pubDate ? safeToIso(pubDate) : null,
+          sourceId: id,
+          sourceLabel: feed.label,
+          categoryId,
+          category: categoryLabel
+        };
 
         if (debug) {
-          const firstBlock = blocks[0] || "";
-          const firstTitle = firstBlock ? extractTagValue(firstBlock, "title") : null;
-          const firstLink = firstBlock ? extractLink(firstBlock) : null;
-          const firstCats = firstBlock ? extractCategories(firstBlock) : [];
-
-          pushDebugUrl(debugStats, id, feed.label, feedUrl, {
-            status: res.status,
-            ok: res.ok,
-            length: xml.length,
-            hasItem: xml.toLowerCase().includes("<item"),
-            hasEntry: xml.toLowerCase().includes("<entry"),
-            blocksCount: blocks.length,
-            firstTitle,
-            firstLink,
-            firstCats,
-            head: xml.slice(0, 220),
-            firstBlockHead: firstBlock.slice(0, 220),
-          });
-        }
-
-        for (const block of blocks) {
-          const title = extractTagValue(block, "title");
-          const link = extractLink(block);
-
-          const pubDate =
-            extractTagValue(block, "pubDate") ||
-            extractTagValue(block, "updated") ||
-            extractTagValue(block, "published") ||
-            extractTagValue(block, "dc:date");
-
-          if (!title || !link) continue;
-
-          // ✅ Per-feed include/exclude (aðskilur VB vs Fiskifréttir)
-          const host = safeHost(link);
-          if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
-          if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
-
-          // ✅ Global dedupe
-          if (seenUrls.has(link)) continue;
-          seenUrls.add(link);
-
-          const rssCats = extractCategories(block);
-          const catText = rssCats.join(" ").trim();
-
-          const description =
-            extractTagValue(block, "description") ||
-            extractTagValue(block, "summary") ||
-            extractTagValue(block, "content:encoded") ||
-            "";
-
-          let inferred = inferCategory({
-            sourceId: id,
-            url: link,
-            rssCategories: rssCats,
-            rssCategoryText: catText,
-            title,
-            description
-          });
-
-          let { categoryId, categoryLabel, categoryFrom } = inferred;
-
-          // ✅ Fallback override:
-          // Ef þessi miðill lendir í "oflokkad" => þvinga í "innlent"
-          if (FORCE_INNLENT_IF_UNCLASSIFIED.has(id) && categoryId === "oflokkad") {
-            categoryId = "innlent";
-            categoryLabel = labelFor("innlent");
-            categoryFrom = `fallbackOverride:${id}`;
-          }
-
-          if (activeCats.size > 0 && !activeCats.has(categoryId)) continue;
-
-          const item = {
-            title,
-            url: link,
-            publishedAt: pubDate ? safeToIso(pubDate) : null,
-            sourceId: id,
-            sourceLabel: feed.label,
-            categoryId,
-            category: categoryLabel
+          item.debug = {
+            rssCats,
+            categoryFrom
           };
-
-          if (debug) {
-            item.debug = {
-              rssCats,
-              categoryFrom,
-              feedUrl
-            };
-          }
-
-          items.push(item);
         }
-      } catch (err) {
-        console.error("Feed error:", id, feedUrl, err);
-        if (debug) pushDebugUrl(debugStats, id, feed.label, feedUrl, { error: String(err?.message || err) });
+
+        items.push(item);
       }
+    } catch (err) {
+      console.error("Feed error:", id, err);
+      if (debug) debugStats[id] = { url: feeds[id]?.url, error: String(err?.message || err) };
     }
   }
 
@@ -274,28 +237,6 @@ export async function onRequestGet({ request }) {
 }
 
 /* =========================
-   Fetch helper (timeout)
-   ========================= */
-
-async function fetchWithTimeout(url, init, timeoutMs) {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort("timeout"), timeoutMs);
-
-  try {
-    const res = await fetch(url, { ...(init || {}), signal: controller.signal });
-    clearTimeout(t);
-    return res;
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-function pushDebugUrl(debugStats, id, label, feedUrl, obj) {
-  debugStats[id] = debugStats[id] || { label: label || id, urls: [] };
-  debugStats[id].urls.push({ url: feedUrl, ...obj });
-}
-
-/* =========================
    Parsing helpers (RSS + Atom)
    ========================= */
 
@@ -313,7 +254,7 @@ function extractTagValue(xml, tag) {
   const esc = escapeRegExp(tag);
 
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
@@ -678,10 +619,6 @@ function mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm) {
     if (has("matur")) return "menning";
     if (has("smartland")) return "menning";
     if (has("200 mílur") || has("200 milur")) return "innlent";
-
-    if (has("tækni") || has("taekni") || has("togt")) return "taekni";
-    if (has("vísindi") || has("visindi")) return "visindi";
-
     return null;
   }
 
@@ -838,11 +775,9 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/frettir/innlent")) return "innlent";
     if (u.includes("/frettir/erlent")) return "erlent";
     if (u.includes("/sport/")) return "ithrottir";
-    if (u.includes("/vidskipti/")) return "vidskipti";
     if (u.includes("/matur/")) return "menning";
     if (u.includes("/smartland/")) return "menning";
     if (u.includes("/200milur/")) return "innlent";
-    if (u.includes("/togt/")) return "taekni";
   }
 
   if (sourceId === "ruv") {
