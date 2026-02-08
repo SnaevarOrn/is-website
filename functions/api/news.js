@@ -806,6 +806,7 @@ function mapFromUrl(sourceId, u, titleNorm) {
   // Vísir: many links are /g/<id>/<slug> => no section in URL
   if (sourceId === "visir") {
     if (u.includes("/menning")) return "menning";
+    if (u.includes("/lifid")) return "menning";
     if (u.includes("/gagnryni/")) return "menning";
     if (u.includes("/g/")) {
       const t = String(titleNorm || "");
