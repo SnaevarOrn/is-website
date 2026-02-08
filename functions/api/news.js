@@ -76,6 +76,7 @@ mbl: {
     "https://www.visir.is/rss/skodun",
     "https://www.visir.is/rss/lifid",
     "https://www.visir.is/rss/gagnryni",
+    "https://www.visir.is/rss/tonlist"
   ]
 },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
@@ -807,6 +808,7 @@ function mapFromUrl(sourceId, u, titleNorm) {
   if (sourceId === "visir") {
     if (u.includes("/menning")) return "menning";
     if (u.includes("/lifid")) return "menning";
+    if (u.includes("/tonlist")) return "menning";
     if (u.includes("/gagnryni/")) return "menning";
     if (u.includes("/g/")) {
       const t = String(titleNorm || "");
