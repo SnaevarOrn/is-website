@@ -70,10 +70,12 @@ mbl: {
     "https://www.visir.is/rss/innlent",
     "https://www.visir.is/rss/erlent",
     "https://www.visir.is/rss/ithrottir",
+    "https://www.visir.is/rss/sport",
     "https://www.visir.is/rss/vidskipti",
     "https://www.visir.is/rss/menning",
     "https://www.visir.is/rss/skodun",
-    "https://www.visir.is/rss/lifid"
+    "https://www.visir.is/rss/lifid",
+    "https://www.visir.is/rss/gagnryni",
   ]
 },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
