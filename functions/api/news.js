@@ -66,7 +66,6 @@ mbl: {
     visir: {
   label: "Vísir",
   url: [
-    "https://www.visir.is/rss/allt",
     "https://www.visir.is/rss/innlent",
     "https://www.visir.is/rss/erlent",
     "https://www.visir.is/rss/ithrottir",
@@ -76,7 +75,8 @@ mbl: {
     "https://www.visir.is/rss/skodun",
     "https://www.visir.is/rss/lifid",
     "https://www.visir.is/rss/gagnryni",
-    "https://www.visir.is/rss/tonlist"
+    "https://www.visir.is/rss/tonlist",
+    "https://www.visir.is/rss/allt",
   ]
 },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
@@ -230,6 +230,16 @@ for (const id of activeSources) {
 
         let { categoryId, categoryLabel, categoryFrom } = inferred;
 
+        // ✅ VÍSIR FIX: treystum feedUrl þegar link-ið er /g/... og flokkun mistekst
+if (id === "visir" && categoryId === "oflokkad") {
+  const hinted = visirCategoryFromFeedUrl(feedUrl);
+  if (hinted) {
+    categoryId = hinted;
+    categoryLabel = labelFor(hinted);
+    categoryFrom = "feedUrlHint";
+  }
+}
+
         if (FORCE_INNLENT_IF_UNCLASSIFIED.has(id) && categoryId === "oflokkad") {
           categoryId = "innlent";
           categoryLabel = labelFor("innlent");
@@ -283,6 +293,29 @@ for (const id of activeSources) {
       "cache-control": debug ? "no-store" : "public, max-age=300"
     }
   });
+}
+
+// New
+function visirCategoryFromFeedUrl(feedUrl) {
+  const u = String(feedUrl || "").toLowerCase();
+
+  if (u.includes("/rss/innlent")) return "innlent";
+  if (u.includes("/rss/erlent")) return "erlent";
+
+  if (u.includes("/rss/ithrottir") || u.includes("/rss/sport")) return "ithrottir";
+
+  if (u.includes("/rss/vidskipti")) return "vidskipti";
+
+  if (
+    u.includes("/rss/menning") ||
+    u.includes("/rss/lifid") ||
+    u.includes("/rss/tonlist") ||
+    u.includes("/rss/gagnryni")
+  ) return "menning";
+
+  if (u.includes("/rss/skodun")) return "skodun";
+
+  return null;
 }
 
 /* =========================
