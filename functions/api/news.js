@@ -62,7 +62,20 @@ mbl: {
     "https://www.mbl.is/feeds/200milur/"
   ]
 },
-    visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
+    //visir: { url: "https://www.visir.is/rss/allt",  label: "Vísir" },
+    visir: {
+  label: "Vísir",
+  url: [
+    "https://www.visir.is/rss/allt",
+    "https://www.visir.is/rss/innlent",
+    "https://www.visir.is/rss/erlent",
+    "https://www.visir.is/rss/ithrottir",
+    "https://www.visir.is/rss/vidskipti",
+    "https://www.visir.is/rss/menning",
+    "https://www.visir.is/rss/skodun",
+    "https://www.visir.is/rss/lifid"
+  ]
+},
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
     frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
     heimildin:  { url: "https://heimildin.is/rss/",       label: "Heimildin" },
