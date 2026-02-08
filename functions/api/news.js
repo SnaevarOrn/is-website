@@ -70,6 +70,7 @@ mbl: {
     "https://www.visir.is/rss/erlent",
     "https://www.visir.is/rss/ithrottir",
     "https://www.visir.is/rss/sport",
+    "https://www.visir.is/rss/fotbolti",
     "https://www.visir.is/rss/vidskipti",
     "https://www.visir.is/rss/menning",
     "https://www.visir.is/rss/skodun",
@@ -302,7 +303,7 @@ function visirCategoryFromFeedUrl(feedUrl) {
   if (u.includes("/rss/innlent")) return "innlent";
   if (u.includes("/rss/erlent")) return "erlent";
 
-  if (u.includes("/rss/ithrottir") || u.includes("/rss/sport")) return "ithrottir";
+  if (u.includes("/rss/ithrottir") || ("/rss/fotbolti") || u.includes("/rss/sport")) return "ithrottir";
 
   if (u.includes("/rss/vidskipti")) return "vidskipti";
 
