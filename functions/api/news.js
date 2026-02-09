@@ -83,6 +83,7 @@ mbl: {
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
 
+    akureyri: { url: "https://www.akureyri.net/feed",             label: "Akureyri" },
     bb:         { url: "https://bb.is/feed/",             label: "Bæjarins Besta" },
     bbl:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
     byggingar:   { url: "https://byggingar.is/feed",            label: "Byggingar" },
