@@ -8,7 +8,8 @@
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
     
-    { id: "akureyri",        label: "Akureyri",  domain: "akureyri.net" },
+    { id: "akureyri.is",        label: "Akureyri.is",  domain: "akureyri.is" },
+    { id: "akureyri.net",        label: "Akureyri.net",  domain: "akureyri.net" },
     { id: "bb",        label: "Bæjarins Besta",  domain: "bb.is" },
     { id: "bbl",       label: "Bændablaðið",     domain: "bbl.is" },
     { id: "byggingar", label: "Byggingar",       domain: "byggingar.is" },
