@@ -303,7 +303,7 @@ function visirCategoryFromFeedUrl(feedUrl) {
   if (u.includes("/rss/innlent")) return "innlent";
   if (u.includes("/rss/erlent")) return "erlent";
 
-  if (u.includes("/rss/ithrottir") || ("/rss/fotbolti") || u.includes("/rss/sport")) return "ithrottir";
+  if (u.includes("/rss/ithrottir") || u.includes("/rss/fotbolti") || u.includes("/rss/sport")) return "ithrottir";
 
   if (u.includes("/rss/vidskipti")) return "vidskipti";
 
