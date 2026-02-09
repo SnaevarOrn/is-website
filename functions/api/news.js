@@ -80,10 +80,16 @@ mbl: {
     "https://www.visir.is/rss/allt",
   ]
 },
-    ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
+    ruv: { url: [ "https://www.ruv.is/rss/frettir", label: "RÚV" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
 
-    akureyri: { url: "https://www.akureyri.net/feed",             label: "Akureyri" },
+    akureyri: {
+    label: "Akureyri",
+    url: [
+      "https://www.akureyri.net/feed",
+      "https://www.akureyri.is/feed.xml",
+      ]            
+    },
     bb:         { url: "https://bb.is/feed/",             label: "Bæjarins Besta" },
     bbl:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
     byggingar:   { url: "https://byggingar.is/feed",            label: "Byggingar" },
