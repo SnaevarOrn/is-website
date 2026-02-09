@@ -77,7 +77,7 @@ mbl: {
     "https://www.visir.is/rss/lifid",
     "https://www.visir.is/rss/gagnryni",
     "https://www.visir.is/rss/tonlist",
-    //"https://www.visir.is/rss/allt",
+    "https://www.visir.is/rss/allt",
   ]
 },
     ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
