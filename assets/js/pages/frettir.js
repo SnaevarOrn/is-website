@@ -19,6 +19,7 @@
     { id: "feykir",    label: "Feykir",          domain: "feykir.is" },
     { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
     { id: "heimildin", label: "Heimildin",       domain: "heimildin.is" },
+    { id: "mannlif",    label: "Mannlíf",          domain: "mannlif.is" },
     { id: "midjan",    label: "Miðjan",          domain: "midjan.is" },
     { id: "nutiminn",  label: "Nútíminn",        domain: "nutiminn.is" },
     { id: "sunnlenska", label: "Sunnlenska", domain: "sunnlenska.is" },
