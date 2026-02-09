@@ -80,7 +80,7 @@ mbl: {
     "https://www.visir.is/rss/allt",
   ]
 },
-    ruv: { url: [ "https://www.ruv.is/rss/frettir", label: "RÚV" },
+    ruv: { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
 
     akureyri: {
