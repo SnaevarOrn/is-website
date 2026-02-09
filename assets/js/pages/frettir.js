@@ -20,6 +20,9 @@
     { id: "byggingar", label: "Byggingar",       domain: "byggingar.is" },
     { id: "fiskifrettir", label: "Fiskifréttir", domain: "fiskifrettir.is" },
     { id: "frjalsverslun", label: "Frjáls verslun", domain: "frjalsverslun.is" },
+    { id: "sunnlenska", label: "Sunnlenska", domain: "sunnlenska.is" },
+    { id: "tigull", label: "Tígull", domain: "tigull.is" },
+    { id: "trolli", label: "Trölli", domain: "trolli.is" },
     { id: "grapevine", label: "Grapevine",       domain: "grapevine.is" },
     { id: "visbending", label: "Vísbending",       domain: "visbending.is" },
   ];
