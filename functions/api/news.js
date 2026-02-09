@@ -43,7 +43,7 @@ export async function onRequestGet({ request }) {
   const debug = searchParams.get("debug") === "1";
 
   const feeds = {
-    ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
+    
     //mbl: { url: "https://www.mbl.is/feeds/fp/",        label: "Morgunblaðið" },
 mbl: {
   label: "Morgunblaðið",
@@ -80,7 +80,9 @@ mbl: {
     "https://www.visir.is/rss/allt",
   ]
 },
+    ruv:   { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
     dv:    { url: "https://www.dv.is/feed/",        label: "DV" },
+   
     frettin:    { url: "https://frettin.is/feed/",        label: "Fréttin" },
     heimildin:  { url: "https://heimildin.is/rss/",       label: "Heimildin" },
     grapevine:  { url: "https://grapevine.is/feed/",      label: "Grapevine" },
@@ -94,6 +96,10 @@ mbl: {
     bbl:   { url: "https://www.bbl.is/rss/",            label: "Bændablaðið" },
     byggingar:   { url: "https://byggingar.is/feed",            label: "Byggingar" },
     visbending: { url: "https://visbending.is/rss/",            label: "Vísbending" },
+    sunnlenska: { url: "https://www.sunnlenska.is/feed/",            label: "Sunnlenska" },
+    tigull: { url: "https://tigull.is/feed/",            label: "Tígull" },
+    trolli: { url: "https://trolli.is/feed/",            label: "Trölli" },
+     
     // VB: útilokum allt sem bendir á fiskifrettir.vb.is
     vb: {
       url: "https://www.vb.is/rss",
@@ -119,6 +125,9 @@ mbl: {
     "feykir",
     "fjardarfrettir",
     "midjan",
+    "sunnlenska",
+    "tigull",
+    "trolli",
   ]);
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
