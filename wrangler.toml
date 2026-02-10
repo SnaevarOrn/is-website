@@ -1,0 +1,11 @@
+name = "is-news-cron"
+main = "worker.js"
+compatibility_date = "2026-02-10"
+
+[triggers]
+crons = ["*/5 * * * *"] # 5 mín fresti (mæli með, ekki 1 mín)
+
+[[d1_databases]]
+binding = "DB"
+database_name = "is_news"
+database_id = "REPLACE_ME"
