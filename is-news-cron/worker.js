@@ -1,0 +1,881 @@
+/**
+ * Welcome to Cloudflare Workers! This is your first worker.
+ *
+ * - Run "npm run dev" in your terminal to start a development server
+ * - Open a browser tab at http://localhost:8787/ to see your worker in action
+ * - Run "npm run deploy" to publish your worker
+ *
+ * Learn more at https://developers.cloudflare.com/workers/
+ */
+
+"use strict";
+
+/* =========================
+   Category model
+   ========================= */
+
+const CATEGORY_MAP = [
+  { id: "innlent",   label: "Innlent" },
+  { id: "erlent",    label: "Erlent" },
+  { id: "ithrottir", label: "Íþróttir" },
+  { id: "vidskipti", label: "Viðskipti" },
+  { id: "menning",   label: "Menning" },
+  { id: "skodun",    label: "Skoðun" },
+  { id: "taekni",    label: "Tækni" },
+  { id: "heilsa",    label: "Heilsa" },
+  { id: "umhverfi",  label: "Umhverfi" },
+  { id: "visindi",   label: "Vísindi" },
+  { id: "oflokkad",  label: "Óflokkað" },
+];
+
+const VALID_CATEGORY_IDS = new Set(CATEGORY_MAP.map(c => c.id));
+function labelFor(id) {
+  return (CATEGORY_MAP.find(c => c.id === id)?.label) || "Óflokkað";
+}
+
+/* =========================
+   Feeds config (from your news.js)
+   ========================= */
+
+const FEEDS = {
+  mbl: {
+    label: "Morgunblaðið",
+    url: [
+      "https://www.mbl.is/feeds/fp/",
+      "https://www.mbl.is/feeds/nyjast/",
+      "https://www.mbl.is/feeds/innlent/",
+      "https://www.mbl.is/feeds/erlent/",
+      "https://www.mbl.is/feeds/vidskipti/",
+      "https://www.mbl.is/feeds/menning/",
+      "https://www.mbl.is/feeds/sport/",
+      "https://www.mbl.is/feeds/togt/",
+      "https://www.mbl.is/feeds/smartland/",
+      "https://www.mbl.is/feeds/matur/",
+      "https://www.mbl.is/feeds/ferdalog/",
+      "https://www.mbl.is/feeds/200milur/"
+    ]
+  },
+  visir: {
+    label: "Vísir",
+    url: [
+      "https://www.visir.is/rss/innlent",
+      "https://www.visir.is/rss/erlent",
+      "https://www.visir.is/rss/ithrottir",
+      "https://www.visir.is/rss/sport",
+      "https://www.visir.is/rss/fotbolti",
+      "https://www.visir.is/rss/vidskipti",
+      "https://www.visir.is/rss/menning",
+      "https://www.visir.is/rss/skodun",
+      "https://www.visir.is/rss/lifid",
+      "https://www.visir.is/rss/gagnryni",
+      "https://www.visir.is/rss/tonlist",
+      "https://www.visir.is/rss/allt",
+    ]
+  },
+  ruv: { url: "https://www.ruv.is/rss/frettir", label: "RÚV" },
+  dv:  { url: "https://www.dv.is/feed/", label: "DV" },
+
+  akureyri: {
+    label: "Akureyri",
+    url: ["https://www.akureyri.net/feed", "https://www.akureyri.is/feed.xml"]
+  },
+
+  bb: { url: "https://bb.is/feed/", label: "Bæjarins Besta" },
+  bbl: { url: "https://www.bbl.is/rss/", label: "Bændablaðið" },
+  byggingar: { url: "https://byggingar.is/feed", label: "Byggingar" },
+  eyjafrettir: { url: "https://eyjafrettir.is/feed/", label: "Eyjafréttir" },
+  fjardarfrettir: { url: "https://www.fjardarfrettir.is/feed", label: "Fjarðarfréttir" },
+  frjalsverslun: { url: "https://vb.is/rss/frjals-verslun/", label: "Frjáls verslun" },
+  frettin: { url: "https://frettin.is/feed/", label: "Fréttin" },
+  feykir: { url: "https://www.feykir.is/feed", label: "Feykir" },
+  heimildin: { url: "https://heimildin.is/rss/", label: "Heimildin" },
+  grapevine: { url: "https://grapevine.is/feed/", label: "Grapevine" },
+  mannlif: { url: "https://mannlif.is/rss/", label: "Mannlíf" },
+  midjan: { url: "http://www.midjan.is/feed/", label: "Miðjan" },
+  nutiminn: { url: "https://www.nutiminn.is/feed/", label: "Nútíminn" },
+  sunnlenska: { url: "https://www.sunnlenska.is/feed/", label: "Sunnlenska" },
+  tigull: { url: "https://tigull.is/feed/", label: "Tígull" },
+  trolli: { url: "https://trolli.is/feed/", label: "Trölli" },
+  visbending: { url: "https://visbending.is/rss/", label: "Vísbending" },
+
+  vb: {
+    url: "https://www.vb.is/rss",
+    label: "Viðskiptablaðið",
+    excludeLinkHosts: ["fiskifrettir.vb.is"]
+  },
+  fiskifrettir: {
+    url: "https://fiskifrettir.vb.is/rss/",
+    label: "Fiskifréttir",
+    includeLinkHosts: ["fiskifrettir.vb.is"]
+  },
+};
+
+const FORCE_INNLENT_IF_UNCLASSIFIED = new Set([
+  "bb","bbl","byggingar","eyjafrettir","fiskifrettir","frjalsverslun",
+  "feykir","fjardarfrettir","midjan","sunnlenska","tigull","trolli",
+]);
+
+/* =========================
+   Worker entrypoints
+   ========================= */
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    // Health
+    if (url.pathname === "/" || url.pathname === "/health") {
+      return new Response("is-news-cron alive");
+    }
+
+    // Cached API (reads from D1)
+    if (url.pathname === "/news") {
+      return handleNewsApi(request, env);
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runCron(env, event));
+  }
+};
+
+/* =========================
+   Cron job
+   ========================= */
+
+async function runCron(env, event) {
+  const started = new Date().toISOString();
+  console.log("🕒 runCron start", started, event?.cron);
+
+  // Safety: one cron run at a time (best-effort). If you want strict locking, add Durable Object.
+  // Here we just proceed.
+
+  const cutoffDays = 14; // parse/insert only within last N days when publishedAt exists
+  const cutoffMs = cutoffDays * 24 * 60 * 60 * 1000;
+  const cutoffIso = new Date(Date.now() - cutoffMs).toISOString();
+
+  let fetchedFeeds = 0, http304 = 0, http200 = 0, inserted = 0, skippedOld = 0, errors = 0;
+
+  for (const sourceId of Object.keys(FEEDS)) {
+    const feed = FEEDS[sourceId];
+    const urls = Array.isArray(feed.url) ? feed.url : [feed.url];
+
+    for (const feedUrl of urls) {
+      try {
+        fetchedFeeds++;
+
+        const state = await env.DB.prepare(
+          "SELECT etag, last_modified FROM feed_urls WHERE feed_url = ?"
+        ).bind(feedUrl).first();
+
+        const headers = {
+          "User-Agent": "is.is news cron",
+          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
+        };
+        if (state?.etag) headers["If-None-Match"] = state.etag;
+        if (state?.last_modified) headers["If-Modified-Since"] = state.last_modified;
+
+        const res = await fetch(feedUrl, { headers });
+
+        if (res.status === 304) {
+          http304++;
+          await upsertFeedState(env, { feedUrl, sourceId, sourceLabel: feed.label, status: 304 });
+          continue;
+        }
+
+        const xml = await res.text();
+
+        if (!res.ok) {
+          errors++;
+          console.error("Feed HTTP error:", sourceId, feedUrl, res.status, xml.slice(0, 180));
+          await upsertFeedState(env, { feedUrl, sourceId, sourceLabel: feed.label, status: res.status });
+          continue;
+        }
+
+        http200++;
+
+        await upsertFeedState(env, {
+          feedUrl,
+          sourceId,
+          sourceLabel: feed.label,
+          status: res.status,
+          etag: res.headers.get("etag"),
+          lastModified: res.headers.get("last-modified"),
+        });
+
+        const blocks = parseFeedBlocks(xml);
+
+        for (const block of blocks) {
+          const title = extractTagValue(block, "title");
+          const linkRaw = extractLink(block);
+          if (!title || !linkRaw) continue;
+
+          // include/exclude host rules
+          const host = safeHost(linkRaw);
+          if (feed.includeLinkHosts?.length && !feed.includeLinkHosts.includes(host)) continue;
+          if (feed.excludeLinkHosts?.length && feed.excludeLinkHosts.includes(host)) continue;
+
+          const pubDate =
+            extractTagValue(block, "pubDate") ||
+            extractTagValue(block, "updated") ||
+            extractTagValue(block, "published") ||
+            extractTagValue(block, "dc:date");
+
+          const publishedAt = pubDate ? safeToIso(pubDate) : null;
+
+          if (publishedAt && publishedAt < cutoffIso) {
+            skippedOld++;
+            continue;
+          }
+
+          const description =
+            extractTagValue(block, "description") ||
+            extractTagValue(block, "summary") ||
+            extractTagValue(block, "content:encoded") ||
+            "";
+
+          const rssCats = extractCategories(block);
+          const catText = rssCats.join(" ").trim();
+
+          let inferred = inferCategory({
+            sourceId,
+            url: linkRaw,
+            rssCategories: rssCats,
+            rssCategoryText: catText,
+            title,
+            description
+          });
+
+          let { categoryId, categoryLabel, categoryFrom } = inferred;
+
+          // Vísir feedUrl hint fallback (your fix)
+          if (sourceId === "visir" && categoryId === "oflokkad") {
+            const hinted = visirCategoryFromFeedUrl(feedUrl);
+            if (hinted) {
+              categoryId = hinted;
+              categoryLabel = labelFor(hinted);
+              categoryFrom = "feedUrlHint";
+            }
+          }
+
+          if (FORCE_INNLENT_IF_UNCLASSIFIED.has(sourceId) && categoryId === "oflokkad") {
+            categoryId = "innlent";
+            categoryLabel = labelFor("innlent");
+            categoryFrom = `fallbackOverride:${sourceId}`;
+          }
+
+          const canonical = canonicalizeUrl(linkRaw);
+          const urlHash = await sha1Hex(canonical);
+
+          const fetchedAt = new Date().toISOString();
+
+          // Insert idempotently (de-dupe is DB-level: url_hash PK + url UNIQUE)
+          const stmt = env.DB.prepare(`
+            INSERT OR IGNORE INTO articles
+              (url_hash, url, title, description, published_at, source_id, source_label, category_id, category_label, feed_url, fetched_at, raw_categories)
+            VALUES
+              (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            urlHash,
+            canonical,
+            String(title).trim(),
+            String(description || "").trim(),
+            publishedAt,
+            sourceId,
+            FEEDS[sourceId]?.label || sourceId,
+            categoryId,
+            categoryLabel,
+            feedUrl,
+            fetchedAt,
+            rssCats.length ? JSON.stringify(rssCats) : null
+          );
+
+          const r = await stmt.run();
+          // D1 returns {success, meta.changes} – changes==1 means inserted
+          if (r?.meta?.changes === 1) {
+            inserted++;
+          }
+        }
+      } catch (e) {
+        errors++;
+        console.error("Feed error:", sourceId, feedUrl, String(e?.message || e));
+        await upsertFeedState(env, { feedUrl, sourceId, sourceLabel: FEEDS[sourceId]?.label, status: 0 });
+      }
+    }
+  }
+
+  console.log("✅ runCron done", {
+    fetchedFeeds, http200, http304, inserted, skippedOld, errors
+  });
+}
+
+async function upsertFeedState(env, { feedUrl, sourceId, sourceLabel, status, etag, lastModified }) {
+  const now = new Date().toISOString();
+  await env.DB.prepare(`
+    INSERT INTO feed_urls (feed_url, source_id, source_label, etag, last_modified, last_status, last_fetch_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(feed_url) DO UPDATE SET
+      source_id=excluded.source_id,
+      source_label=excluded.source_label,
+      etag=COALESCE(excluded.etag, feed_urls.etag),
+      last_modified=COALESCE(excluded.last_modified, feed_urls.last_modified),
+      last_status=excluded.last_status,
+      last_fetch_at=excluded.last_fetch_at
+  `).bind(
+    feedUrl,
+    sourceId,
+    sourceLabel || sourceId,
+    etag || null,
+    lastModified || null,
+    Number(status || 0),
+    now
+  ).run();
+}
+
+/* =========================
+   API: read from D1 (+ search)
+   ========================= */
+
+async function handleNewsApi(request, env) {
+  const { searchParams } = new URL(request.url);
+
+  const sources = (searchParams.get("sources") || "").split(",").filter(Boolean);
+  const catsParam = (searchParams.get("cats") || "").split(",").filter(Boolean);
+  const limit = clampInt(searchParams.get("limit"), 1, 360, 50);
+  const q = (searchParams.get("q") || "").trim();
+  const debug = searchParams.get("debug") === "1";
+
+  const activeSources = sources.length ? sources : [];
+  const activeCats = new Set((catsParam.length ? catsParam : []).filter(id => VALID_CATEGORY_IDS.has(id)));
+
+  // Build WHERE
+  const wh = [];
+  const args = [];
+
+  if (activeSources.length) {
+    wh.push(`source_id IN (${activeSources.map(() => "?").join(",")})`);
+    args.push(...activeSources);
+  }
+  if (activeCats.size) {
+    const a = [...activeCats];
+    wh.push(`category_id IN (${a.map(() => "?").join(",")})`);
+    args.push(...a);
+  }
+
+  let rows = [];
+
+  if (q) {
+    // FTS query
+    const where = wh.length ? `AND ${wh.join(" AND ")}` : "";
+    // MATCH query – keep it simple; you can refine later (prefix, stemming, etc.)
+    const stmt = env.DB.prepare(`
+      SELECT a.*
+      FROM articles_fts f
+      JOIN articles a ON a.rowid = f.rowid
+      WHERE articles_fts MATCH ?
+      ${where}
+      ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
+      LIMIT ?
+    `);
+
+    rows = (await stmt.bind(q, ...args, limit).all()).results || [];
+  } else {
+    const where = wh.length ? `WHERE ${wh.join(" AND ")}` : "";
+    const stmt = env.DB.prepare(`
+      SELECT *
+      FROM articles
+      ${where}
+      ORDER BY COALESCE(published_at, fetched_at) DESC
+      LIMIT ?
+    `);
+
+    rows = (await stmt.bind(...args, limit).all()).results || [];
+  }
+
+  const items = rows.map(r => ({
+    title: r.title,
+    url: r.url,
+    publishedAt: r.published_at || null,
+    sourceId: r.source_id,
+    sourceLabel: r.source_label,
+    categoryId: r.category_id,
+    category: r.category_label
+  }));
+
+  const availableSet = new Set(items.map(x => x.categoryId).filter(Boolean));
+  availableSet.add("oflokkad");
+
+  const payload = debug ? { items, availableCategories: [...availableSet], debug: { q, sources: activeSources, cats: [...activeCats] } }
+                        : { items, availableCategories: [...availableSet] };
+
+  return new Response(JSON.stringify(payload), {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "public, max-age=60"
+    }
+  });
+}
+
+/* =========================
+   URL canonicalization + hashing (de-dupe core)
+   ========================= */
+
+function canonicalizeUrl(u) {
+  try {
+    const url = new URL(String(u).trim());
+    url.hash = "";
+
+    // Drop common tracking params
+    const drop = new Set([
+      "utm_source","utm_medium","utm_campaign","utm_term","utm_content",
+      "fbclid","gclid","yclid","mc_cid","mc_eid"
+    ]);
+    for (const k of [...url.searchParams.keys()]) {
+      if (drop.has(k.toLowerCase())) url.searchParams.delete(k);
+    }
+
+    // Normalize host + trailing slash
+    url.host = url.host.toLowerCase();
+
+    // remove trailing slash except root
+    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
+      url.pathname = url.pathname.slice(0, -1);
+    }
+
+    // sort params for stability
+    const entries = [...url.searchParams.entries()].sort((a,b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+    url.search = "";
+    for (const [k,v] of entries) url.searchParams.append(k, v);
+
+    return url.toString();
+  } catch {
+    return String(u || "").trim();
+  }
+}
+
+async function sha1Hex(str) {
+  const data = new TextEncoder().encode(String(str));
+  const buf = await crypto.subtle.digest("SHA-1", data);
+  const bytes = new Uint8Array(buf);
+  let out = "";
+  for (const b of bytes) out += b.toString(16).padStart(2, "0");
+  return out;
+}
+
+/* =========================
+   Parsing helpers (RSS + Atom)
+   ========================= */
+
+function parseFeedBlocks(xml) {
+  const itemRe = /<(?:\w+:)?item\b[^>]*>[\s\S]*?<\/(?:\w+:)?item>/gi;
+  const items = [...String(xml || "").matchAll(itemRe)].map(m => m[0]);
+  if (items.length) return items;
+
+  const entryRe = /<(?:\w+:)?entry\b[^>]*>[\s\S]*?<\/(?:\w+:)?entry>/gi;
+  return [...String(xml || "").matchAll(entryRe)].map(m => m[0]);
+}
+
+function extractTagValue(xml, tag) {
+  const src = String(xml || "");
+  const esc = escapeRegExp(tag);
+
+  const re = new RegExp(
+    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    "i"
+  );
+
+  const m = src.match(re);
+  return m ? decodeEntities(m[1]).trim() : null;
+}
+
+function extractLink(block) {
+  const src = String(block || "");
+
+  const mHref = src.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
+  if (mHref?.[1]) return decodeEntities(mHref[1]).trim();
+
+  const m = src.match(/<link\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+  if (m?.[1]) return decodeEntities(m[1]).trim();
+
+  return null;
+}
+
+function extractCategories(block) {
+  const src = String(block || "");
+  const out = [];
+
+  const reRss = /<category\b[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/category>/gi;
+  let m;
+  while ((m = reRss.exec(src)) !== null) {
+    const v = decodeEntities(m[1] || "").trim();
+    if (v) out.push(v);
+  }
+
+  const reAtom = /<category\b[^>]*\bterm=["']([^"']+)["'][^>]*\/?>/gi;
+  while ((m = reAtom.exec(src)) !== null) {
+    const v = decodeEntities(m[1] || "").trim();
+    if (v) out.push(v);
+  }
+
+  return out;
+}
+
+function safeToIso(dateString) {
+  const d = new Date(dateString);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function safeHost(url) {
+  try { return new URL(url).host.toLowerCase(); } catch { return ""; }
+}
+
+function decodeEntities(s) {
+  let str = String(s || "");
+  str = str
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&apos;", "'")
+    .replaceAll("&nbsp;", " ")
+    .replaceAll("&ndash;", "–")
+    .replaceAll("&mdash;", "—")
+    .replaceAll("&ndash;", "–")
+    .replaceAll("&mdash;", "—");
+
+  str = str.replace(/&#(\d+);/g, (_, n) => {
+    const code = Number(n);
+    return Number.isFinite(code) ? String.fromCodePoint(code) : _;
+  });
+
+  str = str.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+    const code = parseInt(hex, 16);
+    return Number.isFinite(code) ? String.fromCodePoint(code) : _;
+  });
+
+  return str;
+}
+
+function escapeRegExp(s) {
+  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function clampInt(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, Math.trunc(n)));
+}
+
+/* =========================
+   Vísir feedUrl hint (your fix)
+   ========================= */
+
+function visirCategoryFromFeedUrl(feedUrl) {
+  const u = String(feedUrl || "").toLowerCase();
+
+  if (u.includes("/rss/innlent")) return "innlent";
+  if (u.includes("/rss/erlent")) return "erlent";
+
+  if (u.includes("/rss/ithrottir") || u.includes("/rss/fotbolti") || u.includes("/rss/sport")) return "ithrottir";
+  if (u.includes("/rss/vidskipti")) return "vidskipti";
+
+  if (
+    u.includes("/rss/menning") ||
+    u.includes("/rss/lifid") ||
+    u.includes("/rss/tonlist") ||
+    u.includes("/rss/gagnryni")
+  ) return "menning";
+
+  if (u.includes("/rss/skodun")) return "skodun";
+  return null;
+}
+
+/* =========================
+   Categorization (ported from your code)
+   ========================= */
+
+function normalizeText(s) {
+  const str = String(s || "").toLowerCase();
+  const noMarks = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return noMarks
+    .replaceAll("ð", "d")
+    .replaceAll("þ", "th")
+    .replaceAll("æ", "ae")
+    .replaceAll("ö", "o");
+}
+
+function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title, description }) {
+  const host = safeHost(url);
+
+  const hinted = classifyWithSourceHints({
+    host,
+    url,
+    title,
+    description,
+    item: { categories: rssCategories }
+  });
+
+  if (hinted && VALID_CATEGORY_IDS.has(hinted)) {
+    return { categoryId: hinted, categoryLabel: labelFor(hinted), categoryFrom: "sourceHints" };
+  }
+
+  const u = normalizeText(url);
+  const t = normalizeText(title);
+
+  const rssTermsNorm = (rssCategories || []).map(normalizeText).filter(Boolean);
+  const rssNormJoined = normalizeText(rssCategoryText);
+
+  const fromRss = mapFromRssCategories(sourceId, rssTermsNorm, rssNormJoined);
+  if (fromRss) return { categoryId: fromRss, categoryLabel: labelFor(fromRss), categoryFrom: "rss" };
+
+  const fromUrl = mapFromUrl(sourceId, u, t);
+  if (fromUrl) return { categoryId: fromUrl, categoryLabel: labelFor(fromUrl), categoryFrom: "url" };
+
+  const fromText = mapFromText(rssNormJoined) || mapFromText(t);
+  const categoryId = fromText || "oflokkad";
+  return { categoryId, categoryLabel: labelFor(categoryId), categoryFrom: fromText ? "keywords" : "default" };
+}
+
+function norm(s){
+  return String(s || "")
+    .replace(/&nbsp;|&#160;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function extractFeedCategories(item){
+  const cats = [];
+  if (Array.isArray(item?.categories)) cats.push(...item.categories);
+  if (typeof item?.category === "string") cats.push(item.category);
+
+  const out = [];
+  const seen = new Set();
+  for (const c of cats){
+    const cc = String(c || "").trim();
+    if (!cc) continue;
+    const key = norm(cc);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(cc);
+  }
+  return out;
+}
+
+function mapBbCategoryToBucket(feedCats){
+  const joined = norm(feedCats.join(" | "));
+  if (!joined) return null;
+  if (joined.includes("aðsendar greinar")) return "skodun";
+  if (joined.includes("menning")) return "menning";
+  if (joined.includes("samgöngur")) return "innlent";
+  if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
+  if (joined.includes("vestfir")) return "innlent";
+  return null;
+}
+
+function mapNutiminnCategoryToBucket(feedCats){
+  const joined = norm(feedCats.join(" | "));
+  if (!joined) return null;
+  if (joined.includes("aðsendar")) return "skodun";
+  if (joined.includes("brotkast")) return "menning";
+  if (joined.includes("fréttir")) return "innlent";
+  if (joined.includes("forsíða")) return null;
+  if (joined.includes("í fókus") || joined.includes("i fokus")) return "menning";
+  if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
+  return null;
+}
+
+function mapBblUrlToBucket(uNorm){
+  if (!uNorm) return null;
+  if (uNorm.includes("/skodun/")) return "skodun";
+  if (uNorm.includes("/folk/")) return "menning";
+  if (uNorm.includes("/frettir/")) return "innlent";
+  return null;
+}
+
+function classifyWithSourceHints({ host, url, title, description, item }){
+  const h = norm(host);
+  const u = norm(url);
+  const t = norm(title);
+  const d = norm(description);
+  const feedCats = extractFeedCategories(item);
+  const fcNorm = norm(feedCats.join(" | "));
+
+  if (h === "bb.is" || h.endsWith(".bb.is")){
+    const bb = mapBbCategoryToBucket(feedCats);
+    if (bb) return bb;
+    if (t.includes(" skrifar") || (t.includes("|") && t.includes("skrifar"))) return "skodun";
+    return null;
+  }
+
+  if (h === "www.nutiminn.is" || h === "nutiminn.is" || h.endsWith(".nutiminn.is")){
+    const nm = mapNutiminnCategoryToBucket(feedCats);
+    if (nm) return nm;
+    if (fcNorm.includes("aðsendar")) return "skodun";
+    if (t.includes(" pistill") || t.includes(" leiðari") || t.includes(" skrifar")) return "skodun";
+    return null;
+  }
+
+  if (h === "www.bbl.is" || h === "bbl.is" || h.endsWith(".bbl.is")){
+    const byUrl = mapBblUrlToBucket(u);
+    if (byUrl) return byUrl;
+    if (fcNorm.includes("skodun")) return "skodun";
+    if (fcNorm.includes("folk")) return "menning";
+    if (fcNorm.includes("frettir")) return "innlent";
+    return null;
+  }
+
+  if (h === "heimildin.is" || h.endsWith(".heimildin.is") || h === "stundin.is" || h.endsWith(".stundin.is")){
+    if (t.includes(" skrifar") || t.includes(" pistill") || t.includes(" leiðari")) return "skodun";
+    if (d.includes(" kemur fram í pistli") || d.includes(" skrifar") || d.includes(" leiðari")) return "skodun";
+    if (t.includes("kvikmynd") || t.includes("leikhús") || t.includes("listasafn") || t.includes("menning")) return "menning";
+    if (t.includes("homo ") || t.includes("neanderd") || t.includes("forn") || t.includes("vísind") || t.includes("rannsókn")) return "visindi";
+    if (t.includes("loftslag") || t.includes("mengun") || t.includes("náttúru") || t.includes("umhverf")) return "umhverfi";
+    return null;
+  }
+
+  if (h === "feykir.is" || h.endsWith(".feykir.is")){
+    if (t.includes(" skrifar") || (t.includes("|") && t.includes("skrifar"))) return "skodun";
+    if (t.includes("knattspyrn") || t.includes("körfu") || t.includes("bonus deild") ||
+        t.includes("leikur") || t.includes("jafntefli") || t.includes("sigur") ||
+        d.includes("knattspyrn") || d.includes("körfu") || d.includes("bonus deild")) return "ithrottir";
+    if (t.includes("matgæð") || t.includes("uppskrift") || t.includes("mælir með") || d.includes("uppskrift")) return "menning";
+    if (t.includes("byggðalín") || t.includes("landsnet") || t.includes("raforku") || t.includes("flutningskerfi")) return "innlent";
+    if (t.includes("sjókvía") || t.includes("lagareldi") || t.includes("eldis") || d.includes("sjókvía")) return "umhverfi";
+    return null;
+  }
+
+  return null;
+}
+
+function mapFromRssCategories(sourceId, termsNorm, joinedNorm) {
+  if ((!termsNorm || termsNorm.length === 0) && !joinedNorm) return null;
+
+  const bySource = mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm);
+  if (bySource) return bySource;
+
+  const generic = mapFromText(termsNorm.join(" ")) || mapFromText(joinedNorm);
+  return generic || null;
+}
+
+function mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm) {
+  const has = (needle) => termsNorm.includes(normalizeText(needle)) || String(joinedNorm || "").includes(normalizeText(needle));
+
+  if (sourceId === "mbl") {
+    if (has("innlent")) return "innlent";
+    if (has("erlent")) return "erlent";
+    if (has("íþróttir") || has("ithrottir")) return "ithrottir";
+    if (has("viðskipti") || has("vidskipti")) return "vidskipti";
+    if (has("matur")) return "menning";
+    if (has("smartland")) return "menning";
+    if (has("200 mílur") || has("200 milur")) return "innlent";
+    return null;
+  }
+
+  if (sourceId === "bbl") {
+    if (has("frettir")) return "innlent";
+    if (has("skodun")) return "skodun";
+    if (has("folk")) return "menning";
+    return null;
+  }
+
+  return null;
+}
+
+function mapFromText(x) {
+  if (!x) return null;
+
+  const sportWords = ["sport","ithrott","fotbolta","fotbolti","handbolti","nba","korfubolti","tennis","motorsport","formula","ufc","olymp","olympi","marathon","darts","hnefaleik","breidablik","valur","tindastoll","chess","nfl","premier league","champions league","europa league","enska urvalsdeild","enskar urvalsdeild","enski boltinn","enskur boltinn","ronaldo","messi","mourinho","guardiola","klopp","arsenal","man city","manchester city","man utd","manchester united","liverpool","chelsea","tottenham","barcelona","real madrid","atletico","psg","bayern","dortmund","juventus","milan","inter","433","4-3-3","4 3 3"];
+  const bizWords = ["vidskip","business","markad","fjarmal","kaupholl","verdbref","gengi","vext","hagkerfi","verdbolga"];
+  const cultureWords = ["menning","folk","lifid","list","tonlist","kvikmynd","bok","leikhus","sjonvarp","utvarp","svidslist","matur","kokte","smartland","samkvaem","daisy","tipsy","tattuin","tattoo","stjarna","model","fegurd","afthrey"];
+  const opinionWords = ["skodun","comment","pistill","leidari","grein","ummal","dalkur","kronika","nedanmals","adsendar","aðsendar"];
+  const foreignWords = ["erlent","foreign","bandarisk","usa","iran","italia","evropa","world","alheim","althjod","trump","musk","russland","kina","japan","ukraina","bresk","bandarikin","epstein"];
+  const localWords = ["innlent","island","reykjavik","hafnarfjord","akureyri","reykjanes","kopavog","laugarvatn","vestmannaeyj","landsbank","hs ork","logregl","rettar","daemd","dom","handtek","sakfelld"];
+  const techWords = ["taekni","tolva","forrit","forritun","gervigreind","ai","netoryggi","oryggi","snjallsimi","apple","google","microsoft","raf"];
+  const healthWords = ["heilsa","laekn","sjuk","sjukdom","lyf","spitali","naering","smit","veira"];
+  const envWords = ["umhverfi","loftslag","mengun","natur","jokull","eldgos","skjalfti","vedur","haf","fisk","skograekt","fornleif"];
+  const sciWords = ["visindi","rannsokn","geim","edlis","efna","liffraedi","stjornufraedi","stjornukerfi","tungl","sol"];
+
+  if (sportWords.some(w => x.includes(w))) return "ithrottir";
+  if (bizWords.some(w => x.includes(w))) return "vidskipti";
+  if (cultureWords.some(w => x.includes(w))) return "menning";
+  if (opinionWords.some(w => x.includes(w))) return "skodun";
+  if (techWords.some(w => x.includes(w))) return "taekni";
+  if (healthWords.some(w => x.includes(w))) return "heilsa";
+  if (envWords.some(w => x.includes(w))) return "umhverfi";
+  if (sciWords.some(w => x.includes(w))) return "visindi";
+  if (foreignWords.some(w => x.includes(w))) return "erlent";
+  if (localWords.some(w => x.includes(w))) return "innlent";
+
+  return null;
+}
+
+function mapFromUrl(sourceId, u, titleNorm) {
+  if (u.includes("/sport") || u.includes("/ithrott")) return "ithrottir";
+  if (u.includes("/vidskip") || u.includes("/business") || u.includes("/markad")) return "vidskipti";
+  if (u.includes("/menning") || u.includes("/lifid") || u.includes("/list") || u.includes("/folk")) return "menning";
+  if (u.includes("/skodun") || u.includes("/pistill") || u.includes("/comment")) return "skodun";
+  if (u.includes("/taekni") || u.includes("/tech")) return "taekni";
+  if (u.includes("/heilsa") || u.includes("/health")) return "heilsa";
+  if (u.includes("/umhverfi") || u.includes("/environment")) return "umhverfi";
+  if (u.includes("/visindi") || u.includes("/science")) return "visindi";
+  if (u.includes("/erlent")) return "erlent";
+  if (u.includes("/innlent")) return "innlent";
+
+  if (sourceId === "vb") {
+    if (u.includes("/frettir/")) return "vidskipti";
+    if (u.includes("/skodun/")) return "skodun";
+    if (u.includes("/folk/")) return "menning";
+    if (u.includes("/eftir-vinnu/")) {
+      const t = String(titleNorm || "");
+      if (t.includes("taekni") || t.includes("iphone") || t.includes("simi") || t.includes("ai") || t.includes("gervigreind")) return "taekni";
+      return "menning";
+    }
+  }
+
+  if (sourceId === "dv") {
+    if (u.includes("/pressan")) return "innlent";
+    if (u.includes("/fokus")) return "menning";
+    if (u.includes("433.is") || u.includes("/433") || u.includes("4-3-3")) return "ithrottir";
+  }
+
+  if (sourceId === "visir") {
+    if (u.includes("/menning") || u.includes("/lifid") || u.includes("/tonlist") || u.includes("/gagnryni/")) return "menning";
+    if (u.includes("/g/")) {
+      const t = String(titleNorm || "");
+      if (t.includes("ronaldo") || t.includes("messi") || t.includes("mourinho") ||
+          t.includes("arsenal") || t.includes("man city") || t.includes("premier") ||
+          t.includes("olymp") || t.includes("darts") || t.includes("undanurslit")) return "ithrottir";
+    }
+    if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
+    if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
+  }
+
+  if (sourceId === "mbl") {
+    if (u.includes("/frettir/innlent")) return "innlent";
+    if (u.includes("/frettir/erlent")) return "erlent";
+    if (u.includes("/sport/")) return "ithrottir";
+    if (u.includes("/matur/") || u.includes("/ferdalog/") || u.includes("/smartland/")) return "menning";
+    if (u.includes("/200milur/")) return "innlent";
+  }
+
+  if (sourceId === "ruv") {
+    if (u.includes("/ithrottir")) return "ithrottir";
+    if (u.includes("/vidskipti")) return "vidskipti";
+    if (u.includes("/menning")) return "menning";
+    if (u.includes("/erlent")) return "erlent";
+    if (u.includes("/innlent")) return "innlent";
+  }
+
+  if (sourceId === "bbl") {
+    if (u.includes("/skodun/")) return "skodun";
+    if (u.includes("/folk/")) return "menning";
+    if (u.includes("/frettir/")) return "innlent";
+  }
+
+  return null;
+}
