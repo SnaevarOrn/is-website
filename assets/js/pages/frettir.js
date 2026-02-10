@@ -69,8 +69,6 @@
     readSet.add(url);
     saveReadSet(readSet);
   }
-  // NEW frettir 2
-  const NEWS_API = window.FRETTIR_API || "/api/news";
   
   const $ = (sel) => document.querySelector(sel);
 
