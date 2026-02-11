@@ -172,7 +172,7 @@ async function runCron(env, event) {
   const started = new Date().toISOString();
   console.log("🕒 runCron start", started, event?.cron);
 
-  const cutoffDays = 14;
+  const cutoffDays = 31;
   const cutoffIso = new Date(Date.now() - cutoffDays * 86400e3).toISOString();
 
   let fetchedFeeds = 0, http304 = 0, http200 = 0, inserted = 0, skippedOld = 0, errors = 0;
