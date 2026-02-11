@@ -373,7 +373,7 @@ async function handleNewsApi(request, env) {
   const catsParam = (searchParams.get("cats") || "")
     .split(",").map((s) => s.trim()).filter(Boolean);
 
-  const limit = clampInt(searchParams.get("limit"), 1, 360, 50);
+  const limit = clampInt(searchParams.get("limit"), 1, 900, 50);
   const q = (searchParams.get("q") || "").trim();
   const debug = searchParams.get("debug") === "1";
 
