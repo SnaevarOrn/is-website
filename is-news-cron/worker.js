@@ -190,10 +190,12 @@ async function runCron(env, event) {
         ).bind(feedUrl).first();
 
         const headers = {
-          "User-Agent": "is.is news cron",
-          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7"
-        };
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+  "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
+  "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
+  "Cache-Control": "no-cache",
+  "Pragma": "no-cache"
+};
 
         if (state?.etag) headers["If-None-Match"] = state.etag;
         if (state?.last_modified) headers["If-Modified-Since"] = state.last_modified;
