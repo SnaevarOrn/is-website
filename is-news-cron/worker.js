@@ -441,13 +441,22 @@ __name(parseFeedBlocks, "parseFeedBlocks");
 function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
+
+  // matches: <title>...</title> and <content:encoded>...</content:encoded>
+  // handles optional CDATA
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\$begin:math:display$CDATA\\\\\[\)\?\(\[\\\\s\\\\S\]\*\?\)\(\?\:\\$end:math:display$\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>` +
+      `(?:<!\\[CDATA\\[)?` +
+      `([\\s\\S]*?)` +
+      `(?:\\]\\]>)?` +
+    `<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
+
   const m = src.match(re);
   return m ? decodeEntities(m[1]).trim() : null;
 }
+
 __name(extractTagValue, "extractTagValue");
 
 function extractLink(block) {
