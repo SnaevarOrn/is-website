@@ -442,6 +442,7 @@ function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
+  // CDATA + normal text
   const re = new RegExp(
     `<(?:\\w+:)?${esc}\\b[^>]*>` +
       `(?:<!\\[CDATA\\[)?` +
