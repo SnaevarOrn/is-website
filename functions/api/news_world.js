@@ -69,6 +69,8 @@ const FEEDS = {
   ars:      { url: "https://feeds.arstechnica.com/arstechnica/index",   label: "Ars Technica" },
   wired:    { url: "https://www.wired.com/feed/rss",                    label: "WIRED" },
   natgeo:   { url: "https://www.nationalgeographic.com/content/natgeo/en_us/index.rss", label: "NatGeo" },
+  aftonbladet:    { url: "g",                    label: "Aftonbladet" },
+  t3:    { url: "https://www.t3.com/feeds.xml",                    label: "T3" },
 };
 
 /* =========================
