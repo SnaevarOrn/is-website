@@ -14,6 +14,8 @@
   { id: "verge",     label: "The Verge",     domain: "theverge.com" },
   { id: "ars",       label: "Ars Technica",  domain: "arstechnica.com" },
   { id: "wired",     label: "WIRED",         domain: "wired.com" },
+  { id: "t3",     label: "T3",         domain: "t3.com" },
+  { id: "hackaday",     label: "Hackaday",         domain: "hackaday.com" },
 ];
 
   // We reuse the same category ids as backend for simplicity
