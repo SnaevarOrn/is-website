@@ -1,4 +1,4 @@
-// worker.js (FULL, copy/paste-ready)
+// worker.js (copy/paste ready)
 
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
@@ -7,7 +7,7 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
    CORS
    ========================= */
 
-// Lock down if you want:
+// Lock down later if you want:
 // const CORS_ALLOW_ORIGIN = "https://xn--s-iga.is";
 const CORS_ALLOW_ORIGIN = "*";
 
@@ -130,12 +130,22 @@ var FEEDS = {
 };
 
 var FORCE_INNLENT_IF_UNCLASSIFIED = new Set([
-  "bb","bbl","byggingar","eyjafrettir","fiskifrettir","frjalsverslun","feykir",
-  "fjardarfrettir","midjan","sunnlenska","tigull","trolli"
+  "bb",
+  "bbl",
+  "byggingar",
+  "eyjafrettir",
+  "fiskifrettir",
+  "frjalsverslun",
+  "feykir",
+  "fjardarfrettir",
+  "midjan",
+  "sunnlenska",
+  "tigull",
+  "trolli"
 ]);
 
 /* =========================
-   Worker entrypoints
+   Worker entry
    ========================= */
 
 var worker_default = {
@@ -164,6 +174,8 @@ var worker_default = {
   }
 };
 
+export { worker_default as default };
+
 /* =========================
    Cron
    ========================= */
@@ -172,8 +184,8 @@ async function runCron(env, event) {
   const started = new Date().toISOString();
   console.log("🕒 runCron start", started, event?.cron);
 
-  const cutoffDays = 31;
-  const cutoffIso = new Date(Date.now() - cutoffDays * 86400e3).toISOString();
+  const cutoffDays = 14;
+  const cutoffIso = new Date(Date.now() - cutoffDays * 24 * 60 * 60 * 1000).toISOString();
 
   let fetchedFeeds = 0, http304 = 0, http200 = 0, inserted = 0, skippedOld = 0, errors = 0;
 
@@ -189,18 +201,27 @@ async function runCron(env, event) {
           "SELECT etag, last_modified FROM feeds WHERE feed_url = ?"
         ).bind(feedUrl).first();
 
-        const headers = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-  "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
-  "Accept-Language": "is,is-IS;q=0.9,en;q=0.7",
-  "Cache-Control": "no-cache",
-  "Pragma": "no-cache"
-};
+        // Default headers
+        let headers = {
+          "User-Agent": "is.is news cron",
+          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+          "Accept-Language": "is,is-IS;q=0.9,en;q=0.7"
+        };
 
         if (state?.etag) headers["If-None-Match"] = state.etag;
         if (state?.last_modified) headers["If-Modified-Since"] = state.last_modified;
 
-        const res = await fetch(feedUrl, { headers });
+        let res = await fetch(feedUrl, { headers });
+
+        // Some sites block CF worker UA and/or conditional headers → try a browser-ish fallback
+        if (res.status === 403) {
+          headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+            "Accept-Language": "is,is-IS;q=0.9,en;q=0.7"
+          };
+          res = await fetch(feedUrl, { headers });
+        }
 
         if (res.status === 304) {
           http304++;
@@ -218,7 +239,6 @@ async function runCron(env, event) {
         }
 
         http200++;
-
         await upsertFeedState(env, {
           feedUrl,
           sourceId,
@@ -246,7 +266,6 @@ async function runCron(env, event) {
             extractTagValue(block, "dc:date");
 
           const publishedAt = pubDate ? safeToIso(pubDate) : null;
-
           if (publishedAt && publishedAt < cutoffIso) {
             skippedOld++;
             continue;
@@ -255,12 +274,13 @@ async function runCron(env, event) {
           const description =
             extractTagValue(block, "description") ||
             extractTagValue(block, "summary") ||
-            extractTagValue(block, "content:encoded") || "";
+            extractTagValue(block, "content:encoded") ||
+            "";
 
           const rssCats = extractCategories(block);
           const catText = rssCats.join(" ").trim();
 
-          const inferred = inferCategory({
+          let inferred = inferCategory({
             sourceId,
             url: linkRaw,
             rssCategories: rssCats,
@@ -316,7 +336,6 @@ async function runCron(env, event) {
             `).bind(row.id, haystack).run();
           }
         }
-
       } catch (e) {
         errors++;
         console.error("Feed error:", sourceId, feedUrl, String(e?.message || e));
@@ -367,18 +386,13 @@ __name(upsertFeedState, "upsertFeedState");
 async function handleNewsApi(request, env) {
   const { searchParams } = new URL(request.url);
 
-  const sources = (searchParams.get("sources") || "")
-    .split(",").map((s) => s.trim()).filter(Boolean);
-
-  const catsParam = (searchParams.get("cats") || "")
-    .split(",").map((s) => s.trim()).filter(Boolean);
-
-  const limit = clampInt(searchParams.get("limit"), 1, 900, 50);
+  const sources = (searchParams.get("sources") || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const catsParam = (searchParams.get("cats") || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const limit = clampInt(searchParams.get("limit"), 1, 360, 50);
   const q = (searchParams.get("q") || "").trim();
   const debug = searchParams.get("debug") === "1";
 
-  const activeCats = new Set((catsParam.length ? catsParam : [])
-    .filter((id) => VALID_CATEGORY_IDS.has(id)));
+  const activeCats = new Set((catsParam.length ? catsParam : []).filter((id) => VALID_CATEGORY_IDS.has(id)));
 
   const wh = [];
   const args = [];
@@ -401,7 +415,6 @@ async function handleNewsApi(request, env) {
     const qNorm = normalizeText(q);
     const like = `%${qNorm}%`;
     const whereExtra = wh.length ? `AND ${wh.join(" AND ")}` : "";
-
     sql = `
       SELECT a.*
       FROM article_search s
@@ -411,11 +424,9 @@ async function handleNewsApi(request, env) {
       ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
       LIMIT ?
     `;
-
     bindArgs = [like, ...args, limit];
   } else {
     const where = wh.length ? `WHERE ${wh.join(" AND ")}` : "";
-
     sql = `
       SELECT a.*
       FROM articles a
@@ -423,7 +434,6 @@ async function handleNewsApi(request, env) {
       ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
       LIMIT ?
     `;
-
     bindArgs = [...args, limit];
   }
 
@@ -456,7 +466,7 @@ async function handleNewsApi(request, env) {
 __name(handleNewsApi, "handleNewsApi");
 
 /* =========================
-   Text / URL utils
+   Search index helpers
    ========================= */
 
 function buildHaystack(title, description) {
@@ -465,6 +475,10 @@ function buildHaystack(title, description) {
   return `${t} ${d}`.trim();
 }
 __name(buildHaystack, "buildHaystack");
+
+/* =========================
+   RSS/Atom parsing helpers
+   ========================= */
 
 function canonicalizeUrl(u) {
   try {
@@ -486,8 +500,9 @@ function canonicalizeUrl(u) {
       url.pathname = url.pathname.slice(0, -1);
     }
 
-    const entries = [...url.searchParams.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+    const entries = [...url.searchParams.entries()].sort(
+      (a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1])
+    );
 
     url.search = "";
     for (const [k, v] of entries) url.searchParams.append(k, v);
@@ -504,39 +519,6 @@ function normalizeUrlKey(url) {
 }
 __name(normalizeUrlKey, "normalizeUrlKey");
 
-function normalizeText(s) {
-  const str = String(s || "").toLowerCase();
-  const noMarks = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return noMarks
-    .replaceAll("ð", "d")
-    .replaceAll("þ", "th")
-    .replaceAll("æ", "ae")
-    .replaceAll("ö", "o");
-}
-__name(normalizeText, "normalizeText");
-
-function safeToIso(dateString) {
-  const d = new Date(dateString);
-  return isNaN(d.getTime()) ? null : d.toISOString();
-}
-__name(safeToIso, "safeToIso");
-
-function safeHost(url) {
-  try { return new URL(url).host.toLowerCase(); } catch { return ""; }
-}
-__name(safeHost, "safeHost");
-
-function clampInt(value, min, max, fallback) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.max(min, Math.min(max, Math.trunc(n)));
-}
-__name(clampInt, "clampInt");
-
-/* =========================
-   Feed parsing
-   ========================= */
-
 function parseFeedBlocks(xml) {
   const itemRe = /<(?:\w+:)?item\b[^>]*>[\s\S]*?<\/(?:\w+:)?item>/gi;
   const items = [...String(xml || "").matchAll(itemRe)].map((m) => m[0]);
@@ -547,17 +529,16 @@ function parseFeedBlocks(xml) {
 }
 __name(parseFeedBlocks, "parseFeedBlocks");
 
-function escapeRegExp(s) {
-  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-__name(escapeRegExp, "escapeRegExp");
-
 function extractTagValue(xml, tag) {
   const src = String(xml || "");
   const esc = escapeRegExp(tag);
 
   const re = new RegExp(
-    `<(?:\\w+:)?${esc}\\b[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/(?:\\w+:)?${esc}>`,
+    `<(?:\\w+:)?${esc}\\b[^>]*>` +
+      `(?:<!\\[CDATA\\[)?` +
+      `([\\s\\S]*?)` +
+      `(?:\\]\\]>)?` +
+    `<\\/(?:\\w+:)?${esc}>`,
     "i"
   );
 
@@ -568,7 +549,6 @@ __name(extractTagValue, "extractTagValue");
 
 function extractLink(block) {
   const src = String(block || "");
-
   const mHref = src.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*\/?>/i);
   if (mHref?.[1]) return decodeEntities(mHref[1]).trim();
 
@@ -601,9 +581,23 @@ function extractCategories(block) {
 }
 __name(extractCategories, "extractCategories");
 
+function safeToIso(dateString) {
+  const d = new Date(dateString);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+__name(safeToIso, "safeToIso");
+
+function safeHost(url) {
+  try {
+    return new URL(url).host.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+__name(safeHost, "safeHost");
+
 function decodeEntities(s) {
   let str = String(s || "");
-
   str = str
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
@@ -629,8 +623,20 @@ function decodeEntities(s) {
 }
 __name(decodeEntities, "decodeEntities");
 
+function escapeRegExp(s) {
+  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+__name(escapeRegExp, "escapeRegExp");
+
+function clampInt(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, Math.trunc(n)));
+}
+__name(clampInt, "clampInt");
+
 /* =========================
-   Category inference (MISSING BEFORE)
+   Category inference
    ========================= */
 
 function visirCategoryFromFeedUrl(feedUrl) {
@@ -645,9 +651,21 @@ function visirCategoryFromFeedUrl(feedUrl) {
 }
 __name(visirCategoryFromFeedUrl, "visirCategoryFromFeedUrl");
 
+function normalizeText(s) {
+  const str = String(s || "").toLowerCase();
+  const noMarks = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return noMarks
+    .replaceAll("ð", "d")
+    .replaceAll("þ", "th")
+    .replaceAll("æ", "ae")
+    .replaceAll("ö", "o");
+}
+__name(normalizeText, "normalizeText");
+
 function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title, description }) {
   const host = safeHost(url);
 
+  // Source-specific heuristics FIRST (these were missing in your broken 600-line version)
   const hinted = classifyWithSourceHints({
     host,
     url,
@@ -679,7 +697,11 @@ function inferCategory({ sourceId, url, rssCategories, rssCategoryText, title, d
 __name(inferCategory, "inferCategory");
 
 function norm(s) {
-  return String(s || "").replace(/&nbsp;|&#160;/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+  return String(s || "")
+    .replace(/&nbsp;|&#160;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 __name(norm, "norm");
 
@@ -707,9 +729,9 @@ __name(extractFeedCategories, "extractFeedCategories");
 function mapBbCategoryToBucket(feedCats) {
   const joined = norm(feedCats.join(" | "));
   if (!joined) return null;
-  if (joined.includes("aðsendar greinar")) return "skodun";
+  if (joined.includes("aðsendar greinar") || joined.includes("adsendar greinar")) return "skodun";
   if (joined.includes("menning")) return "menning";
-  if (joined.includes("samgöngur")) return "innlent";
+  if (joined.includes("samgöngur") || joined.includes("samgongur")) return "innlent";
   if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
   if (joined.includes("vestfir")) return "innlent";
   return null;
@@ -719,10 +741,10 @@ __name(mapBbCategoryToBucket, "mapBbCategoryToBucket");
 function mapNutiminnCategoryToBucket(feedCats) {
   const joined = norm(feedCats.join(" | "));
   if (!joined) return null;
-  if (joined.includes("aðsendar")) return "skodun";
+  if (joined.includes("aðsendar") || joined.includes("adsendar")) return "skodun";
   if (joined.includes("brotkast")) return "menning";
-  if (joined.includes("fréttir")) return "innlent";
-  if (joined.includes("forsíða")) return null;
+  if (joined.includes("fréttir") || joined.includes("frettir")) return "innlent";
+  if (joined.includes("forsíða") || joined.includes("forsida")) return null;
   if (joined.includes("í fókus") || joined.includes("i fokus")) return "menning";
   if (joined.includes("íþrótt") || joined.includes("ithrott")) return "ithrottir";
   return null;
@@ -757,8 +779,8 @@ function classifyWithSourceHints({ host, url, title, description, item }) {
   if (h === "www.nutiminn.is" || h === "nutiminn.is" || h.endsWith(".nutiminn.is")) {
     const nm = mapNutiminnCategoryToBucket(feedCats);
     if (nm) return nm;
-    if (fcNorm.includes("aðsendar")) return "skodun";
-    if (t.includes(" pistill") || t.includes(" leiðari") || t.includes(" skrifar")) return "skodun";
+    if (fcNorm.includes("aðsendar") || fcNorm.includes("adsendar")) return "skodun";
+    if (t.includes(" pistill") || t.includes(" leiðari") || t.includes(" leidari") || t.includes(" skrifar")) return "skodun";
     return null;
   }
 
@@ -772,20 +794,32 @@ function classifyWithSourceHints({ host, url, title, description, item }) {
   }
 
   if (h === "heimildin.is" || h.endsWith(".heimildin.is") || h === "stundin.is" || h.endsWith(".stundin.is")) {
-    if (t.includes(" skrifar") || t.includes(" pistill") || t.includes(" leiðari")) return "skodun";
-    if (d.includes(" kemur fram í pistli") || d.includes(" skrifar") || d.includes(" leiðari")) return "skodun";
-    if (t.includes("kvikmynd") || t.includes("leikhús") || t.includes("listasafn") || t.includes("menning")) return "menning";
-    if (t.includes("vísind") || t.includes("rannsókn") || t.includes("geim") || t.includes("efna") || t.includes("eðlis")) return "visindi";
-    if (t.includes("loftslag") || t.includes("mengun") || t.includes("náttúr") || t.includes("umhverf")) return "umhverfi";
+    if (t.includes(" skrifar") || t.includes(" pistill") || t.includes(" leiðari") || t.includes(" leidari")) return "skodun";
+    if (d.includes(" kemur fram í pistli") || d.includes(" skrifar") || d.includes(" leiðari") || d.includes(" leidari")) return "skodun";
+    if (t.includes("kvikmynd") || t.includes("leikhús") || t.includes("leikhus") || t.includes("listasafn") || t.includes("menning")) return "menning";
+    if (t.includes("vísind") || t.includes("visind") || t.includes("rannsókn") || t.includes("rannsokn") || t.includes("geim")) return "visindi";
+    if (t.includes("loftslag") || t.includes("mengun") || t.includes("náttúru") || t.includes("natturu") || t.includes("umhverf")) return "umhverfi";
     return null;
   }
 
   if (h === "feykir.is" || h.endsWith(".feykir.is")) {
     if (t.includes(" skrifar") || (t.includes("|") && t.includes("skrifar"))) return "skodun";
-    if (t.includes("knattspyrn") || t.includes("körfu") || t.includes("leikur") || t.includes("sigur") || d.includes("knattspyrn") || d.includes("körfu")) return "ithrottir";
-    if (t.includes("uppskrift") || d.includes("uppskrift")) return "menning";
-    if (t.includes("raforku") || t.includes("flutningskerfi")) return "innlent";
-    if (t.includes("eldis") || d.includes("eldis")) return "umhverfi";
+
+    if (
+      t.includes("knattspyrn") || t.includes("körfu") || t.includes("korfu") || t.includes("bónus deild") || t.includes("bonus deild") ||
+      t.includes("leikur") || t.includes("jafntefli") || t.includes("sigur") ||
+      d.includes("knattspyrn") || d.includes("körfu") || d.includes("korfu") || d.includes("bónus deild") || d.includes("bonus deild")
+    ) return "ithrottir";
+
+    if (t.includes("matgæð") || t.includes("matgaed") || t.includes("uppskrift") || t.includes("mælir með") || t.includes("maelir med") || d.includes("uppskrift"))
+      return "menning";
+
+    if (t.includes("byggðalín") || t.includes("byggdalin") || t.includes("landsnet") || t.includes("raforku") || t.includes("flutningskerfi"))
+      return "innlent";
+
+    if (t.includes("sjókvía") || t.includes("sjokvia") || t.includes("lagareldi") || t.includes("eldis") || d.includes("sjókvía") || d.includes("sjokvia"))
+      return "umhverfi";
+
     return null;
   }
 
@@ -799,7 +833,8 @@ function mapFromRssCategories(sourceId, termsNorm, joinedNorm) {
   const bySource = mapFromRssCategoriesBySource(sourceId, termsNorm, joinedNorm);
   if (bySource) return bySource;
 
-  return mapFromText(termsNorm.join(" ")) || mapFromText(joinedNorm) || null;
+  const generic = mapFromText(termsNorm.join(" ")) || mapFromText(joinedNorm);
+  return generic || null;
 }
 __name(mapFromRssCategories, "mapFromRssCategories");
 
@@ -832,16 +867,43 @@ __name(mapFromRssCategoriesBySource, "mapFromRssCategoriesBySource");
 function mapFromText(x) {
   if (!x) return null;
 
-  const sportWords = ["sport","ithrott","fotbolti","handbolti","korfubolti","premier league","champions league","nba","ufc","olymp","messi","ronaldo"];
-  const bizWords = ["vidskip","business","markad","fjarmal","kaupholl","gengi","vext","hagkerfi","verdbolga"];
-  const cultureWords = ["menning","lifid","list","tonlist","kvikmynd","bok","leikhus","matur","smartland","afthrey"];
-  const opinionWords = ["skodun","pistill","leidari","grein","ummal","dalkur","adsendar","aðsendar"];
-  const foreignWords = ["erlent","world","usa","evropa","russland","kina","ukraina","bresk","bandarikin"];
-  const localWords = ["innlent","island","reykjavik","hafnarfjord","kopavog","logregl","rettar","dom","handtek","sakfelld"];
-  const techWords = ["taekni","tolva","forrit","gervigreind","ai","netoryggi","apple","google","microsoft"];
-  const healthWords = ["heilsa","laekn","sjuk","lyf","spitali","naering","smit","veira"];
-  const envWords = ["umhverfi","loftslag","mengun","natur","jokull","eldgos","skjalfti","vedur","haf"];
-  const sciWords = ["visindi","rannsokn","geim","edlis","efna","liffraedi","tungl","sol"];
+  const sportWords = [
+    "sport","ithrott","fotbolta","fotbolti","handbolti","nba","korfubolti","tennis",
+    "motorsport","formula","ufc","olymp","olympi","marathon","darts","hnefaleik",
+    "breidablik","valur","tindastoll","chess","nfl","premier league","champions league",
+    "europa league","enska urvalsdeild","enskar urvalsdeild","enski boltinn","enskur boltinn",
+    "ronaldo","messi","mourinho","guardiola","klopp","arsenal","man city","manchester city",
+    "man utd","manchester united","liverpool","chelsea","tottenham","barcelona","real madrid",
+    "atletico","psg","bayern","dortmund","juventus","milan","inter","433","4-3-3","4 3 3"
+  ];
+
+  const bizWords = ["vidskip","business","markad","fjarmal","kaupholl","verdbref","gengi","vext","hagkerfi","verdbolga"];
+
+  const cultureWords = [
+    "menning","folk","lifid","list","tonlist","kvikmynd","bok","leikhus","sjonvarp","utvarp",
+    "svidslist","matur","kokte","smartland","samkvaem","daisy","tipsy","tattuin","tattoo",
+    "stjarna","model","fegurd","afthrey"
+  ];
+
+  const opinionWords = ["skodun","comment","pistill","leidari","grein","ummal","dalkur","kronika","nedanmals","adsendar","aðsendar"];
+
+  const foreignWords = [
+    "erlent","foreign","bandarisk","usa","iran","italia","evropa","world","alheim","althjod",
+    "trump","musk","russland","kina","japan","ukraina","bresk","bandarikin","epstein"
+  ];
+
+  const localWords = [
+    "innlent","island","reykjavik","hafnarfjord","akureyri","reykjanes","kopavog","laugarvatn",
+    "vestmannaeyj","landsbank","hs ork","logregl","rettar","daemd","dom","handtek","sakfelld"
+  ];
+
+  const techWords = ["taekni","tolva","forrit","forritun","gervigreind","ai","netoryggi","oryggi","snjallsimi","apple","google","microsoft","raf"];
+
+  const healthWords = ["heilsa","laekn","sjuk","sjukdom","lyf","spitali","naering","smit","veira"];
+
+  const envWords = ["umhverfi","loftslag","mengun","natur","jokull","eldgos","skjalfti","vedur","haf","fisk","skograekt","fornleif"];
+
+  const sciWords = ["visindi","rannsokn","geim","edlis","efna","liffraedi","stjornufraedi","stjornukerfi","tungl","sol"];
 
   if (sportWords.some((w) => x.includes(w))) return "ithrottir";
   if (bizWords.some((w) => x.includes(w))) return "vidskipti";
@@ -876,7 +938,7 @@ function mapFromUrl(sourceId, u, titleNorm) {
     if (u.includes("/folk/")) return "menning";
     if (u.includes("/eftir-vinnu/")) {
       const t = String(titleNorm || "");
-      if (t.includes("taekni") || t.includes("iphone") || t.includes("ai") || t.includes("gervigreind")) return "taekni";
+      if (t.includes("taekni") || t.includes("iphone") || t.includes("simi") || t.includes("ai") || t.includes("gervigreind")) return "taekni";
       return "menning";
     }
   }
@@ -889,6 +951,10 @@ function mapFromUrl(sourceId, u, titleNorm) {
 
   if (sourceId === "visir") {
     if (u.includes("/menning") || u.includes("/lifid") || u.includes("/tonlist") || u.includes("/gagnryni/")) return "menning";
+    if (u.includes("/g/")) {
+      const t = String(titleNorm || "");
+      if (t.includes("ronaldo") || t.includes("messi") || t.includes("mourinho") || t.includes("arsenal") || t.includes("man city") || t.includes("premier") || t.includes("olymp") || t.includes("darts") || t.includes("undanurslit")) return "ithrottir";
+    }
     if (u.includes("/enski-boltinn") || u.includes("/enskiboltinn")) return "ithrottir";
     if (u.includes("/korfubolti") || u.includes("/handbolti")) return "ithrottir";
   }
@@ -918,9 +984,3 @@ function mapFromUrl(sourceId, u, titleNorm) {
   return null;
 }
 __name(mapFromUrl, "mapFromUrl");
-
-/* =========================
-   Export
-   ========================= */
-
-export { worker_default as default };
