@@ -28,6 +28,8 @@ const ALLOWED_HOSTS = new Set([
   "www.theverge.com", "theverge.com",
   "arstechnica.com", "www.arstechnica.com",
   "www.wired.com", "wired.com",
+  "www.t3.com", "t3.com",
+  "www.hackaday.com", "hackaday",
 ]);
 
 function json(data, status = 200, cacheControl = "public, max-age=300") {
