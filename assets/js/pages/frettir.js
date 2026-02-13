@@ -1,7 +1,7 @@
 // /assets/js/pages/frettir.js
 (() => {
   "use strict";
-
+ 
   const SOURCES = [
     { id: "ruv",       label: "RÚV",             domain: "ruv.is" },
     { id: "mbl",       label: "Morgunblaðið",    domain: "mbl.is" },
