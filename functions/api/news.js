@@ -135,9 +135,11 @@ mbl: {
     "feykir",
     "fjardarfrettir",
     "midjan",
+    "skagafjordur",
     "sunnlenska",
     "tigull",
     "trolli",
+    "vestfirdir",
   ]);
 
   const activeSources = sources.length ? sources : Object.keys(feeds);
