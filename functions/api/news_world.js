@@ -53,6 +53,7 @@ const FEEDS = {
   reuters:  { url: "https://news.google.com/rss/search?q=site%3Areuters.com&hl=en-US&gl=US&ceid=US%3Aen",             label: "Reuters" },
   ap:       { url: "https://news.google.com/rss/search?q=when:24h allinurl:apnews.com", label: "AP News" },
   bloomberg: { url: "https://news.google.com/rss/search?q=when:24h allinurl:bloomberg.com", label: "Bloomberg" },
+  nytimes: { url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", label: "NY Times" },
   
   // Public service / large broadcasters
   bbc:      { url: "https://feeds.bbci.co.uk/news/rss.xml",             label: "BBC News" },
