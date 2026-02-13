@@ -184,7 +184,7 @@ async function runCron(env, event) {
   const started = new Date().toISOString();
   console.log("🕒 runCron start", started, event?.cron);
 
-  const cutoffDays = 14;
+  const cutoffDays = 31;
   const cutoffIso = new Date(Date.now() - cutoffDays * 24 * 60 * 60 * 1000).toISOString();
 
   let fetchedFeeds = 0, http304 = 0, http200 = 0, inserted = 0, skippedOld = 0, errors = 0;
@@ -388,7 +388,7 @@ async function handleNewsApi(request, env) {
 
   const sources = (searchParams.get("sources") || "").split(",").map((s) => s.trim()).filter(Boolean);
   const catsParam = (searchParams.get("cats") || "").split(",").map((s) => s.trim()).filter(Boolean);
-  const limit = clampInt(searchParams.get("limit"), 1, 360, 50);
+  const limit = clampInt(searchParams.get("limit"), 1, 1200, 50);
   const q = (searchParams.get("q") || "").trim();
   const debug = searchParams.get("debug") === "1";
 
