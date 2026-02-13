@@ -4,22 +4,41 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 /* =========================
-   CORS
+   CORS + Security headers
    ========================= */
 
-// Lock down later if you want:
+// Lockdown: settu þetta á þitt domain þegar þú ert tilbúinn.
 // const CORS_ALLOW_ORIGIN = "https://xn--s-iga.is";
 const CORS_ALLOW_ORIGIN = "*";
 
+function securityHeaders() {
+  return {
+    // API hardening (sérstaklega gagnlegt ef einhver reynir að embedda / sniffa)
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+    // API svar á ekki að vera iframe-að
+    "X-Frame-Options": "DENY",
+    // Fyrir “bara JSON” er þetta fínt:
+    "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+    // HSTS: notaðu bara ef þú ert 100% á HTTPS (sem þú ert á workers.dev + eigin domain)
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+  };
+}
+
 function corsHeaders(request) {
+  // Ef þú vilt læsa við eitt origin:
+  // const origin = request.headers.get("Origin") || "";
+  // const allow = origin === CORS_ALLOW_ORIGIN ? origin : "";
+  // return { "Access-Control-Allow-Origin": allow, "Vary": "Origin", ... }
+
   return {
     "Access-Control-Allow-Origin": CORS_ALLOW_ORIGIN,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Vary": "Origin"
+    "Vary": "Origin",
   };
 }
-__name(corsHeaders, "corsHeaders");
 
 function withCors(request, init = {}) {
   const base = init.headers ? Object.fromEntries(new Headers(init.headers)) : {};
@@ -27,10 +46,12 @@ function withCors(request, init = {}) {
     ...init,
     headers: {
       ...base,
-      ...corsHeaders(request)
-    }
+      ...securityHeaders(),
+      ...corsHeaders(request),
+    },
   };
 }
+
 __name(withCors, "withCors");
 
 /* =========================
