@@ -195,8 +195,6 @@ var worker_default = {
   }
 };
 
-export { worker_default as default };
-
 /* =========================
    NEW
    ========================= */
@@ -265,9 +263,15 @@ async function runCron(env, event) {
   backoffMs: 1000
 });
 
+// 403 fallback: sumir blokka "is.is news cron" UA eða conditional headers
 if (res.status === 403) {
-  headers = { ... };
-  res = await fetchWithTimeoutAndRetry(feedUrl, headers, {
+  const fallbackHeaders = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+    "Accept-Language": "is,is-IS;q=0.9,en;q=0.7"
+  };
+
+  res = await fetchWithTimeoutAndRetry(feedUrl, fallbackHeaders, {
     timeoutMs: 12000,
     retries: 1,
     backoffMs: 1200
@@ -1035,3 +1039,5 @@ function mapFromUrl(sourceId, u, titleNorm) {
   return null;
 }
 __name(mapFromUrl, "mapFromUrl");
+
+export default worker_default;
