@@ -198,6 +198,33 @@ var worker_default = {
 export { worker_default as default };
 
 /* =========================
+   NEW
+   ========================= */
+
+async function fetchWithTimeoutAndRetry(url, headers, opts = {}) {
+  const timeoutMs = opts.timeoutMs ?? 12000;
+  const retries = opts.retries ?? 1;
+  const backoffMs = opts.backoffMs ?? 900;
+
+  let attempt = 0;
+  while (true) {
+    attempt++;
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(url, { headers, signal: controller.signal });
+      clearTimeout(t);
+      return res;
+    } catch (err) {
+      clearTimeout(t);
+      if (attempt > retries) throw err;
+      await new Promise(r => setTimeout(r, backoffMs * attempt));
+    }
+  }
+}
+
+/* =========================
    Cron
    ========================= */
 
@@ -232,17 +259,20 @@ async function runCron(env, event) {
         if (state?.etag) headers["If-None-Match"] = state.etag;
         if (state?.last_modified) headers["If-Modified-Since"] = state.last_modified;
 
-        let res = await fetch(feedUrl, { headers });
+        let res = await fetchWithTimeoutAndRetry(feedUrl, headers, {
+  timeoutMs: 12000,
+  retries: 1,
+  backoffMs: 1000
+});
 
-        // Some sites block CF worker UA and/or conditional headers → try a browser-ish fallback
-        if (res.status === 403) {
-          headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-            "Accept-Language": "is,is-IS;q=0.9,en;q=0.7"
-          };
-          res = await fetch(feedUrl, { headers });
-        }
+if (res.status === 403) {
+  headers = { ... };
+  res = await fetchWithTimeoutAndRetry(feedUrl, headers, {
+    timeoutMs: 12000,
+    retries: 1,
+    backoffMs: 1200
+  });
+}
 
         if (res.status === 304) {
           http304++;
