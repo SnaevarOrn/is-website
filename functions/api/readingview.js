@@ -33,7 +33,7 @@ const ALLOWED_HOSTS = new Set([
   "www.mannlif.is", "mannlif.is",
   "www.midjan.is", "midjan.is",
   "www.nutiminn.is", "nutiminn.is",
-  "www.skagafjordur.is", "skagafjordur.is"
+  "www.skagafjordur.is", "skagafjordur.is",
   "www.stundin.is", "stundin.is",
   "www.sunnlenska.is", "sunnlenska.is",
   "www.tigull.is", "tigull.is",
@@ -41,7 +41,7 @@ const ALLOWED_HOSTS = new Set([
   "www.heimildin.is", "heimildin.is",
   "www.grapevine.is", "grapevine.is",
   "www.vb.is", "vb.is",
-  "www.vestfirdir.is", "vestfirdir.is"
+  "www.vestfirdir.is", "vestfirdir.is",
   "www.visbending.is", "visbending.is",
   "www.433.is", "433.is",
 ]);
