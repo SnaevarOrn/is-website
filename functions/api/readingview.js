@@ -33,15 +33,17 @@ const ALLOWED_HOSTS = new Set([
   "www.mannlif.is", "mannlif.is",
   "www.midjan.is", "midjan.is",
   "www.nutiminn.is", "nutiminn.is",
-  "stundin.is", "www.stundin.is",
-  "sunnlenska.is", "www.sunnlenska.is",
-  "tigull.is", "www.tigull.is",
-  "trolli.is", "www.trolli.is",
-  "heimildin.is", "www.heimildin.is",
-  "grapevine.is", "www.grapevine.is",
+  "www.skagafjordur.is", "skagafjordur.is"
+  "www.stundin.is", "stundin.is",
+  "www.sunnlenska.is", "sunnlenska.is",
+  "www.tigull.is", "tigull.is",
+  "www.trolli.is", "trolli.is",
+  "www.heimildin.is", "heimildin.is",
+  "www.grapevine.is", "grapevine.is",
   "www.vb.is", "vb.is",
-  "visbending.is", "www.visbending.is",
-  "433.is", "www.433.is",
+  "www.vestfirdir.is", "vestfirdir.is"
+  "www.visbending.is", "visbending.is",
+  "www.433.is", "433.is",
 ]);
 
 function json(data, status = 200, cacheControl = "public, max-age=300") {
