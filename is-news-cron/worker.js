@@ -443,7 +443,7 @@ async function handleNewsApi(request, env) {
 
   const sources = (searchParams.get("sources") || "").split(",").map((s) => s.trim()).filter(Boolean);
   const catsParam = (searchParams.get("cats") || "").split(",").map((s) => s.trim()).filter(Boolean);
-  const limit = clampInt(searchParams.get("limit"), 1, 1200, 50);
+  const limit = clampInt(searchParams.get("limit"), 1, 1500, 250);
   const q = (searchParams.get("q") || "").trim();
   const debug = searchParams.get("debug") === "1";
 
