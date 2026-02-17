@@ -149,31 +149,37 @@
       <button class="pill-btn primary" id="btnRetry" type="button">Reyna aftur</button>
     </section>
         <!-- Reading view modal -->
-    <dialog class="reading" id="readingDialog" aria-label="Leshamur">
-      <div class="reading-card" role="document">
-        <div class="reading-head">
-          <div class="reading-kicker" id="readingSite">Frétt</div>
-          <button class="icon-btn" id="btnCloseReading" type="button" aria-label="Loka" title="Loka">✕</button>
-        </div>
-
-        <h2 class="reading-title" id="readingTitle">Hleð…</h2>
-
-        <div class="reading-actions">
-          <a class="pill-btn" id="readingOpenOriginal" href="#" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
-            Opna upprunalega
-          </a>
-          <button class="pill-btn primary" id="readingMarkRead" type="button">
-            Merkja lesið
-          </button>
-        </div>
-
-        <div class="reading-body" id="readingBody">
-          <p class="muted">Sæki texta…</p>
-        </div>
-
-        <div class="reading-foot tiny muted" id="readingMeta"></div>
+<dialog class="reading" id="readingDialog" aria-label="Leshamur">
+  <div class="reading-card" role="document">
+    <div class="reading-head">
+      <div class="reading-head-left">
+        <div class="reading-kicker" id="readingSite">Frétt</div>
       </div>
-    </dialog>
+
+      <div class="reading-head-right">
+        <a class="pill-btn sm" id="readingOpenOriginal" href="#"
+           target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
+          Opna upprunalega
+        </a>
+
+        <button class="pill-btn primary sm" id="readingMarkRead" type="button">
+          Merkja lesið
+        </button>
+
+        <button class="icon-btn" id="btnCloseReading" type="button"
+                aria-label="Loka" title="Loka">✕</button>
+      </div>
+    </div>
+
+    <h2 class="reading-title" id="readingTitle">Hleð…</h2>
+
+    <div class="reading-body" id="readingBody">
+      <p class="muted">Sæki texta…</p>
+    </div>
+
+    <div class="reading-foot tiny muted" id="readingMeta"></div>
+  </div>
+</dialog>
   </main>
 
   <script src="/assets/js/utils.js"></script>
