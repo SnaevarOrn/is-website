@@ -762,4 +762,35 @@ dialog.reading[open] {
 body.reading-open {
   overflow: hidden;
 }
+/* Reading header: prevent "mbl.is" from breaking the layout */
+.reading-head{
+  display: grid;
+  grid-template-columns: 1fr auto; /* left can shrink, right stays "auto" */
+  align-items: center;
+  gap: 10px;
+}
+
+.reading-head-left{ min-width: 0; } /* critical for ellipsis to work */
+
+.reading-kicker{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Keep actions grouped on the right without kicking the left */
+.reading-head-right{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: nowrap;  /* change to wrap if you prefer 2-line header */
+}
+
+/* Optional: if it still feels tight on small screens, shrink pills a bit */
+@media (max-width: 420px){
+  .pill-btn.sm{ padding: 7px 9px; font-size: .86rem; }
+  .reading-head-right{ gap: 8px; }
+}
 
