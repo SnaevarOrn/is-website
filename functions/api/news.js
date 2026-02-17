@@ -100,6 +100,7 @@ mbl: {
     feykir:         { url: "https://www.feykir.is/feed",       label: "Feykir" },
     heimildin:      { url: "https://heimildin.is/rss/",        label: "Heimildin" },
     grapevine:      { url: "https://grapevine.is/feed/",       label: "Grapevine" },
+    kaffid:         { url: "https://www.kaffid.is/feed/",      label: "Kaffið" },
     mannlif:        { url: "https://mannlif.is/rss/",          label: "Mannlíf" },
     midjan:         { url: "http://www.midjan.is/feed/",       label: "Miðjan" },
     nutiminn:       { url: "https://www.nutiminn.is/feed/",    label: "Nútíminn" }, 
