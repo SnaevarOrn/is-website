@@ -1015,6 +1015,21 @@ async function loadMore() {
     wirePullToRefresh();
     refresh();
   }
+  
+  const readingDialog = document.getElementById("readingDialog");
+
+function openReading() {
+  document.body.classList.add("reading-open");
+  readingDialog.showModal();
+}
+
+function closeReading() {
+  readingDialog.close();
+  document.body.classList.remove("reading-open");
+}
+
+document.getElementById("btnCloseReading").addEventListener("click", closeReading);
+readingDialog.addEventListener("close", () => document.body.classList.remove("reading-open"));
 
   init();
 })();
