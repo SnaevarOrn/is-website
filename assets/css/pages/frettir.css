@@ -759,3 +759,7 @@ dialog.reading[open] {
   flex: 0 0 auto;
   padding-top: 10px;
 }
+body.reading-open {
+  overflow: hidden;
+}
+
