@@ -675,3 +675,87 @@ html[data-theme="dark"] .reading-card{ background:var(--panel2); }
   width:72px;
   max-width:72px;
 }
+/* =========================
+   Reading view: viewport-fit + body-only scroll
+   ========================= */
+
+/* Make the dialog itself be the fullscreen overlay (no internal dialog scrolling) */
+dialog.reading {
+  border: 0;
+  background: transparent;
+  padding:
+    calc(env(safe-area-inset-top) + 12px)
+    calc(env(safe-area-inset-right) + 12px)
+    calc(env(safe-area-inset-bottom) + 12px)
+    calc(env(safe-area-inset-left) + 12px);
+
+  width: 100vw;
+  height: 100dvh;      /* iOS-friendly dynamic viewport */
+  max-width: none;
+  max-height: none;
+  margin: 0;
+}
+
+dialog.reading::backdrop {
+  /* keep whatever look you already have; this is just a sane default */
+  background: rgba(0,0,0,.55);
+}
+
+/* Center the card within the fullscreen dialog */
+dialog.reading[open] {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* The card becomes a flex column, capped to the viewport */
+.reading-card {
+  width: min(720px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* critical: prevents the card from scrolling */
+}
+
+/* Header row with actions beside close */
+.reading-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reading-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Optional: smaller pills in header (won't break if .sm doesn't exist elsewhere) */
+.pill-btn.sm {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Title should not create a second scroll region */
+.reading-title {
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+}
+
+/* Only the article body scrolls */
+.reading-body {
+  flex: 1 1 auto;
+  min-height: 0; /* critical for flex children to allow scrolling */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+
+/* Footer stays visible, not part of scroll */
+.reading-foot {
+  flex: 0 0 auto;
+  padding-top: 10px;
+}
