@@ -1,13 +1,13 @@
 // /assets/js/pages/frettir.js
 (() => {
   "use strict";
- 
+
   const SOURCES = [
     { id: "ruv",       label: "RÚV",             domain: "ruv.is" },
     { id: "mbl",       label: "Morgunblaðið",    domain: "mbl.is" },
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
-    
+
     { id: "24",            label: "24 Stundir",      domain: "24stundir.is" },
     { id: "akureyri.is",   label: "Akureyri.is",     domain: "akureyri.is" },
     { id: "akureyri.net",  label: "Akureyri.net",    domain: "akureyri.net" },
@@ -57,7 +57,7 @@
   // Rest comes in batches (smaller requests => smoother progress)
   const REST_BATCH_SIZE = 4;     // 4 sources at a time
   const LIMIT_PER_BATCH = 25;    // items per batch request
-  const LOAD_MORE_STEP = 100;     // how many more items when pressing "Sækja meira"
+  const LOAD_MORE_STEP = 100;    // how many more items when pressing "Sækja meira"
 
   // Read/visited tracking
   const READ_KEY = "is_news_read_v1";
@@ -74,7 +74,7 @@
     readSet.add(url);
     saveReadSet(readSet);
   }
-  
+
   const $ = (sel) => document.querySelector(sel);
 
   const els = {
@@ -84,9 +84,8 @@
     btnThemeToggle: $("#btnThemeToggle"),
     btnOpenSettings: $("#btnOpenSettings"),
     btnRefresh: $("#btnRefresh"),
-    // NEW
     btnLoadMore: $("#btnLoadMore"),
-    
+
     settingsDialog: $("#settingsDialog"),
     sourcesList: $("#sourcesList"),
     catsList: $("#catsList"),
@@ -123,7 +122,6 @@
     readingBody: $("#readingBody"),
     readingMeta: $("#readingMeta"),
     readingOpenOriginal: $("#readingOpenOriginal"),
-    readingMarkRead: $("#readingMarkRead"),
   };
 
   const defaultPrefs = () => ({
@@ -390,6 +388,12 @@
     return out;
   }
 
+  function escSelector(s) {
+    const val = String(s || "");
+    if (window.CSS && typeof CSS.escape === "function") return CSS.escape(val);
+    return val.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  }
+
   function renderNews(items) {
     if (!els.newsList) return;
 
@@ -459,7 +463,7 @@
   function selectedIds(mapObj) {
     return Object.entries(mapObj).filter(([, v]) => !!v).map(([k]) => k);
   }
-  
+
   function chunkArray(arr, size) {
     const out = [];
     for (let i = 0; i < (arr || []).length; i += size) {
@@ -524,7 +528,6 @@
     showEmpty(false);
 
     setLoading(true);
-    // progressbar sýnir framvindu, spinner sýnir að “eitthvað er í gangi”
     hideProgress();
     setStatus("Sæki fréttir…");
 
@@ -536,7 +539,6 @@
 
     const selectedCats = selectedIds(prefs.categories);
 
-    // Engar stillingar => sýna empty strax
     if (selected.length === 0 || selectedCats.length === 0) {
       renderNews([]);
       showEmpty(true);
@@ -559,7 +561,7 @@
     let combined = [];
 
     try {
-      // 1) Core first (ef eitthvað af þeim er valið)
+      // 1) Core first
       if (coreCount > 0) {
         setProgress((coreCount / total) * 100, `Sæki helstu miðla… (${coreCount}/${total})`);
 
@@ -573,35 +575,33 @@
         if (combined.length) setStatus(`Sýni ${combined.length} fréttir (helstu miðlar).`);
         else setStatus("Engar fréttir enn — prófa fleiri miðla…");
       } else {
-        // Enginn core miðill valinn => byrja strax á rest (sem er þá “allt”)
         setProgress(0, `Sæki miðla… (0/${total})`);
       }
 
-      // 2) Rest in batches (smooth progress)
-if (restCount > 0) {
-  const batches = chunkArray(restSources, REST_BATCH_SIZE);
-  let processed = coreCount;
+      // 2) Rest in batches
+      if (restCount > 0) {
+        const batches = chunkArray(restSources, REST_BATCH_SIZE);
+        let processed = coreCount;
 
-  for (let i = 0; i < batches.length; i++) {
-    const batch = batches[i];
+        for (let i = 0; i < batches.length; i++) {
+          const batch = batches[i];
 
-    // progress based on sources completed
-    setProgress((processed / total) * 100, `Sæki fleiri miðla… (${processed}/${total})`);
+          setProgress((processed / total) * 100, `Sæki fleiri miðla… (${processed}/${total})`);
 
-    const batchData = await fetchNewsFromBackend(prefs, batch, LIMIT_PER_BATCH);
-    const batchItems = Array.isArray(batchData?.items) ? batchData.items : [];
+          const batchData = await fetchNewsFromBackend(prefs, batch, LIMIT_PER_BATCH);
+          const batchItems = Array.isArray(batchData?.items) ? batchData.items : [];
 
-    combined = mergeItemsUnique(combined, batchItems);
-    renderNews(combined);
-    setLastUpdated();
+          combined = mergeItemsUnique(combined, batchItems);
+          renderNews(combined);
+          setLastUpdated();
 
-    processed += batch.length;
-  }
+          processed += batch.length;
+        }
 
-  setProgress(100, `Sýni ${combined.length} fréttir.`);
-} else {
-  setProgress(100, combined.length ? `Sýni ${combined.length} fréttir.` : "Ekkert fannst.");
-}
+        setProgress(100, `Sýni ${combined.length} fréttir.`);
+      } else {
+        setProgress(100, combined.length ? `Sýni ${combined.length} fréttir.` : "Ekkert fannst.");
+      }
 
       if (combined.length === 0) {
         showEmpty(true);
@@ -609,14 +609,15 @@ if (restCount > 0) {
       } else {
         showEmpty(false);
       }
-      // Sync limit with what we actually rendered (refresh uses multiple batch limits)
-currentLimit = combined.length;
 
-// Decide if "Sækja meira" should be shown after refresh
-if (els.btnLoadMore) {
-  if (combined.length > 0) els.btnLoadMore.removeAttribute("hidden");
-  else els.btnLoadMore.setAttribute("hidden", "");
-}
+      // Sync limit with what we actually rendered
+      currentLimit = combined.length;
+
+      // Decide if "Sækja meira" should be shown after refresh
+      if (els.btnLoadMore) {
+        if (combined.length > 0) els.btnLoadMore.removeAttribute("hidden");
+        else els.btnLoadMore.setAttribute("hidden", "");
+      }
 
     } catch (err) {
       console.error("[frettir] refresh error", err);
@@ -625,43 +626,41 @@ if (els.btnLoadMore) {
     } finally {
       isRefreshing = false;
       setLoading(false);
-      // Láta progress ná 100% augnablik, svo fela
       setTimeout(hideProgress, 700);
       ptrDone();
     }
   }
-async function loadMore() {
-  if (isRefreshing) return;
-  if (!lastPrefsForLoadMore) return;
 
-  const btn = els.btnLoadMore;
-  if (!btn) return;
+  async function loadMore() {
+    if (isRefreshing) return;
+    if (!lastPrefsForLoadMore) return;
 
-  // Increase limit and refetch with same selections
-  currentLimit = (currentLimit || 60) + LOAD_MORE_STEP;
+    const btn = els.btnLoadMore;
+    if (!btn) return;
 
-  btn.disabled = true;
-  const prevText = btn.textContent;
-  btn.textContent = "Sæki meira…";
+    currentLimit = (currentLimit || 60) + LOAD_MORE_STEP;
 
-  try {
-    const data = await fetchNewsFromBackend(lastPrefsForLoadMore, lastSelectedSourcesForLoadMore, currentLimit);
-    const items = Array.isArray(data?.items) ? data.items : [];
-    renderNews(items);
-    setLastUpdated();
+    btn.disabled = true;
+    const prevText = btn.textContent;
+    btn.textContent = "Sæki meira…";
 
-    // If backend returns fewer than requested, likely no more available right now
-    canLoadMore = items.length >= currentLimit;
-    if (!canLoadMore) btn.setAttribute("hidden", "");
-    setStatus(`Sýni ${items.length} fréttir.`);
-  } catch (err) {
-    console.error("[frettir] loadMore error", err);
-    setStatus("Gat ekki sótt fleiri fréttir.");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = prevText || "Sækja meira";
+    try {
+      const data = await fetchNewsFromBackend(lastPrefsForLoadMore, lastSelectedSourcesForLoadMore, currentLimit);
+      const items = Array.isArray(data?.items) ? data.items : [];
+      renderNews(items);
+      setLastUpdated();
+
+      canLoadMore = items.length >= currentLimit;
+      if (!canLoadMore) btn.setAttribute("hidden", "");
+      setStatus(`Sýni ${items.length} fréttir.`);
+    } catch (err) {
+      console.error("[frettir] loadMore error", err);
+      setStatus("Gat ekki sótt fleiri fréttir.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prevText || "Sækja meira";
+    }
   }
-}
 
   /* -----------------------
      Reading view modal
@@ -672,14 +671,20 @@ async function loadMore() {
   function openReading() {
     closeMenu();
     if (!els.readingDialog) return;
+
+    document.body.classList.add("reading-open");
+
     if (typeof els.readingDialog.showModal === "function") els.readingDialog.showModal();
     else els.readingDialog.setAttribute("open", "");
   }
 
   function closeReading() {
     if (!els.readingDialog) return;
+
     if (typeof els.readingDialog.close === "function") els.readingDialog.close();
     else els.readingDialog.removeAttribute("open");
+
+    document.body.classList.remove("reading-open");
   }
 
   function setReadingLoading(url) {
@@ -710,6 +715,11 @@ async function loadMore() {
 
   async function showReadingView(url) {
     if (!url) return;
+
+    // Auto-mark as read when opening reading view (same behavior as "Opna upprunalega")
+    markRead(url);
+    const art0 = els.newsList?.querySelector(`.item[data-url="${escSelector(url)}"]`);
+    if (art0) art0.classList.add("is-read");
 
     setReadingLoading(url);
     openReading();
@@ -755,12 +765,6 @@ async function loadMore() {
       }
       if (els.readingMeta) els.readingMeta.textContent = "";
     }
-  }
-
-  function escSelector(s) {
-    const val = String(s || "");
-    if (window.CSS && typeof CSS.escape === "function") return CSS.escape(val);
-    return val.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   }
 
   /* -----------------------
@@ -929,7 +933,7 @@ async function loadMore() {
     els.btnCatsAll?.addEventListener("click", () => setAll("cat", true));
     els.btnCatsNone?.addEventListener("click", () => setAll("cat", false));
     els.btnLoadMore?.addEventListener("click", loadMore);
-    
+
     els.btnResetSettings?.addEventListener("click", () => {
       const d = defaultPrefs();
       savePrefs(d);
@@ -942,17 +946,14 @@ async function loadMore() {
     // Reading modal controls
     els.btnCloseReading?.addEventListener("click", closeReading);
 
+    // Ensure body scroll lock is cleared if dialog closes via ESC, etc.
+    els.readingDialog?.addEventListener("close", () => {
+      document.body.classList.remove("reading-open");
+    });
+
     // Close reading on backdrop click (if user taps outside card)
     els.readingDialog?.addEventListener("click", (e) => {
       if (e.target === els.readingDialog) closeReading();
-    });
-
-    els.readingMarkRead?.addEventListener("click", () => {
-      if (!readingCurrentUrl) return;
-      markRead(readingCurrentUrl);
-
-      const art = els.newsList?.querySelector(`.item[data-url="${escSelector(readingCurrentUrl)}"]`);
-      if (art) art.classList.add("is-read");
     });
 
     // If user clicks "open original" inside modal: mark read too
@@ -964,7 +965,7 @@ async function loadMore() {
     });
 
     // News list click handling:
-    // - 📖 opens reading view modal
+    // - 📖 opens reading view modal (auto-marks read inside showReadingView)
     // - normal link opens in new tab and marks read
     els.newsList?.addEventListener("click", (e) => {
       const readBtn = e.target.closest("button[data-readview='1']");
@@ -1002,8 +1003,7 @@ async function loadMore() {
         return;
       }
       closeMenu();
-          });
-    
+    });
   }
 
   function init() {
@@ -1017,21 +1017,6 @@ async function loadMore() {
     wirePullToRefresh();
     refresh();
   }
-  
-  const readingDialog = document.getElementById("readingDialog");
-
-function openReading() {
-  document.body.classList.add("reading-open");
-  readingDialog.showModal();
-}
-
-function closeReading() {
-  readingDialog.close();
-  document.body.classList.remove("reading-open");
-}
-
-document.getElementById("btnCloseReading").addEventListener("click", closeReading);
-readingDialog.addEventListener("close", () => document.body.classList.remove("reading-open"));
 
   init();
 })();
