@@ -8,6 +8,7 @@
     { id: "visir",     label: "Vísir",           domain: "visir.is" },
     { id: "dv",        label: "DV",              domain: "dv.is" },
     
+    { id: "24",            label: "24 Stundir",      domain: "24stundir.is" },
     { id: "akureyri.is",   label: "Akureyri.is",     domain: "akureyri.is" },
     { id: "akureyri.net",  label: "Akureyri.net",    domain: "akureyri.net" },
     { id: "bb",            label: "Bæjarins Besta",  domain: "bb.is" },
@@ -31,6 +32,7 @@
     { id: "trolli",        label: "Trölli",          domain: "trolli.is" },
     { id: "vb",            label: "Viðskiptablaðið", domain: "vb.is" },
     { id: "vestfirdir",    label: "Vestfirðir",      domain: "vestfirdir.is" },
+    { id: "viljinn",       label: "Viljinn",         domain: "viljinn.is" },
     { id: "visbending",    label: "Vísbending",      domain: "visbending.is" },
   ];
 
