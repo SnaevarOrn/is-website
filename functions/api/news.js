@@ -90,6 +90,8 @@ mbl: {
       "https://www.akureyri.is/feed.xml",
       ]            
     },
+
+    24:             { url: "https://24stundir.is/feed/",       label: "24 Stundir" },
     bb:             { url: "https://bb.is/feed/",              label: "Bæjarins Besta" },
     bbl:            { url: "https://www.bbl.is/rss/",          label: "Bændablaðið" },
     byggingar:      { url: "https://byggingar.is/feed",        label: "Byggingar" },
@@ -109,6 +111,7 @@ mbl: {
     tigull:         { url: "https://tigull.is/feed/",          label: "Tígull" },
     trolli:         { url: "https://trolli.is/feed/",          label: "Trölli" },
     vestfirdir:     { url: "https://www.vestfirdir.is/feed",   label: "Vestfirðir" },
+    viljinn:        { url: "https://viljinn.is/feed/",         label: "Viljinn" },
     visbending:     { url: "https://visbending.is/rss/",       label: "Vísbending" },
      
     // VB: útilokum allt sem bendir á fiskifrettir.vb.is
