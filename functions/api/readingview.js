@@ -18,7 +18,8 @@ const ALLOWED_HOSTS = new Set([
   "www.mbl.is", "mbl.is",
   "www.visir.is", "visir.is",
   "www.dv.is", "dv.is",
-   
+
+  "www.24stundir.is", "24stundir.is",
   "www.akureyri.is", "akureyri.is", 
   "www.akureyri.net", "akureyri.net", 
   "www.bb.is", "bb.is",
@@ -43,6 +44,7 @@ const ALLOWED_HOSTS = new Set([
   "www.trolli.is", "trolli.is",
   "www.vb.is", "vb.is",
   "www.vestfirdir.is", "vestfirdir.is",
+  "www.viljinn.is", "viljinn.is",
   "www.visbending.is", "visbending.is",
   "www.433.is", "433.is",
 ]);
