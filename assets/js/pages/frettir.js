@@ -9,8 +9,8 @@
     { id: "dv",        label: "DV",              domain: "dv.is" },
 
     { id: "24",            label: "24 Stundir",      domain: "24stundir.is" },
-    { id: "akureyri.is",   label: "Akureyri.is",     domain: "akureyri.is" },
-    { id: "akureyri.net",  label: "Akureyri.net",    domain: "akureyri.net" },
+    { id: "akis",          label: "Akureyri.is",     domain: "akureyri.is" },
+    { id: "aknet",         label: "Akureyri.net",    domain: "akureyri.net" },
     { id: "bb",            label: "Bæjarins Besta",  domain: "bb.is" },
     { id: "bbl",           label: "Bændablaðið",     domain: "bbl.is" },
     { id: "byggingar",     label: "Byggingar",       domain: "byggingar.is" },
