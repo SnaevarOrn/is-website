@@ -14,6 +14,9 @@ html[data-theme="light"]{
   --muted: rgba(11,18,32,.70);
   --panel: color-mix(in srgb, var(--card) 96%, transparent);
   --panel2: color-mix(in srgb, var(--card) 92%, transparent);
+
+  --progress-bg: rgba(15,23,42,.14);
+  --progress-fg: #2b6cff;
 }
 
 html[data-theme="dark"]{
@@ -27,6 +30,9 @@ html[data-theme="dark"]{
   --muted: rgba(234,244,255,.72);
   --panel: color-mix(in srgb, var(--card) 55%, transparent);
   --panel2: color-mix(in srgb, var(--card) 70%, transparent);
+
+  --progress-bg: rgba(255,255,255,.14);
+  --progress-fg: #2b6cff;
 }
 
 body{
@@ -60,14 +66,18 @@ body{
 }
 
 .ph-left{ display:flex; align-items:center; gap:10px; }
+.ph-right{ display:flex; align-items:center; gap:10px; } /* keeps theme + menu same row */
+
 .ph-title h1{ font-size:16px; line-height:1.1; margin:0; }
 .ph-kicker{ font-size:11px; opacity:.7; margin-bottom:2px; }
 
+/* Meta row: one line, with updated+refresh on the far right */
 .ph-meta{
   width:100%;
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
+  flex-wrap:nowrap;
 
   margin-top:6px;
   padding:0 2px;
@@ -77,12 +87,45 @@ body{
 
   white-space:nowrap;
   overflow:hidden;
-  text-overflow:ellipsis;
 }
-.ph-dot{ opacity:.55; }
-.ph-meta #statusText{
+
+.ph-dot{ opacity:.55; flex:0 0 auto; }
+
+#statusText{
+  flex:1 1 auto;
+  min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#btnLoadMore.nm-plus{ flex:0 0 auto; margin-left:6px; }
+
+#statusSpinner,
+#loadProgressText{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+#lastUpdated{
+  flex:0 0 auto;
+  margin-left:auto;     /* pushes updated+refresh to the right */
+  white-space:nowrap;
+}
+
+/* Refresh MUST be inside .ph-meta to sit next to lastUpdated */
+#btnRefresh{
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  border-radius:12px;
+}
+
+/* progress bar (compact) */
+#loadProgress.ph-progress{
+  flex:0 0 auto;
+  width:72px;
+  max-width:72px;
 }
 
 /* Spinner */
@@ -136,6 +179,26 @@ html[data-theme="dark"] .pill-btn{ background:var(--panel2); }
   background: color-mix(in srgb, #2b6cff 12%, var(--card));
 }
 
+/* Load-more as a small + button */
+#btnLoadMore.nm-plus{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: inherit;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#btnLoadMore.nm-plus:hover{ background: rgba(255,255,255,.10); }
+#btnLoadMore.nm-plus:active{ transform: translateY(1px); }
+#btnLoadMore.nm-plus:disabled{ opacity:.55; cursor: default; transform:none; }
+
 /* Small action button on each news item */
 .read-btn{
   margin-left:auto;
@@ -173,10 +236,7 @@ html[data-theme="dark"] .read-btn:hover{
   display:none;
   pointer-events:none;
 }
-.menu-panel.open{
-  display:block;
-  pointer-events:auto;
-}
+.menu-panel.open{ display:block; pointer-events:auto; }
 
 .menu-card{
   border:1px solid var(--line);
@@ -439,7 +499,6 @@ html[data-theme="dark"] .settings-card{ background:var(--panel2); }
   background: color-mix(in srgb, var(--card) 70%, transparent);
   backdrop-filter: blur(8px);
 }
-
 html[data-theme="dark"] .ph-tabs{
   background: color-mix(in srgb, var(--card) 55%, transparent);
 }
@@ -468,7 +527,6 @@ html[data-theme="dark"] .ph-tabs{
   opacity:.95;
   background: color-mix(in srgb, var(--card) 88%, transparent);
 }
-
 html[data-theme="dark"] .ph-tab:hover{
   background: color-mix(in srgb, var(--card) 70%, transparent);
 }
@@ -480,7 +538,6 @@ html[data-theme="dark"] .ph-tab:hover{
   background:var(--card);
   box-shadow: 0 10px 24px rgba(2,6,23,.10);
 }
-
 html[data-theme="dark"] .ph-tab.is-active,
 html[data-theme="dark"] .ph-tab[aria-current="page"]{
   background: color-mix(in srgb, var(--card) 82%, transparent);
@@ -488,26 +545,45 @@ html[data-theme="dark"] .ph-tab[aria-current="page"]{
 }
 
 /* =========================
-   Reading view modal
+   Reading view modal (single, clean version)
    ========================= */
+body.reading-open{ overflow:hidden; }
+
 .reading::backdrop{ background:rgba(0,0,0,.22); }
 html[data-theme="dark"] .reading::backdrop{ background:rgba(0,0,0,.60); }
 
-.reading{
+dialog.reading{
   border:0;
-  padding:0;
   background:transparent;
-  width:min(860px, calc(100vw - 22px));
-  color:var(--text);
+  padding:
+    calc(env(safe-area-inset-top) + 12px)
+    calc(env(safe-area-inset-right) + 12px)
+    calc(env(safe-area-inset-bottom) + 12px)
+    calc(env(safe-area-inset-left) + 12px);
+
+  width:100vw;
+  height:100dvh;
+  max-width:none;
+  max-height:none;
+  margin:0;
 }
 
-/* Kill “black text in dark mode” issues if any nested element has default color */
-.reading,
-.reading *{
-  color:var(--text);
+dialog.reading[open]{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
 }
+
+.reading,
+.reading *{ color:var(--text); }
 
 .reading-card{
+  width: clamp(320px, 92vw, 980px);
+  max-height:100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+
   border:1px solid var(--line);
   border-radius:20px;
   background:var(--card);
@@ -520,48 +596,56 @@ html[data-theme="dark"] .reading-card{ background:var(--panel2); }
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:12px;
   margin-bottom:8px;
 }
 
-.reading-kicker{
-  font-size:11px;
-  opacity:.72;
+.reading-title-row{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  min-width:0;
 }
 
 .reading-title{
-  margin:2px 0 12px;
-  font-size:20px;
+  margin:0;
+  min-width:0;
+  font-size:1.35rem;
+  line-height:1.15;
   font-weight:750;
   letter-spacing:-0.01em;
-  line-height:1.18;
 }
 
-.reading-actions{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:12px;
+.reading-title a{
+  color:inherit;
+  text-decoration:none;
 }
-.reading-actions::after{
-  content:"";
-  display:block;
-  width:100%;
-  height:1px;
-  margin-top:12px;
-  background: color-mix(in srgb, var(--line) 85%, transparent);
-  border-radius:999px;
+.reading-title a:hover{ text-decoration:underline; }
+
+#readingTitle{
+  display:inline-block;
+  max-width:min(62vw, 720px);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.reading-site{
+  white-space:nowrap;
+  opacity:.72;
+  font-size:.95rem;
 }
 
 .reading-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+
   border:1px solid color-mix(in srgb, var(--line) 80%, transparent);
   border-radius:16px;
   background:var(--panel);
   padding:12px;
-
-  max-height:min(68vh, 620px);
-  overflow:auto;
-  -webkit-overflow-scrolling: touch;
 
   font-size:16px;
 }
@@ -573,6 +657,7 @@ html[data-theme="dark"] .reading-card{ background:var(--panel2); }
 .reading-body p:last-child{ margin-bottom:0; }
 
 .reading-foot{
+  flex:0 0 auto;
   margin-top:10px;
   opacity:.75;
   display:flex;
@@ -580,363 +665,24 @@ html[data-theme="dark"] .reading-card{ background:var(--panel2); }
   gap:10px;
   flex-wrap:wrap;
 }
+
+/* Progress bar */
 .progress{
   display:inline-flex;
   width:140px;
   height:8px;
   border-radius:999px;
-  background: color-mix(in oklab, var(--border) 70%, transparent);
+  background: var(--progress-bg);
   overflow:hidden;
   vertical-align:middle;
 }
 .progress-bar{
   height:100%;
   width:0%;
-  background: var(--accent);
+  background: var(--progress-fg);
   transition: width 180ms ease;
 }
 
-/* Load-more as a small + button in the status/header line */
-#btnLoadMore.nm-plus{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:28px;
-  height:28px;
-  margin-left:10px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  color: inherit;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-#btnLoadMore.nm-plus:hover{
-  background: rgba(255,255,255,.10);
-}
-
-#btnLoadMore.nm-plus:active{
-  transform: translateY(1px);
-}
-
-#btnLoadMore.nm-plus:disabled{
-  opacity:.55;
-  cursor: default;
-  transform:none;
-}
-
-/* --- Bottom meta row layout fixes --- */
-.ph-meta{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-/* Þetta er “Sýni 190 fr…” — þarf að mega minnka í flex */
-.ph-meta .ph-status,
-#statusText{
-  flex:1 1 auto;
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-/* setur Uppfært hægra megin */
-.ph-meta .ph-updated,
-#lastUpdated{
-  margin-left:auto;
-  white-space:nowrap;
-}
-
-/* % við hliðina á spinnernum, aldrei hægra megin */
-.ph-meta .ph-pct,
-#loadProgressText{
-  white-space:nowrap;
-}
-
-/* litli + takkinn */
-.nm-plus{
-  width:28px;
-  height:28px;
-  padding:0;
-  display:inline-grid;
-  place-items:center;
-  border-radius:999px;
-  line-height:1;
-  font-weight:700;
-}
-
-/* progress bar má vera compact og ekki ýta layouti í sundur */
-.ph-meta .ph-progress{
-  width:72px;
-  max-width:72px;
-}
-/* =========================
-   Reading view: viewport-fit + body-only scroll
-   ========================= */
-
-/* Make the dialog itself be the fullscreen overlay (no internal dialog scrolling) */
-dialog.reading {
-  border: 0;
-  background: transparent;
-  padding:
-    calc(env(safe-area-inset-top) + 12px)
-    calc(env(safe-area-inset-right) + 12px)
-    calc(env(safe-area-inset-bottom) + 12px)
-    calc(env(safe-area-inset-left) + 12px);
-
-  width: 100vw;
-  height: 100dvh;      /* iOS-friendly dynamic viewport */
-  max-width: none;
-  max-height: none;
-  margin: 0;
-}
-
-dialog.reading::backdrop {
-  /* keep whatever look you already have; this is just a sane default */
-  background: rgba(0,0,0,.55);
-}
-
-/* Center the card within the fullscreen dialog */
-dialog.reading[open] {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-/* The card becomes a flex column, capped to the viewport */
-.reading-card {
-  width: min(720px, 100%);
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* critical: prevents the card from scrolling */
-}
-
-/* Header row with actions beside close */
-.reading-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.reading-head-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Optional: smaller pills in header (won't break if .sm doesn't exist elsewhere) */
-.pill-btn.sm {
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* Title should not create a second scroll region */
-.reading-title {
-  flex: 0 0 auto;
-  margin-bottom: 10px;
-}
-
-/* Only the article body scrolls */
-.reading-body {
-  flex: 1 1 auto;
-  min-height: 0; /* critical for flex children to allow scrolling */
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px;
-}
-
-/* Footer stays visible, not part of scroll */
-.reading-foot {
-  flex: 0 0 auto;
-  padding-top: 10px;
-}
-body.reading-open {
-  overflow: hidden;
-}
-/* Reading header: prevent "mbl.is" from breaking the layout */
-.reading-head{
-  display: grid;
-  grid-template-columns: 1fr auto; /* left can shrink, right stays "auto" */
-  align-items: center;
-  gap: 10px;
-}
-
-.reading-head-left{ min-width: 0; } /* critical for ellipsis to work */
-
-.reading-kicker{
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* Keep actions grouped on the right without kicking the left */
-.reading-head-right{
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: nowrap;  /* change to wrap if you prefer 2-line header */
-}
-
-/* Reading view: wider + device-fit */
-dialog.reading[open]{
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-}
-
-/* Card width scales with device (PC wider, mobile near full width) */
-.reading-card{
-  width: clamp(320px, 92vw, 980px);
-  max-height: 100%;
-}
-
-/* One-row header: title+site on left, close on right */
-.reading-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 12px;
-}
-
-.reading-title-row{
-  display:flex;
-  align-items:baseline;
-  gap: 10px;
-  min-width: 0; /* allows ellipsis */
-}
-
-.reading-title{
-  margin: 0;
-  min-width: 0;
-  font-size: 1.35rem; /* tweak if you want */
-  line-height: 1.15;
-}
-
-.reading-title a{
-  color: inherit;
-  text-decoration: none;
-}
-
-.reading-title a:hover{
-  text-decoration: underline;
-}
-
-/* Site right after title */
-.reading-site{
-  white-space: nowrap;
-  opacity: .72;
-  font-size: .95rem;
-}
-
-/* If title is long, don't break header—truncate title first */
-#readingTitle{
-  display:inline-block;
-  max-width: min(62vw, 720px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* =========================
-   Header: layout fix (theme + menu same row, meta right tools)
-   ========================= */
-
-/* Ensure right-side buttons never stack vertically */
-.ph-right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-/* The top header row should not force meta to collide */
-.page-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  flex-wrap:wrap;
-}
-
-/* Meta row: force 3 logical areas:
-   [status + plus + spinner + pct] .... [updated + refresh] */
-.ph-meta{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:10px;
-
-  /* important: stop weird pushing */
-  flex-wrap:nowrap;
-
-  margin-top:6px;
-  padding:0 2px;
-
-  white-space:nowrap;
-  overflow:hidden;
-}
-
-/* Status text: can shrink */
-#statusText,
-.ph-meta .ph-status{
-  flex:1 1 auto;
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-/* Keep spinner + pct together, and on the LEFT side */
-#statusSpinner,
-#loadProgressText{
-  flex:0 0 auto;
-}
-
-/* Remove the dot if you want it purely cosmetic;
-   but make sure it never jumps right */
-.ph-dot{
-  flex:0 0 auto;
-  opacity:.55;
-}
-
-/* Updated label stays on the right, but doesn't steal the whole row */
-#lastUpdated{
-  flex:0 0 auto;
-  margin-left:auto;
-  white-space:nowrap;
-}
-
-/* Refresh icon sits to the RIGHT of updated time, same baseline */
-#btnRefresh{
-  flex:0 0 auto;
-  width:34px;   /* smaller than --tap looks better in meta row */
-  height:34px;
-  border-radius:12px;
-}
-
-/* Load-more (+) should not push things around */
-#btnLoadMore.nm-plus{
-  flex:0 0 auto;
-  margin-left:6px;  /* next to status text */
-}
-
-/* Progress bar must not force layout wrapping */
-#loadProgress.ph-progress{
-  flex:0 0 auto;
-  width:72px;
-  max-width:72px;
-}
-
-/* On small screens, allow title to take more space */
 @media (max-width: 520px){
-  #readingTitle{ max-width: 72vw; }
+  #readingTitle{ max-width:72vw; }
 }
