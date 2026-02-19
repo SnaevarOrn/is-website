@@ -125,6 +125,8 @@ mbl: {
 
   // If classification fails for these sources, force into "innlent"
   const FORCE_INNLENT_IF_UNCLASSIFIED = new Set([
+    "aknet",
+    "akis",
     "bb",
     "bbl",
     "byggingar",
@@ -133,6 +135,7 @@ mbl: {
     "frjalsverslun",
     "feykir",
     "fjardarfrettir",
+    "hi",
     "midjan",
     "skagafjordur",
     "sunnlenska",
