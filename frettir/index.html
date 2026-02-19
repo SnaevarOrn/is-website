@@ -65,7 +65,9 @@
     <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
     <span id="loadProgressText" class="tiny muted ph-pct" hidden>0%</span>
   </div>
-
+<div class="progress ph-progress" id="loadProgress" hidden aria-label="Hleðsla">
+    <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
+  </div>
 <button class="icon-btn"
             id="btnRefresh"
             type="button"
@@ -77,11 +79,7 @@
     <span class="ph-updated" id="lastUpdated"></span>
 
       </div>
-
-  <div class="progress ph-progress" id="loadProgress" hidden aria-label="Hleðsla">
-    <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
   </div>
-</div>
   </header>
 
   <main class="page-main">
