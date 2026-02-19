@@ -788,9 +788,67 @@ body.reading-open {
   flex-wrap: nowrap;  /* change to wrap if you prefer 2-line header */
 }
 
-/* Optional: if it still feels tight on small screens, shrink pills a bit */
-@media (max-width: 420px){
-  .pill-btn.sm{ padding: 7px 9px; font-size: .86rem; }
-  .reading-head-right{ gap: 8px; }
+/* Reading view: wider + device-fit */
+dialog.reading[open]{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
 }
 
+/* Card width scales with device (PC wider, mobile near full width) */
+.reading-card{
+  width: clamp(320px, 92vw, 980px);
+  max-height: 100%;
+}
+
+/* One-row header: title+site on left, close on right */
+.reading-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+}
+
+.reading-title-row{
+  display:flex;
+  align-items:baseline;
+  gap: 10px;
+  min-width: 0; /* allows ellipsis */
+}
+
+.reading-title{
+  margin: 0;
+  min-width: 0;
+  font-size: 1.35rem; /* tweak if you want */
+  line-height: 1.15;
+}
+
+.reading-title a{
+  color: inherit;
+  text-decoration: none;
+}
+
+.reading-title a:hover{
+  text-decoration: underline;
+}
+
+/* Site right after title */
+.reading-site{
+  white-space: nowrap;
+  opacity: .72;
+  font-size: .95rem;
+}
+
+/* If title is long, don't break header—truncate title first */
+#readingTitle{
+  display:inline-block;
+  max-width: min(62vw, 720px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* On small screens, allow title to take more space */
+@media (max-width: 520px){
+  #readingTitle{ max-width: 72vw; }
+}
