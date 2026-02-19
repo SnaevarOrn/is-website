@@ -81,9 +81,7 @@
   const els = {
     btnBack: $("#btnBack"),
     btnMenu: $("#btnMenu"),
-    menuPanel: $("#menuPanel"),
     btnThemeToggle: $("#btnThemeToggle"),
-    btnOpenSettings: $("#btnOpenSettings"),
     btnRefresh: $("#btnRefresh"),
     btnLoadMore: $("#btnLoadMore"),
 
@@ -199,25 +197,7 @@
     if (els.lastUpdated) els.lastUpdated.textContent = `Uppfært ${hh}:${mm}`;
   }
 
-  function openMenu() {
-    els.menuPanel?.classList.add("open");
-    els.menuPanel?.setAttribute("aria-hidden", "false");
-    setTimeout(() => window.addEventListener("pointerdown", onOutsideMenu, { once: true }), 0);
-  }
-
-  function closeMenu() {
-    els.menuPanel?.classList.remove("open");
-    els.menuPanel?.setAttribute("aria-hidden", "true");
-  }
-
-  function onOutsideMenu(e) {
-    if (!els.menuPanel) return;
-    if (!els.menuPanel.contains(e.target) && e.target !== els.btnMenu) closeMenu();
-    else setTimeout(() => window.addEventListener("pointerdown", onOutsideMenu, { once: true }), 0);
-  }
-
   function openSettings() {
-    closeMenu();
     if (!els.settingsDialog) return;
     if (typeof els.settingsDialog.showModal === "function") els.settingsDialog.showModal();
     else els.settingsDialog.setAttribute("open", "");
@@ -847,7 +827,6 @@
     if (isRefreshing) return;
     if (els.settingsDialog?.open) return;
     if (els.readingDialog?.open) return;
-    if (els.menuPanel?.classList.contains("open")) return;
     if (window.scrollY > 0) return;
 
     const p = e.touches ? e.touches[0] : e;
@@ -912,21 +891,14 @@
       else window.location.href = "/";
     });
 
-    els.btnMenu?.addEventListener("click", () => {
-      if (els.menuPanel?.classList.contains("open")) closeMenu();
-      else openMenu();
-    });
+    // ☰ = opna stillingar/síun
+    els.btnMenu?.addEventListener("click", openSettings);
 
-    els.btnThemeToggle?.addEventListener("click", () => {
-      toggleTheme();
-      closeMenu();
-    });
+    // 🌓 = theme toggle
+    els.btnThemeToggle?.addEventListener("click", toggleTheme);
 
-    els.btnOpenSettings?.addEventListener("click", openSettings);
-    els.btnRefresh?.addEventListener("click", () => {
-      closeMenu();
-      refresh();
-    });
+    // 🔄 = refresh
+    els.btnRefresh?.addEventListener("click", refresh);
 
     els.btnEmptyOpenSettings?.addEventListener("click", openSettings);
     els.btnRetry?.addEventListener("click", refresh);
@@ -1008,7 +980,6 @@
         closeSettings();
         return;
       }
-      closeMenu();
     });
   }
 
