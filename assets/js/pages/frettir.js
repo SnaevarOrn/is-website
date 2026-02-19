@@ -22,6 +22,7 @@
     { id: "frjalsverslun", label: "Frjáls verslun",  domain: "frjalsverslun.is" },
     { id: "grapevine",     label: "Grapevine",       domain: "grapevine.is" },
     { id: "heimildin",     label: "Heimildin",       domain: "heimildin.is" },
+    { id: "hi",            label: "Háskóli Íslands", domain: "hi.is" },
     { id: "kaffid",        label: "Kaffið",          domain: "kaffid.is" },
     { id: "mannlif",       label: "Mannlíf",         domain: "mannlif.is" },
     { id: "midjan",        label: "Miðjan",          domain: "midjan.is" },
