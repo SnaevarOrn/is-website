@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ís.is — Fréttir</title>
-  
+
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.png" sizes="32x32">
   <link rel="icon" href="/favicon.png" sizes="16x16">
@@ -26,7 +26,7 @@
     const meta = document.getElementById('metaThemeColor');
     if (meta) meta.setAttribute('content', theme === 'dark' ? '#0b0f14' : '#ffffff');
   })();
-</script>
+  </script>
 </head>
 
 <body>
@@ -34,61 +34,46 @@
     <div class="ph-left">
       <button class="icon-btn" id="btnBack" aria-label="Til baka" title="Forsíða">←</button>
       <div class="ph-title">
-
-  <nav class="ph-tabs" aria-label="Fréttasvæði">
-    <a class="ph-tab" href="/frettir/" data-tab="iceland">IS</a>
-    <a class="ph-tab" href="/erlent/"  data-tab="world">🌐</a>
-  </nav>
-</div>
-
+        <nav class="ph-tabs" aria-label="Fréttasvæði">
+          <a class="ph-tab" href="/frettir/" data-tab="iceland">IS</a>
+          <a class="ph-tab" href="/erlent/"  data-tab="world">🌐</a>
+        </nav>
+      </div>
     </div>
 
     <div class="ph-right">
-      <button class="icon-btn" id="btnMenu" aria-label="Valmynd" title="Valmynd">☰</button>
+      <!-- NEW: Theme button next to hamburger -->
+      <button class="icon-btn" id="btnThemeToggle" aria-label="Þema" title="Þema">🌓</button>
+
+      <!-- Hamburger now opens Settings (no menu panel) -->
+      <button class="icon-btn" id="btnMenu" aria-label="Stillingar" title="Stillingar">☰</button>
     </div>
 
     <div class="ph-meta" aria-live="polite">
-  <span id="statusText" class="ph-status">Tilbúið.</span>
+      <!-- Status + LoadMore side-by-side -->
+      <span class="ph-status">
+        <span id="statusText">Tilbúið.</span>
+        <button id="btnLoadMore"
+                class="nm-plus"
+                type="button"
+                hidden
+                title="Sækja meira"
+                aria-label="Sækja meira">+</button>
+      </span>
 
-  <button id="btnLoadMore"
-          class="nm-plus"
-          type="button"
-          hidden
-          title="Sækja meira"
-          aria-label="Sækja meira">+</button>
+      <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
+      <span id="loadProgressText" class="tiny muted ph-pct" hidden>0%</span>
 
-  <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
-  <span id="loadProgressText" class="tiny muted ph-pct" hidden>0%</span>
+      <span class="ph-dot">•</span>
 
-  <span class="ph-dot">•</span>
-  <span id="lastUpdated" class="ph-updated"></span>
+      <span class="ph-updated">
+        <span id="lastUpdated"></span>
+        <!-- NEW: Refresh button next to last updated -->
+        <button class="icon-btn" id="btnRefresh" type="button" aria-label="Endurhlaða" title="Endurhlaða">🔄</button>
+      </span>
 
-  <div class="progress ph-progress" id="loadProgress" hidden aria-label="Hleðsla">
-    <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
-  </div>
-</div>
-    <div class="menu-panel" id="menuPanel" aria-hidden="true">
-      <div class="menu-card">
-        <button class="menu-action" id="btnThemeToggle" type="button">
-          <span class="ma-title">Þema</span>
-          <span class="ma-sub">Light / Dark</span>
-        </button>
-
-        <button class="menu-action" id="btnOpenSettings" type="button">
-          <span class="ma-title">Stillingar</span>
-          <span class="ma-sub">Miðlar + síur</span>
-        </button>
-
-        <button class="menu-action" id="btnRefresh" type="button">
-          <span class="ma-title">Endurhlaða</span>
-          <span class="ma-sub">Sækja nýjustu</span>
-        </button>
-
-        <div class="menu-row-last">
-          <a class="menu-link" href="/">Forsíða</a>
-          <span class="menu-dot">•</span>
-          <a class="menu-link" href="/spil/">Spil</a>
-        </div>
+      <div class="progress ph-progress" id="loadProgress" hidden aria-label="Hleðsla">
+        <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
       </div>
     </div>
   </header>
@@ -148,37 +133,36 @@
       <p class="muted" id="errorMsg">Gat ekki sótt fréttir.</p>
       <button class="pill-btn primary" id="btnRetry" type="button">Reyna aftur</button>
     </section>
-    
-        <!-- Reading view modal -->
-<dialog class="reading" id="readingDialog" aria-label="Leshamur">
-  <div class="reading-card" role="document">
-    <div class="reading-head">
-      <div class="reading-title-row">
-        <h2 class="reading-title">
-          <a id="readingTitleLink"
-             href="#"
-             target="_blank"
-             rel="noopener noreferrer"
-             referrerpolicy="no-referrer">
-            <span id="readingTitle">Hleð…</span>
-          </a>
-        </h2>
 
-        <span class="reading-site" id="readingSite">Frétt</span>
+    <!-- Reading view modal -->
+    <dialog class="reading" id="readingDialog" aria-label="Leshamur">
+      <div class="reading-card" role="document">
+        <div class="reading-head">
+          <div class="reading-title-row">
+            <h2 class="reading-title">
+              <a id="readingTitleLink"
+                 href="#"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 referrerpolicy="no-referrer">
+                <span id="readingTitle">Hleð…</span>
+              </a>
+            </h2>
+
+            <span class="reading-site" id="readingSite">Frétt</span>
+          </div>
+
+          <button class="icon-btn" id="btnCloseReading"
+                  type="button" aria-label="Loka" title="Loka">✕</button>
+        </div>
+
+        <div class="reading-body" id="readingBody">
+          <p class="muted">Sæki texta…</p>
+        </div>
+
+        <div class="reading-foot tiny muted" id="readingMeta"></div>
       </div>
-
-      <button class="icon-btn" id="btnCloseReading"
-              type="button" aria-label="Loka" title="Loka">✕</button>
-    </div>
-
-    <div class="reading-body" id="readingBody">
-      <p class="muted">Sæki texta…</p>
-    </div>
-
-    <div class="reading-foot tiny muted" id="readingMeta"></div>
-  </div>
-</dialog>
-
+    </dialog>
   </main>
 
   <script src="/assets/js/utils.js"></script>
