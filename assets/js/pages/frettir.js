@@ -115,14 +115,14 @@
     loadProgressBar: $("#loadProgressBar"),
     loadProgressText: $("#loadProgressText"),
 
-    // Reading view modal
-    readingDialog: $("#readingDialog"),
-    btnCloseReading: $("#btnCloseReading"),
-    readingSite: $("#readingSite"),
-    readingTitle: $("#readingTitle"),
-    readingBody: $("#readingBody"),
-    readingMeta: $("#readingMeta"),
-    readingOpenOriginal: $("#readingOpenOriginal"),
+      // Reading view modal
+  readingDialog: $("#readingDialog"),
+  btnCloseReading: $("#btnCloseReading"),
+  readingSite: $("#readingSite"),
+  readingTitle: $("#readingTitle"),
+  readingTitleLink: $("#readingTitleLink"),
+  readingBody: $("#readingBody"),
+  readingMeta: $("#readingMeta"),
   };
 
   const defaultPrefs = () => ({
@@ -688,13 +688,13 @@
     document.body.classList.remove("reading-open");
   }
 
-  function setReadingLoading(url) {
+    function setReadingLoading(url) {
     readingCurrentUrl = url || "";
     if (els.readingSite) els.readingSite.textContent = "Leshamur";
     if (els.readingTitle) els.readingTitle.textContent = "Sæki texta…";
     if (els.readingBody) els.readingBody.innerHTML = `<p class="muted">Sæki texta…</p>`;
     if (els.readingMeta) els.readingMeta.textContent = "";
-    if (els.readingOpenOriginal) els.readingOpenOriginal.href = readingCurrentUrl || "#";
+    if (els.readingTitleLink) els.readingTitleLink.href = readingCurrentUrl || "#";
   }
 
   function paragraphsFromText(text) {
@@ -716,6 +716,7 @@
 
   async function showReadingView(url) {
     if (!url) return;
+        readingCurrentUrl = url;
 
     // Auto-mark as read when opening reading view (same behavior as "Opna upprunalega")
     markRead(url);
@@ -752,7 +753,7 @@
           `${wc ? wc + " orð" : ""}${wc && cc ? " • " : ""}${cc ? cc + " stafir" : ""}`;
       }
 
-      if (els.readingOpenOriginal) els.readingOpenOriginal.href = url;
+            if (els.readingTitleLink) els.readingTitleLink.href = url;
     } catch (err) {
       console.error("[frettir] readingview error", err);
       if (els.readingTitle) els.readingTitle.textContent = "Gat ekki sótt texta";
@@ -765,6 +766,7 @@
         `;
       }
       if (els.readingMeta) els.readingMeta.textContent = "";
+            if (els.readingTitleLink) els.readingTitleLink.href = url;
     }
   }
 
@@ -947,6 +949,17 @@
     // Reading modal controls
     els.btnCloseReading?.addEventListener("click", closeReading);
 
+        // Title in reading view opens original (same behavior as list title)
+    els.readingTitleLink?.addEventListener("click", (e) => {
+      if (!readingCurrentUrl) return;
+
+      e.preventDefault();
+      window.open(readingCurrentUrl, "_blank", "noopener,noreferrer");
+
+      // Optional: close modal after opening (feels nice on desktop)
+      closeReading();
+    });
+
     // Ensure body scroll lock is cleared if dialog closes via ESC, etc.
     els.readingDialog?.addEventListener("close", () => {
       document.body.classList.remove("reading-open");
@@ -955,14 +968,6 @@
     // Close reading on backdrop click (if user taps outside card)
     els.readingDialog?.addEventListener("click", (e) => {
       if (e.target === els.readingDialog) closeReading();
-    });
-
-    // If user clicks "open original" inside modal: mark read too
-    els.readingOpenOriginal?.addEventListener("click", () => {
-      if (!readingCurrentUrl) return;
-      markRead(readingCurrentUrl);
-      const art = els.newsList?.querySelector(`.item[data-url="${escSelector(readingCurrentUrl)}"]`);
-      if (art) art.classList.add("is-read");
     });
 
     // News list click handling:
