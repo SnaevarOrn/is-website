@@ -649,8 +649,11 @@
 
   let readingCurrentUrl = "";
 
-  function openReading() {
-    closeMenu();
+    function openReading() {
+    // Ekki lengur menu-panel til að loka.
+    // Ef settings eru opin, lokum þeim (valfrjálst, en þægilegt).
+    if (els.settingsDialog?.open) closeSettings();
+
     if (!els.readingDialog) return;
 
     document.body.classList.add("reading-open");
@@ -658,6 +661,7 @@
     if (typeof els.readingDialog.showModal === "function") els.readingDialog.showModal();
     else els.readingDialog.setAttribute("open", "");
   }
+
 
   function closeReading() {
     if (!els.readingDialog) return;
@@ -844,7 +848,6 @@
     if (isRefreshing) return;
     if (els.settingsDialog?.open) return;
     if (els.readingDialog?.open) return;
-    if (els.menuPanel?.classList.contains("open")) return;
     if (window.scrollY > 0) return;
 
     const p = e.touches ? e.touches[0] : e;
