@@ -50,32 +50,37 @@
     </div>
 
     <div class="ph-meta" aria-live="polite">
-      <!-- Status + LoadMore side-by-side -->
-      <span class="ph-status">
-        <span id="statusText">Tilbúið.</span>
-        <button id="btnLoadMore"
-                class="nm-plus"
-                type="button"
-                hidden
-                title="Sækja meira"
-                aria-label="Sækja meira">+</button>
-      </span>
+  <div class="ph-meta-left">
+    <span class="ph-status">
+      <span id="statusText">Tilbúið.</span>
 
-      <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
-      <span id="loadProgressText" class="tiny muted ph-pct" hidden>0%</span>
+      <button id="btnLoadMore"
+              class="nm-plus"
+              type="button"
+              hidden
+              title="Sækja meira"
+              aria-label="Sækja meira">+</button>
+    </span>
 
-      <span class="ph-dot">•</span>
+    <span id="statusSpinner" class="spinner sm" aria-hidden="true" hidden></span>
+    <span id="loadProgressText" class="tiny muted ph-pct" hidden>0%</span>
+  </div>
 
-      <span class="ph-updated">
-        <span id="lastUpdated"></span>
-        <!-- NEW: Refresh button next to last updated -->
-        <button class="icon-btn" id="btnRefresh" type="button" aria-label="Endurhlaða" title="Endurhlaða">🔄</button>
-      </span>
+  <div class="ph-meta-right">
+    <span class="ph-dot">•</span>
+    <span class="ph-updated" id="lastUpdated"></span>
 
-      <div class="progress ph-progress" id="loadProgress" hidden aria-label="Hleðsla">
-        <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
-      </div>
-    </div>
+    <button class="icon-btn"
+            id="btnRefresh"
+            type="button"
+            aria-label="Endurhlaða"
+            title="Endurhlaða">🔄</button>
+  </div>
+
+  <div class="progress ph-progress" id="loadProgress" hidden aria-label="Hleðsla">
+    <div class="progress-bar" id="loadProgressBar" style="width:0%"></div>
+  </div>
+</div>
   </header>
 
   <main class="page-main">
