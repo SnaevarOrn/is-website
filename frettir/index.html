@@ -148,26 +148,28 @@
       <p class="muted" id="errorMsg">Gat ekki sótt fréttir.</p>
       <button class="pill-btn primary" id="btnRetry" type="button">Reyna aftur</button>
     </section>
+    
         <!-- Reading view modal -->
 <dialog class="reading" id="readingDialog" aria-label="Leshamur">
   <div class="reading-card" role="document">
     <div class="reading-head">
-      <div class="reading-head-left">
-        <div class="reading-kicker" id="readingSite">Frétt</div>
+      <div class="reading-title-row">
+        <h2 class="reading-title">
+          <a id="readingTitleLink"
+             href="#"
+             target="_blank"
+             rel="noopener noreferrer"
+             referrerpolicy="no-referrer">
+            <span id="readingTitle">Hleð…</span>
+          </a>
+        </h2>
+
+        <span class="reading-site" id="readingSite">Frétt</span>
       </div>
 
-      <div class="reading-head-right">
-        <a class="pill-btn sm" id="readingOpenOriginal" href="#"
-           target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
-          Opna upprunalega
-        </a>
-
-        <button class="icon-btn" id="btnCloseReading" type="button"
-                aria-label="Loka" title="Loka">✕</button>
-      </div>
+      <button class="icon-btn" id="btnCloseReading"
+              type="button" aria-label="Loka" title="Loka">✕</button>
     </div>
-
-    <h2 class="reading-title" id="readingTitle">Hleð…</h2>
 
     <div class="reading-body" id="readingBody">
       <p class="muted">Sæki texta…</p>
@@ -176,6 +178,7 @@
     <div class="reading-foot tiny muted" id="readingMeta"></div>
   </div>
 </dialog>
+
   </main>
 
   <script src="/assets/js/utils.js"></script>
