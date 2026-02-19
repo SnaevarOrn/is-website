@@ -58,7 +58,7 @@
   // Rest comes in batches (smaller requests => smoother progress)
   const REST_BATCH_SIZE = 4;     // 4 sources at a time
   const LIMIT_PER_BATCH = 25;    // items per batch request
-  const LOAD_MORE_STEP = 100;    // how many more items when pressing "Sækja meira"
+  const LOAD_MORE_STEP = 400;    // how many more items when pressing "Sækja meira"
 
   // Read/visited tracking
   const READ_KEY = "is_news_read_v1";
