@@ -848,6 +848,94 @@ dialog.reading[open]{
   text-overflow: ellipsis;
 }
 
+/* =========================
+   Header: layout fix (theme + menu same row, meta right tools)
+   ========================= */
+
+/* Ensure right-side buttons never stack vertically */
+.ph-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* The top header row should not force meta to collide */
+.page-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+/* Meta row: force 3 logical areas:
+   [status + plus + spinner + pct] .... [updated + refresh] */
+.ph-meta{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  /* important: stop weird pushing */
+  flex-wrap:nowrap;
+
+  margin-top:6px;
+  padding:0 2px;
+
+  white-space:nowrap;
+  overflow:hidden;
+}
+
+/* Status text: can shrink */
+#statusText,
+.ph-meta .ph-status{
+  flex:1 1 auto;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* Keep spinner + pct together, and on the LEFT side */
+#statusSpinner,
+#loadProgressText{
+  flex:0 0 auto;
+}
+
+/* Remove the dot if you want it purely cosmetic;
+   but make sure it never jumps right */
+.ph-dot{
+  flex:0 0 auto;
+  opacity:.55;
+}
+
+/* Updated label stays on the right, but doesn't steal the whole row */
+#lastUpdated{
+  flex:0 0 auto;
+  margin-left:auto;
+  white-space:nowrap;
+}
+
+/* Refresh icon sits to the RIGHT of updated time, same baseline */
+#btnRefresh{
+  flex:0 0 auto;
+  width:34px;   /* smaller than --tap looks better in meta row */
+  height:34px;
+  border-radius:12px;
+}
+
+/* Load-more (+) should not push things around */
+#btnLoadMore.nm-plus{
+  flex:0 0 auto;
+  margin-left:6px;  /* next to status text */
+}
+
+/* Progress bar must not force layout wrapping */
+#loadProgress.ph-progress{
+  flex:0 0 auto;
+  width:72px;
+  max-width:72px;
+}
+
 /* On small screens, allow title to take more space */
 @media (max-width: 520px){
   #readingTitle{ max-width: 72vw; }
