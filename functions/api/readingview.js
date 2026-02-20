@@ -147,6 +147,29 @@ function decodeEntities(input) {
   s = stripSoftHyphens(s);
 
   return s;
+
+  // Common named (include ISO-8859-1 / HTML4 named entities)
+const NAMED = {
+  nbsp: " ", amp: "&", quot: "\"", apos: "'", lt: "<", gt: ">",
+  ndash: "–", mdash: "—",
+
+  // Icelandic + common Latin-1
+  Aacute:"Á", aacute:"á",
+  Eth:"Ð", eth:"ð",
+  THORN:"Þ", thorn:"þ",
+  AElig:"Æ", aelig:"æ",
+  Oacute:"Ó", oacute:"ó",
+  Iacute:"Í", iacute:"í",
+  Uacute:"Ú", uacute:"ú",
+  Yacute:"Ý", yacute:"ý",
+  Eacute:"É", eacute:"é",
+  Ouml:"Ö", ouml:"ö",
+};
+
+s = s.replace(/&([a-zA-Z]+);/g, (m, name) => {
+  const v = NAMED[name];
+  return v !== undefined ? v : m;
+});
 }
 
 // Strip tags if we end up with HTML-ish blobs (from JSON fields sometimes)
