@@ -39,7 +39,7 @@ export async function onRequestGet({ request }) {
 
   const sources = (searchParams.get("sources") || "").split(",").filter(Boolean);
   const catsParam = (searchParams.get("cats") || "").split(",").filter(Boolean);
-  const limit = clampInt(searchParams.get("limit"), 1, 360, 50);
+  const limit = clampInt(searchParams.get("limit"), 1, 999, 50);
   const debug = searchParams.get("debug") === "1";
 
   const feeds = {
