@@ -29,7 +29,7 @@ const ALLOWED_HOSTS = new Set([
   "www.feykir.is", "feykir.is",
   "www.fjardarfrettir.is", "fjardarfrettir.is",
   "www.frettin.is", "frettin.is",
-  "fiskifrettir.vb.is", "fiskifrettir.is",
+  "www.fiskifrettir.vb.is", "https://fiskifrettir.vb.is/", "fiskifrettir.vb.is", "fiskifrettir.is",
   "frjalsverslun.vb.is", "frjalsverslun.is",
   "www.grapevine.is", "grapevine.is",
   "www.heimildin.is", "heimildin.is",
@@ -324,6 +324,13 @@ function truncateFromKnownCutMarkers(paragraphs) {
 
     // bb.is cookie/consent notice
     /við\s+notum\s+vefk[öo]kur\s+til\s+a[ðd]\s+safna\s+og\s+greina\s+uppl[ýy]singar\s+um\s+notkun\s+og\s+virkni\s+á\s+bb\.is/i,
+
+    // feykir.is subscription promo (cut marker)
+    // Matches the “Færð blaðið inn um lúguna…” block and variants (price/month/PDF/locked news)
+    /\bf[æa]r[ðd]\s+bla[ðd]i[ðd]\s+inn\s+um\s+l[úu]guna\b[\s\S]{0,800}?\b(kostar|kr\.?|kr[óo]n(?:ur|um)|a[ðd]gang|pdf|l[æa]stum\s+fr[ée]ttum|m[áa]nu[ðd]i)\b/i,
+
+    // byggingar.is promo/about block (cut marker)
+    /\bbyggingar\.is\b[\s\S]{0,500}?\b(öflugur|fretta\s+og\s+vefmidill|byggingarmarka[ðd]i|contact\s+us)\b/i,
   ];
 
   const isMarker = (s) => {
