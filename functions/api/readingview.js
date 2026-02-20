@@ -331,6 +331,13 @@ function truncateFromKnownCutMarkers(paragraphs) {
 
     // byggingar.is promo/about block (cut marker)
     /\bbyggingar\.is\b[\s\S]{0,500}?\b(öflugur|fretta\s+og\s+vefmidill|byggingarmarka[ðd]i|contact\s+us)\b/i,
+
+    // generic cookie consent block 1
+    /\b(f[óo]tspor\s+við\s+erum\s+a[ðd]\s+nota|sl[öo]kkt\s+a[ðd]\s+[þu]eim\s+i\s+stillingum)\b/i,
+
+    // generic cookie consent block 2
+    /\bvi[ðd]\s+notum\s+sm[áa]k[öo]kur\b[\s\S]{0,600}?\b(sam[þt]ykkir|stefnu\s+okkar|loka|uppl[ýy]singar)\b/i,
+    
   ];
 
   const isMarker = (s) => {
