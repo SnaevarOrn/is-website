@@ -106,6 +106,7 @@ mbl: {
     tigull:         { url: "https://tigull.is/feed/",           label: "Tígull" },
     trolli:         { url: "https://trolli.is/feed/",           label: "Trölli" },
     vestfirdir:     { url: "https://www.vestfirdir.is/feed",    label: "Vestfirðir" },
+    vikubladid:     { url: "https://www.vikubladid.is/feed",    label: "Vikublaðið" },
     viljinn:        { url: "https://viljinn.is/feed/",          label: "Viljinn" },
     visbending:     { url: "https://visbending.is/rss/",        label: "Vísbending" },
      
