@@ -33,6 +33,7 @@
     { id: "trolli",        label: "Trölli",          domain: "trolli.is" },
     { id: "vb",            label: "Viðskiptablaðið", domain: "vb.is" },
     { id: "vestfirdir",    label: "Vestfirðir",      domain: "vestfirdir.is" },
+    { id: "vikubladid",    label: "Vikublaðið",      domain: "vikubladid.is" },
     { id: "viljinn",       label: "Viljinn",         domain: "viljinn.is" },
     { id: "visbending",    label: "Vísbending",      domain: "visbending.is" },
   ];
