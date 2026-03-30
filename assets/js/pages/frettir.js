@@ -131,7 +131,7 @@
   ])),
   categories: Object.fromEntries(CATEGORIES.map(c => [
     c.id,
-    c.id !== "ithrottir"
+    c.id !== "ithrottir", "oflokkad"
   ])),
 });
 
