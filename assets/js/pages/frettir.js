@@ -125,9 +125,15 @@
   };
 
   const defaultPrefs = () => ({
-    sources: Object.fromEntries(SOURCES.map(s => [s.id, true])),
-    categories: Object.fromEntries(CATEGORIES.map(c => [c.id, true])),
-  });
+  sources: Object.fromEntries(SOURCES.map(s => [
+    s.id,
+    ["ruv", "mbl", "visir", "dv"].includes(s.id)
+  ])),
+  categories: Object.fromEntries(CATEGORIES.map(c => [
+    c.id,
+    c.id !== "ithrottir"
+  ])),
+});
 
   function loadPrefs() {
     try {
