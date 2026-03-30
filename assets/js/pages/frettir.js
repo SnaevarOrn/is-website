@@ -127,7 +127,7 @@
   const defaultPrefs = () => ({
   sources: Object.fromEntries(SOURCES.map(s => [
     s.id,
-    ["ruv", "mbl", "visir", "dv"].includes(s.id)
+    ["ruv", "mbl", "bbl", "visir", "dv"].includes(s.id)
   ])),
   categories: Object.fromEntries(CATEGORIES.map(c => [
     c.id,
