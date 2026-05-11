@@ -11,6 +11,11 @@ const downloadBtn = document.getElementById("downloadBtn");
 const clearBtn = document.getElementById("clearBtn");
 const swapBtn = document.getElementById("swapBtn");
 
+const STORAGE_KEYS = {
+  following: "igCompare.following",
+  followers: "igCompare.followers",
+};
+
 function normalizeName(value) {
   return value
     .trim()
@@ -34,18 +39,35 @@ function autoResize(textarea) {
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
+function saveState() {
+  localStorage.setItem(STORAGE_KEYS.following, followingInput.value);
+  localStorage.setItem(STORAGE_KEYS.followers, followersInput.value);
+}
+
+function loadState() {
+  followingInput.value =
+    localStorage.getItem(STORAGE_KEYS.following) || "";
+
+  followersInput.value =
+    localStorage.getItem(STORAGE_KEYS.followers) || "";
+}
+
 function update() {
   autoResize(followingInput);
   autoResize(followersInput);
 
   const following = parseList(followingInput.value);
   const followers = parseList(followersInput.value);
+
   const followerSet = new Set(followers);
 
-  const notFollowingBack = following.filter(name => !followerSet.has(name));
+  const notFollowingBack = following.filter(
+    name => !followerSet.has(name)
+  );
 
   followingCount.textContent = `${following.length} nöfn`;
   followersCount.textContent = `${followers.length} nöfn`;
+
   resultCount.textContent = notFollowingBack.length;
 
   if (!following.length && !followers.length) {
@@ -55,41 +77,67 @@ function update() {
   }
 
   if (!notFollowingBack.length) {
-    resultList.textContent = "Allir sem þú followar virðast followa þig tilbaka.";
+    resultList.textContent =
+      "Allir sem þú followar virðast followa þig tilbaka.";
+
     resultList.classList.add("empty");
     return;
   }
 
-  resultList.textContent = notFollowingBack.map(name => `@${name}`).join("\n");
+  resultList.textContent = notFollowingBack
+    .map(name => `@${name}`)
+    .join("\n");
+
   resultList.classList.remove("empty");
 }
 
 function getResultText() {
-  return resultList.classList.contains("empty") ? "" : resultList.textContent;
+  return resultList.classList.contains("empty")
+    ? ""
+    : resultList.textContent;
 }
 
-followingInput.addEventListener("input", update);
-followersInput.addEventListener("input", update);
+followingInput.addEventListener("input", () => {
+  saveState();
+  update();
+});
+
+followersInput.addEventListener("input", () => {
+  saveState();
+  update();
+});
 
 copyBtn.addEventListener("click", async () => {
   const text = getResultText();
+
   if (!text) return;
 
   await navigator.clipboard.writeText(text);
+
   copyBtn.textContent = "Copied";
-  setTimeout(() => (copyBtn.textContent = "Copy"), 1200);
+
+  setTimeout(() => {
+    copyBtn.textContent = "Copy";
+  }, 1200);
 });
 
 downloadBtn.addEventListener("click", () => {
   const text = getResultText();
+
   if (!text) return;
 
-  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob(
+    [text],
+    { type: "text/plain;charset=utf-8" }
+  );
+
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
+
   a.href = url;
   a.download = "not-following-back.txt";
+
   a.click();
 
   URL.revokeObjectURL(url);
@@ -98,14 +146,22 @@ downloadBtn.addEventListener("click", () => {
 clearBtn.addEventListener("click", () => {
   followingInput.value = "";
   followersInput.value = "";
+
+  localStorage.removeItem(STORAGE_KEYS.following);
+  localStorage.removeItem(STORAGE_KEYS.followers);
+
   update();
 });
 
 swapBtn.addEventListener("click", () => {
   const temp = followingInput.value;
+
   followingInput.value = followersInput.value;
   followersInput.value = temp;
+
+  saveState();
   update();
 });
 
+loadState();
 update();
