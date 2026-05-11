@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="is">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Instagram Follow-back samanburður</title>
+  <link rel="stylesheet" href="/assets/css/ig-compare.css" />
+</head>
+<body>
+  <main class="ig-page">
+    <header class="ig-header">
+      <h1>Instagram follow-back checker</h1>
+      <p>Paste-aðu <strong>following</strong> og <strong>followers</strong> lista. Allt keyrir local í browsernum.</p>
+    </header>
+
+    <section class="ig-grid">
+      <div class="ig-card">
+        <label for="followingInput">Following</label>
+        <textarea id="followingInput" placeholder="@username1&#10;username2&#10;username3"></textarea>
+        <small id="followingCount">0 nöfn</small>
+      </div>
+
+      <div class="ig-card">
+        <label for="followersInput">Followers</label>
+        <textarea id="followersInput" placeholder="@username1&#10;username2&#10;username3"></textarea>
+        <small id="followersCount">0 nöfn</small>
+      </div>
+
+      <div class="ig-card result-card">
+        <div class="result-head">
+          <label>Niðurstaða</label>
+          <span id="resultCount">0</span>
+        </div>
+
+        <div id="resultList" class="result-list empty">
+          Engin gögn komin inn.
+        </div>
+
+        <div class="button-row">
+          <button id="copyBtn" type="button">Copy</button>
+          <button id="downloadBtn" type="button">Download .txt</button>
+          <button id="swapBtn" type="button">Swap</button>
+          <button id="clearBtn" type="button" class="danger">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <p class="privacy-note">
+      Privacy: Listarnir fara ekki úr tækinu þínu. Ekkert er vistað eða sent á server.
+    </p>
+  </main>
+
+  <script src="/assets/js/ig-compare.js"></script>
+</body>
+</html>
