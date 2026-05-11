@@ -20,23 +20,34 @@ function normalizeName(value) {
   return value
     .trim()
     .replace(/^@+/, "")
-    .replace(/\s+/g, "")
+    .replace(/[^\p{L}\p{N}._]/gu, "")
     .toLowerCase();
+}
+
+function looksLikeUsername(name) {
+  if (!name) return false;
+  if (name === ".") return false;
+  if (name.length < 2) return false;
+  if (name.includes(" ")) return false;
+
+  if (!/^[a-z0-9._]+$/.test(name)) return false;
+  if (/^[._]+$/.test(name)) return false;
+
+  return true;
 }
 
 function parseList(text) {
   const raw = text
-    .split(/\n|,|;|\t/)
+    .split(/\r?\n|,|;|\t/)
     .map(normalizeName)
-    .filter(Boolean)
-    .filter(name => /^[a-z0-9._]+$/.test(name));
+    .filter(looksLikeUsername);
 
   return [...new Set(raw)];
 }
 
-function autoResize(textarea) {
-  textarea.style.height = "auto";
-  textarea.style.height = `${textarea.scrollHeight}px`;
+function autoResize() {
+  // Intentionally disabled.
+  // Textareas should stay compact and scroll internally.
 }
 
 function saveState() {
@@ -45,20 +56,15 @@ function saveState() {
 }
 
 function loadState() {
-  followingInput.value =
-    localStorage.getItem(STORAGE_KEYS.following) || "";
-
-  followersInput.value =
-    localStorage.getItem(STORAGE_KEYS.followers) || "";
+  followingInput.value = localStorage.getItem(STORAGE_KEYS.following) || "";
+  followersInput.value = localStorage.getItem(STORAGE_KEYS.followers) || "";
 }
 
 function update() {
-  autoResize(followingInput);
-  autoResize(followersInput);
+  autoResize();
 
   const following = parseList(followingInput.value);
   const followers = parseList(followersInput.value);
-
   const followerSet = new Set(followers);
 
   const notFollowingBack = following.filter(
@@ -67,7 +73,6 @@ function update() {
 
   followingCount.textContent = `${following.length} nöfn`;
   followersCount.textContent = `${followers.length} nöfn`;
-
   resultCount.textContent = notFollowingBack.length;
 
   if (!following.length && !followers.length) {
@@ -79,7 +84,6 @@ function update() {
   if (!notFollowingBack.length) {
     resultList.textContent =
       "Allir sem þú followar virðast followa þig tilbaka.";
-
     resultList.classList.add("empty");
     return;
   }
@@ -109,13 +113,11 @@ followersInput.addEventListener("input", () => {
 
 copyBtn.addEventListener("click", async () => {
   const text = getResultText();
-
   if (!text) return;
 
   await navigator.clipboard.writeText(text);
 
   copyBtn.textContent = "Copied";
-
   setTimeout(() => {
     copyBtn.textContent = "Copy";
   }, 1200);
@@ -123,21 +125,17 @@ copyBtn.addEventListener("click", async () => {
 
 downloadBtn.addEventListener("click", () => {
   const text = getResultText();
-
   if (!text) return;
 
-  const blob = new Blob(
-    [text],
-    { type: "text/plain;charset=utf-8" }
-  );
+  const blob = new Blob([text], {
+    type: "text/plain;charset=utf-8",
+  });
 
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
 
   a.href = url;
   a.download = "not-following-back.txt";
-
   a.click();
 
   URL.revokeObjectURL(url);
