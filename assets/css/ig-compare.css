@@ -1,0 +1,153 @@
+:root {
+  --bg: #0f1115;
+  --card: #171a21;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --border: #2a2f3a;
+  --accent: #8b5cf6;
+  --danger: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.ig-page {
+  width: min(1400px, 94vw);
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.ig-header {
+  margin-bottom: 28px;
+}
+
+.ig-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 4vw, 4rem);
+}
+
+.ig-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.ig-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.ig-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  min-height: 320px;
+}
+
+label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 260px;
+  resize: none;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: #0b0d11;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.45;
+}
+
+textarea:focus {
+  outline: 2px solid var(--accent);
+  border-color: var(--accent);
+}
+
+small {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+}
+
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#resultCount {
+  background: var(--accent);
+  color: white;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 800;
+}
+
+.result-list {
+  min-height: 260px;
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: #0b0d11;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.result-list.empty {
+  color: var(--muted);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+.privacy-note {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 950px) {
+  .ig-grid {
+    grid-template-columns: 1fr;
+  }
+}
